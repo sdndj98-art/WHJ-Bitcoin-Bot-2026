@@ -101,6 +101,24 @@ body[data-whj-theme="light"] .whj-extra-btn{background:#e7f0f7;color:#23425c}
 .whj-shortcuts-card p{color:var(--m);font-size:11px;line-height:2;margin:5px 0}
 .whj-shortcuts-card button{margin-top:12px}
 @media(max-width:700px){.whj-clock{display:none}.whj-extra-btn{padding:8px 9px;font-size:9px}.topright{gap:6px}}
+
+/* Layout alignment and horizontal-overflow guard */
+html,body{width:100%;max-width:100%;overflow-x:clip}
+.shell{grid-template-columns:230px minmax(0,1fr);width:100%;min-width:0}
+main{min-width:0;width:100%}
+.view,.card,.content,.lower,.scanner-layout,.scanner-lower,.scanner-indicator-grid{min-width:0}
+.tablewrap{min-width:0;max-width:100%;overflow-x:auto}
+canvas{max-width:100%}
+.top,.topright{min-width:0;flex-wrap:wrap}
+@media(max-width:700px){
+ .shell{display:block;width:100%;min-width:0}
+ .side{left:0;right:0;width:100%;max-width:100%}
+ .nav{width:100%;min-width:0}
+ .nav button{min-width:0;overflow-wrap:anywhere}
+ main{width:100%;max-width:none;min-width:0;margin:0}
+ .top{align-items:flex-start}
+ .topright{max-width:100%;justify-content:flex-start}
+}
 </style></head><body><div class="shell"><aside class="side"><div class="brand"><div class="logo">₿</div><div><b>WHJ BITCOIN</b><small>مركز قيادة التداول الذكي</small></div></div><div class="navlabel">القائمة الرئيسية</div><nav class="nav"><button class="active" data-view="overview"><span class="ico">⌂</span>الرئيسية</button><button data-view="scanner"><span class="ico">⌁</span>ماسح السوق</button><button data-view="strategies"><span class="ico">◈</span>الاستراتيجيات</button><button data-view="trades"><span class="ico">⇄</span>الصفقات</button><button data-view="risk"><span class="ico">⌁</span>المخاطر</button><button data-view="system"><span class="ico">⚙</span>النظام</button><button data-view="forward"><span class="ico">◷</span>المراقبة المستقبلية</button></nav><div class="sidefoot">WHJ Bitcoin Bot 2026<br>مراقبة وتحليل · Paper Trading فقط</div></aside><main>
 <div class="mobilehead">WHJ BITCOIN · مركز القيادة</div><header class="top"><div><div class="eyebrow">WHJ / COMMAND CENTER</div><h1 id="pageTitle">نظرة عامة</h1><div class="sub">مراقبة أداء البوت وتحليل BTC/USD</div></div><div class="topright"><button class="toolbtn" id="exportJson" type="button">تنزيل التقرير JSON</button><button class="toolbtn" id="exportCsv" type="button">تصدير الصفقات CSV</button><span class="pill"><i class="dot"></i><span id="systemState">جارٍ تحميل البيانات</span></span><button class="refresh" id="refresh">↻ تحديث البيانات</button></div></header>
 <div class="banner"><div><b>وضع الحماية مفعّل — التداول الحقيقي متوقف</b><p>تعرض اللوحة بيانات التحليل والمحاكاة فقط، ولا ترسل أوامر إلى منصات التداول.</p></div><span class="status">● PAPER MODE</span></div>
