@@ -13,30 +13,30 @@ class ForwardPaperMonitorTests(unittest.TestCase):
     def test_forward_report_write_preserves_previous_file_if_replace_fails(self):
         with tempfile.TemporaryDirectory() as folder:
             target = Path(folder) / "forward_paper_report.json"
-            target.write_text('{"previous": true}\\n', encoding="utf-8")
+            target.write_text('{"previous": true}\n', encoding="utf-8")
             with patch("forward_paper_monitor.os.replace", side_effect=OSError("simulated replace failure")):
                 with self.assertRaisesRegex(OSError, "simulated replace failure"):
                     write_report_atomically({"current": True}, target)
             self.assertEqual(
-                target.read_text(encoding="utf-8"), '{"previous": true}\\n'
+                target.read_text(encoding="utf-8"), '{"previous": true}\n'
             )
             self.assertEqual(list(Path(folder).glob(".forward_paper_report.json.*.tmp")), [])
 
     def test_forward_report_write_rejects_non_finite_json_without_corrupting_previous_file(self):
         with tempfile.TemporaryDirectory() as folder:
             target = Path(folder) / "forward_paper_report.json"
-            target.write_text('{"previous": true}\\n', encoding="utf-8")
+            target.write_text('{"previous": true}\n', encoding="utf-8")
             with self.assertRaises(ValueError):
                 write_report_atomically({"invalid": float("nan")}, target)
             self.assertEqual(
-                target.read_text(encoding="utf-8"), '{"previous": true}\\n'
+                target.read_text(encoding="utf-8"), '{"previous": true}\n'
             )
             self.assertEqual(list(Path(folder).glob(".forward_paper_report.json.*.tmp")), [])
 
     def test_forward_report_write_replaces_file_with_valid_json(self):
         with tempfile.TemporaryDirectory() as folder:
             target = Path(folder) / "forward_paper_report.json"
-            target.write_text('{"previous": true}\\n', encoding="utf-8")
+            target.write_text('{"previous": true}\n', encoding="utf-8")
             returned = write_report_atomically({"schema_version": 1, "status": "PAPER_MONITORING"}, target)
             self.assertEqual(returned, target)
             self.assertEqual(
