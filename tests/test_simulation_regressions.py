@@ -5,7 +5,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from paper_account import update_paper_account
+from paper_account import run_paper_portfolio, update_paper_account
 from paper_trading import run_backtest
 from strategy_lab import run_strategy_lab
 
@@ -76,6 +76,17 @@ class PersistentPaperAccountTests(unittest.TestCase):
             self.assertGreaterEqual(result["max_drawdown_pct"], 10.0)
             self.assertFalse(result["open_position"])
             self.assertGreaterEqual(result["completed_trades"], 1)
+
+    def test_three_independent_paper_strategy_ledgers(self):
+        with tempfile.TemporaryDirectory() as folder:
+            candles = self.make_candles([100.0 + (i % 40) * 0.4 for i in range(180)])
+            first = run_paper_portfolio(candles, state_dir=folder)
+            second = run_paper_portfolio(candles, state_dir=folder)
+            self.assertEqual(set(first["accounts"]), {"sma_trend", "ema_trend", "rsi_momentum"})
+            for name, account in second["accounts"].items():
+                self.assertEqual(account["processed_new_candles"], 0)
+                self.assertEqual(account["strategy"], name)
+                self.assertTrue(account["state_persisted"])
 
     def test_corrupt_state_is_not_silently_reset(self):
         with tempfile.TemporaryDirectory() as folder:
