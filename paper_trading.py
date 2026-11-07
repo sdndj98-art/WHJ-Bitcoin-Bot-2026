@@ -62,7 +62,13 @@ def run_backtest(prices, initial_cash=1000.0, fee_rate=0.001, slippage_rate=0.00
             entry_cost = 0.0
             position_open = False
 
-        equity = cash + btc * reference_price
+        # Track realizable equity after estimated exit slippage and fees.
+        if position_open:
+            liquidation = btc * reference_price * (1 - slippage_rate)
+            liquidation -= liquidation * fee_rate
+            equity = cash + liquidation
+        else:
+            equity = cash
         equity_peak = max(equity_peak, equity)
         if equity_peak > 0:
             drawdown = (equity_peak - equity) / equity_peak * 100
