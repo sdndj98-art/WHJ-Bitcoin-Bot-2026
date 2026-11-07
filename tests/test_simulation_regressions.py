@@ -8,7 +8,7 @@ from pathlib import Path
 
 from paper_account import _ema_last, _save_state_atomically, run_paper_portfolio, update_paper_account
 from paper_trading import run_backtest
-from strategy_lab import _simulate, run_strategy_lab
+from strategy_lab import _consensus_signals, _simulate, run_strategy_lab
 from risk_analysis import block_bootstrap_trade_risk, monte_carlo_trade_risk
 
 
@@ -54,6 +54,40 @@ class BlockBootstrapRiskTests(unittest.TestCase):
             block_bootstrap_trade_risk([{"pnl": 1.0}], block_size=0)
         with self.assertRaises(ValueError):
             block_bootstrap_trade_risk([{"pnl": float("inf")}])
+
+
+
+class ConsensusEnsembleTests(unittest.TestCase):
+    def test_equal_family_votes_prevent_trend_family_dominance(self):
+        names = (
+            "sma_trend", "ema_trend", "sma200_regime", "ema50_200_regime",
+            "sma200_filter", "ema200_filter", "sma50_200_cross", "donchian_55_20",
+            "rsi_momentum", "rsi2_mean_reversion", "rsi14_mean_reversion",
+            "bollinger_mean_reversion",
+        )
+        signals = {name: [False, False] for name in names}
+        for name in names[:4]:
+            signals[name][0] = True
+        signals["rsi_momentum"][0] = True
+        for name in names[:8]:
+            signals[name][1] = True
+        self.assertEqual(_consensus_signals(signals), [True, False])
+
+    def test_consensus_requires_two_mean_reversion_votes_and_valid_lengths(self):
+        names = (
+            "sma_trend", "ema_trend", "sma200_regime", "ema50_200_regime",
+            "sma200_filter", "ema200_filter", "sma50_200_cross", "donchian_55_20",
+            "rsi_momentum", "rsi2_mean_reversion", "rsi14_mean_reversion",
+            "bollinger_mean_reversion",
+        )
+        signals = {name: [False] for name in names}
+        signals["rsi_momentum"] = [True]
+        signals["rsi2_mean_reversion"] = [True]
+        signals["rsi14_mean_reversion"] = [True]
+        self.assertEqual(_consensus_signals(signals), [True])
+        signals["ema_trend"] = [True, False]
+        with self.assertRaises(ValueError):
+            _consensus_signals(signals)
 
 
 class StrategyLabTests(unittest.TestCase):
