@@ -76,7 +76,32 @@ body{background:radial-gradient(ellipse at 76% -18%,rgba(37,111,148,.24),transpa
 @media(max-width:850px){.scanner-layout,.scanner-lower{grid-template-columns:1fr}.radar-stage{height:215px}}
 @media(max-width:700px){.scanner-head{align-items:flex-start;flex-direction:column}.scanner-head h2{font-size:19px}.scanner-head-tags{width:100%}.scanner-stats{gap:8px}.scanner-stats .card{padding:12px;min-height:102px}.scanner-stats .value{font-size:16px}.scanner-safety{align-items:flex-start;flex-wrap:wrap}.scanner-safety .status{margin-right:47px}.radar-stage{height:205px}}
 
- .forward-risk{color:var(--r)}#forwardFile{height:auto;min-width:220px}#forward .banner{margin-top:13px}@media(max-width:700px){#forward .tablewrap{margin:0 -4px}#forward table{font-size:10px}}.scanner-indicator-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:11px;margin-top:13px}.scanner-indicator-grid .metric .value{font-size:20px}.gate-row{transition:border-color .2s,background .2s}.gate-row.pass{border-color:#286b5a;background:#102d2b}.gate-row.fail{border-color:#624252;background:#291d2a}@media(max-width:850px){.scanner-indicator-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(max-width:380px){.scanner-indicator-grid{grid-template-columns:1fr 1fr}.scanner-indicator-grid .metric .value{font-size:17px}}\n</style></head><body><div class="shell"><aside class="side"><div class="brand"><div class="logo">₿</div><div><b>WHJ BITCOIN</b><small>مركز قيادة التداول الذكي</small></div></div><div class="navlabel">القائمة الرئيسية</div><nav class="nav"><button class="active" data-view="overview"><span class="ico">⌂</span>الرئيسية</button><button data-view="scanner"><span class="ico">⌁</span>ماسح السوق</button><button data-view="strategies"><span class="ico">◈</span>الاستراتيجيات</button><button data-view="trades"><span class="ico">⇄</span>الصفقات</button><button data-view="risk"><span class="ico">⌁</span>المخاطر</button><button data-view="system"><span class="ico">⚙</span>النظام</button><button data-view="forward"><span class="ico">◷</span>المراقبة المستقبلية</button></nav><div class="sidefoot">WHJ Bitcoin Bot 2026<br>مراقبة وتحليل · Paper Trading فقط</div></aside><main>
+ .forward-risk{color:var(--r)}#forwardFile{height:auto;min-width:220px}#forward .banner{margin-top:13px}@media(max-width:700px){#forward .tablewrap{margin:0 -4px}#forward table{font-size:10px}}.scanner-indicator-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:11px;margin-top:13px}.scanner-indicator-grid .metric .value{font-size:20px}.gate-row{transition:border-color .2s,background .2s}.gate-row.pass{border-color:#286b5a;background:#102d2b}.gate-row.fail{border-color:#624252;background:#291d2a}@media(max-width:850px){.scanner-indicator-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(max-width:380px){.scanner-indicator-grid{grid-template-columns:1fr 1fr}.scanner-indicator-grid .metric .value{font-size:17px}}\n
+/* Dashboard UX enhancements */
+body[data-whj-theme="light"]{--bg:#eef3f8;--p:#fff;--p2:#f4f8fc;--line:#cbd8e5;--t:#15283b;--m:#587087;--c:#087f99;--g:#087d58;--r:#c33450;--a:#9b6500;background:#eef3f8;color:#15283b}
+body[data-whj-theme="light"] .side{background:#f8fbff;border-left-color:#cbd8e5}
+body[data-whj-theme="light"] .card{background:linear-gradient(145deg,#fff,#f4f8fc);border-color:#cbd8e5;box-shadow:0 8px 22px #24364a12}
+body[data-whj-theme="light"] .banner{background:linear-gradient(105deg,#e2f2f7,#f3f7fb);border-color:#c1d8e3}
+body[data-whj-theme="light"] .signalbox,body[data-whj-theme="light"] .scanner-reasons,body[data-whj-theme="light"] .filter{background:#edf4fa;color:#15283b}
+body[data-whj-theme="light"] td{color:#263c51;border-bottom-color:#dce5ed}
+body[data-whj-theme="light"] th{color:#526b82;border-bottom-color:#cbd8e5}
+body[data-whj-theme="light"] .toolbtn,body[data-whj-theme="light"] .refresh,body[data-whj-theme="light"] .pill{background:#e7f0f7;color:#23425c;border-color:#c5d5e2}
+body.whj-compact main{padding-top:15px}
+body.whj-compact .card{padding:12px}
+body.whj-compact .grid,body.whj-compact .content,body.whj-compact .lower{gap:8px}
+.whj-clock{font-variant-numeric:tabular-nums;color:var(--c);font-size:10px;border:1px solid var(--line);background:#102137;border-radius:10px;padding:9px 11px;white-space:nowrap}
+body[data-whj-theme="light"] .whj-clock{background:#e7f0f7;color:#23425c}
+.whj-extra-btn{border:1px solid var(--line);background:#102137;color:#c5d7e9;border-radius:10px;padding:9px 11px;font-size:10px;cursor:pointer;white-space:nowrap}
+.whj-extra-btn:hover,.whj-extra-btn:focus-visible{border-color:var(--c);outline:2px solid transparent;color:#fff}
+body[data-whj-theme="light"] .whj-extra-btn{background:#e7f0f7;color:#23425c}
+.whj-shortcuts{position:fixed;z-index:20;inset:0;background:#020914cc;display:none;place-items:center;padding:18px}
+.whj-shortcuts.open{display:grid}
+.whj-shortcuts-card{width:min(420px,100%);background:var(--p);border:1px solid var(--line);border-radius:16px;padding:20px;box-shadow:0 20px 70px #0008}
+.whj-shortcuts-card h3{margin:0 0 12px;font-size:15px}
+.whj-shortcuts-card p{color:var(--m);font-size:11px;line-height:2;margin:5px 0}
+.whj-shortcuts-card button{margin-top:12px}
+@media(max-width:700px){.whj-clock{display:none}.whj-extra-btn{padding:8px 9px;font-size:9px}.topright{gap:6px}}
+</style></head><body><div class="shell"><aside class="side"><div class="brand"><div class="logo">₿</div><div><b>WHJ BITCOIN</b><small>مركز قيادة التداول الذكي</small></div></div><div class="navlabel">القائمة الرئيسية</div><nav class="nav"><button class="active" data-view="overview"><span class="ico">⌂</span>الرئيسية</button><button data-view="scanner"><span class="ico">⌁</span>ماسح السوق</button><button data-view="strategies"><span class="ico">◈</span>الاستراتيجيات</button><button data-view="trades"><span class="ico">⇄</span>الصفقات</button><button data-view="risk"><span class="ico">⌁</span>المخاطر</button><button data-view="system"><span class="ico">⚙</span>النظام</button><button data-view="forward"><span class="ico">◷</span>المراقبة المستقبلية</button></nav><div class="sidefoot">WHJ Bitcoin Bot 2026<br>مراقبة وتحليل · Paper Trading فقط</div></aside><main>
 <div class="mobilehead">WHJ BITCOIN · مركز القيادة</div><header class="top"><div><div class="eyebrow">WHJ / COMMAND CENTER</div><h1 id="pageTitle">نظرة عامة</h1><div class="sub">مراقبة أداء البوت وتحليل BTC/USD</div></div><div class="topright"><button class="toolbtn" id="exportJson" type="button">تنزيل التقرير JSON</button><button class="toolbtn" id="exportCsv" type="button">تصدير الصفقات CSV</button><span class="pill"><i class="dot"></i><span id="systemState">جارٍ تحميل البيانات</span></span><button class="refresh" id="refresh">↻ تحديث البيانات</button></div></header>
 <div class="banner"><div><b>وضع الحماية مفعّل — التداول الحقيقي متوقف</b><p>تعرض اللوحة بيانات التحليل والمحاكاة فقط، ولا ترسل أوامر إلى منصات التداول.</p></div><span class="status">● PAPER MODE</span></div>
 <section class="view active" id="overview"><div class="grid">
@@ -269,4 +294,44 @@ function csvCell(value){let s=String(value??"");if(/^[=+\-@\t\r]/.test(s))s="'"+
 function exportCsv(){const rows=report&&report.paper_backtest&&report.paper_backtest.trade_log||[];const keys=["timestamp","side","result","pnl"];const lines=[keys,...rows.map(t=>keys.map(k=>t[k]??(k==="timestamp"?t.date??"":k==="side"?t.action??"":"")))];downloadFile("whj-paper-trades.csv","\uFEFF"+lines.map(r=>r.map(csvCell).join(",")).join("\r\n"),"text/csv;charset=utf-8")}
 async function load(){try{$("systemState").textContent="جارٍ التحديث";let r=await fetch("./report.json?t="+Date.now(),{cache:"no-store"});if(!r.ok)throw Error("report unavailable (HTTP "+r.status+")");let candidate=await r.json();if(!candidate||typeof candidate!=="object"||Array.isArray(candidate))throw Error("invalid report format");report=candidate;render()}catch(e){if(report){$("systemState").textContent="تعذر التحديث؛ البيانات المعروضة من آخر تقرير ناجح";$("updated").textContent="فشل جلب التقرير الجديد. آخر بيانات ناجحة: "+(report.time?new Date(report.time).toLocaleString("ar-IQ"):"وقت غير متوفر")+". اضغط تحديث لإعادة المحاولة."}else{$("systemState").textContent="بانتظار التقرير الصالح";$("updated").textContent="لم يتوفر تقرير صالح بعد؛ ستظهر البيانات بعد أول تشغيل ناجح."}}}
 document.querySelectorAll(".nav button").forEach(b=>b.addEventListener("click",()=>{document.querySelectorAll(".nav button").forEach(x=>x.classList.toggle("active",x===b));document.querySelectorAll(".view").forEach(v=>v.classList.toggle("active",v.id===b.dataset.view));set("pageTitle",b.textContent.trim())}));$("refresh").addEventListener("click",load);$("exportJson").addEventListener("click",()=>{if(report)downloadFile("whj-report.json",JSON.stringify(report,null,2),"application/json")});$("exportCsv").addEventListener("click",exportCsv);$("strategyFilter").addEventListener("input",e=>filterRows("strategyRows",e.target.value));$("tradeFilter").addEventListener("input",e=>filterRows("tradeRows",e.target.value));window.addEventListener("resize",()=>report&&drawChart(report.persistent_paper_account||{}));load();setInterval(load,60000);
+
+/* WHJ dashboard quality-of-life controls */
+(function(){
+ const top=document.querySelector(".topright");
+ if(!top)return;
+ const makeButton=(id,label,title)=>{const b=document.createElement("button");b.type="button";b.id=id;b.className="whj-extra-btn";b.textContent=label;b.title=title;b.setAttribute("aria-label",title);top.appendChild(b);return b};
+ const clock=document.createElement("span");clock.className="whj-clock";clock.id="whjClock";clock.setAttribute("aria-live","off");top.insertBefore(clock,top.querySelector(".pill"));
+ const tick=()=>{clock.textContent=new Intl.DateTimeFormat("ar-IQ",{timeZone:"Asia/Baghdad",hour:"2-digit",minute:"2-digit",second:"2-digit",hour12:true}).format(new Date())+" · بغداد"};
+ tick();window.setInterval(tick,1000);
+ const theme=makeButton("whjThemeToggle","☼ المظهر","تبديل المظهر الداكن والفاتح");
+ const compact=makeButton("whjCompactToggle","↕ مضغوط","تبديل كثافة عرض البطاقات");
+ const help=makeButton("whjShortcutHelp","⌨ الاختصارات","عرض اختصارات لوحة المفاتيح");
+ const fullscreen=makeButton("whjFullscreen","⛶ ملء الشاشة","تبديل وضع ملء الشاشة");
+ const applyTheme=value=>{document.body.dataset.whjTheme=value;theme.textContent=value==="light"?"☾ داكن":"☼ فاتح";try{localStorage.setItem("whj-dashboard-theme",value)}catch(e){}};
+ let savedTheme="dark";try{savedTheme=localStorage.getItem("whj-dashboard-theme")||"dark"}catch(e){}applyTheme(savedTheme==="light"?"light":"dark");
+ let isCompact=false;try{isCompact=localStorage.getItem("whj-dashboard-compact")==="1"}catch(e){}document.body.classList.toggle("whj-compact",isCompact);compact.textContent=isCompact?"↕ مريح":"↕ مضغوط";
+ theme.addEventListener("click",()=>applyTheme(document.body.dataset.whjTheme==="light"?"dark":"light"));
+ compact.addEventListener("click",()=>{isCompact=!isCompact;document.body.classList.toggle("whj-compact",isCompact);compact.textContent=isCompact?"↕ مريح":"↕ مضغوط";try{localStorage.setItem("whj-dashboard-compact",isCompact?"1":"0")}catch(e){}});
+ const modal=document.createElement("div");modal.className="whj-shortcuts";modal.id="whjShortcuts";modal.innerHTML='<div class="whj-shortcuts-card" role="dialog" aria-modal="true" aria-labelledby="whjHelpTitle"><h3 id="whjHelpTitle">اختصارات لوحة WHJ</h3><p><b>1–7</b> التنقل بين أقسام اللوحة</p><p><b>R</b> تحديث التقرير والبيانات</p><p><b>F</b> ملء الشاشة</p><p><b>?</b> إظهار هذه المساعدة · <b>Esc</b> إغلاقها</p><button type="button" class="whj-extra-btn" id="whjCloseHelp">إغلاق</button></div>';
+ document.body.appendChild(modal);
+ const closeHelp=()=>modal.classList.remove("open");help.addEventListener("click",()=>modal.classList.add("open"));modal.addEventListener("click",e=>{if(e.target===modal)closeHelp()});modal.querySelector("#whjCloseHelp").addEventListener("click",closeHelp);
+ const toggleFullscreen=async()=>{try{if(!document.fullscreenElement){await document.documentElement.requestFullscreen()}else{await document.exitFullscreen()}}catch(e){fullscreen.title="ملء الشاشة غير مدعوم في هذا المتصفح"}};
+ fullscreen.addEventListener("click",toggleFullscreen);
+ document.addEventListener("fullscreenchange",()=>{fullscreen.textContent=document.fullscreenElement?"⛶ خروج":"⛶ ملء الشاشة"});
+ const nav=[...document.querySelectorAll(".nav button")];
+ nav.forEach((b,i)=>{b.title=(i+1)+" · "+b.textContent.trim();b.setAttribute("aria-label",b.textContent.trim())});
+ document.addEventListener("keydown",e=>{
+  if(e.altKey||e.ctrlKey||e.metaKey)return;
+  const tag=e.target&&e.target.tagName;if(["INPUT","TEXTAREA","SELECT"].includes(tag)||e.target.isContentEditable)return;
+  if(e.key==="Escape"){closeHelp();return}
+  if(e.key==="?" ){modal.classList.toggle("open");return}
+  if(e.key.toLowerCase()==="r"){const refresh=document.getElementById("refresh");if(refresh)refresh.click();return}
+  if(e.key.toLowerCase()==="f"){toggleFullscreen();return}
+  if(/^[1-7]$/.test(e.key)&&nav[Number(e.key)-1])nav[Number(e.key)-1].click();
+ });
+ const updateNavState=()=>nav.forEach(b=>{if(b.classList.contains("active"))b.setAttribute("aria-current","page");else b.removeAttribute("aria-current")});
+ nav.forEach(b=>b.addEventListener("click",updateNavState));updateNavState();
+ const status=document.getElementById("systemState");
+ if(status){const observer=new MutationObserver(()=>{const text=status.textContent||"";status.title=text;status.setAttribute("aria-live","polite")});observer.observe(status,{childList:true,subtree:true,characterData:true})}
+})();
 </script></body></html>
