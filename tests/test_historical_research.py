@@ -142,6 +142,10 @@ class HistoricalResearchTests(unittest.TestCase):
         result = run_long_short_lab(bars)
         self.assertIn("sma200_long_short", result["strategies"])
         self.assertIn("buy_and_hold_25pct", result["strategies"])
+        self.assertTrue(all(
+            window["start_index"] >= result["split_index"]
+            for window in result["strategies"]["sma200_long_short"]["walk_forward_windows"]
+        ))
         metrics = result["strategies"]["sma200_long_short"]["out_of_sample"]
         self.assertGreater(metrics["funding_paid_usd"], 0)
         self.assertTrue(math.isfinite(metrics["return_pct"]))
