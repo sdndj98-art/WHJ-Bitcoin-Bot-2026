@@ -1582,13 +1582,55 @@ def run_forward_paper_accounts(candles, state_dir="."):
         state_path=str(directory / "paper_6h_rsi14_mean_reversion.json"),
         strategy="rsi14_mean_reversion",
     )
+    ensemble_four_hour = update_paper_account(
+        account_rows(four_hour),
+        state_path=str(directory / "paper_4h_ema50_200_ensemble_sleeve.json"),
+        initial_cash=500.0,
+        strategy="ema50_200_regime",
+    )
+    ensemble_six_hour = update_paper_account(
+        account_rows(six_hour),
+        state_path=str(directory / "paper_6h_ema50_200_ensemble_sleeve.json"),
+        initial_cash=500.0,
+        strategy="ema50_200_regime",
+    )
+    ensemble_initial = (
+        ensemble_four_hour["initial_cash_usd"] + ensemble_six_hour["initial_cash_usd"]
+    )
+    ensemble_equity = (
+        ensemble_four_hour["equity_after_estimated_exit_costs_usd"]
+        + ensemble_six_hour["equity_after_estimated_exit_costs_usd"]
+    )
+    ensemble_portfolio = {
+        "mode": "PERSISTENT_50_50_MULTI_TIMEFRAME_PAPER_ONLY",
+        "initial_cash_usd": round(ensemble_initial, 2),
+        "equity_after_estimated_exit_costs_usd": round(ensemble_equity, 2),
+        "return_pct": round((ensemble_equity / ensemble_initial - 1.0) * 100.0, 2),
+        "completed_trades": (
+            ensemble_four_hour["completed_trades"] + ensemble_six_hour["completed_trades"]
+        ),
+        "fees_paid_usd": round(
+            ensemble_four_hour["fees_paid_usd"] + ensemble_six_hour["fees_paid_usd"], 4
+        ),
+        "sleeves": {
+            "4h": ensemble_four_hour,
+            "6h": ensemble_six_hour,
+        },
+        "max_drawdown_by_sleeve_pct": {
+            "4h": ensemble_four_hour["max_drawdown_pct"],
+            "6h": ensemble_six_hour["max_drawdown_pct"],
+        },
+        "allocation": "50% of capital to each native-timeframe sleeve; each sleeve allocates 25% of its own equity per entry.",
+        "note": "The sleeve drawdowns are reported separately; no unsynchronized combined drawdown is inferred.",
+    }
     return {
         "mode": "PERSISTENT_MULTI_TIMEFRAME_PAPER_ONLY",
         "daily_sma20_50": daily_result,
         "four_hour_ema50_200": four_hour_result,
         "daily_bollinger_mean_reversion": daily_bollinger_result,
         "six_hour_rsi14_mean_reversion": six_hour_rsi_result,
-        "note": "These accounts process only newly closed aggregated bars and persist state between scheduled runs. No real orders are sent.",
+        "ema50_200_4h_6h_50_50_portfolio": ensemble_portfolio,
+        "note": "Accounts process only newly closed aggregated bars and persist state between scheduled runs. No real orders are sent.",
     }
 
 
@@ -1743,6 +1785,12 @@ def main():
             )
         },
         "qualification_summary": summarize_qualification(result),
+        "forward_paper_4h_6h_ensemble": {
+            "return_pct": forward_paper["ema50_200_4h_6h_50_50_portfolio"]["return_pct"],
+            "equity_usd": forward_paper["ema50_200_4h_6h_50_50_portfolio"]["equity_after_estimated_exit_costs_usd"],
+            "completed_trades": forward_paper["ema50_200_4h_6h_50_50_portfolio"]["completed_trades"],
+            "max_drawdown_by_sleeve_pct": forward_paper["ema50_200_4h_6h_50_50_portfolio"]["max_drawdown_by_sleeve_pct"],
+        },
         "strategies": {
             name: {
                 "oos_return_pct": metrics["out_of_sample"]["return_pct"],
