@@ -208,6 +208,18 @@ class HistoricalResearchTests(unittest.TestCase):
             for window in result["strategies"]["donchian_55_20"]["walk_forward_windows"]
         ))
         self.assertTrue(math.isfinite(result["strategies"]["donchian_55_20"]["out_of_sample"]["return_pct"]))
+        self.assertEqual(list(result["cost_sensitivity"]), ["1x", "1.5x", "2x", "3x"])
+        base = result["strategies"]["donchian_55_20"]["out_of_sample"]
+        one_x = result["cost_sensitivity"]["1x"]["strategies"]["donchian_55_20"]
+        self.assertEqual(one_x["return_pct"], base["return_pct"])
+        self.assertEqual(
+            one_x["benchmark_edge_pp"],
+            round(base["return_pct"] - result["strategies"]["buy_and_hold_25pct"]["out_of_sample"]["return_pct"], 2),
+        )
+        self.assertGreater(
+            result["cost_sensitivity"]["3x"]["fee_rate_each_side"],
+            result["cost_sensitivity"]["1x"]["fee_rate_each_side"],
+        )
 
     def test_atr_trailing_exit_uses_completed_close_and_next_bar_execution(self):
         bars = []
