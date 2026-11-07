@@ -247,7 +247,11 @@ def run_strategy_lab(prices, fee=0.001, slippage=0.0005):
     benchmark_peak = 1000.0
     benchmark_max_dd = 0.0
     for price in prices[split:]:
-        marked_equity = benchmark_cash + benchmark_units * float(price)
+        # Compare drawdown on the same net-liquidation basis as strategies:
+        # estimate exit slippage and fee at every observation, not only at the end.
+        liquidation = benchmark_units * float(price) * (1 - slippage)
+        liquidation -= liquidation * fee
+        marked_equity = benchmark_cash + liquidation
         benchmark_peak = max(benchmark_peak, marked_equity)
         if benchmark_peak > 0:
             benchmark_max_dd = max(
