@@ -319,7 +319,7 @@ def write_report_atomically(report, output_path="forward_paper_report.json"):
         ) as temporary:
             temporary_path = Path(temporary.name)
             json.dump(report, temporary, indent=2, allow_nan=False)
-            temporary.write("\\n")
+            temporary.write("\n")
             temporary.flush()
             os.fsync(temporary.fileno())
         os.replace(temporary_path, target)
