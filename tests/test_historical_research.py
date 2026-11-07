@@ -429,6 +429,11 @@ class HistoricalResearchTests(unittest.TestCase):
         benchmark = {"out_of_sample": {"return_pct": 2.0}}
         stress_benchmark = {"out_of_sample": {"return_pct": 0.5}}
 
+        missing_benchmark = assess_strategy_qualification(candidate, stress)
+        self.assertFalse(missing_benchmark["qualified_for_extended_paper_review"])
+        self.assertIn("outperform_buy_and_hold_oos", missing_benchmark["failed_checks"])
+        self.assertFalse(missing_benchmark["benchmark_comparison"]["benchmark_available"])
+
         result = assess_strategy_qualification(
             candidate, stress,
             benchmark_metrics=benchmark,
