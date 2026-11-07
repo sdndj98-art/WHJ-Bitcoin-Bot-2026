@@ -69,6 +69,8 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: whj-five-year-research-${{ github.run_number }}
-          path: |\n            historical_research.json\n            strategy_qualification_report.md
+          path: |
+            historical_research.json
+            strategy_qualification_report.md
           if-no-files-found: error
           retention-days: 30
