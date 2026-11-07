@@ -416,6 +416,22 @@ class HistoricalResearchTests(unittest.TestCase):
                     }
                 }
             },
+            "forward_paper_accounts": {
+                "daily_sma20_50": {
+                    "equity_after_estimated_exit_costs_usd": 891.87,
+                    "return_pct": -10.81, "completed_trades": 6,
+                    "win_rate_pct": 16.67, "profit_factor": 0.01,
+                    "max_drawdown_pct": 10.81,
+                    "risk_pause_reasons": ["maximum_drawdown"],
+                },
+                "four_hour_ema50_200": {
+                    "equity_after_estimated_exit_costs_usd": 1324.68,
+                    "return_pct": 32.47, "completed_trades": 96,
+                    "win_rate_pct": 25.0, "profit_factor": 1.83,
+                    "max_drawdown_pct": 9.23,
+                    "risk_pause_reasons": ["consecutive_loss_limit"],
+                },
+            },
             "extended_lab_strategy_qualification": {
                 "ohlc_breakout": {}, "long_short": {}, "daily_regime_filter": {},
             },
@@ -431,6 +447,11 @@ class HistoricalResearchTests(unittest.TestCase):
         self.assertIn("1 failed gate", report)
         self.assertIn("2 failed gates", report)
         self.assertLess(report.index("1d / bollinger"), report.index("1d / weak_edge"))
+        self.assertIn("Persistent forward paper-account snapshot", report)
+        self.assertIn("Daily SMA20/SMA50", report)
+        self.assertIn("PAUSED — maximum_drawdown", report)
+        self.assertIn("4h EMA50/EMA200", report)
+        self.assertIn("PAUSED — consecutive_loss_limit", report)
 
 
     def test_qualification_requires_outperformance_of_matched_benchmark(self):
