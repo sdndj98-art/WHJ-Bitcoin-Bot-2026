@@ -100,6 +100,8 @@ def scan_btc_market(candles, market_data_quality=None, volume_lookback=20,
     if any(current - previous != interval_seconds for previous, current in zip(timestamps, timestamps[1:])):
         raise ValueError(f"Scanner requires contiguous completed {timeframe} candles")
     if any(timestamp % interval_seconds != 0 for timestamp in timestamps):
+        if interval_hours == 1:
+            raise ValueError("Scanner hourly candle timestamps must align to UTC hour boundaries")
         raise ValueError(f"Scanner {timeframe} candle timestamps must align to UTC boundaries")
 
     closes = [item[4] for item in normalized]
@@ -261,15 +263,15 @@ def _aggregate_hourly_candles(candles, hours):
             timestamp = int(row[0])
             if float(row[0]) != timestamp:
                 raise ValueError
-            if previous_timestamp is not None and timestamp <= previous_timestamp:
-                raise ValueError("Hourly timestamps must be strictly increasing")
-            if timestamp % interval_seconds:
-                raise ValueError("Hourly timestamps must align to UTC hour boundaries")
-            previous_timestamp = timestamp
-            bucket = timestamp // span_seconds
-            groups.setdefault(bucket, []).append(row)
         except (TypeError, ValueError, OverflowError) as exc:
             raise ValueError("Invalid hourly candle timestamp") from exc
+        if previous_timestamp is not None and timestamp <= previous_timestamp:
+            raise ValueError("Hourly timestamps must be strictly increasing")
+        if timestamp % interval_seconds:
+            raise ValueError("Hourly timestamps must align to UTC hour boundaries")
+        previous_timestamp = timestamp
+        bucket = timestamp // span_seconds
+        groups.setdefault(bucket, []).append(row)
 
     aggregated = []
     for bucket in sorted(groups):
