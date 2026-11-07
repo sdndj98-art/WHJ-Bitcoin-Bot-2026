@@ -8,6 +8,13 @@ from paper_account import seed_forward_paper_account, update_paper_account
 
 
 class ForwardPaperMonitorTests(unittest.TestCase):
+    def test_github_monitor_runs_hourly_to_review_each_closed_hour(self):
+        workflow = Path(".github/workflows/forward-paper-monitor.yml").read_text(
+            encoding="utf-8"
+        )
+        self.assertIn('cron: "17 * * * *"', workflow)
+        self.assertNotIn('cron: "17 */4 * * *"', workflow)
+
     def make_candles(self, hours=24 * 60):
         start = 1_700_000_000
         start -= start % 3600
