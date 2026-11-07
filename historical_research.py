@@ -103,29 +103,51 @@ def load_two_year_candles(days=DAYS, now=None):
             "low": low,
             "close": close,
             "volume": volume,
+            "imputed": False,
         }
 
-    candles = [unique[key] for key in sorted(unique)]
+    observed = [unique[key] for key in sorted(unique)]
     # Drop any candle whose one-hour interval has not fully closed.
     cutoff = now_ms - (now_ms % INTERVAL_MS)
-    candles = [row for row in candles if row["timestamp"] + INTERVAL_MS <= cutoff]
-    if len(candles) < 1000:
+    observed = [row for row in observed if row["timestamp"] + INTERVAL_MS <= cutoff]
+    if len(observed) < 1000:
         raise ValueError("Insufficient closed hourly candles for multi-regime research")
 
-    gaps = []
-    for previous, current in zip(candles, candles[1:]):
-        delta = current["timestamp"] - previous["timestamp"]
-        if delta != INTERVAL_MS:
-            gaps.append({
-                "after": previous["timestamp"],
-                "before": current["timestamp"],
-                "missing_hours": max(0, delta // INTERVAL_MS - 1),
-            })
-    if gaps:
-        raise ValueError(
-            "Historical series contains missing hourly intervals; refusing to distort indicators. "
-            + str(gaps[:5])
-        )
+    # Coinbase may omit intervals with no reported trades. For short gaps only,
+    # insert clearly-marked flat candles at the previous close with zero volume.
+    # Large gaps are rejected instead of fabricating a long price path.
+    candles = []
+    imputed_count = 0
+    for current in observed:
+        if candles:
+            previous = candles[-1]
+            delta = current["timestamp"] - previous["timestamp"]
+            if delta <= 0 or delta % INTERVAL_MS:
+                raise ValueError("Historical candle timestamps are not aligned to hourly boundaries")
+            missing = delta // INTERVAL_MS - 1
+            if missing > 6:
+                raise ValueError(
+                    "Historical data gap exceeds the six-hour repair limit: "
+                    + str({"after": previous["timestamp"], "before": current["timestamp"], "missing_hours": missing})
+                )
+            for offset in range(1, missing + 1):
+                flat = previous["close"]
+                candles.append({
+                    "timestamp": previous["timestamp"] + offset * INTERVAL_MS,
+                    "open": flat,
+                    "high": flat,
+                    "low": flat,
+                    "close": flat,
+                    "volume": 0.0,
+                    "imputed": True,
+                })
+                imputed_count += 1
+        candles.append(current)
+
+    if len(candles) < 1000:
+        raise ValueError("Insufficient hourly candles after data-quality repair")
+    # Keep the imputation count available to the report without hiding it in prices.
+    candles[0]["_imputed_hour_count"] = imputed_count
     return candles
 
 
@@ -144,7 +166,12 @@ def main():
         "first_closed_candle_utc": datetime.fromtimestamp(candles[0]["timestamp"] / 1000, timezone.utc).isoformat(),
         "last_closed_candle_utc": datetime.fromtimestamp(candles[-1]["timestamp"] / 1000, timezone.utc).isoformat(),
         "fees": {"entry_and_exit_rate": FEE_RATE, "slippage_each_side": SLIPPAGE_RATE},
-        "data_quality": {"all_hourly_intervals_present": True, "ohlcv_validated": True},
+        "data_quality": {
+            "hourly_intervals_contiguous_after_repair": True,
+            "imputed_missing_hour_count": candles[0].get("_imputed_hour_count", 0),
+            "imputation_method": "Forward-filled prior close with zero volume for gaps of at most six hours; larger gaps are rejected.",
+            "ohlcv_validated": True,
+        },
         "research": research,
         "warning": "Historical results are not forecasts. Strategy selection requires robust out-of-sample performance and forward paper trading. No live orders were placed.",
     }
