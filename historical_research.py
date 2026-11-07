@@ -644,6 +644,7 @@ def run_forward_paper_accounts(candles, state_dir="."):
     directory = Path(state_dir)
     daily = aggregate_candles(candles, 24)
     four_hour = aggregate_candles(candles, 4)
+    six_hour = aggregate_candles(candles, 6)
 
     def account_rows(bars):
         return [[int(row["timestamp"] // 1000), 0, 0, 0, str(row["close"])] for row in bars]
@@ -663,11 +664,17 @@ def run_forward_paper_accounts(candles, state_dir="."):
         state_path=str(directory / "paper_daily_bollinger.json"),
         strategy="bollinger_mean_reversion",
     )
+    six_hour_rsi_result = update_paper_account(
+        account_rows(six_hour),
+        state_path=str(directory / "paper_6h_rsi14_mean_reversion.json"),
+        strategy="rsi14_mean_reversion",
+    )
     return {
         "mode": "PERSISTENT_MULTI_TIMEFRAME_PAPER_ONLY",
         "daily_sma20_50": daily_result,
         "four_hour_ema50_200": four_hour_result,
         "daily_bollinger_mean_reversion": daily_bollinger_result,
+        "six_hour_rsi14_mean_reversion": six_hour_rsi_result,
         "note": "These accounts process only newly closed aggregated bars and persist state between scheduled runs. No real orders are sent.",
     }
 
@@ -761,6 +768,7 @@ def main():
                 ("daily_sma20_50", forward_paper["daily_sma20_50"]),
                 ("four_hour_ema50_200", forward_paper["four_hour_ema50_200"]),
                 ("daily_bollinger_mean_reversion", forward_paper["daily_bollinger_mean_reversion"]),
+                ("six_hour_rsi14_mean_reversion", forward_paper["six_hour_rsi14_mean_reversion"]),
             )
         },
         "strategies": {
