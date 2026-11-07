@@ -21,6 +21,12 @@ class TermuxDiagnosticsTests(unittest.TestCase):
         )
         self.assertEqual(result.returncode, 0, result.stderr)
 
+    def test_diagnostics_compiles_all_tracked_python_without_bytecode(self):
+        source = SCRIPT.read_text(encoding="utf-8")
+        self.assertIn('"git", "ls-files", "-z", "--", "*.py"', source)
+        self.assertIn('compile(source_file.read(), filename, "exec")', source)
+        self.assertNotIn("python -m py_compile ./*.py", source)
+
     def test_diagnostics_script_does_not_run_the_market_application(self):
         source = SCRIPT.read_text(encoding="utf-8")
         self.assertNotIn("python main.py", source)

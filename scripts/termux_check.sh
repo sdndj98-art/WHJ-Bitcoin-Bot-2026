@@ -49,11 +49,46 @@ if [ "$FAILURES" -eq 0 ]; then
 fi
 
 echo
-echo "========== PYTHON SYNTAX CHECK =========="
-if python -m py_compile ./*.py; then
-  echo "PASS: top-level Python files compile"
+echo "========== TRACKED PYTHON SYNTAX CHECK =========="
+if ! command -v git >/dev/null 2>&1; then
+  echo "FAIL: Git is required to enumerate tracked project files."
+  echo "Fix: pkg install git"
+  FAILURES=$((FAILURES + 1))
+elif python - <<'PY'
+import os
+import subprocess
+import sys
+
+result = subprocess.run(
+    ["git", "ls-files", "-z", "--", "*.py"],
+    check=True,
+    stdout=subprocess.PIPE,
+)
+files = [os.fsdecode(item) for item in result.stdout.split(b"\0") if item]
+if not files:
+    print("No tracked Python files found.", file=sys.stderr)
+    raise SystemExit(1)
+
+errors = []
+for filename in files:
+    try:
+        with open(filename, "rb") as source_file:
+            compile(source_file.read(), filename, "exec")
+    except (OSError, SyntaxError, ValueError) as exc:
+        errors.append((filename, exc))
+
+for filename, error in errors:
+    print(f"FAIL: {filename}: {error}", file=sys.stderr)
+
+if errors:
+    raise SystemExit(1)
+
+print(f"PASS: all {len(files)} tracked Python files compile (no bytecode written)")
+PY
+then
+  echo "PASS: all tracked Python files compile"
 else
-  echo "FAIL: Python syntax/compilation check"
+  echo "FAIL: tracked Python syntax check"
   FAILURES=$((FAILURES + 1))
 fi
 
