@@ -103,9 +103,11 @@ class HistoricalResearchTests(unittest.TestCase):
         self.assertEqual(first["daily_sma20_50"]["processed_new_candles"], 210)
         self.assertEqual(first["four_hour_ema50_200"]["processed_new_candles"], 1260)
         self.assertEqual(first["daily_bollinger_mean_reversion"]["processed_new_candles"], 210)
+        self.assertEqual(first["six_hour_rsi14_mean_reversion"]["processed_new_candles"], 840)
         self.assertEqual(second["daily_sma20_50"]["processed_new_candles"], 0)
         self.assertEqual(second["four_hour_ema50_200"]["processed_new_candles"], 0)
         self.assertEqual(second["daily_bollinger_mean_reversion"]["processed_new_candles"], 0)
+        self.assertEqual(second["six_hour_rsi14_mean_reversion"]["processed_new_candles"], 0)
 
     def test_turtle_breakout_uses_prior_channel_and_reports_costs(self):
         bars = []
