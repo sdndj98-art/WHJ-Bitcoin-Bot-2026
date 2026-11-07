@@ -888,7 +888,10 @@ def main():
         json.dumps(result, indent=2, allow_nan=False) + "\n",
         encoding="utf-8",
     )
-    Path("strategy_qualification_report.md").write_text(\n        build_qualification_markdown(result), encoding="utf-8"\n    )\n    summary = {
+    Path("strategy_qualification_report.md").write_text(
+        build_qualification_markdown(result), encoding="utf-8"
+    )
+    summary = {
         "source": result["source"],
         "candles": result["candles"],
         "first": result["first_closed_candle_utc"],
