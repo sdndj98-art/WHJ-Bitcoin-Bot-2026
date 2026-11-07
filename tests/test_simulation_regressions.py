@@ -96,6 +96,16 @@ class PersistentPaperAccountTests(unittest.TestCase):
                 update_paper_account(self.make_candles([100.0 + i for i in range(55)]),
                                      state_path=str(state_path))
 
+    def test_rejects_invalid_cash_and_fractional_timestamps(self):
+        candles = self.make_candles([100.0 + i for i in range(55)])
+        with tempfile.TemporaryDirectory() as folder:
+            with self.assertRaises(ValueError):
+                update_paper_account(candles, state_path=str(Path(folder) / "cash.json"),
+                                     initial_cash=0)
+            candles[10][0] = 10.5
+            with self.assertRaises(ValueError):
+                update_paper_account(candles, state_path=str(Path(folder) / "time.json"))
+
     def test_rejects_duplicate_or_unsorted_timestamps(self):
         with tempfile.TemporaryDirectory() as folder:
             state_path = str(Path(folder) / "paper_state.json")
