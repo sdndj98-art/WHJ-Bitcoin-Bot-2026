@@ -18,6 +18,7 @@ class StrategyLabTests(unittest.TestCase):
         self.assertIsInstance(benchmark["max_drawdown_pct"], float)
         self.assertFalse(benchmark["open_position"])
         self.assertTrue(benchmark["fees_and_slippage_included"])
+        self.assertEqual(benchmark["allocation_fraction"], 0.25)
         for name in ("sma_trend", "ema_trend", "rsi_momentum", "sma200_regime", "ema50_200_regime"):
             strategy = report["strategies"][name]
             self.assertEqual(len(strategy["walk_forward_windows"]), 3)
