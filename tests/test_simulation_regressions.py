@@ -55,6 +55,17 @@ class StrategyLabTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             run_strategy_lab([100.0] * 119 + [float("nan")])
 
+    def test_backtest_drawdown_includes_open_position_liquidation_costs(self):
+        prices = [float(value) for value in range(50, 100)] + [100.0, 50.0]
+        fee = 0.01
+        slippage = 0.02
+        report = run_backtest(prices, fee_rate=fee, slippage_rate=slippage)
+
+        units = (1000.0 - 1000.0 * fee) / (100.0 * (1.0 + slippage))
+        expected_equity = units * 50.0 * (1.0 - slippage) * (1.0 - fee)
+        expected_drawdown = (1000.0 - expected_equity) / 1000.0 * 100.0
+        self.assertAlmostEqual(report["max_drawdown_pct"], expected_drawdown, places=2)
+
     def test_backtest_open_position_includes_estimated_exit_costs(self):
         prices = [100.0 + i * 0.5 for i in range(100)]
         report = run_backtest(prices)
