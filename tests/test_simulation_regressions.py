@@ -237,6 +237,18 @@ class PersistentPaperAccountTests(unittest.TestCase):
                     with self.assertRaisesRegex(ValueError, "trade timestamp"):
                         update_paper_account(candles, state_path=str(state_path))
 
+    def test_saved_initial_capital_must_match_configuration_without_overwriting_ledger(self):
+        with tempfile.TemporaryDirectory() as folder:
+            state_path = Path(folder) / "paper_state.json"
+            candles = self.make_candles([100.0 + i for i in range(55)])
+            update_paper_account(candles, state_path=str(state_path), initial_cash=1000.0)
+            before = state_path.read_text(encoding="utf-8")
+            with self.assertRaisesRegex(ValueError, "initial capital does not match"):
+                update_paper_account(
+                    candles, state_path=str(state_path), initial_cash=900.0
+                )
+            self.assertEqual(state_path.read_text(encoding="utf-8"), before)
+
     def test_state_persists_and_reprocessing_is_idempotent(self):
         with tempfile.TemporaryDirectory() as folder:
             state_path = str(Path(folder) / "paper_state.json")
