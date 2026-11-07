@@ -372,12 +372,52 @@ def run_ohlc_breakout_lab(bars, fee=FEE_RATE, slippage=SLIPPAGE_RATE):
             "allocation_fraction": 0.25,
         }
     }
+    # Cost sensitivity reruns the identical fixed signals at progressively
+    # harsher execution costs; it does not retune parameters for each scenario.
+    cost_sensitivity = {}
+    for multiplier in (1.0, 1.5, 2.0, 3.0):
+        scenario_fee = fee * multiplier
+        scenario_slippage = slippage * multiplier
+        if scenario_fee >= 1 or scenario_slippage >= 1:
+            raise ValueError("Cost sensitivity multiplier produces invalid execution costs")
+        benchmark_allocation = 250.0
+        benchmark_cash_scenario = 750.0
+        benchmark_units_scenario = (
+            benchmark_allocation * (1 - scenario_fee)
+            / (float(bars[split]["close"]) * (1 + scenario_slippage))
+        )
+        benchmark_exit = benchmark_units_scenario * float(bars[-1]["close"]) * (1 - scenario_slippage)
+        benchmark_exit -= benchmark_exit * scenario_fee
+        benchmark_return = round(
+            ((benchmark_cash_scenario + benchmark_exit) / 1000.0 - 1) * 100, 2
+        )
+        scenario_strategies = {}
+        for name, (entry, exit_period, regime, atr_multiple) in strategies.items():
+            signals = _turtle_signals(bars, entry, exit_period, regime, atr_multiple)
+            metrics = _simulate_ohlc(
+                bars, signals, split, len(bars), scenario_fee, scenario_slippage
+            )
+            scenario_strategies[name] = {
+                **metrics,
+                "benchmark_return_pct": benchmark_return,
+                "benchmark_edge_pp": round(metrics["return_pct"] - benchmark_return, 2),
+            }
+        cost_sensitivity[f"{multiplier:g}x"] = {
+            "cost_multiplier": multiplier,
+            "fee_rate_each_side": scenario_fee,
+            "slippage_rate_each_side": scenario_slippage,
+            "matched_buy_and_hold_return_pct": benchmark_return,
+            "strategies": scenario_strategies,
+        }
+
     return {
         "mode": "OHLC_DONCHIAN_CHRONOLOGICAL_HOLDOUT",
         "sample_count": len(bars),
         "split_index": split,
         "execution": "Prior completed candle breakout signal; next close fill; 25% allocation; fees and slippage included.",
         "note": "Donchian channel bounds use prior highs/lows only; SMA200 regime uses completed daily closes.",
+        "cost_sensitivity": cost_sensitivity,
+        "cost_sensitivity_note": "Fixed signals are replayed without retuning at 1x, 1.5x, 2x, and 3x the supplied fee/slippage assumptions; benchmark edge is relative to matched 25% buy-and-hold under identical costs.",
         "strategies": results,
     }
 
