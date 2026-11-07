@@ -52,6 +52,39 @@ class ForwardPaperMonitorTests(unittest.TestCase):
         paused = dict(strong, risk_pause_reasons=["maximum_drawdown"])
         self.assertEqual(assess_sleeve_health(paused)["status"], "RISK_PAUSED")
 
+    def test_rolling_trade_window_detects_recent_deterioration(self):
+        base = {
+            "completed_trades": 40,
+            "max_drawdown_pct": 3.0,
+            "profit_factor": 1.4,
+            "return_pct": 5.0,
+            "risk_pause_reasons": [],
+            "recent_trades": [{"pnl_usd": 2.0} for _ in range(10)],
+        }
+        healthy = assess_sleeve_health(base)
+        self.assertEqual(healthy["rolling_status"], "ROLLING_STABLE")
+        self.assertEqual(healthy["status"], "CONTINUE_PAPER_REVIEW")
+        deteriorated = dict(
+            base,
+            recent_trades=[{"pnl_usd": -1.0} for _ in range(10)],
+        )
+        result = assess_sleeve_health(deteriorated)
+        self.assertEqual(result["rolling_status"], "ROLLING_REVIEW_REQUIRED")
+        self.assertEqual(result["status"], "REVIEW_REQUIRED")
+        self.assertFalse(result["live_trading_eligible"])
+
+    def test_rolling_window_rejects_invalid_trade_pnl(self):
+        account = {
+            "completed_trades": 12,
+            "max_drawdown_pct": 1.0,
+            "profit_factor": 1.0,
+            "return_pct": 1.0,
+            "risk_pause_reasons": [],
+            "recent_trades": [{"pnl_usd": float("nan")}],
+        }
+        with self.assertRaisesRegex(ValueError, "Recent trade PnL"):
+            assess_sleeve_health(account)
+
     def test_health_assessment_rejects_invalid_metrics(self):
         invalid = {
             "completed_trades": True,
