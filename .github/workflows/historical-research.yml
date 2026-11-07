@@ -40,9 +40,11 @@ jobs:
           path: |
             paper_daily_sma20_50.json
             paper_4h_ema50_200.json
-          key: whj-mtf-paper-v4-${{ github.run_id }}-${{ github.run_attempt }}
+            paper_daily_bollinger.json
+          key: whj-mtf-paper-v5-${{ github.run_id }}-${{ github.run_attempt }}
           restore-keys: |
             whj-mtf-paper-v4-
+            whj-mtf-paper-v5-
 
       - name: Run historical data ingestion tests
         run: python -m unittest discover -s tests -p 'test_historical_research.py' -v
@@ -57,7 +59,7 @@ jobs:
           path: |
             paper_daily_sma20_50.json
             paper_4h_ema50_200.json
-          key: whj-mtf-paper-v4-${{ github.run_id }}-${{ github.run_attempt }}
+          key: whj-mtf-paper-v5-${{ github.run_id }}-${{ github.run_attempt }}
 
       - name: Save historical research report
         uses: actions/upload-artifact@v4
