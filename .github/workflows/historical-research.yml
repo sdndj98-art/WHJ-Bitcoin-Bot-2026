@@ -1,4 +1,4 @@
-name: WHJ Ten-Year Historical Strategy Research
+name: WHJ Extended Historical Strategy Research
 
 on:
   workflow_dispatch:
@@ -18,11 +18,11 @@ permissions:
   contents: read
 
 concurrency:
-  group: whj-ten-year-historical-research
+  group: whj-extended-historical-research
   cancel-in-progress: false
 
 jobs:
-  ten-year-research:
+  extended-history-research:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
@@ -51,7 +51,7 @@ jobs:
       - name: Run historical data ingestion tests
         run: python -m unittest discover -s tests -p 'test_historical_research.py' -v
 
-      - name: Run ten-year historical research
+      - name: Run extended historical research
         run: python historical_research.py
 
       - name: Save multi-timeframe paper account state
@@ -68,7 +68,7 @@ jobs:
       - name: Save historical research report
         uses: actions/upload-artifact@v4
         with:
-          name: whj-ten-year-research-${{ github.run_number }}
+          name: whj-extended-history-research-${{ github.run_number }}
           path: |
             historical_research.json
             strategy_qualification_report.md
