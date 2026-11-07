@@ -165,7 +165,23 @@ def update_paper_account(candles, state_path="paper_account_state.json",
         required_history = 200 if strategy in ("sma200_regime", "ema50_200_regime", "bollinger_mean_reversion") else 50
         if len(history) >= required_history:
             prior_close = history[-1]
-            if strategy == "ema50_200_regime":
+            if strategy == "bollinger_mean_reversion":
+                window = history[-20:]
+                mean = sum(window) / 20
+                variance = sum((value - mean) ** 2 for value in window) / 20
+                lower_band = mean - 2 * math.sqrt(variance)
+                regime_sma = sum(history[-200:]) / 200
+                if state["btc"] <= 0:
+                    want_long = prior_close < lower_band and prior_close > regime_sma
+                    want_flat = False
+                else:
+                    want_flat = (
+                        prior_close >= mean
+                        or prior_close < regime_sma
+                        or int(state.get("holding_bars", 0)) >= 10
+                    )
+                    want_long = not want_flat
+            elif strategy == "ema50_200_regime":
                 fast = _ema_last(history, 50)
                 slow = _ema_last(history, 200)
                 want_long = fast > slow and prior_close > slow
