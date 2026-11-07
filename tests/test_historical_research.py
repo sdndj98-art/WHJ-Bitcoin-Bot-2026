@@ -124,6 +124,10 @@ class HistoricalResearchTests(unittest.TestCase):
         result = run_ohlc_breakout_lab(bars)
         self.assertIn("donchian_55_20_sma200", result["strategies"])
         self.assertIn("buy_and_hold_25pct", result["strategies"])
+        self.assertTrue(all(
+            window["start_index"] >= result["split_index"]
+            for window in result["strategies"]["donchian_55_20"]["walk_forward_windows"]
+        ))
         self.assertTrue(math.isfinite(result["strategies"]["donchian_55_20"]["out_of_sample"]["return_pct"]))
 
     def test_long_short_research_charges_funding_and_matches_benchmark(self):
