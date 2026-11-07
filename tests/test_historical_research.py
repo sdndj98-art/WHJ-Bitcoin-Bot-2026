@@ -232,7 +232,7 @@ class HistoricalResearchTests(unittest.TestCase):
                 bars, [direction, direction, direction], 1, 3,
                 fee, slippage, funding_rate_per_8h=0.0, bar_hours=24,
             )
-            entry_fill = 100.0 * (1 - direction * slippage)
+            entry_fill = 100.0 * (1 + direction * slippage)
             units = direction * 250.0 / entry_fill
             entry_fee = 250.0 * fee
             cash = 1000.0 - units * entry_fill - entry_fee
