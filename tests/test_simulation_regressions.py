@@ -8,6 +8,32 @@ from pathlib import Path
 from paper_account import _ema_last, run_paper_portfolio, update_paper_account
 from paper_trading import run_backtest
 from strategy_lab import _simulate, run_strategy_lab
+from risk_analysis import monte_carlo_trade_risk
+
+
+class MonteCarloRiskTests(unittest.TestCase):
+    def test_bootstrap_risk_is_reproducible_and_reports_tail_risk(self):
+        trades = [
+            {"pnl": 12.0}, {"pnl": -8.0}, {"pnl": 15.0},
+            {"pnl": -10.0}, {"pnl": 4.0}, {"pnl": -3.0},
+        ]
+        first = monte_carlo_trade_risk(trades, simulations=1000, seed=7)
+        second = monte_carlo_trade_risk(trades, simulations=1000, seed=7)
+        self.assertEqual(first, second)
+        self.assertEqual(first["trade_count"], len(trades))
+        self.assertEqual(first["simulations"], 1000)
+        self.assertGreaterEqual(first["p95_max_drawdown_pct"], first["median_max_drawdown_pct"])
+        self.assertIn("serial dependence", " ".join(first["limitations"]))
+
+    def test_bootstrap_risk_handles_empty_trades_and_rejects_invalid_input(self):
+        self.assertEqual(
+            monte_carlo_trade_risk([])["status"],
+            "INSUFFICIENT_TRADES",
+        )
+        with self.assertRaises(ValueError):
+            monte_carlo_trade_risk([{"pnl": float("nan")}])
+        with self.assertRaises(ValueError):
+            monte_carlo_trade_risk([{"pnl": 1.0}], simulations=99)
 
 
 class StrategyLabTests(unittest.TestCase):
