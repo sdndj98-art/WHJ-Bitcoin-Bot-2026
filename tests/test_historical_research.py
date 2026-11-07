@@ -4,7 +4,7 @@ import unittest
 from datetime import datetime, timezone
 from unittest.mock import patch
 
-from historical_research import (INTERVAL_MS, aggregate_candles, load_two_year_candles, run_forward_paper_accounts, run_ohlc_breakout_lab, run_long_short_lab, run_daily_regime_filter_lab, _atr_series, _regime_switching_atr_signals, _rsi_series, _simulate_ohlc, assess_strategy_qualification, assess_research_lab_qualification, build_qualification_markdown, summarize_qualification, _turtle_signals)
+from historical_research import (INTERVAL_MS, aggregate_candles, load_two_year_candles, run_forward_paper_accounts, run_ohlc_breakout_lab, run_long_short_lab, run_daily_regime_filter_lab, run_multi_timeframe_ensemble_lab, _atr_series, _regime_switching_atr_signals, _rsi_series, _simulate_ohlc, assess_strategy_qualification, assess_research_lab_qualification, build_qualification_markdown, summarize_qualification, _turtle_signals)
 
 
 class HistoricalResearchTests(unittest.TestCase):
@@ -272,6 +272,29 @@ class HistoricalResearchTests(unittest.TestCase):
         self.assertEqual(values[-1], 100.0)
         with self.assertRaises(ValueError):
             _rsi_series([1.0, 2.0], 2)
+
+    def test_multi_timeframe_ensemble_uses_completed_4h_and_6h_series(self):
+        candles = []
+        for index in range(24 * 210):
+            timestamp = index * INTERVAL_MS
+            price = 50000.0 + index * 0.2
+            candles.append({
+                "timestamp": timestamp,
+                "open": price - 1,
+                "high": price + 3,
+                "low": price - 3,
+                "close": price,
+                "volume": 2.0,
+                "imputed": False,
+            })
+        result = run_multi_timeframe_ensemble_lab(candles)
+        self.assertEqual(result["bar_count_4h"], 24 * 210 // 4)
+        self.assertEqual(result["bar_count_6h"], 24 * 210 // 6)
+        self.assertIn("last fully closed 6h", result["execution"])
+        candidate = result["strategies"]["ema50_200_4h_6h_consensus"]
+        self.assertEqual(len(candidate["walk_forward_windows"]), 3)
+        self.assertTrue(math.isfinite(candidate["out_of_sample"]["return_pct"]))
+        self.assertIn("buy_and_hold_25pct", result["strategies"])
 
     def test_daily_regime_filter_uses_complete_daily_history(self):
         candles = []
