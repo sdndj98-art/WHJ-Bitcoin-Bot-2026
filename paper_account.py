@@ -186,7 +186,8 @@ def update_paper_account(candles, state_path="paper_account_state.json",
 
             if state.get("daily_bucket") != datetime.fromtimestamp(timestamp, timezone.utc).date().isoformat():
                 state["daily_bucket"] = datetime.fromtimestamp(timestamp, timezone.utc).date().isoformat()
-                daily_mark = state["btc"] * close * (1 - slippage_rate)
+                prior_mark_price = history[-1] if history else close
+                daily_mark = state["btc"] * prior_mark_price * (1 - slippage_rate)
                 daily_mark -= daily_mark * fee_rate
                 state["daily_start_equity"] = state["cash"] + daily_mark
                 state["daily_loss_paused"] = False
