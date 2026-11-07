@@ -18,11 +18,11 @@ permissions:
   contents: read
 
 concurrency:
-  group: whj-two-year-historical-research
+  group: whj-five-year-historical-research
   cancel-in-progress: false
 
 jobs:
-  two-year-research:
+  five-year-research:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
@@ -40,14 +40,14 @@ jobs:
           path: |
             paper_daily_sma20_50.json
             paper_4h_ema50_200.json
-          key: whj-mtf-paper-v3-${{ github.run_id }}-${{ github.run_attempt }}
+          key: whj-mtf-paper-v4-${{ github.run_id }}-${{ github.run_attempt }}
           restore-keys: |
-            whj-mtf-paper-v1-
+            whj-mtf-paper-v4-
 
       - name: Run historical data ingestion tests
         run: python -m unittest discover -s tests -p 'test_historical_research.py' -v
 
-      - name: Run two-year historical research
+      - name: Run five-year historical research
         run: python historical_research.py
 
       - name: Save multi-timeframe paper account state
@@ -57,7 +57,7 @@ jobs:
           path: |
             paper_daily_sma20_50.json
             paper_4h_ema50_200.json
-          key: whj-mtf-paper-v1-${{ github.run_id }}-${{ github.run_attempt }}
+          key: whj-mtf-paper-v4-${{ github.run_id }}-${{ github.run_attempt }}
 
       - name: Save historical research report
         uses: actions/upload-artifact@v4
