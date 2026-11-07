@@ -208,6 +208,18 @@ class HistoricalResearchTests(unittest.TestCase):
         ))
         self.assertTrue(math.isfinite(result["strategies"]["donchian_55_20"]["out_of_sample"]["return_pct"]))
 
+    def test_atr_trailing_exit_uses_completed_close_and_next_bar_execution(self):
+        bars = []
+        for index in range(56):
+            close = 100.0 + index
+            bars.append({"open": close - 0.1, "high": close + 0.2, "low": close - 0.2, "close": close, "volume": 1.0})
+        close = 140.0
+        bars.append({"open": 155.0, "high": 155.2, "low": 139.8, "close": close, "volume": 1.0})
+        signals = _turtle_signals(bars, 55, 20, atr_stop_multiple=3.0)
+        self.assertTrue(signals[55])
+        self.assertFalse(signals[56])
+        with self.assertRaises(ValueError):
+            _turtle_signals(bars, 55, 20, atr_stop_multiple=0)
     def test_ohlc_drawdown_includes_open_position_liquidation_costs(self):
         bars = [
             {"open": 100.0, "high": 101.0, "low": 99.0, "close": 100.0, "volume": 1.0},
