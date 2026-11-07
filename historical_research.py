@@ -325,7 +325,9 @@ def run_ohlc_breakout_lab(bars, fee=FEE_RATE, slippage=SLIPPAGE_RATE):
     peak = 1000.0
     max_drawdown = 0.0
     for row in bars[split:]:
-        equity = benchmark_cash + benchmark_units * float(row["close"])
+        liquidation = benchmark_units * float(row["close"]) * (1 - slippage)
+        liquidation -= liquidation * fee
+        equity = benchmark_cash + liquidation
         peak = max(peak, equity)
         max_drawdown = max(max_drawdown, (peak - equity) / peak * 100)
     exit_value = benchmark_units * float(bars[-1]["close"]) * (1 - slippage)
@@ -557,7 +559,13 @@ def _simulate_long_short(bars, signals, start, end, fee, slippage,
             cash -= funding
             funding_paid += funding
 
-        equity = cash + units * price
+        if units:
+            direction = 1 if units > 0 else -1
+            liquidation_fill = price * (1 - direction * slippage)
+            liquidation_fee = abs(units * liquidation_fill) * fee
+            equity = cash + units * liquidation_fill - liquidation_fee
+        else:
+            equity = cash
         peak = max(peak, equity)
         if peak > 0:
             max_drawdown = max(max_drawdown, (peak - equity) / peak * 100)
