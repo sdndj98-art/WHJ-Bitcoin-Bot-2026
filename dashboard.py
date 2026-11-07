@@ -72,7 +72,7 @@ def build_dashboard(report):
             html.escape(str(item.get("daily_loss_paused", "—")))
         )
         for name, item in portfolio.items()
-    ) or '<tr><td colspan="6">Persistent paper portfolio not available</td></tr>'
+    ) or '<tr><td colspan="9">Persistent paper portfolio not available</td></tr>'
     lab = report.get("strategy_lab", {}).get("strategies", {})
     strategy_rows = "".join(
         "<tr><td>{}</td><td>{}</td><td>{}</td><td>{}</td><td>{}</td></tr>".format(
