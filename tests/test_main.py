@@ -59,6 +59,8 @@ class PaperTradingTests(unittest.TestCase):
         self.assertEqual(result["final_equity_usd"], 1000.0)
         self.assertEqual(result["completed_trades"], 0)
         self.assertFalse(result["open_position"])
+        self.assertEqual(result["max_drawdown_pct"], 0.0)
+        self.assertEqual(result["profit_factor"], 0.0)
 
     def test_rejects_short_history(self):
         with self.assertRaises(ValueError):
@@ -67,6 +69,17 @@ class PaperTradingTests(unittest.TestCase):
     def test_rejects_invalid_fee(self):
         with self.assertRaises(ValueError):
             run_backtest([100.0] * 51, fee_rate=1.0)
+
+    def test_rejects_non_finite_prices(self):
+        with self.assertRaises(ValueError):
+            run_backtest([100.0] * 50 + [float("nan")])
+
+    def test_returns_risk_and_trade_quality_metrics(self):
+        result = run_backtest([float(i) for i in range(1, 101)])
+        self.assertIn("max_drawdown_pct", result)
+        self.assertIn("average_trade_pnl_usd", result)
+        self.assertIn("profit_factor", result)
+        self.assertIn("max_consecutive_losses", result)
 
 
 class ReportingTests(unittest.TestCase):
@@ -77,7 +90,10 @@ class ReportingTests(unittest.TestCase):
             "paper_backtest": {
                 "final_equity_usd": 1010, "return_pct": 1.0,
                 "completed_trades": 1, "win_rate_pct": 100,
-                "fees_paid_usd": 2, "trade_log": [{"result": "WIN", "pnl": 10}]
+                "fees_paid_usd": 2, "max_drawdown_pct": 3.2,
+                "average_trade_pnl_usd": 10, "profit_factor": None,
+                "max_consecutive_losses": 0,
+                "trade_log": [{"result": "WIN", "pnl": 10}]
             }
         }
 
@@ -87,6 +103,7 @@ class ReportingTests(unittest.TestCase):
         page = build_dashboard(report)
         self.assertIn("BTC/USD", page)
         self.assertIn("1010", page)
+        self.assertIn("Max drawdown (%)", page)
         self.assertNotIn("<script>alert(1)</script>", page)
 
     def test_telegram_message_contains_signal_and_paper_equity(self):
