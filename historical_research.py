@@ -830,6 +830,45 @@ def build_qualification_markdown(result):
             )
         lines.append("")
 
+    # Diagnostic shortlist only: rank by the weaker of base/stress benchmark edges.
+    # This is deliberately not a promotion gate and never changes qualification.
+    watchlist = []
+    for group_name, strategies in groups.items():
+        if group_name == "Hourly / multi-timeframe strategies":
+            candidates = [
+                (f"{timeframe} / {name}", qualification)
+                for timeframe, timeframe_strategies in strategies.items()
+                for name, qualification in timeframe_strategies.items()
+            ]
+        else:
+            candidates = list(strategies.items())
+        for name, qualification in candidates:
+            comparison = qualification.get("benchmark_comparison", {})
+            if comparison.get("benchmark_available"):
+                base_edge = comparison.get("oos_outperformance_pct_points")
+                stress_edge = comparison.get("stress_oos_outperformance_pct_points")
+                if base_edge is not None and stress_edge is not None:
+                    watchlist.append((min(base_edge, stress_edge), name, base_edge, stress_edge, qualification))
+    watchlist.sort(key=lambda item: item[0], reverse=True)
+    if watchlist:
+        lines.extend([
+            "## Benchmark-edge research watchlist (diagnostic only)",
+            "",
+            "Sorted by the weaker of base-cost and elevated-cost benchmark edges. "
+            "This shortlist is for choosing what to investigate next; it does not waive "
+            "trade-count, drawdown, profit-factor, or walk-forward gates.",
+            "",
+        ])
+        for _, name, base_edge, stress_edge, qualification in watchlist[:5]:
+            status = "qualified for extended paper review" if qualification.get(
+                "qualified_for_extended_paper_review", False
+            ) else "not qualified"
+            lines.append(
+                f"- **{name}** ({status}): {base_edge:+.2f} pp base; "
+                f"{stress_edge:+.2f} pp elevated costs."
+            )
+        lines.append("")
+
     total = passed = 0
     for group_name, strategies in groups.items():
         lines.extend([f"## {group_name}", ""])
