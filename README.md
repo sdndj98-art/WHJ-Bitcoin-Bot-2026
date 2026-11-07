@@ -28,7 +28,7 @@ Create two GitHub Actions repository secrets:
 If both secrets exist, each successful analysis sends a concise report. Without them, the Telegram step is skipped. Never put tokens in source code, commits, or workflow text.
 
 ## Automated schedule
-GitHub Actions runs tests and analysis on pushes to `main`, hourly at minute 7 (UTC), and when manually started from the Actions tab. Each run uploads `report.json` and `dashboard.html` as an artifact retained for 14 days.
+GitHub Actions runs tests and analysis on pushes to `main`, hourly at minute 7 (UTC), and when manually started from the Actions tab. Each run uploads `report.json` and `dashboard.html` as an artifact retained for 14 days. The optional Telegram step is skipped safely unless both repository secrets are configured.
 
 ## Indicator
 - BUY when latest closed price > SMA20 > SMA50.
