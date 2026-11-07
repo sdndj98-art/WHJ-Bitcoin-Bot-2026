@@ -168,15 +168,27 @@ function render(){if(!report)return;const a=report.persistent_paper_account||{},
 let forwardReport=null;
 function validateForwardReport(x){
  const n=v=>typeof v==="number"&&Number.isFinite(v);
+ const integer=v=>Number.isInteger(v)&&v>=0;
  if(!x||typeof x!=="object"||Array.isArray(x)||x.schema_version!==1||x.mode!=="FORWARD_ONLY_PAPER_NO_LIVE_ORDERS")throw Error("صيغة التقرير غير مدعومة أو ليست تقرير مراقبة ورقية");
- if(!n(x.initial_cash_usd)||x.initial_cash_usd<=0||!n(x.equity_after_estimated_exit_costs_usd)||x.equity_after_estimated_exit_costs_usd<=0||!n(x.return_pct)||!Number.isInteger(x.completed_trades)||x.completed_trades<0)throw Error("قيم المحفظة الأساسية غير صالحة");
+ if(!n(x.initial_cash_usd)||x.initial_cash_usd<=0||!n(x.equity_after_estimated_exit_costs_usd)||x.equity_after_estimated_exit_costs_usd<=0||!n(x.return_pct)||!integer(x.completed_trades))throw Error("قيم المحفظة الأساسية غير صالحة");
  const keys=["1h_sma_trend","1h_ema_trend","1h_rsi14_mean_reversion","4h","6h"];
- if(!x.sleeves_summary||!keys.every(k=>{const a=x.sleeves_summary[k];return a&&n(a.equity_usd)&&a.equity_usd>0&&n(a.return_pct)&&Number.isInteger(a.completed_trades)&&a.completed_trades>=0&&Array.isArray(a.risk_pause_reasons)&&n(a.cash_usd)&&a.cash_usd>=0&&n(a.btc_units)&&a.btc_units>=0&&n(a.exposure_usd)&&a.exposure_usd>=0&&n(a.exposure_pct_of_equity)&&a.exposure_pct_of_equity>=0&&n(a.fees_paid_usd)&&a.fees_paid_usd>=0&&Number.isInteger(a.current_consecutive_losses)&&a.current_consecutive_losses>=0&&typeof a.open_position==="boolean"&&Math.abs(a.exposure_pct_of_equity-(a.exposure_usd/a.equity_usd*100))<=0.02;}))throw Error("بيانات الاستراتيجيات الخمس أو تفاصيل التعرّض غير مكتملة");
- if(!n(x.cash_usd)||x.cash_usd<0||!n(x.btc_units)||x.btc_units<0||!n(x.gross_exposure_usd)||x.gross_exposure_usd<0||!n(x.gross_exposure_pct_of_equity)||x.gross_exposure_pct_of_equity<0||!n(x.fees_paid_usd)||x.fees_paid_usd<0||!Number.isInteger(x.open_positions)||x.open_positions<0||x.open_positions>5)throw Error("ملخص التعرّض والسيولة غير صالح");
+ if(!x.sleeves_summary||!keys.every(k=>{
+  const a=x.sleeves_summary[k];
+  if(!a||!n(a.equity_usd)||a.equity_usd<=0||!n(a.return_pct)||!integer(a.completed_trades)||!n(a.win_rate_pct)||a.win_rate_pct<0||a.win_rate_pct>100||(a.profit_factor!==null&&a.profit_factor!==undefined&&(!n(a.profit_factor)||a.profit_factor<0))||!n(a.max_drawdown_pct)||a.max_drawdown_pct<0||a.max_drawdown_pct>100||!Array.isArray(a.risk_pause_reasons)||a.risk_pause_reasons.some(v=>typeof v!=="string")||!n(a.cash_usd)||a.cash_usd<0||!n(a.btc_units)||a.btc_units<0||!n(a.exposure_usd)||a.exposure_usd<0||!n(a.exposure_pct_of_equity)||a.exposure_pct_of_equity<0||!n(a.fees_paid_usd)||a.fees_paid_usd<0||!integer(a.current_consecutive_losses)||typeof a.open_position!=="boolean")return false;
+  if((a.btc_units>0)!==a.open_position||(a.btc_units===0&&a.exposure_usd>0.02)||a.cash_usd+a.exposure_usd+0.02<a.equity_usd)return false;
+  if(Math.abs(a.exposure_pct_of_equity-(a.exposure_usd/a.equity_usd*100))>0.02)return false;
+  const h=a.health_assessment;
+  if(!h||typeof h!=="object"||!["RISK_PAUSED","INSUFFICIENT_FORWARD_SAMPLE","REVIEW_REQUIRED","CONTINUE_PAPER_REVIEW"].includes(h.status)||h.live_trading_eligible!==false)return false;
+  if(h.rolling_status!==undefined&&!["ROLLING_REVIEW_REQUIRED","ROLLING_STABLE","INSUFFICIENT_ROLLING_SAMPLE"].includes(h.rolling_status))return false;
+  if(h.rolling_net_pnl_usd!==undefined&&!n(h.rolling_net_pnl_usd))return false;
+  if(h.rolling_max_drawdown_pct!==undefined&&(!n(h.rolling_max_drawdown_pct)||h.rolling_max_drawdown_pct<0||h.rolling_max_drawdown_pct>100))return false;
+  if(h.rolling_window_trades!==undefined&&!integer(h.rolling_window_trades))return false;
+  return true;
+ }))throw Error("بيانات الاستراتيجيات الخمس أو تفاصيل المخاطر والتعرّض غير صالحة");
+ if(!n(x.cash_usd)||x.cash_usd<0||!n(x.btc_units)||x.btc_units<0||!n(x.gross_exposure_usd)||x.gross_exposure_usd<0||!n(x.gross_exposure_pct_of_equity)||x.gross_exposure_pct_of_equity<0||!n(x.fees_paid_usd)||x.fees_paid_usd<0||!integer(x.open_positions)||x.open_positions>5)throw Error("ملخص التعرّض والسيولة غير صالح");
  const sumField=key=>keys.reduce((sum,k)=>sum+x.sleeves_summary[k][key],0);
  if(Math.abs(sumField("cash_usd")-x.cash_usd)>0.02||Math.abs(sumField("btc_units")-x.btc_units)>0.00000002||Math.abs(sumField("exposure_usd")-x.gross_exposure_usd)>0.02||Math.abs(sumField("fees_paid_usd")-x.fees_paid_usd)>0.0002||keys.reduce((sum,k)=>sum+(x.sleeves_summary[k].open_position?1:0),0)!==x.open_positions)throw Error("تفاصيل الحسابات لا تطابق إجمالي التعرّض والسيولة");
  if(Math.abs(x.gross_exposure_pct_of_equity-(x.gross_exposure_usd/x.equity_after_estimated_exit_costs_usd*100))>0.02)throw Error("نسبة التعرّض الإجمالية لا تطابق قيمة المحفظة");
- for(const k of keys){const h=x.sleeves_summary[k].health_assessment;if(h&&(!["RISK_PAUSED","INSUFFICIENT_FORWARD_SAMPLE","REVIEW_REQUIRED","CONTINUE_PAPER_REVIEW"].includes(h.status)||h.live_trading_eligible!==false||(h.rolling_status!==undefined&&!["ROLLING_REVIEW_REQUIRED","ROLLING_STABLE","INSUFFICIENT_ROLLING_SAMPLE"].includes(h.rolling_status))))throw Error("تقييم صحة الاستراتيجية غير صالح");}
  const sleeveEquity=keys.reduce((sum,k)=>sum+x.sleeves_summary[k].equity_usd,0);
  const sleeveTrades=keys.reduce((sum,k)=>sum+x.sleeves_summary[k].completed_trades,0);
  if(Math.abs(sleeveEquity-x.equity_after_estimated_exit_costs_usd)>0.02||sleeveTrades!==x.completed_trades)throw Error("إجماليات الحسابات لا تطابق ملخص المحفظة");
@@ -185,13 +197,13 @@ function validateForwardReport(x){
  if(!x.data_quality||x.data_quality.quality!=="HEALTHY")throw Error("جودة بيانات السوق لا تسمح بعرض التقرير كحالة سليمة");
  const dq=x.data_quality;
  if(dq.imputed_hourly_candles!==undefined||dq.total_hourly_candles!==undefined||dq.imputed_hourly_pct!==undefined){
-  if(!Number.isInteger(dq.imputed_hourly_candles)||dq.imputed_hourly_candles<0||!Number.isInteger(dq.total_hourly_candles)||dq.total_hourly_candles<1||dq.imputed_hourly_candles>dq.total_hourly_candles||!n(dq.imputed_hourly_pct)||dq.imputed_hourly_pct<0||dq.imputed_hourly_pct>100||Math.abs(dq.imputed_hourly_pct-dq.imputed_hourly_candles/dq.total_hourly_candles*100)>0.01)throw Error("إحصاءات الشموع التاريخية الاصطناعية غير متسقة");
+  if(!integer(dq.imputed_hourly_candles)||!integer(dq.total_hourly_candles)||dq.total_hourly_candles<1||dq.imputed_hourly_candles>dq.total_hourly_candles||!n(dq.imputed_hourly_pct)||dq.imputed_hourly_pct<0||dq.imputed_hourly_pct>100||Math.abs(dq.imputed_hourly_pct-dq.imputed_hourly_candles/dq.total_hourly_candles*100)>0.01)throw Error("إحصاءات الشموع التاريخية الاصطناعية غير متسقة");
  }
- if(typeof x.generated_at_utc!=="string"||!Number.isFinite(Date.parse(x.generated_at_utc))||!Number.isFinite(x.latest_hourly_candle_timestamp))throw Error("الطوابع الزمنية في التقرير غير صالحة");
+ if(typeof x.generated_at_utc!=="string"||!Number.isFinite(Date.parse(x.generated_at_utc))||!n(x.latest_hourly_candle_timestamp)||x.latest_hourly_candle_timestamp<=0)throw Error("الطوابع الزمنية في التقرير غير صالحة");
  if(!["PAPER_MONITORING","RISK_PAUSED","REVIEW_REQUIRED"].includes(x.status))throw Error("حالة المراقبة غير معروفة");
  if(x.cycle_status!==undefined||x.total_processed_new_candles!==undefined){
-  if(!["WAITING_FOR_NEW_CLOSED_CANDLES","PROCESSED_NEW_CANDLES"].includes(x.cycle_status)||!Number.isInteger(x.total_processed_new_candles)||x.total_processed_new_candles<0)throw Error("حالة دورة المراقبة غير صالحة");
-  const processed=keys.reduce((sum,k)=>sum+(Number.isInteger(x.sleeves_summary[k].processed_new_candles)?x.sleeves_summary[k].processed_new_candles:0),0);
+  if(!["WAITING_FOR_NEW_CLOSED_CANDLES","PROCESSED_NEW_CANDLES"].includes(x.cycle_status)||!integer(x.total_processed_new_candles))throw Error("حالة دورة المراقبة غير صالحة");
+  const processed=keys.reduce((sum,k)=>sum+(integer(x.sleeves_summary[k].processed_new_candles)?x.sleeves_summary[k].processed_new_candles:0),0);
   if(processed!==x.total_processed_new_candles||(x.cycle_status==="WAITING_FOR_NEW_CLOSED_CANDLES")!==(processed===0))throw Error("إجمالي الشموع المعالجة لا يطابق حسابات الاستراتيجيات");
  }
  return x;
