@@ -123,17 +123,35 @@ def run_strategy_lab(prices, fee=0.001, slippage=0.0005):
         }
 
     # Buy-and-hold benchmark over exactly the same out-of-sample window.
-    start_price = prices[split]
-    end_price = prices[-1]
+    # Apply the same fee and slippage assumptions on entry and liquidation.
+    start_price = float(prices[split]) * (1 + slippage)
+    entry_fee = 1000.0 * fee
+    benchmark_units = (1000.0 - entry_fee) / start_price
+    benchmark_entry_cost = 1000.0
+    benchmark_peak = 1000.0
+    benchmark_max_dd = 0.0
+    benchmark_equity = 1000.0
+    for price in prices[split:]:
+        liquidation_value = benchmark_units * float(price) * (1 - slippage)
+        liquidation_value -= liquidation_value * fee
+        benchmark_equity = liquidation_value
+        benchmark_peak = max(benchmark_peak, benchmark_equity)
+        if benchmark_peak > 0:
+            benchmark_max_dd = max(
+                benchmark_max_dd,
+                (benchmark_peak - benchmark_equity) / benchmark_peak * 100,
+            )
+    benchmark_pnl = benchmark_equity - benchmark_entry_cost
     results["buy_and_hold"] = {
         "out_of_sample": {
-            "return_pct": round((end_price / start_price - 1) * 100, 2),
-            "final_equity_usd": round(1000 * end_price / start_price, 2),
-            "max_drawdown_pct": None,
+            "return_pct": round((benchmark_equity / 1000.0 - 1) * 100, 2),
+            "final_equity_usd": round(benchmark_equity, 2),
+            "max_drawdown_pct": round(benchmark_max_dd, 2),
             "closed_trades": 1,
-            "win_rate_pct": 100.0 if end_price > start_price else 0.0,
+            "win_rate_pct": 100.0 if benchmark_pnl > 0 else 0.0,
             "profit_factor": None,
-            "open_position": True,
+            "open_position": False,
+            "fees_and_slippage_included": True,
         }
     }
     return {
