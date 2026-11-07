@@ -348,6 +348,180 @@ def run_ohlc_breakout_lab(bars, fee=FEE_RATE, slippage=SLIPPAGE_RATE):
     }
 
 
+def _directional_signals(bars):
+    closes = [float(row["close"]) for row in bars]
+    ema50 = [None] * len(bars)
+    ema200 = [None] * len(bars)
+    alpha50 = 2.0 / 51.0
+    alpha200 = 2.0 / 201.0
+    current50 = closes[0]
+    current200 = closes[0]
+    for i, close in enumerate(closes):
+        current50 = alpha50 * close + (1 - alpha50) * current50
+        current200 = alpha200 * close + (1 - alpha200) * current200
+        ema50[i] = current50
+        ema200[i] = current200
+
+    sma200 = [None] * len(bars)
+    for i in range(199, len(bars)):
+        sma200[i] = sum(closes[i - 199:i + 1]) / 200
+
+    signals = {
+        "sma200_long_short": [0] * len(bars),
+        "ema50_200_long_short": [0] * len(bars),
+        "donchian_55_20_long_short": [],
+    }
+    donchian_direction = 0
+    for i, row in enumerate(bars):
+        close = closes[i]
+        if sma200[i] is not None:
+            signals["sma200_long_short"][i] = 1 if close >= sma200[i] else -1
+            signals["ema50_200_long_short"][i] = 1 if ema50[i] >= ema200[i] else -1
+
+        if donchian_direction == 1 and i >= 20 and close < min(
+            float(bars[j]["low"]) for j in range(i - 20, i)
+        ):
+            donchian_direction = 0
+        elif donchian_direction == -1 and i >= 20 and close > max(
+            float(bars[j]["high"]) for j in range(i - 20, i)
+        ):
+            donchian_direction = 0
+        elif donchian_direction == 0 and i >= 55:
+            prior_high = max(float(bars[j]["high"]) for j in range(i - 55, i))
+            prior_low = min(float(bars[j]["low"]) for j in range(i - 55, i))
+            if close > prior_high:
+                donchian_direction = 1
+            elif close < prior_low:
+                donchian_direction = -1
+        signals["donchian_55_20_long_short"].append(donchian_direction)
+    return signals
+
+
+def _simulate_long_short(bars, signals, start, end, fee, slippage,
+                         funding_rate_per_8h=0.00005, bar_hours=24):
+    cash = 1000.0
+    units = 0.0
+    entry_price = 0.0
+    entry_fee = 0.0
+    funding_paid = 0.0
+    trades = []
+    peak = cash
+    max_drawdown = 0.0
+    fees_paid = 0.0
+
+    for i in range(max(start, 1), end):
+        price = float(bars[i]["close"])
+        target = int(signals[i - 1])
+        current = 1 if units > 0 else (-1 if units < 0 else 0)
+
+        if target != current:
+            if units:
+                exit_fill = price * (1 - current * slippage)
+                exit_fee = abs(units * exit_fill) * fee
+                pnl = (exit_fill - entry_price) * units - entry_fee - exit_fee - funding_paid
+                cash += units * exit_fill - exit_fee
+                trades.append(pnl)
+                fees_paid += exit_fee
+                units = 0.0
+                entry_price = 0.0
+                entry_fee = 0.0
+                funding_paid = 0.0
+
+            if target:
+                equity = cash
+                notional = max(0.0, equity * 0.25)
+                entry_fee = notional * fee
+                entry_fill = price * (1 + target * slippage)
+                units = target * (notional - entry_fee) / entry_fill
+                cash -= units * entry_fill
+                entry_price = entry_fill
+                fees_paid += entry_fee
+
+        if units:
+            funding = abs(units * price) * funding_rate_per_8h * (bar_hours / 8.0)
+            cash -= funding
+            funding_paid += funding
+
+        equity = cash + units * price
+        peak = max(peak, equity)
+        if peak > 0:
+            max_drawdown = max(max_drawdown, (peak - equity) / peak * 100)
+
+    if units:
+        direction = 1 if units > 0 else -1
+        exit_fill = float(bars[end - 1]["close"]) * (1 - direction * slippage)
+        exit_fee = abs(units * exit_fill) * fee
+        final_equity = cash + units * exit_fill - exit_fee
+        final_pnl = (exit_fill - entry_price) * units - entry_fee - exit_fee - funding_paid
+        trades.append(final_pnl)
+        fees_paid += exit_fee
+    else:
+        final_equity = cash
+
+    wins = sum(1 for pnl in trades if pnl > 0)
+    gross_profit = sum(pnl for pnl in trades if pnl > 0)
+    gross_loss = -sum(pnl for pnl in trades if pnl < 0)
+    return {
+        "return_pct": round((final_equity / 1000 - 1) * 100, 2),
+        "final_equity_usd": round(final_equity, 2),
+        "max_drawdown_pct": round(max_drawdown, 2),
+        "closed_trades": len(trades),
+        "win_rate_pct": round(wins / len(trades) * 100, 2) if trades else 0.0,
+        "profit_factor": round(gross_profit / gross_loss, 2) if gross_loss else (None if gross_profit else 0.0),
+        "fees_paid_usd": round(fees_paid, 4),
+        "funding_paid_usd": round(funding_paid, 4),
+        "open_position": False,
+    }
+
+
+def run_long_short_lab(bars, fee=FEE_RATE, slippage=SLIPPAGE_RATE,
+                       funding_rate_per_8h=0.00005):
+    """Research unlevered 25%-notional long/short futures signals with funding costs."""
+    if len(bars) < 500:
+        raise ValueError("At least 500 daily bars are required for long/short research")
+    signals = _directional_signals(bars)
+    split = int(len(bars) * 0.7)
+    walk_start = max(200, len(bars) // 2)
+    edges = [walk_start + ((len(bars) - walk_start) * k) // 3 for k in range(4)]
+    results = {}
+    for name, values in signals.items():
+        windows = []
+        for fold in range(3):
+            start, end = edges[fold], edges[fold + 1]
+            if end > start:
+                windows.append({
+                    "window": fold + 1,
+                    "start_index": start,
+                    "end_index_exclusive": end,
+                    "metrics": _simulate_long_short(
+                        bars, values, start, end, fee, slippage, funding_rate_per_8h
+                    ),
+                })
+        returns = [window["metrics"]["return_pct"] for window in windows]
+        results[name] = {
+            "in_sample": _simulate_long_short(
+                bars, values, 200, split, fee, slippage, funding_rate_per_8h
+            ),
+            "out_of_sample": _simulate_long_short(
+                bars, values, split, len(bars), fee, slippage, funding_rate_per_8h
+            ),
+            "walk_forward_windows": windows,
+            "worst_window_return_pct": min(returns) if returns else None,
+        }
+    return {
+        "mode": "UNLEVERED_LONG_SHORT_PAPER_RESEARCH",
+        "sample_count": len(bars),
+        "split_index": split,
+        "position_notional_pct": 25,
+        "fee_each_side": fee,
+        "slippage_each_side": slippage,
+        "funding_rate_per_8h_assumption": funding_rate_per_8h,
+        "funding_note": "A symmetric funding cost is charged to both long and short exposure; actual perpetual funding varies and can be positive or negative.",
+        "leverage": 1,
+        "strategies": results,
+    }
+
+
 def run_forward_paper_accounts(candles, state_dir="."):
     """Maintain independent 1d and 4h paper accounts across daily workflow runs."""
     directory = Path(state_dir)
@@ -406,6 +580,10 @@ def main():
     daily_bars = aggregate_candles(candles, 24)
     ohlc_breakout_research = run_ohlc_breakout_lab(daily_bars)
     ohlc_breakout_stress = run_ohlc_breakout_lab(daily_bars, fee=0.002, slippage=0.001)
+    long_short_research = run_long_short_lab(daily_bars)
+    long_short_stress = run_long_short_lab(
+        daily_bars, fee=0.002, slippage=0.001, funding_rate_per_8h=0.0001
+    )
     forward_paper = run_forward_paper_accounts(candles)
     result = {
         "project": "WHJ Bitcoin Bot",
@@ -430,6 +608,8 @@ def main():
         "forward_paper_accounts": forward_paper,
         "ohlc_breakout_research": ohlc_breakout_research,
         "ohlc_breakout_stress": ohlc_breakout_stress,
+        "long_short_research": long_short_research,
+        "long_short_stress": long_short_stress,
         "warning": "Historical results are not forecasts. Strategy selection requires robust out-of-sample performance and forward paper trading. No live orders were placed.",
     }
     Path("historical_research.json").write_text(
