@@ -82,7 +82,7 @@ class PersistentPaperAccountTests(unittest.TestCase):
             candles = self.make_candles([100.0 + (i % 40) * 0.4 for i in range(180)])
             first = run_paper_portfolio(candles, state_dir=folder)
             second = run_paper_portfolio(candles, state_dir=folder)
-            self.assertEqual(set(first["accounts"]), {"sma_trend", "ema_trend", "rsi_momentum"})
+            self.assertEqual(set(first["accounts"]), {"sma_trend", "ema_trend", "rsi_momentum", "sma200_regime"})
             for name, account in second["accounts"].items():
                 self.assertEqual(account["processed_new_candles"], 0)
                 self.assertEqual(account["strategy"], name)
