@@ -3,7 +3,7 @@ import unittest
 from datetime import datetime, timezone
 from unittest.mock import patch
 
-from historical_research import INTERVAL_MS, aggregate_candles, load_two_year_candles
+from historical_research import (INTERVAL_MS, aggregate_candles, load_two_year_candles, run_forward_paper_accounts)
 
 
 class HistoricalResearchTests(unittest.TestCase):
@@ -79,6 +79,30 @@ class HistoricalResearchTests(unittest.TestCase):
         self.assertEqual(four_hour[0]["high"], candles[3]["high"])
         self.assertTrue(four_hour[2]["imputed"])
         self.assertEqual(daily[0]["volume"], 24.0)
+
+    def test_forward_paper_accounts_persist_and_are_idempotent(self):
+        import tempfile
+
+        candles = []
+        for index in range(24 * 210):
+            timestamp = index * INTERVAL_MS
+            price = 50000.0 + index * 2.0
+            candles.append({
+                "timestamp": timestamp,
+                "open": price,
+                "high": price + 5,
+                "low": price - 5,
+                "close": price + 2,
+                "volume": 3.0,
+                "imputed": False,
+            })
+        with tempfile.TemporaryDirectory() as folder:
+            first = run_forward_paper_accounts(candles, state_dir=folder)
+            second = run_forward_paper_accounts(candles, state_dir=folder)
+        self.assertEqual(first["daily_sma20_50"]["processed_new_candles"], 210)
+        self.assertEqual(first["four_hour_ema50_200"]["processed_new_candles"], 1260)
+        self.assertEqual(second["daily_sma20_50"]["processed_new_candles"], 0)
+        self.assertEqual(second["four_hour_ema50_200"]["processed_new_candles"], 0)
 
     def test_invalid_ohlc_relationship_is_rejected(self):
         now = datetime(2026, 11, 7, 12, 0, tzinfo=timezone.utc)
