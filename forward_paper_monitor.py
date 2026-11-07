@@ -64,6 +64,52 @@ def validate_hourly_feed(candles, now_timestamp=None):
     return {"quality": "HEALTHY", "latest_closed_candle_age_minutes": round(age_minutes, 2)}
 
 
+
+def assess_sleeve_health(account, min_closed_trades=30, review_drawdown_pct=8.0):
+    """Conservative forward-health label; never promotes a strategy to live trading."""
+    import math
+    if not isinstance(account, dict):
+        raise ValueError("Paper account health input must be an object")
+    trades = account.get("completed_trades")
+    drawdown = account.get("max_drawdown_pct")
+    profit_factor = account.get("profit_factor")
+    returns = account.get("return_pct")
+    if isinstance(trades, bool) or not isinstance(trades, int) or trades < 0:
+        raise ValueError("Completed trade count is invalid")
+    for name, value in (("max drawdown", drawdown), ("return", returns)):
+        if isinstance(value, bool) or not isinstance(value, (int, float)) or not math.isfinite(value):
+            raise ValueError(name + " metric is invalid")
+    if profit_factor is not None and (
+        isinstance(profit_factor, bool)
+        or not isinstance(profit_factor, (int, float))
+        or not math.isfinite(profit_factor)
+        or profit_factor < 0
+    ):
+        raise ValueError("Profit factor metric is invalid")
+    pause_reasons = account.get("risk_pause_reasons", [])
+    if not isinstance(pause_reasons, list) or any(not isinstance(x, str) for x in pause_reasons):
+        raise ValueError("Risk pause reasons are invalid")
+    if pause_reasons:
+        status = "RISK_PAUSED"
+        reason = "Risk controls have paused this paper sleeve"
+    elif trades < min_closed_trades:
+        status = "INSUFFICIENT_FORWARD_SAMPLE"
+        reason = "Not enough genuinely forward-closed trades to judge performance"
+    elif drawdown >= review_drawdown_pct or returns <= 0 or profit_factor is None or profit_factor < 1:
+        status = "REVIEW_REQUIRED"
+        reason = "Forward results breached a conservative performance review threshold"
+    else:
+        status = "CONTINUE_PAPER_REVIEW"
+        reason = "Forward metrics pass the review screen; continue paper testing only"
+    return {
+        "status": status,
+        "reason": reason,
+        "minimum_closed_trades": min_closed_trades,
+        "review_drawdown_threshold_pct": review_drawdown_pct,
+        "live_trading_eligible": False,
+    }
+
+
 def _account_rows(bars):
     return [[int(row["timestamp"] // 1000), 0, 0, 0, str(row["close"])] for row in bars]
 
@@ -112,6 +158,7 @@ def process_forward_accounts(candles, state_dir=".", now_timestamp=None):
             "max_drawdown_pct": account["max_drawdown_pct"],
             "open_position": account["open_position"],
             "risk_pause_reasons": account["risk_pause_reasons"],
+            "health_assessment": assess_sleeve_health(account),
         }
     return {
         "schema_version": 1,
