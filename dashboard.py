@@ -59,7 +59,7 @@ def build_dashboard(report):
             html.escape(str(metrics.get("return_pct", "—"))),
             html.escape(str(metrics.get("max_drawdown_pct", "—"))),
             html.escape(str(metrics.get("closed_trades", "—"))),
-            html.escape(str(item.get("worst_window_return_pct", "—")))
+            html.escape(str(item.get("worst_window_return_pct") if item.get("worst_window_return_pct") is not None else "—"))
         )
         for name, item in lab.items()
         for metrics in [item.get("out_of_sample", {})]
