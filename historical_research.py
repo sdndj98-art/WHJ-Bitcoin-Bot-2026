@@ -294,7 +294,7 @@ def run_ohlc_breakout_lab(bars, fee=FEE_RATE, slippage=SLIPPAGE_RATE):
     for name, (entry, exit_period, regime) in strategies.items():
         signals = _turtle_signals(bars, entry, exit_period, regime)
         warmup = max(entry, regime or 0)
-        walk_start = max(warmup, len(bars) // 2)
+        walk_start = split
         edges = [walk_start + ((len(bars) - walk_start) * k) // 3 for k in range(4)]
         windows = []
         for fold in range(3):
@@ -485,7 +485,7 @@ def run_long_short_lab(bars, fee=FEE_RATE, slippage=SLIPPAGE_RATE,
         raise ValueError("Funding rate must be a finite non-negative number")
     signals = _directional_signals(bars)
     split = int(len(bars) * 0.7)
-    walk_start = max(200, len(bars) // 2)
+    walk_start = split
     edges = [walk_start + ((len(bars) - walk_start) * k) // 3 for k in range(4)]
     results = {}
     for name, values in signals.items():
