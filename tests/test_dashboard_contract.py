@@ -68,6 +68,8 @@ class DashboardContractTests(unittest.TestCase):
         self.assertIn("نسبة العائد لا تطابق قيمة المحفظة", self.source)
         self.assertIn('x.data_quality.quality!=="HEALTHY"', self.source)
         self.assertIn('accept=".json,application/json"', self.source)
+        self.assertIn("imputed_hourly_candles", self.source)
+        self.assertIn("شموع تاريخية اصطناعية", self.source)
 
 
 if __name__ == "__main__":
