@@ -62,6 +62,14 @@ def analyze(prices):
     else:
         signal = "HOLD"
 
+    strategy_lab = (run_strategy_lab(prices) if len(prices) >= 120 else {
+        "mode": "INSUFFICIENT_DATA",
+        "sample_count": len(prices),
+        "required_prices": 120,
+        "strategies": {},
+        "message": "Strategy holdout comparison requires at least 120 closed candles."
+    })
+
     return {
         "project": "WHJ Bitcoin Bot",
         "mode": "ANALYSIS_AND_HISTORICAL_PAPER_ONLY",
@@ -74,7 +82,7 @@ def analyze(prices):
         "SMA50": round(sma50, 2),
         "signal": signal,
         "paper_backtest": run_backtest(prices),
-        "strategy_lab": run_strategy_lab(prices),
+        "strategy_lab": strategy_lab,
         "disclaimer": "Historical simulation is not a forecast or financial advice. No real orders were placed."
     }
 
