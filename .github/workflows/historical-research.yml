@@ -1,0 +1,43 @@
+name: WHJ Two-Year Historical Strategy Research
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "37 6 * * *"
+  push:
+    branches: [main]
+    paths:
+      - "historical_research.py"
+      - "strategy_lab.py"
+      - ".github/workflows/historical-research.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: whj-two-year-historical-research
+  cancel-in-progress: false
+
+jobs:
+  two-year-research:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout project
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Run two-year historical research
+        run: python historical_research.py
+
+      - name: Save historical research report
+        uses: actions/upload-artifact@v4
+        with:
+          name: whj-two-year-research-${{ github.run_number }}
+          path: historical_research.json
+          if-no-files-found: error
+          retention-days: 30
