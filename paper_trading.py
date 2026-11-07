@@ -30,9 +30,10 @@ def run_backtest(prices, initial_cash=1000.0, fee_rate=0.001, slippage_rate=0.00
         history = prices[i - 50:i]
         sma20 = sum(history[-20:]) / 20
         sma50 = sum(history) / 50
+        signal_price = float(history[-1])
         reference_price = float(prices[i])
 
-        if reference_price > sma20 > sma50 and not position_open:
+        if signal_price > sma20 > sma50 and not position_open:
             fill = reference_price * (1 + slippage_rate)
             fee = cash * fee_rate
             spendable = cash - fee
@@ -41,7 +42,7 @@ def run_backtest(prices, initial_cash=1000.0, fee_rate=0.001, slippage_rate=0.00
             entry_cost = cash
             cash = 0.0
             position_open = True
-        elif reference_price < sma20 < sma50 and position_open:
+        elif signal_price < sma20 < sma50 and position_open:
             fill = reference_price * (1 - slippage_rate)
             gross = btc * fill
             fee = gross * fee_rate
@@ -94,5 +95,5 @@ def run_backtest(prices, initial_cash=1000.0, fee_rate=0.001, slippage_rate=0.00
         "open_position": position_open,
         "unrealized_pnl_usd": round(final_equity - entry_cost, 2) if position_open else 0.0,
         "trade_log": trades,
-        "execution_assumption": "Signal from prior 50 candles; modeled fill at current candle close with fee and slippage; no real orders."
+        "execution_assumption": "Signal uses only prior completed candles; execution is modeled at the next candle close with fee and slippage; no real orders."
     }
