@@ -68,6 +68,10 @@ def validate_hourly_feed(candles, now_timestamp=None):
 def assess_sleeve_health(account, min_closed_trades=30, review_drawdown_pct=8.0):
     """Conservative forward-health label; never promotes a strategy to live trading."""
     import math
+    if isinstance(min_closed_trades, bool) or not isinstance(min_closed_trades, int) or min_closed_trades < 1:
+        raise ValueError("Minimum closed trade threshold must be a positive integer")
+    if isinstance(review_drawdown_pct, bool) or not isinstance(review_drawdown_pct, (int, float)) or not math.isfinite(review_drawdown_pct) or not 0 < review_drawdown_pct <= 100:
+        raise ValueError("Review drawdown threshold must be between 0 and 100")
     if not isinstance(account, dict):
         raise ValueError("Paper account health input must be an object")
     trades = account.get("completed_trades")
@@ -164,7 +168,11 @@ def process_forward_accounts(candles, state_dir=".", now_timestamp=None):
         "schema_version": 1,
         "generated_at_utc": datetime.now(timezone.utc).isoformat(),
         "mode": "FORWARD_ONLY_PAPER_NO_LIVE_ORDERS",
-        "status": "RISK_PAUSED" if any(v["risk_pause_reasons"] for v in summary.values()) else "PAPER_MONITORING",
+        "status": (
+            "RISK_PAUSED" if any(v["health_assessment"]["status"] == "RISK_PAUSED" for v in summary.values())
+            else "REVIEW_REQUIRED" if any(v["health_assessment"]["status"] == "REVIEW_REQUIRED" for v in summary.values())
+            else "PAPER_MONITORING"
+        ),
         "market": "BTC/USD",
         "data_quality": quality,
         "latest_hourly_candle_timestamp": candles[-1]["timestamp"],
