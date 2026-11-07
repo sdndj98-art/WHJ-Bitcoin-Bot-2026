@@ -102,6 +102,14 @@ class PersistentPaperAccountTests(unittest.TestCase):
             self.assertEqual(len(saved["recent_closes"]), 200)
             self.assertEqual(result["strategy"], "sma200_regime")
 
+    def test_ema200_paper_strategy_preserves_full_signal_history(self):
+        with tempfile.TemporaryDirectory() as folder:
+            candles = self.make_candles([100.0 + (i % 70) * 0.5 for i in range(260)])
+            path = Path(folder) / "ema200.json"
+            update_paper_account(candles, state_path=str(path), strategy="ema50_200_regime")
+            saved = json.loads(path.read_text(encoding="utf-8"))
+            self.assertEqual(len(saved["recent_closes"]), 260)
+
     def test_corrupt_state_is_not_silently_reset(self):
         with tempfile.TemporaryDirectory() as folder:
             state_path = Path(folder) / "paper_state.json"
