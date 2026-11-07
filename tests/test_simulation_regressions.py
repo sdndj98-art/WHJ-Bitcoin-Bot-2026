@@ -198,6 +198,23 @@ class PersistentPaperAccountTests(unittest.TestCase):
             self.assertTrue(result["paused_for_loss_streak"])
             self.assertTrue(persisted["paused_for_loss_streak"])
 
+    def test_report_distinguishes_current_and_historical_loss_streaks(self):
+        with tempfile.TemporaryDirectory() as folder:
+            state_path = Path(folder) / "streak_report.json"
+            candles = self.make_candles([100.0 + i for i in range(55)])
+            update_paper_account(candles, state_path=str(state_path))
+            saved = json.loads(state_path.read_text(encoding="utf-8"))
+            saved["trades"] = [
+                {"pnl_usd": -1.0, "result": "LOSS", "side": "SELL"}
+                for _ in range(6)
+            ] + [{"pnl_usd": 2.0, "result": "WIN", "side": "SELL"},
+                 {"pnl_usd": -0.5, "result": "LOSS", "side": "SELL"}]
+            state_path.write_text(json.dumps(saved), encoding="utf-8")
+            result = update_paper_account(candles, state_path=str(state_path))
+            self.assertEqual(result["max_consecutive_losses"], 6)
+            self.assertEqual(result["current_consecutive_losses"], 1)
+            self.assertEqual(result["risk_pause_reasons"], [])
+
     def test_daily_loss_guard_uses_previous_completed_candle(self):
         with tempfile.TemporaryDirectory() as folder:
             state_path = str(Path(folder) / "daily_loss.json")
