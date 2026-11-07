@@ -66,7 +66,7 @@ def validate_hourly_feed(candles, now_timestamp=None):
 
 
 def assess_sleeve_health(account, min_closed_trades=30, review_drawdown_pct=8.0):
-    """Conservative forward-health label; never promotes a strategy to live trading."""
+    """Assess lifetime risk and the latest 20 closed trades; paper review only."""
     import math
     if isinstance(min_closed_trades, bool) or not isinstance(min_closed_trades, int) or min_closed_trades < 1:
         raise ValueError("Minimum closed trade threshold must be a positive integer")
@@ -93,21 +93,63 @@ def assess_sleeve_health(account, min_closed_trades=30, review_drawdown_pct=8.0)
     pause_reasons = account.get("risk_pause_reasons", [])
     if not isinstance(pause_reasons, list) or any(not isinstance(x, str) for x in pause_reasons):
         raise ValueError("Risk pause reasons are invalid")
+
+    recent = account.get("recent_trades", [])
+    if not isinstance(recent, list) or len(recent) > 20:
+        raise ValueError("Recent trade window is invalid")
+    pnl_values = []
+    for trade in recent:
+        if not isinstance(trade, dict):
+            raise ValueError("Recent trade record is invalid")
+        pnl = trade.get("pnl_usd")
+        if isinstance(pnl, bool) or not isinstance(pnl, (int, float)) or not math.isfinite(pnl):
+            raise ValueError("Recent trade PnL must be finite")
+        pnl_values.append(float(pnl))
+    rolling_count = len(pnl_values)
+    rolling_profit = sum(value for value in pnl_values if value > 0)
+    rolling_loss = -sum(value for value in pnl_values if value < 0)
+    rolling_pf = (
+        round(rolling_profit / rolling_loss, 4) if rolling_loss > 0
+        else (None if rolling_profit > 0 else 0.0)
+    )
+    rolling_net = round(sum(pnl_values), 4)
+    rolling_status = "INSUFFICIENT_ROLLING_SAMPLE"
+    if rolling_count >= 10:
+        rolling_status = (
+            "ROLLING_REVIEW_REQUIRED"
+            if rolling_net <= 0 or rolling_pf is None or rolling_pf < 1.0
+            else "ROLLING_STABLE"
+        )
+
     if pause_reasons:
         status = "RISK_PAUSED"
         reason = "Risk controls have paused this paper sleeve"
     elif trades < min_closed_trades:
         status = "INSUFFICIENT_FORWARD_SAMPLE"
         reason = "Not enough genuinely forward-closed trades to judge performance"
-    elif drawdown >= review_drawdown_pct or returns <= 0 or profit_factor is None or profit_factor < 1:
+    elif (
+        drawdown >= review_drawdown_pct
+        or returns <= 0
+        or profit_factor is None
+        or profit_factor < 1
+        or rolling_status == "ROLLING_REVIEW_REQUIRED"
+    ):
         status = "REVIEW_REQUIRED"
-        reason = "Forward results breached a conservative performance review threshold"
+        reason = (
+            "The latest rolling trade window has deteriorated"
+            if rolling_status == "ROLLING_REVIEW_REQUIRED"
+            else "Forward results breached a conservative performance review threshold"
+        )
     else:
         status = "CONTINUE_PAPER_REVIEW"
-        reason = "Forward metrics pass the review screen; continue paper testing only"
+        reason = "Forward and rolling metrics pass the review screen; continue paper testing only"
     return {
         "status": status,
         "reason": reason,
+        "rolling_window_trades": rolling_count,
+        "rolling_net_pnl_usd": rolling_net,
+        "rolling_profit_factor": rolling_pf,
+        "rolling_status": rolling_status,
         "minimum_closed_trades": min_closed_trades,
         "review_drawdown_threshold_pct": review_drawdown_pct,
         "live_trading_eligible": False,
