@@ -30,8 +30,8 @@ jobs:
       - name: Restore persistent paper account state
         uses: actions/cache/restore@v4
         with:
-          path: paper_account_state.json
-          key: whj-paper-account-v1-${{ github.run_id }}-${{ github.run_attempt }}
+          path: paper_account_state_*.json
+          key: whj-paper-portfolio-v2-${{ github.run_id }}-${{ github.run_attempt }}
           restore-keys: |
             whj-paper-account-v1-
 
