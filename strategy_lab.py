@@ -164,7 +164,14 @@ def _simulate(prices, signals, start, end, fee=0.001, slippage=0.0005):
             trades.append(pnl)
             units = 0.0
             entry_value = 0.0
-        equity = cash + units * prices[i]
+        # Measure drawdown on net liquidation value, not a frictionless mark.
+        # This includes the estimated exit slippage and fee while a position is open.
+        if units > 0:
+            liquidation = units * prices[i] * (1 - slippage)
+            liquidation -= liquidation * fee
+            equity = cash + liquidation
+        else:
+            equity = cash
         peak = max(peak, equity)
         max_dd = max(max_dd, (peak - equity) / peak * 100 if peak else 0.0)
     # Report net liquidation value, including estimated exit fee and slippage
