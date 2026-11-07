@@ -173,6 +173,22 @@ class MarketScannerTests(unittest.TestCase):
         self.assertTrue(all(x["paper_candidate_only"] for x in result["timeframes"].values()))
         self.assertEqual(result["timeframes"]["4h"]["timeframe"], "4h")
         self.assertEqual(result["timeframes"]["6h"]["timeframe"], "6h")
+        for item in result["timeframes"].values():
+            self.assertEqual(
+                item["confluence_pct"],
+                round(item["confluence_score"] / item["confluence_total"] * 100.0, 2),
+            )
+        consensus = result["consensus"]
+        self.assertEqual(consensus["evaluated_timeframes"], 3)
+        self.assertGreaterEqual(consensus["average_confluence_pct"], 0.0)
+        self.assertLessEqual(consensus["average_confluence_pct"], 100.0)
+        self.assertIn(consensus["strongest_timeframe"], ("1h", "4h", "6h"))
+        self.assertGreaterEqual(consensus["trend_aligned_timeframes"], 0)
+        self.assertLessEqual(consensus["trend_aligned_timeframes"], 3)
+        self.assertGreaterEqual(consensus["breakout_quality_timeframes"], 0)
+        self.assertLessEqual(consensus["breakout_quality_timeframes"], 3)
+        self.assertTrue(consensus["paper_review_only"])
+        self.assertFalse(consensus["live_execution_enabled"])
 
     def test_rejects_non_finite_volume(self):
         rows = candles()
