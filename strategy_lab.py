@@ -252,6 +252,8 @@ def _market_regime_diagnostics(prices, signals, start_index):
             "positive_forward_bars": 0,
             "absolute_return_sum_pct": 0.0,
             "strategy_active_bars": {strategy: 0 for strategy in signals},
+            "strategy_signal_growth": {strategy: 1.0 for strategy in signals},
+            "strategy_signal_positive_bars": {strategy: 0 for strategy in signals},
         }
         for name in names
     }
@@ -275,13 +277,33 @@ def _market_regime_diagnostics(prices, signals, start_index):
         bucket["positive_forward_bars"] += int(forward_return > 0)
         bucket["absolute_return_sum_pct"] += abs(forward_return)
         for strategy, values in signals.items():
-            bucket["strategy_active_bars"][strategy] += int(bool(values[index]))
+            if bool(values[index]):
+                bucket["strategy_active_bars"][strategy] += 1
+                bucket["strategy_signal_growth"][strategy] *= 1.0 + forward_return / 100.0
+                bucket["strategy_signal_positive_bars"][strategy] += int(forward_return > 0)
 
     result = {}
     for regime, bucket in buckets.items():
         bars = bucket["bars"]
+        strategy_diagnostics = {}
+        for strategy in signals:
+            active = bucket["strategy_active_bars"][strategy]
+            strategy_diagnostics[strategy] = {
+                "active_signal_bars": active,
+                "active_forward_return_pct": (
+                    round((bucket["strategy_signal_growth"][strategy] - 1.0) * 100.0, 2)
+                    if active else None
+                ),
+                "positive_active_forward_bar_pct": (
+                    round(bucket["strategy_signal_positive_bars"][strategy] / active * 100.0, 2)
+                    if active else None
+                ),
+                "evidence_status": "INSUFFICIENT_SAMPLE" if active < 30 else "DESCRIPTIVE_ONLY",
+            }
         result[regime] = {
             "bars": bars,
+            "evidence_status": "INSUFFICIENT_SAMPLE" if bars < 30 else "DESCRIPTIVE_ONLY",
+            "strategy_signal_diagnostics": strategy_diagnostics,
             "market_forward_return_pct": (
                 round((bucket["growth_factor"] - 1.0) * 100.0, 2) if bars else None
             ),
@@ -304,7 +326,9 @@ def _market_regime_diagnostics(prices, signals, start_index):
         ),
         "measurement": (
             "OOS next-bar market returns are grouped by the regime known at the prior close. "
-            "Strategy exposure is the percentage of closes with an active signal; it is not strategy PnL."
+            "Per-strategy active-signal forward returns are descriptive conditional bar returns, "
+            "not trade-level PnL, net returns, or a deployable strategy backtest. "
+            "INSUFFICIENT_SAMPLE is used below 30 active signal bars."
         ),
         "out_of_sample_start_index": first_index,
         "regimes": result,
