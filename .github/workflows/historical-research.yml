@@ -41,10 +41,12 @@ jobs:
             paper_daily_sma20_50.json
             paper_4h_ema50_200.json
             paper_daily_bollinger.json
-          key: whj-mtf-paper-v5-${{ github.run_id }}-${{ github.run_attempt }}
+            paper_6h_rsi14_mean_reversion.json
+          key: whj-mtf-paper-v6-${{ github.run_id }}-${{ github.run_attempt }}
           restore-keys: |
             whj-mtf-paper-v4-
             whj-mtf-paper-v5-
+            whj-mtf-paper-v6-
 
       - name: Run historical data ingestion tests
         run: python -m unittest discover -s tests -p 'test_historical_research.py' -v
@@ -53,14 +55,14 @@ jobs:
         run: python historical_research.py
 
       - name: Save multi-timeframe paper account state
-        if: success() && hashFiles('paper_daily_sma20_50.json', 'paper_4h_ema50_200.json', 'paper_daily_bollinger.json') != ''
+        if: success() && hashFiles('paper_daily_sma20_50.json', 'paper_4h_ema50_200.json', 'paper_daily_bollinger.json', 'paper_6h_rsi14_mean_reversion.json') != ''
         uses: actions/cache/save@v4
         with:
           path: |
             paper_daily_sma20_50.json
             paper_4h_ema50_200.json
             paper_daily_bollinger.json
-          key: whj-mtf-paper-v5-${{ github.run_id }}-${{ github.run_attempt }}
+          key: whj-mtf-paper-v6-${{ github.run_id }}-${{ github.run_attempt }}
 
       - name: Save historical research report
         uses: actions/upload-artifact@v4
