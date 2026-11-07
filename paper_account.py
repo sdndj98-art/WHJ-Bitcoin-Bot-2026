@@ -95,6 +95,14 @@ def _load_state(path, initial_cash, strategy="sma_trend"):
     _number(state["initial_cash"], "state initial cash", 0)
     if state["initial_cash"] <= 0:
         raise ValueError("Saved paper account initial cash must be positive")
+    if not math.isclose(
+        float(state["initial_cash"]), float(initial_cash),
+        rel_tol=1e-9, abs_tol=1e-8,
+    ):
+        raise ValueError(
+            "Saved paper account initial capital does not match the configured amount; "
+            "manual review is required"
+        )
     _number(state["cash"], "state cash", 0)
     _number(state["btc"], "state BTC", 0)
     _number(state["entry_cost"], "state entry cost", 0)
