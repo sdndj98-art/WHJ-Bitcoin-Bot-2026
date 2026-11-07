@@ -59,7 +59,7 @@ def _load_state(path, initial_cash, strategy="sma_trend"):
     _number(state["entry_cost"], "state entry cost", 0)
     _number(state["peak_equity"], "state peak equity", 0)
     _number(state["fees_paid"], "state fees", 0)
-    if not isinstance(state["recent_closes"], list) or len(state["recent_closes"]) > 200 or not isinstance(state["trades"], list):
+    if not isinstance(state["recent_closes"], list) or len(state["recent_closes"]) > 10000 or not isinstance(state["trades"], list):
         raise ValueError("Paper account state collections are invalid")
     for close in state["recent_closes"]:
         _number(close, "saved close", 0)
@@ -238,7 +238,8 @@ def update_paper_account(candles, state_path="paper_account_state.json",
                 state["trades"].append(trade)
                 new_trades.append(trade)
 
-        state["recent_closes"] = (history + [close])[-200:]
+        history_limit = 10000 if strategy == "ema50_200_regime" else 200
+        state["recent_closes"] = (history + [close])[-history_limit:]
         state["last_timestamp"] = timestamp
         processed += 1
 
