@@ -138,6 +138,32 @@ class PaperTradingTests(unittest.TestCase):
         self.assertIn("ema200_filter", result["strategies"])
         self.assertIn("rsi2_mean_reversion", result["strategies"])
         self.assertIn("bollinger_mean_reversion", result["strategies"])
+        self.assertIn("market_regime_diagnostics", result)
+        self.assertIn("bullish", result["market_regime_diagnostics"]["regimes"])
+
+    def test_strategy_lab_reports_causal_out_of_sample_market_regimes(self):
+        from strategy_lab import _market_regime_diagnostics
+
+        prices = (
+            [100.0] * 250
+            + [100.0 + index for index in range(100)]
+            + [200.0 - index for index in range(100)]
+        )
+        signals = {
+            "always_on": [True] * len(prices),
+            "always_off": [False] * len(prices),
+        }
+        result = _market_regime_diagnostics(prices, signals, 200)
+        regimes = result["regimes"]
+        self.assertGreater(regimes["bullish"]["bars"], 0)
+        self.assertGreater(regimes["bearish"]["bars"], 0)
+        self.assertGreater(regimes["sideways_or_transition"]["bars"], 0)
+        for regime in regimes.values():
+            if regime["bars"]:
+                self.assertEqual(regime["strategy_exposure_pct"]["always_on"], 100.0)
+                self.assertEqual(regime["strategy_exposure_pct"]["always_off"], 0.0)
+                self.assertIsNotNone(regime["market_forward_return_pct"])
+        self.assertIn("not strategy PnL", result["measurement"])
 
     def test_strategy_lab_rejects_short_or_invalid_data(self):
         with self.assertRaises(ValueError):
