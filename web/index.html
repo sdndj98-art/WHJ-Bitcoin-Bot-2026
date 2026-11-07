@@ -156,7 +156,14 @@ function validateForwardReport(x){
  const n=v=>typeof v==="number"&&Number.isFinite(v);
  if(!x||typeof x!=="object"||Array.isArray(x)||x.schema_version!==1||x.mode!=="FORWARD_ONLY_PAPER_NO_LIVE_ORDERS")throw Error("صيغة التقرير غير مدعومة أو ليست تقرير مراقبة ورقية");
  if(!n(x.initial_cash_usd)||x.initial_cash_usd<=0||!n(x.equity_after_estimated_exit_costs_usd)||x.equity_after_estimated_exit_costs_usd<=0||!n(x.return_pct)||!Number.isInteger(x.completed_trades)||x.completed_trades<0)throw Error("قيم المحفظة الأساسية غير صالحة");
- if(!x.sleeves_summary||!["4h","6h"].every(k=>x.sleeves_summary[k]&&n(x.sleeves_summary[k].equity_usd)&&n(x.sleeves_summary[k].return_pct)&&Number.isInteger(x.sleeves_summary[k].completed_trades)))throw Error("بيانات حسابي 4h و6h غير مكتملة");
+ if(!x.sleeves_summary||!["4h","6h"].every(k=>x.sleeves_summary[k]&&n(x.sleeves_summary[k].equity_usd)&&x.sleeves_summary[k].equity_usd>0&&n(x.sleeves_summary[k].return_pct)&&Number.isInteger(x.sleeves_summary[k].completed_trades)&&x.sleeves_summary[k].completed_trades>=0&&Array.isArray(x.sleeves_summary[k].risk_pause_reasons)))throw Error("بيانات حسابي 4h و6h غير مكتملة");
+ const sleeveEquity=x.sleeves_summary["4h"].equity_usd+x.sleeves_summary["6h"].equity_usd;
+ const sleeveTrades=x.sleeves_summary["4h"].completed_trades+x.sleeves_summary["6h"].completed_trades;
+ if(Math.abs(sleeveEquity-x.equity_after_estimated_exit_costs_usd)>0.02||sleeveTrades!==x.completed_trades)throw Error("إجماليات الحسابات لا تطابق ملخص المحفظة");
+ const derivedReturn=(x.equity_after_estimated_exit_costs_usd/x.initial_cash_usd-1)*100;
+ if(Math.abs(derivedReturn-x.return_pct)>0.02)throw Error("نسبة العائد لا تطابق قيمة المحفظة");
+ if(!x.data_quality||x.data_quality.quality!=="HEALTHY")throw Error("جودة بيانات السوق لا تسمح بعرض التقرير كحالة سليمة");
+ if(typeof x.generated_at_utc!=="string"||!Number.isFinite(Date.parse(x.generated_at_utc))||!Number.isFinite(x.latest_hourly_candle_timestamp))throw Error("الطوابع الزمنية في التقرير غير صالحة");
  if(!["PAPER_MONITORING","RISK_PAUSED"].includes(x.status))throw Error("حالة المراقبة غير معروفة");
  return x;
 }
@@ -173,9 +180,14 @@ $("forwardFile").addEventListener("change",async e=>{
  const file=e.target.files&&e.target.files[0];if(!file)return;
  if(file.size>2097152){$("forwardMessage").textContent="حجم الملف أكبر من الحد المسموح (2 MB).";e.target.value="";return}
  try{const parsed=validateForwardReport(JSON.parse(await file.text()));forwardReport=parsed;renderForward(parsed);$("forwardMessage").textContent="تم التحقق من التقرير: "+file.name+" · "+fmt(file.size/1024,1)+" KB";}
- catch(err){forwardReport=null;$("forwardMessage").textContent="تعذر قبول التقرير: "+err.message;$("forwardRows").innerHTML="<tr><td colspan='9' class='empty'>لا توجد بيانات صالحة للعرض</td></tr>";}
+ catch(err){forwardReport=null;$("forwardMessage").textContent="تعذر قبول التقرير: "+err.message;resetForwardView();}
 });
-$("clearForward").addEventListener("click",()=>{forwardReport=null;$("forwardFile").value="";$("forwardMessage").textContent="تم مسح التقرير من عرض الصفحة.";["forwardInitial","forwardEquity","forwardReturn","forwardTrades","forwardGenerated","forwardQuality","forwardCandle"].forEach(id=>$(id).textContent="—");$("forwardStatus").textContent="بانتظار التقرير";$("forwardRows").innerHTML="<tr><td colspan='9' class='empty'>حمّل تقريراً صالحاً لعرض النتائج</td></tr>";});
+function resetForwardView(){
+ ["forwardInitial","forwardEquity","forwardReturn","forwardTrades","forwardGenerated","forwardQuality","forwardCandle","forwardAllocation","forwardMaxDD","forwardDaily","forwardStreak"].forEach(id=>$(id).textContent="—");
+ $("forwardStatus").textContent="بانتظار التقرير";$("forwardStatus").className="";
+ $("forwardRows").innerHTML="<tr><td colspan='9' class='empty'>لا توجد بيانات صالحة للعرض</td></tr>";
+}
+$("clearForward").addEventListener("click",()=>{forwardReport=null;$("forwardFile").value="";$("forwardMessage").textContent="تم مسح التقرير من عرض الصفحة.";resetForwardView();});
 function filterRows(id,query){const q=String(query||"").trim().toLocaleLowerCase();document.querySelectorAll("#"+id+" tr").forEach(row=>{row.hidden=!!q&&!row.textContent.toLocaleLowerCase().includes(q)})}
 function downloadFile(name,content,type){const blob=new Blob([content],{type});const url=URL.createObjectURL(blob);const a=document.createElement("a");a.href=url;a.download=name;document.body.appendChild(a);a.click();a.remove();URL.revokeObjectURL(url)}
 function csvCell(value){let s=String(value??"");if(/^[=+\-@\t\r]/.test(s))s="'"+s;return '"'+s.replace(/"/g,'""')+'"'}
