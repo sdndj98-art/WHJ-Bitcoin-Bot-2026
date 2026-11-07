@@ -2,7 +2,7 @@ name: WHJ Bitcoin Bot
 
 on:
   push:
-    branches: [main, build/bitcoin-satoshi-bot, research/cost-sensitivity, release/btc-volume-scanner-mainline, design/premium-scanner-dashboard]
+    branches: [main, build/bitcoin-satoshi-bot, research/cost-sensitivity, release/btc-volume-scanner-mainline, design/premium-scanner-dashboard, research/regime-aware-consensus-ensemble]
   workflow_dispatch:
   schedule:
     - cron: "7 * * * *"
