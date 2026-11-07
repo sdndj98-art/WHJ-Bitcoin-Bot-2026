@@ -233,7 +233,6 @@ def main():
         }
     stress_cost_research = {}
     for label in ("4h", "1d"):
-        bars = timeframe_research[label]["research"]
         hours = 4 if label == "4h" else 24
         aggregated = aggregate_candles(candles, hours)
         stress_cost_research[label] = run_strategy_lab(
@@ -284,7 +283,10 @@ def main():
                 "max_drawdown_pct": account["max_drawdown_pct"],
                 "processed_new_candles": account["processed_new_candles"],
             }
-            for name, account in forward_paper.items()
+            for name, account in (
+                ("daily_sma20_50", forward_paper["daily_sma20_50"]),
+                ("four_hour_ema50_200", forward_paper["four_hour_ema50_200"]),
+            )
         },
         "strategies": {
             name: {
