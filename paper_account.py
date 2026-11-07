@@ -30,6 +30,7 @@ def _new_state(initial_cash, strategy="sma_trend"):
         "recent_closes": [],
         "ema50_state": None,
         "ema200_state": None,
+        "holding_bars": 0,
         "peak_equity": float(initial_cash),
         "max_drawdown_pct": 0.0,
         "daily_bucket": None,
@@ -61,6 +62,8 @@ def _load_state(path, initial_cash, strategy="sma_trend"):
     _number(state["entry_cost"], "state entry cost", 0)
     _number(state["peak_equity"], "state peak equity", 0)
     _number(state["fees_paid"], "state fees", 0)
+    if isinstance(state.get("holding_bars", 0), bool) or not isinstance(state.get("holding_bars", 0), int) or state.get("holding_bars", 0) < 0:
+        raise ValueError("Saved strategy holding counter is invalid")
     if not isinstance(state["recent_closes"], list) or len(state["recent_closes"]) > 20000 or not isinstance(state["trades"], list):
         raise ValueError("Paper account state collections are invalid")
     for close in state["recent_closes"]:
@@ -126,7 +129,7 @@ def update_paper_account(candles, state_path="paper_account_state.json",
     allocation_fraction = _number(allocation_fraction, "allocation_fraction", 0.01, 1)
     max_drawdown_fraction = _number(max_drawdown_fraction, "max_drawdown_fraction", 0.001, 1)
     daily_loss_fraction = _number(daily_loss_fraction, "daily_loss_fraction", 0.001, 1)
-    if strategy not in ("sma_trend", "ema_trend", "rsi_momentum", "sma200_regime", "ema50_200_regime"):
+    if strategy not in ("sma_trend", "ema_trend", "rsi_momentum", "sma200_regime", "ema50_200_regime", "bollinger_mean_reversion"):
         raise ValueError("Unknown paper strategy")
 
     normalized = []
@@ -159,7 +162,7 @@ def update_paper_account(candles, state_path="paper_account_state.json",
             continue
 
         history = [float(x) for x in state["recent_closes"]]
-        required_history = 200 if strategy in ("sma200_regime", "ema50_200_regime") else 50
+        required_history = 200 if strategy in ("sma200_regime", "ema50_200_regime", "bollinger_mean_reversion") else 50
         if len(history) >= required_history:
             prior_close = history[-1]
             if strategy == "ema50_200_regime":
@@ -224,6 +227,8 @@ def update_paper_account(candles, state_path="paper_account_state.json",
                     state["btc"] = units
                     state["entry_cost"] = allocation
                     state["fees_paid"] += fee
+                    if strategy == "bollinger_mean_reversion":
+                        state["holding_bars"] = 0
             elif (want_flat or daily_loss_hit or state.get("paused_for_drawdown", False)) and state["btc"] > 0:
                 fill = close * (1 - slippage_rate)
                 gross = state["btc"] * fill
@@ -241,11 +246,14 @@ def update_paper_account(candles, state_path="paper_account_state.json",
                 state["fees_paid"] += fee
                 state["btc"] = 0.0
                 state["entry_cost"] = 0.0
+                state["holding_bars"] = 0
                 state["trades"].append(trade)
                 new_trades.append(trade)
 
         history_limit = 20000 if strategy == "ema50_200_regime" else 200
         state["recent_closes"] = (history + [close])[-history_limit:]
+        if strategy == "bollinger_mean_reversion" and state["btc"] > 0:
+            state["holding_bars"] = int(state.get("holding_bars", 0)) + 1
         if strategy == "ema50_200_regime":
             alpha50 = 2.0 / 51.0
             alpha200 = 2.0 / 201.0
