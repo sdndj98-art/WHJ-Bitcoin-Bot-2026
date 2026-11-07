@@ -477,9 +477,12 @@ def _directional_signals(bars):
         "ema50_200_long_short": [0] * len(bars),
         "sma200_slope_20_long_short": [0] * len(bars),
         "ema50_200_slope_20_long_short": [0] * len(bars),
+        "sma200_slope_50_long_short": [0] * len(bars),
         "donchian_55_20_long_short": [],
+        "donchian_20_10_long_short": [],
     }
     donchian_direction = 0
+    donchian_20_direction = 0
     for i, row in enumerate(bars):
         close = closes[i]
         if sma200[i] is not None:
@@ -494,6 +497,11 @@ def _directional_signals(bars):
                 signals["ema50_200_slope_20_long_short"][i] = 1
             elif ema50[i] < ema200[i] and ema200[i] < ema200[i - 20]:
                 signals["ema50_200_slope_20_long_short"][i] = -1
+        if i >= 249 and sma200[i] is not None and sma200[i - 50] is not None:
+            if close > sma200[i] and sma200[i] > sma200[i - 50]:
+                signals["sma200_slope_50_long_short"][i] = 1
+            elif close < sma200[i] and sma200[i] < sma200[i - 50]:
+                signals["sma200_slope_50_long_short"][i] = -1
 
         if donchian_direction == 1 and i >= 20 and close < min(
             float(bars[j]["low"]) for j in range(i - 20, i)
@@ -511,6 +519,23 @@ def _directional_signals(bars):
             elif close < prior_low:
                 donchian_direction = -1
         signals["donchian_55_20_long_short"].append(donchian_direction)
+
+        if donchian_20_direction == 1 and i >= 10 and close < min(
+            float(bars[j]["low"]) for j in range(i - 10, i)
+        ):
+            donchian_20_direction = 0
+        elif donchian_20_direction == -1 and i >= 10 and close > max(
+            float(bars[j]["high"]) for j in range(i - 10, i)
+        ):
+            donchian_20_direction = 0
+        elif donchian_20_direction == 0 and i >= 20:
+            prior_high_20 = max(float(bars[j]["high"]) for j in range(i - 20, i))
+            prior_low_20 = min(float(bars[j]["low"]) for j in range(i - 20, i))
+            if close > prior_high_20:
+                donchian_20_direction = 1
+            elif close < prior_low_20:
+                donchian_20_direction = -1
+        signals["donchian_20_10_long_short"].append(donchian_20_direction)
     return signals
 
 
