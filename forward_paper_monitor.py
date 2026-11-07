@@ -14,22 +14,53 @@ STATE_FILES = {
 
 
 def validate_hourly_feed(candles, now_timestamp=None):
+    """Reject malformed, impossible, synthetic or stale hourly market data."""
+    import math
+
     if not isinstance(candles, list) or len(candles) < 24:
         raise ValueError("At least 24 hourly candles are required")
-    timestamps = [int(row["timestamp"]) for row in candles]
+    timestamps = []
+    required = ("timestamp", "open", "high", "low", "close", "volume")
+    for index, row in enumerate(candles):
+        if not isinstance(row, dict) or any(key not in row for key in required):
+            raise ValueError("Hourly candle is missing required OHLCV fields")
+        raw_timestamp = row["timestamp"]
+        if isinstance(raw_timestamp, bool) or not isinstance(raw_timestamp, (int, float)):
+            raise ValueError("Hourly candle timestamp must be numeric")
+        if not math.isfinite(raw_timestamp) or not float(raw_timestamp).is_integer():
+            raise ValueError("Hourly candle timestamp must be a finite integer")
+        timestamp = int(raw_timestamp)
+        if timestamp < 0:
+            raise ValueError("Hourly candle timestamp cannot be negative")
+        timestamps.append(timestamp)
+        values = {}
+        for key in ("open", "high", "low", "close", "volume"):
+            value = row[key]
+            if isinstance(value, bool) or not isinstance(value, (int, float)) or not math.isfinite(value):
+                raise ValueError("Hourly candle " + key + " must be a finite number")
+            values[key] = float(value)
+        if any(values[key] <= 0 for key in ("open", "high", "low", "close")):
+            raise ValueError("Hourly OHLC prices must be positive")
+        if values["volume"] < 0:
+            raise ValueError("Hourly candle volume cannot be negative")
+        if values["high"] < max(values["open"], values["close"], values["low"]):
+            raise ValueError("Hourly candle high is inconsistent with OHLC prices")
+        if values["low"] > min(values["open"], values["close"], values["high"]):
+            raise ValueError("Hourly candle low is inconsistent with OHLC prices")
+        if "imputed" in row and not isinstance(row["imputed"], bool):
+            raise ValueError("Hourly candle imputed flag must be boolean")
     if timestamps != sorted(timestamps) or len(set(timestamps)) != len(timestamps):
         raise ValueError("Hourly candles must be strictly increasing and unique")
     if any(b - a != 3_600_000 for a, b in zip(timestamps[-25:], timestamps[-24:])):
         raise ValueError("Recent hourly candles contain a gap; paper processing is blocked")
-    last = candles[-1]
-    if last.get("imputed", False):
-        raise ValueError("Latest hourly candle is imputed; paper processing is blocked")
+    if any(row.get("imputed", False) for row in candles[-25:]):
+        raise ValueError("Recent imputed candles detected; paper processing is blocked")
     now = datetime.now(timezone.utc).timestamp() if now_timestamp is None else float(now_timestamp)
+    if not math.isfinite(now):
+        raise ValueError("Current timestamp must be finite")
     age_minutes = (now * 1000 - (timestamps[-1] + 3_600_000)) / 60_000
     if not -5 <= age_minutes <= 120:
         raise ValueError("Latest completed hourly candle is stale or in the future")
-    if any(row.get("imputed", False) for row in candles[-25:]):
-        raise ValueError("Recent imputed candles detected; paper processing is blocked")
     return {"quality": "HEALTHY", "latest_closed_candle_age_minutes": round(age_minutes, 2)}
 
 
