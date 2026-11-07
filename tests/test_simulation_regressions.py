@@ -160,6 +160,27 @@ class PersistentPaperAccountTests(unittest.TestCase):
             self.assertFalse(result["open_position"])
             self.assertGreater(result["return_pct"], 0)
 
+    def test_five_consecutive_losses_trigger_persistent_pause_and_exit(self):
+        with tempfile.TemporaryDirectory() as folder:
+            state_path = Path(folder) / "loss_streak.json"
+            candles = self.make_candles([100.0 + i for i in range(55)])
+            update_paper_account(candles, state_path=str(state_path))
+            saved = json.loads(state_path.read_text(encoding="utf-8"))
+            saved["trades"] = [
+                {"pnl_usd": -1.0, "result": "LOSS", "side": "SELL"}
+                for _ in range(5)
+            ]
+            saved["btc"] = 0.01
+            saved["entry_cost"] = 1.0
+            saved["cash"] = 999.0
+            saved["last_timestamp"] = 54 * 3600
+            state_path.write_text(json.dumps(saved), encoding="utf-8")
+            next_candle = self.make_candles([100.0 + i for i in range(55)] + [155.0])
+            result = update_paper_account(next_candle, state_path=str(state_path))
+            self.assertTrue(result["paused_for_loss_streak"])
+            self.assertFalse(result["open_position"])
+            self.assertEqual(result["risk_limits"]["max_consecutive_losses"], 5)
+
     def test_daily_loss_guard_uses_previous_completed_candle(self):
         with tempfile.TemporaryDirectory() as folder:
             state_path = str(Path(folder) / "daily_loss.json")
