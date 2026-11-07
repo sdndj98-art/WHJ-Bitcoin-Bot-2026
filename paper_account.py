@@ -259,6 +259,29 @@ def run_paper_portfolio(candles, state_dir="."):
         "note": "Each strategy has an independent $1,000 simulated ledger, identical fees, slippage, sizing and risk limits. This is forward paper testing, not live trading.",
     }
 
+def _rolling_health_triggered(trades, initial_cash, drawdown_fraction):
+    """Return whether the latest closed-trade window requires a paper pause."""
+    rolling_trades = trades[-20:]
+    if len(rolling_trades) < 10:
+        return False
+    rolling_pnl = [float(trade["pnl_usd"]) for trade in rolling_trades]
+    rolling_profit = sum(value for value in rolling_pnl if value > 0)
+    rolling_loss = -sum(value for value in rolling_pnl if value < 0)
+    rolling_peak = 0.0
+    rolling_cumulative = 0.0
+    rolling_drawdown = 0.0
+    for trade_pnl in rolling_pnl:
+        rolling_cumulative += trade_pnl
+        rolling_peak = max(rolling_peak, rolling_cumulative)
+        rolling_drawdown = max(rolling_drawdown, rolling_peak - rolling_cumulative)
+    rolling_drawdown_pct = rolling_drawdown / float(initial_cash) * 100.0
+    return (
+        sum(rolling_pnl) <= 0
+        or (rolling_loss > 0 and rolling_profit / rolling_loss < 1.0)
+        or rolling_drawdown_pct >= drawdown_fraction * 100.0
+    )
+
+
 def update_paper_account(candles, state_path="paper_account_state.json",
                          initial_cash=1000.0, fee_rate=0.001,
                          slippage_rate=0.0005, allocation_fraction=0.25,
@@ -318,6 +341,16 @@ def update_paper_account(candles, state_path="paper_account_state.json",
             break
     if saved_loss_streak >= max_consecutive_losses and not state.get("paused_for_loss_streak", False):
         state["paused_for_loss_streak"] = True
+        state_changed = True
+    # Reconcile rolling strategy health even when the feed has no newer candle.
+    if (
+        strategy_health_pause
+        and not state.get("paused_for_strategy_health", False)
+        and _rolling_health_triggered(
+            state["trades"], state["initial_cash"], strategy_health_drawdown_fraction
+        )
+    ):
+        state["paused_for_strategy_health"] = True
         state_changed = True
     for timestamp, close in normalized:
         last = state.get("last_timestamp")
@@ -420,26 +453,14 @@ def update_paper_account(candles, state_path="paper_account_state.json",
                     break
             if loss_streak >= max_consecutive_losses:
                 state["paused_for_loss_streak"] = True
-            if strategy_health_pause and not state.get("paused_for_strategy_health", False):
-                rolling_trades = state["trades"][-20:]
-                if len(rolling_trades) >= 10:
-                    rolling_pnl = [float(trade["pnl_usd"]) for trade in rolling_trades]
-                    rolling_profit = sum(value for value in rolling_pnl if value > 0)
-                    rolling_loss = -sum(value for value in rolling_pnl if value < 0)
-                    rolling_peak = 0.0
-                    rolling_cumulative = 0.0
-                    rolling_drawdown = 0.0
-                    for trade_pnl in rolling_pnl:
-                        rolling_cumulative += trade_pnl
-                        rolling_peak = max(rolling_peak, rolling_cumulative)
-                        rolling_drawdown = max(rolling_drawdown, rolling_peak - rolling_cumulative)
-                    rolling_drawdown_pct = rolling_drawdown / float(state["initial_cash"]) * 100.0
-                    if (
-                        sum(rolling_pnl) <= 0
-                        or (rolling_loss > 0 and rolling_profit / rolling_loss < 1.0)
-                        or rolling_drawdown_pct >= strategy_health_drawdown_fraction * 100.0
-                    ):
-                        state["paused_for_strategy_health"] = True
+            if (
+                strategy_health_pause
+                and not state.get("paused_for_strategy_health", False)
+                and _rolling_health_triggered(
+                    state["trades"], state["initial_cash"], strategy_health_drawdown_fraction
+                )
+            ):
+                state["paused_for_strategy_health"] = True
             paused = (
                 state.get("paused_for_drawdown", False)
                 or state.get("daily_loss_paused", False)
