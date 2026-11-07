@@ -66,7 +66,7 @@ class ForwardPaperMonitorTests(unittest.TestCase):
 
     def test_recent_hourly_gap_is_rejected(self):
         candles = self.make_candles(48)
-        candles[-2]["timestamp"] += 3_600_000
+        candles[-1]["timestamp"] += 3_600_000
         now = candles[-1]["timestamp"] / 1000 + 3600 + 60
         with self.assertRaisesRegex(ValueError, "gap"):
             validate_hourly_feed(candles, now)
