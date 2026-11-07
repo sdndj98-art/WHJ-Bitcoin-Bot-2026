@@ -1433,6 +1433,36 @@ def build_qualification_markdown(result):
             )
         lines.append("")
 
+    forward_portfolio = paper_accounts.get(
+        "forward_only_ema50_200_4h_6h_50_50_portfolio", {}
+    )
+    if isinstance(forward_portfolio, dict) and isinstance(forward_portfolio.get("sleeves"), dict):
+        seed_time = forward_portfolio.get("seed", {}).get("4h", {}).get("last_seeded_timestamp")
+        seed_label = (
+            datetime.fromtimestamp(seed_time, timezone.utc).isoformat()
+            if isinstance(seed_time, (int, float)) else "not available"
+        )
+        lines.extend([
+            "## Genuine forward-only EMA50/200 paper portfolio",
+            "",
+            f"- Seeded from the latest completed historical bar at {seed_label}. Historical data initializes indicators only; it contributes zero trades and zero PnL.",
+            f"- Combined starting capital: ${forward_portfolio.get('initial_cash_usd', 0):,.2f}; current equity: ${forward_portfolio.get('equity_after_estimated_exit_costs_usd', 0):,.2f}; return: {forward_portfolio.get('return_pct', 0):+.2f}%.",
+            f"- Completed forward-only trades: {forward_portfolio.get('completed_trades', 0)}; allocation: 10% of each $500 timeframe sleeve per entry.",
+        ])
+        for timeframe in ("4h", "6h"):
+            account = forward_portfolio["sleeves"].get(timeframe, {})
+            pauses = account.get("risk_pause_reasons", [])
+            status = "PAUSED — " + ", ".join(pauses) if pauses else "active"
+            lines.append(
+                f"- **{timeframe} sleeve:** equity ${account.get('equity_after_estimated_exit_costs_usd', 0):,.2f}; "
+                f"{account.get('completed_trades', 0)} closed trades; "
+                f"max drawdown {account.get('max_drawdown_pct', 0):.2f}%; status {status}."
+            )
+        lines.extend([
+            "- Risk controls: 10% maximum drawdown, 3% daily loss pause, and a five-loss pause. Existing legacy paper ledgers are kept separately and are not reset.",
+            "",
+        ])
+
     # Diagnostic shortlist only: rank by the weaker of base/stress benchmark edges.
     # This is deliberately not a promotion gate and never changes qualification.
     watchlist = []
@@ -1855,6 +1885,15 @@ def main():
             "equity_usd": forward_paper["ema50_200_4h_6h_50_50_portfolio"]["equity_after_estimated_exit_costs_usd"],
             "completed_trades": forward_paper["ema50_200_4h_6h_50_50_portfolio"]["completed_trades"],
             "max_drawdown_by_sleeve_pct": forward_paper["ema50_200_4h_6h_50_50_portfolio"]["max_drawdown_by_sleeve_pct"],
+        },
+        "genuine_forward_only_paper_portfolio": {
+            "return_pct": forward_paper["forward_only_ema50_200_4h_6h_50_50_portfolio"]["return_pct"],
+            "equity_usd": forward_paper["forward_only_ema50_200_4h_6h_50_50_portfolio"]["equity_after_estimated_exit_costs_usd"],
+            "completed_trades": forward_paper["forward_only_ema50_200_4h_6h_50_50_portfolio"]["completed_trades"],
+            "sleeve_drawdowns_pct": {
+                timeframe: forward_paper["forward_only_ema50_200_4h_6h_50_50_portfolio"]["sleeves"][timeframe]["max_drawdown_pct"]
+                for timeframe in ("4h", "6h")
+            },
         },
         "strategies": {
             name: {
