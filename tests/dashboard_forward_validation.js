@@ -6,7 +6,7 @@ const html = fs.readFileSync("web/index.html", "utf8");
 const match = html.match(/function validateForwardReport\(x\)\{[\s\S]*?\n\}\nfunction renderForward\(/);
 assert.ok(match, "Could not locate validateForwardReport in dashboard");
 const validatorSource = match[0].replace(/\nfunction renderForward\($/, "");
-const validate = vm.runInNewContext(`(${validatorSource}; validateForwardReport)`);
+const validate = vm.runInNewContext(`${validatorSource}; validateForwardReport`);
 
 const keys = ["1h_sma_trend", "1h_ema_trend", "1h_rsi14_mean_reversion", "4h", "6h"];
 const allocations = [200, 200, 200, 500, 500];
