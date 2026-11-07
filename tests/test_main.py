@@ -28,6 +28,8 @@ class AnalysisTests(unittest.TestCase):
     def test_rejects_too_few_prices(self):
         with self.assertRaises(ValueError):
             main.analyze([100.0] * 49)
+        with self.assertRaises(ValueError):
+            main.analyze([100.0] * 50)
 
     def test_rejects_non_positive_prices(self):
         with self.assertRaises(ValueError):
@@ -41,14 +43,14 @@ class AnalysisTests(unittest.TestCase):
 
     @patch("main.urllib.request.urlopen")
     def test_fetch_excludes_current_incomplete_candle(self, mocked_open):
-        candles = [[i, "1", "1", "1", str(100 + i), "1", "1", 1] for i in range(51)]
+        candles = [[i, "1", "1", "1", str(100 + i), "1", "1", 1] for i in range(52)]
         payload = {"error": [], "result": {"XXBTZUSD": candles, "last": "123"}}
         mocked_open.return_value.__enter__.return_value = BytesIO(
             json.dumps(payload).encode("utf-8")
         )
         closes = main.fetch_closes()
-        self.assertEqual(len(closes), 50)
-        self.assertEqual(closes[-1], 149.0)
+        self.assertEqual(len(closes), 51)
+        self.assertEqual(closes[-1], 150.0)
 
     @patch("main.urllib.request.urlopen")
     def test_fetch_raises_on_exchange_error(self, mocked_open):
