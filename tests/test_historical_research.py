@@ -26,18 +26,34 @@ class HistoricalResearchTests(unittest.TestCase):
         self.assertEqual(candles[0]["timestamp"] + (len(candles) - 1) * INTERVAL_MS,
                          candles[-1]["timestamp"])
 
-    def test_missing_hour_is_rejected(self):
+    def test_short_missing_hour_is_imputed_and_flagged(self):
         now = datetime(2026, 11, 7, 12, 0, tzinfo=timezone.utc)
         calls = {"count": 0}
 
         def page_with_gap(start_ms, end_ms):
             calls["count"] += 1
-            # Skip one point in the first requested chunk.
             missing = start_ms + 100 * INTERVAL_MS if calls["count"] == 1 else None
             return self.make_page(start_ms, end_ms, skip_timestamp=missing)
 
         with patch("historical_research.fetch_page", side_effect=page_with_gap):
-            with self.assertRaisesRegex(ValueError, "missing hourly intervals"):
+            candles = load_two_year_candles(days=45, now=now)
+        self.assertEqual(candles[0]["_imputed_hour_count"], 1)
+        self.assertEqual(sum(1 for candle in candles if candle["imputed"]), 1)
+
+    def test_large_missing_interval_is_rejected(self):
+        now = datetime(2026, 11, 7, 12, 0, tzinfo=timezone.utc)
+        calls = {"count": 0}
+
+        def page_with_large_gap(start_ms, end_ms):
+            calls["count"] += 1
+            missing = start_ms + 100 * INTERVAL_MS if calls["count"] == 1 else None
+            rows = self.make_page(start_ms, end_ms)
+            if missing is not None:
+                rows = [row for row in rows if row[0] < missing or row[0] >= missing + 8 * INTERVAL_MS]
+            return rows
+
+        with patch("historical_research.fetch_page", side_effect=page_with_large_gap):
+            with self.assertRaisesRegex(ValueError, "six-hour repair limit"):
                 load_two_year_candles(days=45, now=now)
 
     def test_invalid_ohlc_relationship_is_rejected(self):
