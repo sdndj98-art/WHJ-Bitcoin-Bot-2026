@@ -70,6 +70,8 @@ jobs:
             paper_6h_rsi14_mean_reversion.json
             paper_4h_ema50_200_ensemble_sleeve.json
             paper_6h_ema50_200_ensemble_sleeve.json
+            paper_forward_4h_ema50_200.json
+            paper_forward_6h_ema50_200.json
           key: whj-mtf-paper-v7-${{ github.run_id }}-${{ github.run_attempt }}
 
       - name: Save historical research report
