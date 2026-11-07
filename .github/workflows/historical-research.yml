@@ -9,7 +9,9 @@ on:
     paths:
       - "historical_research.py"
       - "strategy_lab.py"
+      - "paper_account.py"
       - "tests/test_historical_research.py"
+      - "tests/test_simulation_regressions.py"
       - ".github/workflows/historical-research.yml"
 
 permissions:
