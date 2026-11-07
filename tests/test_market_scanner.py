@@ -29,7 +29,7 @@ class MarketScannerTests(unittest.TestCase):
     def test_candidate_requires_all_seven_confirmations_and_good_data(self):
         result = scan_btc_market(candles(), HEALTHY)
         self.assertEqual(result["status"], "PAPER_CANDIDATE")
-        self.assertEqual(result["confluence_score"], 6)
+        self.assertEqual(result["confluence_score"], 7)
         self.assertEqual(result["confluence_total"], 7)
         self.assertTrue(result["paper_candidate_only"])
         self.assertFalse(result["live_orders_placed"])
