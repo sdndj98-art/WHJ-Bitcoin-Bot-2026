@@ -8,7 +8,7 @@ from pathlib import Path
 from paper_account import _ema_last, run_paper_portfolio, update_paper_account
 from paper_trading import run_backtest
 from strategy_lab import _simulate, run_strategy_lab
-from risk_analysis import monte_carlo_trade_risk
+from risk_analysis import block_bootstrap_trade_risk, monte_carlo_trade_risk
 
 
 class MonteCarloRiskTests(unittest.TestCase):
@@ -34,6 +34,25 @@ class MonteCarloRiskTests(unittest.TestCase):
             monte_carlo_trade_risk([{"pnl": float("nan")}])
         with self.assertRaises(ValueError):
             monte_carlo_trade_risk([{"pnl": 1.0}], simulations=99)
+
+
+class BlockBootstrapRiskTests(unittest.TestCase):
+    def test_block_bootstrap_is_reproducible_and_reports_method(self):
+        trades = [{"pnl": value} for value in [8, -12, -10, 7, 9, -11, -8, 6]]
+        first = block_bootstrap_trade_risk(trades, simulations=500, seed=19, block_size=2)
+        second = block_bootstrap_trade_risk(trades, simulations=500, seed=19, block_size=2)
+        self.assertEqual(first, second)
+        self.assertEqual(first["trade_count"], len(trades))
+        self.assertEqual(first["block_size"], 2)
+        self.assertIn("block", first["method"])
+        self.assertGreaterEqual(first["p95_max_drawdown_pct"], first["median_max_drawdown_pct"])
+
+    def test_block_bootstrap_validates_parameters_and_empty_input(self):
+        self.assertEqual(block_bootstrap_trade_risk([])["status"], "INSUFFICIENT_TRADES")
+        with self.assertRaises(ValueError):
+            block_bootstrap_trade_risk([{"pnl": 1.0}], block_size=0)
+        with self.assertRaises(ValueError):
+            block_bootstrap_trade_risk([{"pnl": float("inf")}])
 
 
 class StrategyLabTests(unittest.TestCase):
