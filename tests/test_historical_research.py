@@ -430,7 +430,7 @@ class HistoricalResearchTests(unittest.TestCase):
         self.assertIn("+8.53 pp elevated costs", report)
         self.assertIn("1 failed gate", report)
         self.assertIn("2 failed gates", report)
-        self.assertLess(report.index("**1d / bollinger**"), report.index("**weak_edge**"))
+        self.assertLess(report.index("1d / bollinger"), report.index("1d / weak_edge"))
 
 
     def test_qualification_requires_outperformance_of_matched_benchmark(self):
