@@ -74,8 +74,13 @@ def update_paper_account(candles, state_path="paper_account_state.json",
     for row in candles:
         if not isinstance(row, (list, tuple)) or len(row) < 5:
             raise ValueError("Each candle must include timestamp and close")
-        timestamp = _number(row[0], "candle timestamp", 0)
-        close = _number(row[4], "candle close", 0)
+        if isinstance(row[0], bool) or isinstance(row[4], bool):
+            raise ValueError("Candle timestamp and close cannot be boolean values")
+        try:
+            timestamp = _number(float(row[0]), "candle timestamp", 0)
+            close = _number(float(row[4]), "candle close", 0)
+        except (TypeError, ValueError, OverflowError) as exc:
+            raise ValueError("Candle timestamp and close must be numeric") from exc
         normalized.append((int(timestamp), close))
     if not normalized:
         raise ValueError("No closed candles were supplied")
