@@ -689,5 +689,24 @@ class HistoricalResearchTests(unittest.TestCase):
         self.assertTrue(passing["qualified_for_extended_paper_review"])
 
 
+    def test_qualification_report_discloses_synthetic_gap_repairs(self):
+        result = {
+            "source": "test source", "candles": 1000,
+            "first_closed_candle_utc": "start", "last_closed_candle_utc": "end",
+            "data_quality": {
+                "imputed_missing_hour_count": 20,
+                "imputation_method": "forward-filled prior close with zero volume",
+            },
+            "strategy_qualification_policy": {
+                "minimum_oos_trades": 30, "minimum_profit_factor": 1.2,
+                "maximum_oos_drawdown_pct": 10.0,
+            },
+        }
+        report = build_qualification_markdown(result)
+        self.assertIn("Imputed missing hourly candles: 20 (2.0000% of the series)", report)
+        self.assertIn("synthetic observations, not exchange trades", report)
+        self.assertIn("forward-filled prior close with zero volume", report)
+
+
 if __name__ == "__main__":
     unittest.main()
