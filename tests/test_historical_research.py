@@ -4,7 +4,7 @@ import unittest
 from datetime import datetime, timezone
 from unittest.mock import patch
 
-from historical_research import (INTERVAL_MS, aggregate_candles, load_two_year_candles, run_forward_paper_accounts, run_ohlc_breakout_lab, run_long_short_lab, _turtle_signals)
+from historical_research import (INTERVAL_MS, aggregate_candles, load_two_year_candles, run_forward_paper_accounts, run_ohlc_breakout_lab, run_long_short_lab, run_daily_regime_filter_lab, _turtle_signals)
 
 
 class HistoricalResearchTests(unittest.TestCase):
@@ -129,6 +129,28 @@ class HistoricalResearchTests(unittest.TestCase):
             for window in result["strategies"]["donchian_55_20"]["walk_forward_windows"]
         ))
         self.assertTrue(math.isfinite(result["strategies"]["donchian_55_20"]["out_of_sample"]["return_pct"]))
+
+    def test_daily_regime_filter_uses_complete_daily_history(self):
+        candles = []
+        for index in range(24 * 210):
+            timestamp = index * INTERVAL_MS
+            price = 50000.0 + index * 0.2
+            candles.append({
+                "timestamp": timestamp,
+                "open": price - 1,
+                "high": price + 3,
+                "low": price - 3,
+                "close": price,
+                "volume": 2.0,
+                "imputed": False,
+            })
+        result = run_daily_regime_filter_lab(candles)
+        self.assertEqual(result["daily_bar_count"], 210)
+        self.assertIn("ema50_200_with_daily_sma200", result["strategies"])
+        self.assertTrue(all(
+            window["start_index"] >= result["split_index"]
+            for window in result["strategies"]["ema50_200_with_daily_sma200"]["walk_forward_windows"]
+        ))
 
     def test_long_short_research_charges_funding_and_matches_benchmark(self):
         bars = []
