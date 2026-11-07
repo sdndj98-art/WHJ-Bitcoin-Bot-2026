@@ -10,7 +10,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from paper_trading import run_backtest
-from paper_account import update_paper_account
+from paper_account import run_paper_portfolio
 from strategy_lab import run_strategy_lab
 
 API = "https://api.kraken.com/0/public/OHLC?pair=XBTUSD&interval=60"
@@ -102,7 +102,9 @@ def main():
     candles = fetch_closed_candles()
     closes = [float(candle[4]) for candle in candles]
     report = analyze(closes)
-    report["persistent_paper_account"] = update_paper_account(candles)
+    portfolio = run_paper_portfolio(candles)
+    report["persistent_paper_portfolio"] = portfolio
+    report["persistent_paper_account"] = portfolio["accounts"]["sma_trend"]
     REPORT_PATH.write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
     print(json.dumps(report, indent=2))
 
