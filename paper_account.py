@@ -410,10 +410,19 @@ def update_paper_account(candles, state_path="paper_account_state.json",
                     break
             if loss_streak >= max_consecutive_losses:
                 state["paused_for_loss_streak"] = True
+            if strategy_health_pause and not state.get("paused_for_strategy_health", False):
+                rolling_trades = state["trades"][-20:]
+                if len(rolling_trades) >= 10:
+                    rolling_pnl = [float(trade["pnl_usd"]) for trade in rolling_trades]
+                    rolling_profit = sum(value for value in rolling_pnl if value > 0)
+                    rolling_loss = -sum(value for value in rolling_pnl if value < 0)
+                    if sum(rolling_pnl) <= 0 or (rolling_loss > 0 and rolling_profit / rolling_loss < 1.0):
+                        state["paused_for_strategy_health"] = True
             paused = (
                 state.get("paused_for_drawdown", False)
                 or state.get("daily_loss_paused", False)
                 or state.get("paused_for_loss_streak", False)
+                or state.get("paused_for_strategy_health", False)
             )
 
             if want_long and state["btc"] == 0 and not paused:
