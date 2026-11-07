@@ -4,7 +4,7 @@ import unittest
 from datetime import datetime, timezone
 from unittest.mock import patch
 
-from historical_research import (INTERVAL_MS, aggregate_candles, load_two_year_candles, run_forward_paper_accounts, run_ohlc_breakout_lab, run_long_short_lab, run_daily_regime_filter_lab, _simulate_ohlc, assess_strategy_qualification, assess_research_lab_qualification, build_qualification_markdown, summarize_qualification, _turtle_signals)
+from historical_research import (INTERVAL_MS, aggregate_candles, load_two_year_candles, run_forward_paper_accounts, run_ohlc_breakout_lab, run_long_short_lab, run_daily_regime_filter_lab, _rsi_series, _simulate_ohlc, assess_strategy_qualification, assess_research_lab_qualification, build_qualification_markdown, summarize_qualification, _turtle_signals)
 
 
 class HistoricalResearchTests(unittest.TestCase):
@@ -252,6 +252,15 @@ class HistoricalResearchTests(unittest.TestCase):
         self.assertAlmostEqual(result["max_drawdown_pct"], round(expected_drawdown, 2), places=2)
         self.assertAlmostEqual(result["final_equity_usd"], round(expected_equity, 2), places=2)
 
+    def test_wilder_rsi_series_validates_and_tracks_momentum(self):
+        rising = [100.0 + index for index in range(30)]
+        values = _rsi_series(rising, 14)
+        self.assertIsNone(values[13])
+        self.assertEqual(values[14], 100.0)
+        self.assertEqual(values[-1], 100.0)
+        with self.assertRaises(ValueError):
+            _rsi_series([1.0, 2.0], 2)
+
     def test_daily_regime_filter_uses_complete_daily_history(self):
         candles = []
         for index in range(24 * 210):
@@ -269,6 +278,8 @@ class HistoricalResearchTests(unittest.TestCase):
         result = run_daily_regime_filter_lab(candles)
         self.assertEqual(result["daily_bar_count"], 210)
         self.assertIn("ema50_200_with_daily_sma200", result["strategies"])
+        self.assertIn("ema20_50_daily_sma200_rsi50", result["strategies"])
+        self.assertIn("ema20_50_daily_sma200_rsi50_rising", result["strategies"])
         self.assertTrue(all(
             window["start_index"] >= result["split_index"]
             for window in result["strategies"]["ema50_200_with_daily_sma200"]["walk_forward_windows"]
