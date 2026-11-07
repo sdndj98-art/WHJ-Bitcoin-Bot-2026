@@ -3,7 +3,7 @@ import unittest
 from datetime import datetime, timezone
 from unittest.mock import patch
 
-from historical_research import INTERVAL_MS, load_two_year_candles
+from historical_research import INTERVAL_MS, aggregate_candles, load_two_year_candles
 
 
 class HistoricalResearchTests(unittest.TestCase):
@@ -55,6 +55,30 @@ class HistoricalResearchTests(unittest.TestCase):
         with patch("historical_research.fetch_page", side_effect=page_with_large_gap):
             with self.assertRaisesRegex(ValueError, "six-hour repair limit"):
                 load_two_year_candles(days=45, now=now)
+
+    def test_timeframe_aggregation_uses_only_complete_utc_bars(self):
+        candles = []
+        for index in range(24 * 205):
+            timestamp = index * INTERVAL_MS
+            price = 100.0 + index
+            candles.append({
+                "timestamp": timestamp,
+                "open": price,
+                "high": price + 2,
+                "low": price - 2,
+                "close": price + 1,
+                "volume": 1.0,
+                "imputed": index == 10,
+            })
+        four_hour = aggregate_candles(candles, 4)
+        daily = aggregate_candles(candles, 24)
+        self.assertEqual(len(four_hour), (24 * 205) // 4)
+        self.assertEqual(len(daily), 205)
+        self.assertEqual(four_hour[0]["open"], candles[0]["open"])
+        self.assertEqual(four_hour[0]["close"], candles[3]["close"])
+        self.assertEqual(four_hour[0]["high"], candles[3]["high"])
+        self.assertTrue(four_hour[2]["imputed"])
+        self.assertEqual(daily[0]["volume"], 24.0)
 
     def test_invalid_ohlc_relationship_is_rejected(self):
         now = datetime(2026, 11, 7, 12, 0, tzinfo=timezone.utc)
