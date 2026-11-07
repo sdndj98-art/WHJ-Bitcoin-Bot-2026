@@ -886,9 +886,8 @@ def run_multi_timeframe_ensemble_lab(hourly_candles, fee=FEE_RATE, slippage=SLIP
         int(row["timestamp"]) + 6 * 60 * 60 * 1000 for row in six_hour
     ]
     split_4h = int(len(four_hour) * 0.7)
-    split_6h = int(len(six_hour) * 0.7)
-    portfolio_oos_start = max(close_times_4h[split_4h], close_times_6h[split_6h])
-    portfolio_oos_end = min(close_times_4h[-1], close_times_6h[-1]) + 1
+    portfolio_oos_start = close_times_4h[split_4h]
+    portfolio_oos_end = close_times_4h[-1] + 1
     portfolio_edges = [
         portfolio_oos_start + ((portfolio_oos_end - portfolio_oos_start) * k) // 3
         for k in range(4)
@@ -908,7 +907,7 @@ def run_multi_timeframe_ensemble_lab(hourly_candles, fee=FEE_RATE, slippage=SLIP
             })
     portfolio_returns = [window["metrics"]["return_pct"] for window in portfolio_windows]
     portfolio_is_start = max(close_times_4h[200], close_times_6h[200])
-    portfolio_is_end = min(close_times_4h[split_4h], close_times_6h[split_6h])
+    portfolio_is_end = close_times_4h[split_4h]
     portfolio_candidate = {
         "in_sample": _simulate_equal_weight_multitimeframe(
             [four_hour, six_hour], [signal_4h, signal_6h], [4, 6],
