@@ -471,7 +471,70 @@ def _atr_series(bars, period=14):
         result[index] = current
     return result
 
-def run_daily_regime_filter_lab(hourly_candles, fee=FEE_RATE, slippage=SLIPPAGE_RATE):
+def _regime_switching_atr_signals(four_hour, daily, daily_sma200):
+    """Bull-long / bear-short trend with a 3x ATR trailing stop.
+
+    Every 4h bar uses only the previous fully closed daily bar for regime
+    classification. Stops are evaluated at the current completed 4h close;
+    fills are modeled at the next 4h close.
+    """
+    closes = [float(row["close"]) for row in four_hour]
+    ema20 = _ema_series(closes, 20)
+    ema50 = _ema_series(closes, 50)
+    atr14 = _atr_series(four_hour, 14)
+    daily_closes = [float(row["close"]) for row in daily]
+    daily_index = {row["timestamp"] // 86400000: i for i, row in enumerate(daily)}
+    signals = []
+    direction = 0
+    extreme = None
+    blocked_direction = 0
+    for index, row in enumerate(four_hour):
+        day_index = row["timestamp"] // 86400000
+        previous_day = daily_index.get(day_index - 1)
+        regime = 0
+        if previous_day is not None and previous_day >= 219:
+            average = daily_sma200[previous_day]
+            prior_average = daily_sma200[previous_day - 20]
+            if average is not None and prior_average is not None:
+                if daily_closes[previous_day] > average and average > prior_average:
+                    regime = 1
+                elif daily_closes[previous_day] < average and average < prior_average:
+                    regime = -1
+        if regime == 1:
+            desired = 1 if ema20[index] > ema50[index] and closes[index] > ema50[index] else 0
+        elif regime == -1:
+            desired = -1 if ema20[index] < ema50[index] and closes[index] < ema50[index] else 0
+        else:
+            desired = 0
+        if blocked_direction and desired != blocked_direction:
+            blocked_direction = 0
+        if direction == 0:
+            if desired and desired != blocked_direction and atr14[index] is not None:
+                direction = desired
+                extreme = closes[index]
+        elif direction == 1:
+            extreme = max(extreme, closes[index])
+            if desired != 1:
+                direction = 0
+                extreme = None
+            elif atr14[index] is not None and closes[index] < extreme - 3.0 * atr14[index]:
+                direction = 0
+                extreme = None
+                blocked_direction = 1
+        elif direction == -1:
+            extreme = min(extreme, closes[index])
+            if desired != -1:
+                direction = 0
+                extreme = None
+            elif atr14[index] is not None and closes[index] > extreme + 3.0 * atr14[index]:
+                direction = 0
+                extreme = None
+                blocked_direction = -1
+        signals.append(direction)
+    return signals
+
+
+def run_daily_regime_filter_lab(hourly_candles, fee=FEE_RATE, slippage=SLIPPAGE_RATE, funding_rate_per_8h=0.00005):
     """Test 4h entries gated by the previous fully closed daily SMA200 regime."""
     four_hour = aggregate_candles(hourly_candles, 4)
     daily = aggregate_candles(hourly_candles, 24)
@@ -479,6 +542,8 @@ def run_daily_regime_filter_lab(hourly_candles, fee=FEE_RATE, slippage=SLIPPAGE_
         raise ValueError("Insufficient bars for multi-timeframe regime research")
     if not 0 <= fee < 1 or not 0 <= slippage < 1:
         raise ValueError("Fee and slippage must be between 0 and 1")
+    if not math.isfinite(funding_rate_per_8h) or funding_rate_per_8h < 0:
+        raise ValueError("Funding rate must be finite and non-negative")
 
     daily_closes = [float(row["close"]) for row in daily]
     daily_sma200 = [None] * len(daily)
@@ -507,6 +572,7 @@ def run_daily_regime_filter_lab(hourly_candles, fee=FEE_RATE, slippage=SLIPPAGE_
         "ema20_50_daily_sma200_ema20_exit": [],
         "ema20_50_daily_sma200_rsi45_exit": [],
         "ema20_50_daily_sma200_atr3_trailing": [],
+        "regime_switching_atr3_long_short": [],
         "sma20_50_with_daily_sma200": [],
     }
     for i, row in enumerate(four_hour):
@@ -576,6 +642,9 @@ def run_daily_regime_filter_lab(hourly_candles, fee=FEE_RATE, slippage=SLIPPAGE_
                  and daily_regime and closes[i] > sma20[i] > sma50[i])
         )
 
+    signals["regime_switching_atr3_long_short"] = _regime_switching_atr_signals(
+        four_hour, daily, daily_sma200
+    )
     split = int(len(four_hour) * 0.7)
     edges = [split + ((len(four_hour) - split) * k) // 3 for k in range(4)]
     results = {}
@@ -588,12 +657,30 @@ def run_daily_regime_filter_lab(hourly_candles, fee=FEE_RATE, slippage=SLIPPAGE_
                     "window": fold + 1,
                     "start_index": start,
                     "end_index_exclusive": end,
-                    "metrics": _simulate_ohlc(four_hour, signal, start, end, fee, slippage),
+                    "metrics": (
+                        _simulate_long_short(
+                            four_hour, signal, start, end, fee, slippage,
+                            funding_rate_per_8h, bar_hours=4,
+                        ) if name == "regime_switching_atr3_long_short"
+                        else _simulate_ohlc(four_hour, signal, start, end, fee, slippage)
+                    ),
                 })
         returns = [window["metrics"]["return_pct"] for window in windows]
         results[name] = {
-            "in_sample": _simulate_ohlc(four_hour, signal, 200, split, fee, slippage),
-            "out_of_sample": _simulate_ohlc(four_hour, signal, split, len(four_hour), fee, slippage),
+            "in_sample": (
+                _simulate_long_short(
+                    four_hour, signal, 200, split, fee, slippage,
+                    funding_rate_per_8h, bar_hours=4,
+                ) if name == "regime_switching_atr3_long_short"
+                else _simulate_ohlc(four_hour, signal, 200, split, fee, slippage)
+            ),
+            "out_of_sample": (
+                _simulate_long_short(
+                    four_hour, signal, split, len(four_hour), fee, slippage,
+                    funding_rate_per_8h, bar_hours=4,
+                ) if name == "regime_switching_atr3_long_short"
+                else _simulate_ohlc(four_hour, signal, split, len(four_hour), fee, slippage)
+            ),
             "walk_forward_windows": windows,
             "worst_window_return_pct": min(returns) if returns else None,
         }
@@ -608,7 +695,8 @@ def run_daily_regime_filter_lab(hourly_candles, fee=FEE_RATE, slippage=SLIPPAGE_
         "bar_count": len(four_hour),
         "daily_bar_count": len(daily),
         "split_index": split,
-        "execution": "4h signals use the previous fully closed daily SMA200; fills occur at the next 4h close.",
+        "execution": "4h signals use the previous fully closed daily SMA200; fills occur at the next 4h close. The regime-switching candidate uses unlevered 25% notional and modeled funding.",
+        "funding_rate_per_8h_assumption": funding_rate_per_8h,
         "strategies": results,
     }
 
@@ -1308,7 +1396,7 @@ def main():
         daily_bars, fee=0.002, slippage=0.001, funding_rate_per_8h=0.0001
     )
     daily_regime_research = run_daily_regime_filter_lab(candles)
-    daily_regime_stress = run_daily_regime_filter_lab(candles, fee=0.002, slippage=0.001)
+    daily_regime_stress = run_daily_regime_filter_lab(candles, fee=0.002, slippage=0.001, funding_rate_per_8h=0.0001)
     forward_paper = run_forward_paper_accounts(candles)
     qualification = {}
     for label in ("1h", "4h", "6h", "1d"):
