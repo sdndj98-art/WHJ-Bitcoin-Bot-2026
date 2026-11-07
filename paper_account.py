@@ -261,7 +261,8 @@ def update_paper_account(candles, state_path="paper_account_state.json",
                          initial_cash=1000.0, fee_rate=0.001,
                          slippage_rate=0.0005, allocation_fraction=0.25,
                          max_drawdown_fraction=0.10, daily_loss_fraction=0.03,
-                         max_consecutive_losses=5, strategy="sma_trend", strategy_health_pause=False):
+                         max_consecutive_losses=5, strategy="sma_trend", strategy_health_pause=False,
+                         strategy_health_drawdown_fraction=0.08):
     """Process each newly closed hourly candle once and persist the simulated account."""
     initial_cash = _number(initial_cash, "initial_cash", 0)
     if initial_cash <= 0:
@@ -275,6 +276,9 @@ def update_paper_account(candles, state_path="paper_account_state.json",
         raise ValueError("max_consecutive_losses must be a positive integer")
     if not isinstance(strategy_health_pause, bool):
         raise ValueError("strategy_health_pause must be boolean")
+    strategy_health_drawdown_fraction = _number(
+        strategy_health_drawdown_fraction, "strategy_health_drawdown_fraction", 0.001, 1
+    )
     if strategy not in ("sma_trend", "ema_trend", "rsi_momentum", "sma200_regime", "ema50_200_regime", "bollinger_mean_reversion", "rsi14_mean_reversion"):
         raise ValueError("Unknown paper strategy")
 
@@ -420,7 +424,19 @@ def update_paper_account(candles, state_path="paper_account_state.json",
                     rolling_pnl = [float(trade["pnl_usd"]) for trade in rolling_trades]
                     rolling_profit = sum(value for value in rolling_pnl if value > 0)
                     rolling_loss = -sum(value for value in rolling_pnl if value < 0)
-                    if sum(rolling_pnl) <= 0 or (rolling_loss > 0 and rolling_profit / rolling_loss < 1.0):
+                    rolling_peak = 0.0
+                    rolling_cumulative = 0.0
+                    rolling_drawdown = 0.0
+                    for trade_pnl in rolling_pnl:
+                        rolling_cumulative += trade_pnl
+                        rolling_peak = max(rolling_peak, rolling_cumulative)
+                        rolling_drawdown = max(rolling_drawdown, rolling_peak - rolling_cumulative)
+                    rolling_drawdown_pct = rolling_drawdown / float(state["initial_cash"]) * 100.0
+                    if (
+                        sum(rolling_pnl) <= 0
+                        or (rolling_loss > 0 and rolling_profit / rolling_loss < 1.0)
+                        or rolling_drawdown_pct >= strategy_health_drawdown_fraction * 100.0
+                    ):
                         state["paused_for_strategy_health"] = True
             paused = (
                 state.get("paused_for_drawdown", False)

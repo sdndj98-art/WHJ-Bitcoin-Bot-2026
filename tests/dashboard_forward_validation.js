@@ -65,10 +65,12 @@ const render = vm.runInNewContext(`${rendererSource}; renderForward`, context);
 const renderableReport = structuredClone(report);
 for (const key of keys) {
   renderableReport.sleeves_summary[key].health_assessment.rolling_net_pnl_usd = 2.5;
+  renderableReport.sleeves_summary[key].health_assessment.rolling_max_drawdown_pct = 4.25;
 }
 render(renderableReport);
 assert.match(getElement("forwardRows").innerHTML, /1h · SMA Trend/);
 assert.match(getElement("forwardRows").innerHTML, /\$2\.50/);
+assert.match(getElement("forwardRows").innerHTML, /4\.25%/);
 assert.equal((getElement("forwardRows").innerHTML.match(/<tr>/g) || []).length, 5);
 
 console.log("Dashboard forward-report validation and rendering tests passed (five sleeves, aggregates, and runtime rendering).");
