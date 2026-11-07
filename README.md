@@ -39,7 +39,7 @@ GitHub Actions runs tests and hourly analysis on pushes to `main`, hourly at min
 
 ## Browser dashboard
 
-A responsive Arabic command-center dashboard is available in `web/index.html`. It displays the latest generated paper-analysis report, market signal, simulated portfolio metrics, strategy comparison, trade log, risk diagnostics, and market-data quality. The hourly GitHub Actions workflow packages the page together with `report.json` and publishes it to GitHub Pages on the `main` branch. The dashboard refreshes its report every 60 seconds. GitHub Pages must be enabled for the repository; the workflow attempts to configure the Pages site automatically on deployment. The dashboard is read-only and does not submit exchange orders.
+A responsive Arabic command-center dashboard is available in `web/index.html`. It displays the latest generated paper-analysis report, market signal, simulated portfolio metrics, strategy comparison, trade log, risk diagnostics, and market-data quality. The hourly GitHub Actions workflow packages the page together with `report.json` and publishes it to GitHub Pages on the `main` branch. The dashboard refreshes its report every 60 seconds. Before the first deployment, a repository administrator must enable GitHub Pages once in Settings → Pages → Build and deployment → Source → GitHub Actions. The workflow then publishes the site after successful hourly analysis; if Pages is not enabled or GitHub denies setup permissions, the bot analysis still completes and website deployment is skipped. The dashboard is read-only and does not submit exchange orders.
 
 ## Monte Carlo trade-risk diagnostics
 
