@@ -237,32 +237,6 @@ def _turtle_signals(bars, entry_period, exit_period, regime_period=None, atr_sto
                 highest_close = close
         signals.append(in_position)
     return signals
-    """Create close-confirmed Donchian signals using only prior-bar channel bounds."""
-    closes = [float(row["close"]) for row in bars]
-    highs = [float(row["high"]) for row in bars]
-    lows = [float(row["low"]) for row in bars]
-    regime_sma = [None] * len(bars)
-    if regime_period:
-        for i in range(regime_period - 1, len(bars)):
-            regime_sma[i] = sum(closes[i - regime_period + 1:i + 1]) / regime_period
-
-    signals = []
-    in_position = False
-    for i, close in enumerate(closes):
-        if in_position:
-            exit_break = i >= exit_period and close < min(lows[i - exit_period:i])
-            regime_exit = bool(regime_period and regime_sma[i] is not None and close < regime_sma[i])
-            if exit_break or regime_exit:
-                in_position = False
-        elif i >= entry_period:
-            breakout = close > max(highs[i - entry_period:i])
-            regime_ok = not regime_period or (
-                regime_sma[i] is not None and close > regime_sma[i]
-            )
-            if breakout and regime_ok:
-                in_position = True
-        signals.append(in_position)
-    return signals
 
 
 def _simulate_ohlc(bars, signals, start, end, fee, slippage):
@@ -346,6 +320,7 @@ def run_ohlc_breakout_lab(bars, fee=FEE_RATE, slippage=SLIPPAGE_RATE):
         "donchian_20_10_sma200": (20, 10, 200, None),
         "donchian_55_20_sma200": (55, 20, 200, None),
         "donchian_55_20_atr3_trailing": (55, 20, None, 3.0),
+        "donchian_55_20_sma200_atr3_trailing": (55, 20, 200, 3.0),
     }
     results = {}
     for name, (entry, exit_period, regime, atr_multiple) in strategies.items():
