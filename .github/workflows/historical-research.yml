@@ -42,8 +42,8 @@ jobs:
             paper_4h_ema50_200.json
             paper_daily_bollinger.json
             paper_6h_rsi14_mean_reversion.json
-          paper_4h_ema50_200_ensemble_sleeve.json
-          paper_6h_ema50_200_ensemble_sleeve.json
+            paper_4h_ema50_200_ensemble_sleeve.json
+            paper_6h_ema50_200_ensemble_sleeve.json
           key: whj-mtf-paper-v6-${{ github.run_id }}-${{ github.run_attempt }}
           restore-keys: |
             whj-mtf-paper-v6-
