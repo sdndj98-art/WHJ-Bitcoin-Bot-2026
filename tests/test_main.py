@@ -7,7 +7,20 @@ import main
 from dashboard import build_dashboard
 from notify_telegram import format_message
 from paper_trading import run_backtest
+from paper_account import run_paper_portfolio
 from strategy_lab import run_strategy_lab
+
+
+class PortfolioHealthGuardTests(unittest.TestCase):
+    @patch("paper_account.update_paper_account")
+    def test_all_legacy_paper_sleeves_enable_rolling_health_pause(self, mocked_update):
+        mocked_update.return_value = {"mode": "PERSISTENT_PAPER_ONLY"}
+        result = run_paper_portfolio([[1_750_000_000, 0, 0, 0, "100"]])
+        self.assertEqual(len(result["accounts"]), 5)
+        self.assertEqual(mocked_update.call_count, 5)
+        for call in mocked_update.call_args_list:
+            self.assertIs(call.kwargs["strategy_health_pause"], True)
+            self.assertEqual(call.kwargs["strategy_health_drawdown_fraction"], 0.08)
 
 
 class AnalysisTests(unittest.TestCase):
