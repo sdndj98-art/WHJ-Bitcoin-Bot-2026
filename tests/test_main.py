@@ -55,7 +55,7 @@ class AnalysisTests(unittest.TestCase):
 
     @patch("main.urllib.request.urlopen")
     def test_fetch_excludes_current_incomplete_candle(self, mocked_open):
-        candles = [[i * 3600, "100", "102", "99", str(100 + i), "100", "1", 1]
+        candles = [[i * 3600, str(100 + i), str(102 + i), str(99 + i), str(100 + i), "100", "1", 1]
                    for i in range(52)]
         payload = {"error": [], "result": {"XXBTZUSD": candles, "last": "123"}}
         mocked_open.return_value.__enter__.return_value = BytesIO(
