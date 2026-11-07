@@ -4,7 +4,7 @@ import unittest
 from datetime import datetime, timezone
 from unittest.mock import patch
 
-from historical_research import (INTERVAL_MS, aggregate_candles, load_two_year_candles, run_forward_paper_accounts, run_ohlc_breakout_lab, _turtle_signals)
+from historical_research import (INTERVAL_MS, aggregate_candles, load_two_year_candles, run_forward_paper_accounts, run_ohlc_breakout_lab, run_long_short_lab, _turtle_signals)
 
 
 class HistoricalResearchTests(unittest.TestCase):
@@ -125,6 +125,28 @@ class HistoricalResearchTests(unittest.TestCase):
         self.assertIn("donchian_55_20_sma200", result["strategies"])
         self.assertIn("buy_and_hold_25pct", result["strategies"])
         self.assertTrue(math.isfinite(result["strategies"]["donchian_55_20"]["out_of_sample"]["return_pct"]))
+
+    def test_long_short_research_charges_funding_and_matches_benchmark(self):
+        bars = []
+        for index in range(600):
+            close = 50000.0 + index * 10.0
+            bars.append({
+                "timestamp": index * 86400000,
+                "open": close - 1,
+                "high": close + 5,
+                "low": close - 5,
+                "close": close,
+                "volume": 10.0,
+                "imputed": False,
+            })
+        result = run_long_short_lab(bars)
+        self.assertIn("sma200_long_short", result["strategies"])
+        self.assertIn("buy_and_hold_25pct", result["strategies"])
+        metrics = result["strategies"]["sma200_long_short"]["out_of_sample"]
+        self.assertGreater(metrics["funding_paid_usd"], 0)
+        self.assertTrue(math.isfinite(metrics["return_pct"]))
+        with self.assertRaises(ValueError):
+            run_long_short_lab(bars, funding_rate_per_8h=-0.1)
 
     def test_turtle_breakout_rejects_invalid_ohlc(self):
         bars = []
