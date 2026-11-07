@@ -13,24 +13,29 @@ from pathlib import Path
 
 from strategy_lab import run_strategy_lab
 
-BASE_URL = "https://api.binance.com/api/v3/klines"
+BASE_URL = "https://api.exchange.coinbase.com/products/BTC-USD/candles"
 INTERVAL_MS = 60 * 60 * 1000
 DAYS = 730
 FEE_RATE = 0.001
 SLIPPAGE_RATE = 0.0005
 
 
+def _iso_utc(timestamp_ms):
+    return datetime.fromtimestamp(timestamp_ms / 1000, timezone.utc).isoformat(timespec="seconds")
+
+
 def fetch_page(start_ms, end_ms):
     params = urllib.parse.urlencode({
-        "symbol": "BTCUSDT",
-        "interval": "1h",
-        "startTime": start_ms,
-        "endTime": end_ms,
-        "limit": 1000,
+        "granularity": 3600,
+        "start": _iso_utc(start_ms),
+        "end": _iso_utc(end_ms),
     })
     request = urllib.request.Request(
         BASE_URL + "?" + params,
-        headers={"User-Agent": "WHJ-Bitcoin-Bot-Research/1.0"},
+        headers={
+            "User-Agent": "WHJ-Bitcoin-Bot-Research/1.0",
+            "Accept": "application/json",
+        },
     )
     last_error = None
     for attempt in range(5):
@@ -38,31 +43,42 @@ def fetch_page(start_ms, end_ms):
             with urllib.request.urlopen(request, timeout=30) as response:
                 payload = json.loads(response.read().decode("utf-8"))
             if not isinstance(payload, list):
-                raise ValueError("Exchange returned an unexpected candle payload")
-            return payload
+                raise ValueError("Coinbase returned an unexpected candle payload")
+            # Coinbase format: [time, low, high, open, close, volume].
+            rows = []
+            for item in payload:
+                if not isinstance(item, list) or len(item) < 6:
+                    raise ValueError("Malformed Coinbase historical candle")
+                rows.append([
+                    int(item[0]) * 1000,
+                    float(item[3]),
+                    float(item[2]),
+                    float(item[1]),
+                    float(item[4]),
+                    float(item[5]),
+                ])
+            return rows
         except (urllib.error.URLError, TimeoutError, json.JSONDecodeError) as exc:
             last_error = exc
             time.sleep(min(2 ** attempt, 12))
-    raise RuntimeError("Unable to download historical candles: " + str(last_error))
-
+    raise RuntimeError("Unable to download historical candles from Coinbase: " + str(last_error))
 
 def load_two_year_candles(days=DAYS, now=None):
     now_ms = int((now or datetime.now(timezone.utc)).timestamp() * 1000)
-    start_ms = now_ms - days * 24 * INTERVAL_MS
+    start_ms = (now_ms - days * 24 * INTERVAL_MS) // INTERVAL_MS * INTERVAL_MS
     rows = []
     cursor = start_ms
+    # Coinbase caps hourly responses at 300 candles. Use 299-hour slices
+    # to avoid truncation and keep inclusive boundaries unambiguous.
     while cursor < now_ms:
-        page = fetch_page(cursor, now_ms)
-        if not page:
-            break
+        page_end = min(cursor + 299 * INTERVAL_MS, now_ms)
+        page = fetch_page(cursor, page_end)
         rows.extend(page)
-        next_cursor = int(page[-1][0]) + INTERVAL_MS
+        next_cursor = page_end + INTERVAL_MS
         if next_cursor <= cursor:
             raise ValueError("Historical API pagination did not advance")
         cursor = next_cursor
-        if len(page) < 1000:
-            break
-        time.sleep(0.15)
+        time.sleep(0.2)
 
     if not rows:
         raise ValueError("No historical candles were downloaded")
@@ -120,7 +136,7 @@ def main():
     result = {
         "project": "WHJ Bitcoin Bot",
         "mode": "TWO_YEAR_HISTORICAL_RESEARCH_ONLY",
-        "source": "Binance public spot klines BTCUSDT",
+        "source": "Coinbase Exchange public BTC-USD candles",
         "interval": "1h",
         "requested_days": DAYS,
         "actual_days": round((candles[-1]["timestamp"] - candles[0]["timestamp"]) / 86400000, 2),
