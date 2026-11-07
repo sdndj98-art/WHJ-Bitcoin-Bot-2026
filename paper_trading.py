@@ -5,13 +5,15 @@ import math
 def run_backtest(prices, initial_cash=1000.0, fee_rate=0.001, slippage_rate=0.0005):
     if len(prices) < 51:
         raise ValueError("At least 51 prices are required for a next-candle backtest")
-    if not math.isfinite(initial_cash) or initial_cash <= 0:
+    if isinstance(initial_cash, bool) or not isinstance(initial_cash, (int, float)) or not math.isfinite(initial_cash) or initial_cash <= 0:
         raise ValueError("Initial cash must be a finite positive number")
-    if (not math.isfinite(fee_rate) or not math.isfinite(slippage_rate)
+    if (isinstance(fee_rate, bool) or isinstance(slippage_rate, bool)
+            or not isinstance(fee_rate, (int, float)) or not isinstance(slippage_rate, (int, float))
+            or not math.isfinite(fee_rate) or not math.isfinite(slippage_rate)
             or not 0 <= fee_rate < 1 or not 0 <= slippage_rate < 1):
         raise ValueError("Invalid fee or slippage configuration")
-    if any(not isinstance(p, (int, float)) or not math.isfinite(p) or p <= 0
-           for p in prices):
+    if any(isinstance(p, bool) or not isinstance(p, (int, float))
+           or not math.isfinite(p) or p <= 0 for p in prices):
         raise ValueError("Prices must be finite positive numbers")
 
     cash = float(initial_cash)
