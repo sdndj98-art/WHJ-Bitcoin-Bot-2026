@@ -71,6 +71,7 @@ jobs:
               f"- **Status:** {report['status']}",
               f"- **Generated (UTC):** {report['generated_at_utc']}",
               f"- **Market data:** {report['data_quality']['quality']}",
+              f"- **Historical imputed warm-up candles:** {report['data_quality']['imputed_hourly_candles']} / {report['data_quality']['total_hourly_candles']} ({report['data_quality']['imputed_hourly_pct']:.4f}%)",
               f"- **Combined simulated equity:** ${report['equity_after_estimated_exit_costs_usd']:.2f}",
               f"- **Combined return:** {report['return_pct']:.4f}%",
               f"- **Closed trades:** {report['completed_trades']}",
