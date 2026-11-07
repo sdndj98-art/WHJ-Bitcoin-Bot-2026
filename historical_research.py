@@ -453,6 +453,24 @@ def _rsi_series(values, period=14):
         result[index] = 100.0 if average_loss == 0 else 100.0 - 100.0 / (1.0 + average_gain / average_loss)
     return result
 
+def _atr_series(bars, period=14):
+    """Wilder ATR from completed OHLC bars; no future bars are read."""
+    if period < 2 or len(bars) <= period:
+        raise ValueError("ATR requires a period of at least 2 and more bars than the period")
+    true_ranges = [0.0] * len(bars)
+    for index in range(1, len(bars)):
+        high = float(bars[index]["high"])
+        low = float(bars[index]["low"])
+        previous_close = float(bars[index - 1]["close"])
+        true_ranges[index] = max(high - low, abs(high - previous_close), abs(low - previous_close))
+    result = [None] * len(bars)
+    current = sum(true_ranges[1:period + 1]) / period
+    result[period] = current
+    for index in range(period + 1, len(bars)):
+        current = (current * (period - 1) + true_ranges[index]) / period
+        result[index] = current
+    return result
+
 def run_daily_regime_filter_lab(hourly_candles, fee=FEE_RATE, slippage=SLIPPAGE_RATE):
     """Test 4h entries gated by the previous fully closed daily SMA200 regime."""
     four_hour = aggregate_candles(hourly_candles, 4)
@@ -473,6 +491,7 @@ def run_daily_regime_filter_lab(hourly_candles, fee=FEE_RATE, slippage=SLIPPAGE_
     ema50 = _ema_series(closes, 50)
     ema200 = _ema_series(closes, 200)
     rsi14 = _rsi_series(closes, 14)
+    atr14 = _atr_series(four_hour, 14)
     sma20 = [None] * len(closes)
     sma50 = [None] * len(closes)
     for i in range(19, len(closes)):
@@ -487,6 +506,7 @@ def run_daily_regime_filter_lab(hourly_candles, fee=FEE_RATE, slippage=SLIPPAGE_
         "ema20_50_daily_sma200_rsi50_rising": [],
         "ema20_50_daily_sma200_ema20_exit": [],
         "ema20_50_daily_sma200_rsi45_exit": [],
+        "ema20_50_daily_sma200_atr3_trailing": [],
         "sma20_50_with_daily_sma200": [],
     }
     for i, row in enumerate(four_hour):
@@ -536,6 +556,21 @@ def run_daily_regime_filter_lab(hourly_candles, fee=FEE_RATE, slippage=SLIPPAGE_
             rsi_exit_position = False
         signals["ema20_50_daily_sma200_ema20_exit"].append(ema20_exit_position)
         signals["ema20_50_daily_sma200_rsi45_exit"].append(rsi_exit_position)
+        if i == 0:
+            atr_trailing_position = False
+            atr_trailing_peak = None
+        if not atr_trailing_position and trend_setup and atr14[i] is not None:
+            atr_trailing_position = True
+            atr_trailing_peak = closes[i]
+        elif atr_trailing_position:
+            atr_trailing_peak = max(atr_trailing_peak, closes[i])
+            if (
+                not daily_regime or atr14[i] is None
+                or closes[i] < atr_trailing_peak - 3.0 * atr14[i]
+            ):
+                atr_trailing_position = False
+                atr_trailing_peak = None
+        signals["ema20_50_daily_sma200_atr3_trailing"].append(atr_trailing_position)
         signals["sma20_50_with_daily_sma200"].append(
             bool(sma20[i] is not None and sma50[i] is not None
                  and daily_regime and closes[i] > sma20[i] > sma50[i])
