@@ -115,7 +115,8 @@ def _simulate(prices, signals, start, end, fee=0.001, slippage=0.0005):
 def run_strategy_lab(prices, fee=0.001, slippage=0.0005):
     if len(prices) < 120:
         raise ValueError("At least 120 prices are required for strategy holdout testing")
-    if any(not isinstance(p, (int, float)) or not math.isfinite(p) or p <= 0 for p in prices):
+    if any(isinstance(p, bool) or not isinstance(p, (int, float))
+           or not math.isfinite(p) or p <= 0 for p in prices):
         raise ValueError("Prices must be finite positive numbers")
     if not 0 <= fee < 1 or not 0 <= slippage < 1:
         raise ValueError("Fee and slippage must be between 0 and 1")
@@ -155,7 +156,7 @@ def run_strategy_lab(prices, fee=0.001, slippage=0.0005):
             "closed_trades": 1,
             "win_rate_pct": 100.0 if benchmark_pnl > 0 else 0.0,
             "profit_factor": None,
-            "open_position": True,
+            "open_position": False,
             "fees_and_slippage_included": True,
         }
     }
