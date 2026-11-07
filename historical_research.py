@@ -701,6 +701,90 @@ def run_daily_regime_filter_lab(hourly_candles, fee=FEE_RATE, slippage=SLIPPAGE_
     }
 
 
+def run_multi_timeframe_ensemble_lab(hourly_candles, fee=FEE_RATE, slippage=SLIPPAGE_RATE):
+    """Test 4h EMA50/200 entries confirmed by the last fully closed 6h EMA50/200 regime."""
+    four_hour = aggregate_candles(hourly_candles, 4)
+    six_hour = aggregate_candles(hourly_candles, 6)
+    if len(four_hour) < 500 or len(six_hour) < 200:
+        raise ValueError("Insufficient bars for 4h/6h consensus research")
+    if not 0 <= fee < 1 or not 0 <= slippage < 1:
+        raise ValueError("Fee and slippage must be between 0 and 1")
+
+    closes_4h = [float(row["close"]) for row in four_hour]
+    closes_6h = [float(row["close"]) for row in six_hour]
+    ema50_4h = _ema_series(closes_4h, 50)
+    ema200_4h = _ema_series(closes_4h, 200)
+    ema50_6h = _ema_series(closes_6h, 50)
+    ema200_6h = _ema_series(closes_6h, 200)
+    signal_4h = [
+        bool(index >= 199 and ema50_4h[index] > ema200_4h[index]
+             and closes_4h[index] > ema200_4h[index])
+        for index in range(len(four_hour))
+    ]
+    signal_6h = [
+        bool(index >= 199 and ema50_6h[index] > ema200_6h[index]
+             and closes_6h[index] > ema200_6h[index])
+        for index in range(len(six_hour))
+    ]
+
+    # 4h candle timestamps identify their open. At its close, use only a 6h
+    # candle whose end timestamp is <= the 4h candle end; never use a forming 6h bar.
+    six_hour_close_ms = [int(row["timestamp"]) + 6 * 60 * 60 * 1000 for row in six_hour]
+    consensus = []
+    six_index = -1
+    for index, row in enumerate(four_hour):
+        four_hour_close_ms = int(row["timestamp"]) + 4 * 60 * 60 * 1000
+        while (
+            six_index + 1 < len(six_hour_close_ms)
+            and six_hour_close_ms[six_index + 1] <= four_hour_close_ms
+        ):
+            six_index += 1
+        confirmation = bool(six_index >= 0 and signal_6h[six_index])
+        consensus.append(bool(signal_4h[index] and confirmation))
+
+    split = int(len(four_hour) * 0.7)
+    edges = [split + ((len(four_hour) - split) * k) // 3 for k in range(4)]
+    windows = []
+    for fold in range(3):
+        start, end = edges[fold], edges[fold + 1]
+        if end > start:
+            windows.append({
+                "window": fold + 1,
+                "start_index": start,
+                "end_index_exclusive": end,
+                "metrics": _simulate_ohlc(four_hour, consensus, start, end, fee, slippage),
+            })
+    returns = [window["metrics"]["return_pct"] for window in windows]
+    candidate = {
+        "in_sample": _simulate_ohlc(four_hour, consensus, 200, split, fee, slippage),
+        "out_of_sample": _simulate_ohlc(four_hour, consensus, split, len(four_hour), fee, slippage),
+        "walk_forward_windows": windows,
+        "worst_window_return_pct": min(returns) if returns else None,
+    }
+    benchmark = _simulate_ohlc(
+        four_hour, [True] * len(four_hour), split, len(four_hour), fee, slippage
+    )
+    benchmark["profit_factor"] = None
+    benchmark["closed_trades"] = 1
+    benchmark["open_position"] = False
+    benchmark["win_rate_pct"] = 100.0 if benchmark["return_pct"] > 0 else 0.0
+    return {
+        "mode": "FOUR_HOUR_ENTRY_SIX_HOUR_COMPLETED_BAR_CONSENSUS",
+        "bar_count_4h": len(four_hour),
+        "bar_count_6h": len(six_hour),
+        "split_index": split,
+        "execution": (
+            "4h EMA50/200 regime is confirmed by the most recent fully closed 6h EMA50/200 regime; "
+            "the prior completed 4h signal fills at the next 4h close. 25% notional, fees and slippage included."
+        ),
+        "confirmation_rule": "Both 4h and last fully closed 6h bars must have EMA50 > EMA200 and close > EMA200.",
+        "strategies": {
+            "ema50_200_4h_6h_consensus": candidate,
+            "buy_and_hold_25pct": {"out_of_sample": benchmark},
+        },
+    }
+
+
 def _directional_signals(bars):
     closes = [float(row["close"]) for row in bars]
     ema50 = [None] * len(bars)
@@ -1027,6 +1111,7 @@ def summarize_qualification(result, watchlist_limit=5):
         "ohlc_breakout": result.get("extended_lab_strategy_qualification", {}).get("ohlc_breakout", {}),
         "long_short": result.get("extended_lab_strategy_qualification", {}).get("long_short", {}),
         "daily_regime_filter": result.get("extended_lab_strategy_qualification", {}).get("daily_regime_filter", {}),
+        "multi_timeframe_ensemble": result.get("extended_lab_strategy_qualification", {}).get("multi_timeframe_ensemble", {}),
     }
     counts = {}
     candidates = []
@@ -1101,6 +1186,7 @@ def build_qualification_markdown(result):
         "OHLC breakout strategies": result.get("extended_lab_strategy_qualification", {}).get("ohlc_breakout", {}),
         "Long/short research (paper only)": result.get("extended_lab_strategy_qualification", {}).get("long_short", {}),
         "Daily regime filters": result.get("extended_lab_strategy_qualification", {}).get("daily_regime_filter", {}),
+        "4h / 6h consensus ensemble": result.get("extended_lab_strategy_qualification", {}).get("multi_timeframe_ensemble", {}),
     }
     lines = [
         "# WHJ Bitcoin Bot — Strategy Qualification Report", "",
@@ -1397,6 +1483,10 @@ def main():
     )
     daily_regime_research = run_daily_regime_filter_lab(candles)
     daily_regime_stress = run_daily_regime_filter_lab(candles, fee=0.002, slippage=0.001, funding_rate_per_8h=0.0001)
+    multi_timeframe_ensemble_research = run_multi_timeframe_ensemble_lab(candles)
+    multi_timeframe_ensemble_stress = run_multi_timeframe_ensemble_lab(
+        candles, fee=0.002, slippage=0.001
+    )
     forward_paper = run_forward_paper_accounts(candles)
     qualification = {}
     for label in ("1h", "4h", "6h", "1d"):
@@ -1422,6 +1512,9 @@ def main():
         ),
         "daily_regime_filter": assess_research_lab_qualification(
             daily_regime_research, daily_regime_stress
+        ),
+        "multi_timeframe_ensemble": assess_research_lab_qualification(
+            multi_timeframe_ensemble_research, multi_timeframe_ensemble_stress
         ),
     }
 
@@ -1463,6 +1556,8 @@ def main():
         "long_short_stress": long_short_stress,
         "daily_regime_research": daily_regime_research,
         "daily_regime_stress": daily_regime_stress,
+        "multi_timeframe_ensemble_research": multi_timeframe_ensemble_research,
+        "multi_timeframe_ensemble_stress": multi_timeframe_ensemble_stress,
         "warning": "Historical results are not forecasts. Strategy selection requires robust out-of-sample performance and forward paper trading. No live orders were placed.",
     }
     Path("historical_research.json").write_text(
