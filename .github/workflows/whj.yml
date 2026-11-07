@@ -48,8 +48,8 @@ jobs:
         if: success() && hashFiles('paper_account_state_*.json') != ''
         uses: actions/cache/save@v4
         with:
-          path: paper_account_state.json
-          key: whj-paper-account-v1-${{ github.run_id }}-${{ github.run_attempt }}
+          path: paper_account_state_*.json
+          key: whj-paper-portfolio-v3-${{ github.run_id }}-${{ github.run_attempt }}
 
       - name: Save analysis report and dashboard
         if: always()
