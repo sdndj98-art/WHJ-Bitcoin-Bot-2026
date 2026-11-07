@@ -166,13 +166,16 @@ def run_strategy_lab(prices, fee=0.001, slippage=0.0005):
 
     # Buy-and-hold benchmark over exactly the same out-of-sample window.
     # Mark-to-market drawdown uses spot value; final return includes exit costs.
+    # Match the 25% strategy allocation for a fair risk/exposure comparison.
+    benchmark_allocation = 250.0
+    benchmark_cash = 1000.0 - benchmark_allocation
     start_price = float(prices[split]) * (1 + slippage)
-    entry_fee = 1000.0 * fee
-    benchmark_units = (1000.0 - entry_fee) / start_price
+    entry_fee = benchmark_allocation * fee
+    benchmark_units = (benchmark_allocation - entry_fee) / start_price
     benchmark_peak = 1000.0
     benchmark_max_dd = 0.0
     for price in prices[split:]:
-        marked_equity = benchmark_units * float(price)
+        marked_equity = benchmark_cash + benchmark_units * float(price)
         benchmark_peak = max(benchmark_peak, marked_equity)
         if benchmark_peak > 0:
             benchmark_max_dd = max(
@@ -180,7 +183,8 @@ def run_strategy_lab(prices, fee=0.001, slippage=0.0005):
                 (benchmark_peak - marked_equity) / benchmark_peak * 100,
             )
     benchmark_exit = benchmark_units * float(prices[-1]) * (1 - slippage)
-    benchmark_equity = benchmark_exit - benchmark_exit * fee
+    benchmark_exit -= benchmark_exit * fee
+    benchmark_equity = benchmark_cash + benchmark_exit
     benchmark_pnl = benchmark_equity - 1000.0
     results["buy_and_hold"] = {
         "out_of_sample": {
@@ -192,6 +196,7 @@ def run_strategy_lab(prices, fee=0.001, slippage=0.0005):
             "profit_factor": None,
             "open_position": False,
             "fees_and_slippage_included": True,
+            "allocation_fraction": benchmark_allocation / 1000.0,
         }
     }
     return {
@@ -201,6 +206,7 @@ def run_strategy_lab(prices, fee=0.001, slippage=0.0005):
         "in_sample_fraction_pct": 70,
         "out_of_sample_fraction_pct": 30,
         "execution": "Previous completed close signal; next close fill; 25% equity allocation; fee and slippage applied.",
+        "benchmark_note": "Buy-and-hold benchmark uses the same 25% initial allocation as strategy entries; remaining cash stays uninvested for an exposure-matched comparison.",
         "walk_forward_note": "Three chronological fixed-rule evaluation windows are reported independently; parameters are not retuned between windows.",
         "selection_warning": "No strategy is declared a winner from these tests alone. Require positive out-of-sample evidence across multiple market regimes and longer periods before considering deployment.",
         "strategies": results,
