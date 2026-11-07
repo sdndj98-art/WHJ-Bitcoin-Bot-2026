@@ -82,6 +82,39 @@ class ForwardPaperMonitorTests(unittest.TestCase):
         self.assertEqual(result["status"], "REVIEW_REQUIRED")
         self.assertFalse(result["live_trading_eligible"])
 
+    def test_rolling_health_pause_reconciles_without_a_new_candle(self):
+        start = 1_750_000_000
+        start -= start % 3600
+        prices = [250.0 + i * 0.2 for i in range(220)]
+        candles = [
+            [start + i * 3600, 0, 0, 0, str(price)]
+            for i, price in enumerate(prices)
+        ]
+        with tempfile.TemporaryDirectory() as folder:
+            state_path = str(Path(folder) / "no-new-candle-health.json")
+            seed_forward_paper_account(
+                candles, state_path, initial_cash=200.0,
+                strategy="ema50_200_regime",
+            )
+            state = json.loads(Path(state_path).read_text(encoding="utf-8"))
+            state["trades"] = (
+                [{"timestamp": start + i, "side": "SELL", "pnl_usd": 10.0, "result": "WIN"}
+                 for i in range(5)]
+                + [{"timestamp": start + 10 + i, "side": "SELL", "pnl_usd": -4.0, "result": "LOSS"}
+                   for i in range(5)]
+            )
+            Path(state_path).write_text(json.dumps(state), encoding="utf-8")
+            result = update_paper_account(
+                candles, state_path=state_path, initial_cash=200.0,
+                strategy="ema50_200_regime", strategy_health_pause=True,
+                strategy_health_drawdown_fraction=0.08,
+            )
+            self.assertEqual(result["processed_new_candles"], 0)
+            self.assertTrue(result["paused_for_strategy_health"])
+            self.assertIn("strategy_health_deterioration", result["risk_pause_reasons"])
+            saved = json.loads(Path(state_path).read_text(encoding="utf-8"))
+            self.assertTrue(saved["paused_for_strategy_health"])
+
     def test_rolling_drawdown_triggers_review_even_when_net_pnl_is_positive(self):
         account = {
             "completed_trades": 40,
