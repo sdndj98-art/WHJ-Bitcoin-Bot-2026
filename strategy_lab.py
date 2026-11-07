@@ -40,6 +40,8 @@ def _rsi(values, period=14):
 def _signals(prices):
     ema_fast = _ema(prices, 12)
     ema_slow = _ema(prices, 26)
+    ema50 = _ema(prices, 50)
+    ema200 = _ema(prices, 200)
     rsi = _rsi(prices, 14)
     sma20 = [None] * len(prices)
     sma50 = [None] * len(prices)
@@ -51,7 +53,7 @@ def _signals(prices):
     for i in range(199, len(prices)):
         sma200[i] = sum(prices[i - 199:i + 1]) / 200
 
-    result = {"sma_trend": [], "ema_trend": [], "rsi_momentum": [], "sma200_regime": []}
+    result = {"sma_trend": [], "ema_trend": [], "rsi_momentum": [], "sma200_regime": [], "ema50_200_regime": []}
     for i, price in enumerate(prices):
         result["sma_trend"].append(
             bool(sma20[i] is not None and sma50[i] is not None
@@ -65,6 +67,9 @@ def _signals(prices):
             bool(sma20[i] is not None and sma50[i] is not None
                  and sma200[i] is not None and price > sma20[i] > sma50[i] > 0
                  and price > sma200[i])
+        )
+        result["ema50_200_regime"].append(
+            bool(ema50[i] > ema200[i] and price > ema200[i])
         )
     return result
 
