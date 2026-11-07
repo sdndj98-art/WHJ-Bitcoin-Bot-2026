@@ -7,7 +7,7 @@ from pathlib import Path
 
 from paper_account import _ema_last, run_paper_portfolio, update_paper_account
 from paper_trading import run_backtest
-from strategy_lab import run_strategy_lab
+from strategy_lab import _simulate, run_strategy_lab
 
 
 class StrategyLabTests(unittest.TestCase):
@@ -36,6 +36,18 @@ class StrategyLabTests(unittest.TestCase):
             metrics = report["strategies"][name]["out_of_sample"]
             self.assertTrue(math.isfinite(metrics["final_equity_usd"]))
             self.assertGreaterEqual(metrics["max_drawdown_pct"], 0.0)
+
+    def test_strategy_drawdown_includes_open_position_liquidation_costs(self):
+        prices = [100.0] * 8
+        signals = [True] * 8
+        fee = 0.01
+        slippage = 0.01
+        metrics = _simulate(prices, signals, 1, len(prices), fee, slippage)
+
+        units = (250.0 - 250.0 * fee) / (100.0 * (1.0 + slippage))
+        net_liquidation = 750.0 + units * 100.0 * (1.0 - slippage) * (1.0 - fee)
+        expected_drawdown = (1000.0 - net_liquidation) / 1000.0 * 100.0
+        self.assertAlmostEqual(metrics["max_drawdown_pct"], expected_drawdown, places=2)
 
     def test_rejects_boolean_and_non_finite_prices(self):
         with self.assertRaises(ValueError):
