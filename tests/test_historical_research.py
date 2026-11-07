@@ -1,4 +1,5 @@
 """Unit tests for the historical data ingestion gate."""
+import math
 import unittest
 from datetime import datetime, timezone
 from unittest.mock import patch
