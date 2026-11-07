@@ -180,6 +180,7 @@ def process_forward_accounts(candles, state_dir=".", now_timestamp=None):
             daily_loss_fraction=0.03,
             max_consecutive_losses=5,
             strategy="ema50_200_regime",
+            strategy_health_pause=True,
         )
         results[timeframe] = {"seed": seed, "account": account}
 
