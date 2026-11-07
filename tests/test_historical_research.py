@@ -171,9 +171,23 @@ class HistoricalResearchTests(unittest.TestCase):
                 "volume": 3.0,
                 "imputed": False,
             })
+        future_candles = list(candles)
+        for index in range(24 * 210, 24 * 211):
+            timestamp = index * INTERVAL_MS
+            price = 50000.0 + index * 2.0
+            future_candles.append({
+                "timestamp": timestamp,
+                "open": price,
+                "high": price + 5,
+                "low": price - 5,
+                "close": price + 2,
+                "volume": 3.0,
+                "imputed": False,
+            })
         with tempfile.TemporaryDirectory() as folder:
             first = run_forward_paper_accounts(candles, state_dir=folder)
             second = run_forward_paper_accounts(candles, state_dir=folder)
+            third = run_forward_paper_accounts(future_candles, state_dir=folder)
         self.assertEqual(first["daily_sma20_50"]["processed_new_candles"], 210)
         self.assertEqual(first["four_hour_ema50_200"]["processed_new_candles"], 1260)
         self.assertEqual(first["daily_bollinger_mean_reversion"]["processed_new_candles"], 210)
@@ -190,6 +204,21 @@ class HistoricalResearchTests(unittest.TestCase):
         self.assertEqual(second["four_hour_ema50_200"]["processed_new_candles"], 0)
         self.assertEqual(second["daily_bollinger_mean_reversion"]["processed_new_candles"], 0)
         self.assertEqual(second["six_hour_rsi14_mean_reversion"]["processed_new_candles"], 0)
+        forward = first["forward_only_ema50_200_4h_6h_50_50_portfolio"]
+        self.assertEqual(forward["mode"], "GENUINE_FORWARD_ONLY_50_50_PAPER")
+        self.assertEqual(forward["initial_cash_usd"], 1000.0)
+        self.assertEqual(forward["completed_trades"], 0)
+        self.assertEqual(forward["return_pct"], 0.0)
+        self.assertTrue(forward["seed"]["4h"]["created"])
+        self.assertTrue(forward["seed"]["6h"]["created"])
+        self.assertEqual(forward["sleeves"]["4h"]["processed_new_candles"], 0)
+        self.assertEqual(forward["sleeves"]["6h"]["processed_new_candles"], 0)
+        self.assertFalse(forward["sleeves"]["4h"]["risk_pause_reasons"])
+        self.assertFalse(forward["sleeves"]["6h"]["risk_pause_reasons"])
+        self.assertFalse(second["forward_only_ema50_200_4h_6h_50_50_portfolio"]["seed"]["4h"]["created"])
+        self.assertEqual(second["forward_only_ema50_200_4h_6h_50_50_portfolio"]["sleeves"]["4h"]["processed_new_candles"], 0)
+        self.assertEqual(third["forward_only_ema50_200_4h_6h_50_50_portfolio"]["sleeves"]["4h"]["processed_new_candles"], 6)
+        self.assertEqual(third["forward_only_ema50_200_4h_6h_50_50_portfolio"]["sleeves"]["6h"]["processed_new_candles"], 4)
 
     def test_turtle_breakout_uses_prior_channel_and_reports_costs(self):
         bars = []
