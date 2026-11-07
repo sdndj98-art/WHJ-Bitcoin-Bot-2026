@@ -848,8 +848,14 @@ def build_qualification_markdown(result):
                 base_edge = comparison.get("oos_outperformance_pct_points")
                 stress_edge = comparison.get("stress_oos_outperformance_pct_points")
                 if base_edge is not None and stress_edge is not None:
-                    watchlist.append((min(base_edge, stress_edge), name, base_edge, stress_edge, qualification))
-    watchlist.sort(key=lambda item: item[0], reverse=True)
+                    failed_gate_count = len(qualification.get("failed_checks", []))
+                    watchlist.append((
+                        failed_gate_count, min(base_edge, stress_edge),
+                        name, base_edge, stress_edge, qualification,
+                    ))
+    # Prioritize candidates closest to satisfying every fixed gate, then use
+    # the weaker benchmark edge as a tie-breaker. This is diagnostic only.
+    watchlist.sort(key=lambda item: (item[0], -item[1]))
     if watchlist:
         lines.extend([
             "## Benchmark-edge research watchlist (diagnostic only)",
@@ -859,13 +865,14 @@ def build_qualification_markdown(result):
             "trade-count, drawdown, profit-factor, or walk-forward gates.",
             "",
         ])
-        for _, name, base_edge, stress_edge, qualification in watchlist[:5]:
+        for failed_gate_count, _, name, base_edge, stress_edge, qualification in watchlist[:5]:
             status = "qualified for extended paper review" if qualification.get(
                 "qualified_for_extended_paper_review", False
             ) else "not qualified"
+            gate_label = "failed gate" if failed_gate_count == 1 else "failed gates"
             lines.append(
-                f"- **{name}** ({status}): {base_edge:+.2f} pp base; "
-                f"{stress_edge:+.2f} pp elevated costs."
+                f"- **{name}** ({status}; {failed_gate_count} {gate_label}): "
+                f"{base_edge:+.2f} pp base; {stress_edge:+.2f} pp elevated costs."
             )
         lines.append("")
 
