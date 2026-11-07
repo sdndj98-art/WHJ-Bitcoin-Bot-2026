@@ -90,7 +90,14 @@ def _simulate(prices, signals, start, end, fee=0.001, slippage=0.0005):
         equity = cash + units * prices[i]
         peak = max(peak, equity)
         max_dd = max(max_dd, (peak - equity) / peak * 100 if peak else 0.0)
-    final_equity = cash + units * prices[end - 1]
+    # Report net liquidation value, including estimated exit fee and slippage
+    # for any position still open at the end of this evaluation window.
+    if units > 0:
+        estimated_exit = units * prices[end - 1] * (1 - slippage)
+        estimated_exit -= estimated_exit * fee
+        final_equity = cash + estimated_exit
+    else:
+        final_equity = cash
     wins = sum(1 for x in trades if x > 0)
     gp = sum(x for x in trades if x > 0)
     gl = -sum(x for x in trades if x < 0)
@@ -123,25 +130,23 @@ def run_strategy_lab(prices, fee=0.001, slippage=0.0005):
         }
 
     # Buy-and-hold benchmark over exactly the same out-of-sample window.
-    # Apply the same fee and slippage assumptions on entry and liquidation.
+    # Mark-to-market drawdown uses spot value; final return includes exit costs.
     start_price = float(prices[split]) * (1 + slippage)
     entry_fee = 1000.0 * fee
     benchmark_units = (1000.0 - entry_fee) / start_price
-    benchmark_entry_cost = 1000.0
     benchmark_peak = 1000.0
     benchmark_max_dd = 0.0
-    benchmark_equity = 1000.0
     for price in prices[split:]:
-        liquidation_value = benchmark_units * float(price) * (1 - slippage)
-        liquidation_value -= liquidation_value * fee
-        benchmark_equity = liquidation_value
-        benchmark_peak = max(benchmark_peak, benchmark_equity)
+        marked_equity = benchmark_units * float(price)
+        benchmark_peak = max(benchmark_peak, marked_equity)
         if benchmark_peak > 0:
             benchmark_max_dd = max(
                 benchmark_max_dd,
-                (benchmark_peak - benchmark_equity) / benchmark_peak * 100,
+                (benchmark_peak - marked_equity) / benchmark_peak * 100,
             )
-    benchmark_pnl = benchmark_equity - benchmark_entry_cost
+    benchmark_exit = benchmark_units * float(prices[-1]) * (1 - slippage)
+    benchmark_equity = benchmark_exit - benchmark_exit * fee
+    benchmark_pnl = benchmark_equity - 1000.0
     results["buy_and_hold"] = {
         "out_of_sample": {
             "return_pct": round((benchmark_equity / 1000.0 - 1) * 100, 2),
@@ -150,7 +155,7 @@ def run_strategy_lab(prices, fee=0.001, slippage=0.0005):
             "closed_trades": 1,
             "win_rate_pct": 100.0 if benchmark_pnl > 0 else 0.0,
             "profit_factor": None,
-            "open_position": False,
+            "open_position": True,
             "fees_and_slippage_included": True,
         }
     }
