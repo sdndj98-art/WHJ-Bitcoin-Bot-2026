@@ -13,6 +13,7 @@ from paper_trading import run_backtest
 from paper_account import run_paper_portfolio
 from strategy_lab import run_strategy_lab
 from risk_analysis import block_bootstrap_trade_risk, monte_carlo_trade_risk
+from market_scanner import scan_btc_market
 
 API = "https://api.kraken.com/0/public/OHLC?pair=XBTUSD&interval=60"
 REPORT_PATH = Path("report.json")
@@ -173,6 +174,7 @@ def main():
     report = analyze(closes)
     quality = assess_candle_quality(candles)
     report["market_data_quality"] = quality
+    report["market_scanner"] = scan_btc_market(candles, quality)
     if quality["paper_execution_allowed"]:
         portfolio = run_paper_portfolio(candles)
         report["persistent_paper_account"] = portfolio["accounts"]["sma_trend"]
