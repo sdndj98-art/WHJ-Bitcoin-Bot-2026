@@ -47,7 +47,7 @@ def _atr(rows, period=14):
 
 def scan_btc_market(candles, market_data_quality=None, volume_lookback=20,
                     volume_spike_multiple=1.5):
-    """Score a completed hourly candle against six independent confirmation checks.
+    """Score a completed hourly candle against seven independent confirmation checks.
 
     Uses 50 prior candles for EMA trend context, 20 prior candles for breakout
     and volume context, and 14 periods for RSI/ATR. A candidate is a research
@@ -118,6 +118,19 @@ def scan_btc_market(candles, market_data_quality=None, volume_lookback=20,
     candle_range = current_high - current_low
     close_position = ((current_close - current_low) / candle_range
                       if candle_range > 0 else 0.5)
+    upper_wick = max(0.0, current_high - max(current_open, current_close))
+    upper_wick_pct = (upper_wick / candle_range * 100.0
+                      if candle_range > 0 else 0.0)
+    breakout_clearance_atr = (
+        (current_close - prior_high) / atr14 if atr14 > 0 else 0.0
+    )
+    breakout_buffer_atr_required = 0.10
+    max_breakout_upper_wick_pct = 35.0
+    breakout_quality = (
+        breakout
+        and breakout_clearance_atr >= breakout_buffer_atr_required
+        and upper_wick_pct <= max_breakout_upper_wick_pct
+    )
     bullish_candle = current_close > current_open and close_position >= 0.65
 
     quality_ok = (
@@ -130,6 +143,7 @@ def scan_btc_market(candles, market_data_quality=None, volume_lookback=20,
         "market_data_quality_pass": quality_ok,
         "volume_spike": volume_spike,
         "close_above_prior_high": breakout,
+        "breakout_quality_confirmed": breakout_quality,
         "trend_alignment": trend_aligned,
         "rsi_momentum_healthy": rsi_healthy,
         "bullish_close_confirmation": bullish_candle,
@@ -137,8 +151,8 @@ def scan_btc_market(candles, market_data_quality=None, volume_lookback=20,
         "live_execution_enabled": False,
     }
     scored_checks = (
-        quality_ok, volume_spike, breakout, trend_aligned,
-        rsi_healthy, bullish_candle,
+        quality_ok, volume_spike, breakout, breakout_quality,
+        trend_aligned, rsi_healthy, bullish_candle,
     )
     score = sum(scored_checks)
     candidate = score == len(scored_checks)
@@ -151,13 +165,17 @@ def scan_btc_market(candles, market_data_quality=None, volume_lookback=20,
         (not quality_ok, "market_data_quality_blocked_or_unknown"),
         (not volume_spike, "volume_spike_not_confirmed"),
         (not breakout, "close_not_above_prior_lookback_high"),
+        (breakout and breakout_clearance_atr < breakout_buffer_atr_required,
+         "breakout_close_too_near_prior_high"),
+        (breakout and upper_wick_pct > max_breakout_upper_wick_pct,
+         "breakout_upper_wick_rejection_risk"),
         (not trend_aligned, "ema20_ema50_trend_not_aligned"),
         (not rsi_healthy, "rsi_outside_momentum_band"),
         (not bullish_candle, "bullish_candle_confirmation_missing"),
     )
     reasons.extend(code for failed, code in reason_checks if failed)
     if candidate:
-        reasons.append("all_six_scanner_checks_passed_paper_review_only")
+        reasons.append("all_seven_scanner_checks_passed_paper_review_only")
 
     return {
         "market": "BTC/USD",
@@ -166,6 +184,10 @@ def scan_btc_market(candles, market_data_quality=None, volume_lookback=20,
         "lookback_candles": volume_lookback,
         "trend_lookback_candles": 50,
         "volume_spike_multiple_required": volume_spike_multiple,
+        "breakout_buffer_atr_required": breakout_buffer_atr_required,
+        "max_breakout_upper_wick_pct": max_breakout_upper_wick_pct,
+        "breakout_clearance_atr": round(breakout_clearance_atr, 4),
+        "breakout_upper_wick_pct": round(upper_wick_pct, 2),
         "current_volume": round(current_volume, 8),
         "prior_average_volume": round(average_volume, 8),
         "volume_ratio": round(volume_ratio, 4),
