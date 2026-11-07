@@ -226,6 +226,29 @@ def _consensus_signals(signals):
     return consensus
 
 
+
+def _wilson_interval(successes, total, z=1.96):
+    """Return a two-sided Wilson score interval for a binomial proportion."""
+    if (isinstance(successes, bool) or isinstance(total, bool)
+            or not isinstance(successes, int) or not isinstance(total, int)
+            or total < 0 or successes < 0 or successes > total):
+        raise ValueError("Wilson interval counts must be integers with 0 <= successes <= total")
+    if total == 0:
+        return None
+    proportion = successes / total
+    z2 = z * z
+    denominator = 1.0 + z2 / total
+    center = (proportion + z2 / (2.0 * total)) / denominator
+    margin = (z * math.sqrt(
+        proportion * (1.0 - proportion) / total + z2 / (4.0 * total * total)
+    ) / denominator)
+    return {
+        "lower_pct": round(max(0.0, center - margin) * 100.0, 2),
+        "upper_pct": round(min(1.0, center + margin) * 100.0, 2),
+        "method": "wilson_95",
+    }
+
+
 def _market_regime_diagnostics(prices, signals, start_index):
     """Describe OOS market regimes using only information available at each close.
 
@@ -254,6 +277,7 @@ def _market_regime_diagnostics(prices, signals, start_index):
             "strategy_active_bars": {strategy: 0 for strategy in signals},
             "strategy_signal_growth": {strategy: 1.0 for strategy in signals},
             "strategy_signal_positive_bars": {strategy: 0 for strategy in signals},
+            "strategy_signal_returns": {strategy: [] for strategy in signals},
         }
         for name in names
     }
@@ -281,6 +305,7 @@ def _market_regime_diagnostics(prices, signals, start_index):
                 bucket["strategy_active_bars"][strategy] += 1
                 bucket["strategy_signal_growth"][strategy] *= 1.0 + forward_return / 100.0
                 bucket["strategy_signal_positive_bars"][strategy] += int(forward_return > 0)
+                bucket["strategy_signal_returns"][strategy].append(forward_return)
 
     result = {}
     for regime, bucket in buckets.items():
@@ -298,6 +323,13 @@ def _market_regime_diagnostics(prices, signals, start_index):
                     round(bucket["strategy_signal_positive_bars"][strategy] / active * 100.0, 2)
                     if active else None
                 ),
+                "positive_active_forward_bar_ci95_pct": _wilson_interval(
+                    bucket["strategy_signal_positive_bars"][strategy], active
+                ),
+                "mean_active_forward_bar_return_pct": (
+                    round(sum(bucket["strategy_signal_returns"][strategy]) / active, 4)
+                    if active else None
+                ),
                 "evidence_status": "INSUFFICIENT_SAMPLE" if active < 30 else "DESCRIPTIVE_ONLY",
             }
         result[regime] = {
@@ -309,6 +341,9 @@ def _market_regime_diagnostics(prices, signals, start_index):
             ),
             "positive_forward_bar_pct": (
                 round(bucket["positive_forward_bars"] / bars * 100.0, 2) if bars else None
+            ),
+            "positive_forward_bar_ci95_pct": _wilson_interval(
+                bucket["positive_forward_bars"], bars
             ),
             "mean_absolute_forward_bar_return_pct": (
                 round(bucket["absolute_return_sum_pct"] / bars, 4) if bars else None
