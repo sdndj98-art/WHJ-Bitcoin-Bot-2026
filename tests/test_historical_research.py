@@ -4,7 +4,7 @@ import unittest
 from datetime import datetime, timezone
 from unittest.mock import patch
 
-from historical_research import (INTERVAL_MS, aggregate_candles, load_two_year_candles, run_forward_paper_accounts, run_ohlc_breakout_lab, run_long_short_lab, run_daily_regime_filter_lab, _simulate_ohlc, assess_strategy_qualification, assess_research_lab_qualification, build_qualification_markdown, summarize_qualification, _turtle_signals)
+from historical_research import (INTERVAL_MS, aggregate_candles, load_two_year_candles, run_forward_paper_accounts, run_ohlc_breakout_lab, run_long_short_lab, run_daily_regime_filter_lab, run_multi_timeframe_ensemble_lab, _atr_series, _regime_switching_atr_signals, _rsi_series, _simulate_equal_weight_multitimeframe, _simulate_ohlc, assess_strategy_qualification, assess_research_lab_qualification, build_qualification_markdown, summarize_qualification, _turtle_signals)
 
 
 class HistoricalResearchTests(unittest.TestCase):
@@ -171,17 +171,54 @@ class HistoricalResearchTests(unittest.TestCase):
                 "volume": 3.0,
                 "imputed": False,
             })
+        future_candles = list(candles)
+        for index in range(24 * 210, 24 * 211):
+            timestamp = index * INTERVAL_MS
+            price = 50000.0 + index * 2.0
+            future_candles.append({
+                "timestamp": timestamp,
+                "open": price,
+                "high": price + 5,
+                "low": price - 5,
+                "close": price + 2,
+                "volume": 3.0,
+                "imputed": False,
+            })
         with tempfile.TemporaryDirectory() as folder:
             first = run_forward_paper_accounts(candles, state_dir=folder)
             second = run_forward_paper_accounts(candles, state_dir=folder)
+            third = run_forward_paper_accounts(future_candles, state_dir=folder)
         self.assertEqual(first["daily_sma20_50"]["processed_new_candles"], 210)
         self.assertEqual(first["four_hour_ema50_200"]["processed_new_candles"], 1260)
         self.assertEqual(first["daily_bollinger_mean_reversion"]["processed_new_candles"], 210)
         self.assertEqual(first["six_hour_rsi14_mean_reversion"]["processed_new_candles"], 840)
+        ensemble = first["ema50_200_4h_6h_50_50_portfolio"]
+        self.assertEqual(ensemble["initial_cash_usd"], 1000.0)
+        self.assertEqual(ensemble["sleeves"]["4h"]["initial_cash_usd"], 500.0)
+        self.assertEqual(ensemble["sleeves"]["6h"]["initial_cash_usd"], 500.0)
+        self.assertEqual(ensemble["sleeves"]["4h"]["processed_new_candles"], 1260)
+        self.assertEqual(ensemble["sleeves"]["6h"]["processed_new_candles"], 840)
+        self.assertEqual(second["ema50_200_4h_6h_50_50_portfolio"]["sleeves"]["4h"]["processed_new_candles"], 0)
+        self.assertEqual(second["ema50_200_4h_6h_50_50_portfolio"]["sleeves"]["6h"]["processed_new_candles"], 0)
         self.assertEqual(second["daily_sma20_50"]["processed_new_candles"], 0)
         self.assertEqual(second["four_hour_ema50_200"]["processed_new_candles"], 0)
         self.assertEqual(second["daily_bollinger_mean_reversion"]["processed_new_candles"], 0)
         self.assertEqual(second["six_hour_rsi14_mean_reversion"]["processed_new_candles"], 0)
+        forward = first["forward_only_ema50_200_4h_6h_50_50_portfolio"]
+        self.assertEqual(forward["mode"], "GENUINE_FORWARD_ONLY_50_50_PAPER")
+        self.assertEqual(forward["initial_cash_usd"], 1000.0)
+        self.assertEqual(forward["completed_trades"], 0)
+        self.assertEqual(forward["return_pct"], 0.0)
+        self.assertTrue(forward["seed"]["4h"]["created"])
+        self.assertTrue(forward["seed"]["6h"]["created"])
+        self.assertEqual(forward["sleeves"]["4h"]["processed_new_candles"], 0)
+        self.assertEqual(forward["sleeves"]["6h"]["processed_new_candles"], 0)
+        self.assertFalse(forward["sleeves"]["4h"]["risk_pause_reasons"])
+        self.assertFalse(forward["sleeves"]["6h"]["risk_pause_reasons"])
+        self.assertFalse(second["forward_only_ema50_200_4h_6h_50_50_portfolio"]["seed"]["4h"]["created"])
+        self.assertEqual(second["forward_only_ema50_200_4h_6h_50_50_portfolio"]["sleeves"]["4h"]["processed_new_candles"], 0)
+        self.assertEqual(third["forward_only_ema50_200_4h_6h_50_50_portfolio"]["sleeves"]["4h"]["processed_new_candles"], 6)
+        self.assertEqual(third["forward_only_ema50_200_4h_6h_50_50_portfolio"]["sleeves"]["6h"]["processed_new_candles"], 4)
 
     def test_turtle_breakout_uses_prior_channel_and_reports_costs(self):
         bars = []
@@ -252,6 +289,75 @@ class HistoricalResearchTests(unittest.TestCase):
         self.assertAlmostEqual(result["max_drawdown_pct"], round(expected_drawdown, 2), places=2)
         self.assertAlmostEqual(result["final_equity_usd"], round(expected_equity, 2), places=2)
 
+    def test_atr_series_uses_prior_close_and_wilder_smoothing(self):
+        bars = [
+            {"high": 101.0 + i, "low": 99.0 + i, "close": 100.0 + i}
+            for i in range(20)
+        ]
+        values = _atr_series(bars, 14)
+        self.assertIsNone(values[13])
+        self.assertAlmostEqual(values[14], 2.0)
+        self.assertAlmostEqual(values[-1], 2.0)
+        with self.assertRaises(ValueError):
+            _atr_series(bars[:2], 2)
+
+    def test_wilder_rsi_series_validates_and_tracks_momentum(self):
+        rising = [100.0 + index for index in range(30)]
+        values = _rsi_series(rising, 14)
+        self.assertIsNone(values[13])
+        self.assertEqual(values[14], 100.0)
+        self.assertEqual(values[-1], 100.0)
+        with self.assertRaises(ValueError):
+            _rsi_series([1.0, 2.0], 2)
+
+    def test_multi_timeframe_ensemble_uses_completed_4h_and_6h_series(self):
+        candles = []
+        for index in range(24 * 210):
+            timestamp = index * INTERVAL_MS
+            price = 50000.0 + index * 0.2
+            candles.append({
+                "timestamp": timestamp,
+                "open": price - 1,
+                "high": price + 3,
+                "low": price - 3,
+                "close": price,
+                "volume": 2.0,
+                "imputed": False,
+            })
+        result = run_multi_timeframe_ensemble_lab(candles)
+        self.assertEqual(result["bar_count_4h"], 24 * 210 // 4)
+        self.assertEqual(result["bar_count_6h"], 24 * 210 // 6)
+        self.assertIn("most recent fully closed 6h", result["execution"])
+        candidate = result["strategies"]["ema50_200_4h_6h_consensus"]
+        self.assertEqual(len(candidate["walk_forward_windows"]), 3)
+        self.assertTrue(math.isfinite(candidate["out_of_sample"]["return_pct"]))
+        self.assertIn("buy_and_hold_25pct", result["strategies"])
+        portfolio = result["strategies"]["ema50_200_4h_6h_50_50_portfolio"]
+        self.assertEqual(len(portfolio["walk_forward_windows"]), 3)
+        self.assertEqual(portfolio["out_of_sample"]["sleeve_count"], 2)
+
+    def test_native_timeframe_sleeves_match_same_total_initial_exposure(self):
+        four_hour = [
+            {"timestamp": index * 4 * 3600000, "open": 100.0, "high": 101.0,
+             "low": 99.0, "close": 100.0, "volume": 1.0}
+            for index in range(20)
+        ]
+        six_hour = [
+            {"timestamp": index * 6 * 3600000, "open": 100.0, "high": 101.0,
+             "low": 99.0, "close": 100.0, "volume": 1.0}
+            for index in range(14)
+        ]
+        signals_4h = [True] * len(four_hour)
+        signals_6h = [True] * len(six_hour)
+        single = _simulate_ohlc(four_hour, signals_4h, 2, 17, 0.01, 0.02)
+        combined = _simulate_equal_weight_multitimeframe(
+            [four_hour, six_hour], [signals_4h, signals_6h], [4, 6],
+            12 * 3600000, 72 * 3600000, 0.01, 0.02,
+        )
+        self.assertAlmostEqual(combined["final_equity_usd"], single["final_equity_usd"], places=2)
+        self.assertAlmostEqual(combined["max_drawdown_pct"], single["max_drawdown_pct"], places=2)
+        self.assertEqual(combined["sleeve_count"], 2)
+
     def test_daily_regime_filter_uses_complete_daily_history(self):
         candles = []
         for index in range(24 * 210):
@@ -269,10 +375,19 @@ class HistoricalResearchTests(unittest.TestCase):
         result = run_daily_regime_filter_lab(candles)
         self.assertEqual(result["daily_bar_count"], 210)
         self.assertIn("ema50_200_with_daily_sma200", result["strategies"])
+        self.assertIn("ema20_50_daily_sma200_rsi50", result["strategies"])
+        self.assertIn("ema20_50_daily_sma200_rsi50_rising", result["strategies"])
+        self.assertIn("ema20_50_daily_sma200_ema20_exit", result["strategies"])
+        self.assertIn("ema20_50_daily_sma200_rsi45_exit", result["strategies"])
+        self.assertIn("ema20_50_daily_sma200_atr3_trailing", result["strategies"])
+        self.assertIn("regime_switching_atr3_long_short", result["strategies"])
         self.assertTrue(all(
             window["start_index"] >= result["split_index"]
             for window in result["strategies"]["ema50_200_with_daily_sma200"]["walk_forward_windows"]
         ))
+
+        with self.assertRaises(ValueError):
+            run_daily_regime_filter_lab(candles, funding_rate_per_8h=-0.1)
 
     def test_long_short_drawdown_includes_exit_costs_for_long_and_short(self):
         from historical_research import _simulate_long_short

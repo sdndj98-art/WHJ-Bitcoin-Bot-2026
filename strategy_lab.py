@@ -197,6 +197,58 @@ def _simulate(prices, signals, start, end, fee=0.001, slippage=0.0005):
 
 
 
+
+def _consensus_signals(signals):
+    """Build an equal-weight, three-family long-only consensus from completed-bar rules."""
+    trend_names = (
+        "sma_trend", "ema_trend", "sma200_regime", "ema50_200_regime",
+        "sma200_filter", "ema200_filter", "sma50_200_cross", "donchian_55_20",
+    )
+    reversion_names = (
+        "rsi2_mean_reversion", "rsi14_mean_reversion",
+        "bollinger_mean_reversion",
+    )
+    required = set(trend_names + ("rsi_momentum",) + reversion_names)
+    missing = sorted(required.difference(signals))
+    if missing:
+        raise ValueError("Missing consensus signal families: " + ", ".join(missing))
+    lengths = {len(signals[name]) for name in required}
+    if len(lengths) != 1:
+        raise ValueError("Consensus input signal series must have equal lengths")
+    count = lengths.pop()
+    consensus = []
+    for index in range(count):
+        trend_votes = sum(bool(signals[name][index]) for name in trend_names)
+        momentum_vote = bool(signals["rsi_momentum"][index])
+        reversion_votes = sum(bool(signals[name][index]) for name in reversion_names)
+        family_votes = int(trend_votes >= 4) + int(momentum_vote) + int(reversion_votes >= 2)
+        consensus.append(family_votes >= 2)
+    return consensus
+
+
+
+def _wilson_interval(successes, total, z=1.96):
+    """Return a two-sided Wilson score interval for a binomial proportion."""
+    if (isinstance(successes, bool) or isinstance(total, bool)
+            or not isinstance(successes, int) or not isinstance(total, int)
+            or total < 0 or successes < 0 or successes > total):
+        raise ValueError("Wilson interval counts must be integers with 0 <= successes <= total")
+    if total == 0:
+        return None
+    proportion = successes / total
+    z2 = z * z
+    denominator = 1.0 + z2 / total
+    center = (proportion + z2 / (2.0 * total)) / denominator
+    margin = (z * math.sqrt(
+        proportion * (1.0 - proportion) / total + z2 / (4.0 * total * total)
+    ) / denominator)
+    return {
+        "lower_pct": round(max(0.0, center - margin) * 100.0, 2),
+        "upper_pct": round(min(1.0, center + margin) * 100.0, 2),
+        "method": "wilson_95",
+    }
+
+
 def _market_regime_diagnostics(prices, signals, start_index):
     """Describe OOS market regimes using only information available at each close.
 
@@ -223,6 +275,9 @@ def _market_regime_diagnostics(prices, signals, start_index):
             "positive_forward_bars": 0,
             "absolute_return_sum_pct": 0.0,
             "strategy_active_bars": {strategy: 0 for strategy in signals},
+            "strategy_signal_growth": {strategy: 1.0 for strategy in signals},
+            "strategy_signal_positive_bars": {strategy: 0 for strategy in signals},
+            "strategy_signal_returns": {strategy: [] for strategy in signals},
         }
         for name in names
     }
@@ -246,18 +301,49 @@ def _market_regime_diagnostics(prices, signals, start_index):
         bucket["positive_forward_bars"] += int(forward_return > 0)
         bucket["absolute_return_sum_pct"] += abs(forward_return)
         for strategy, values in signals.items():
-            bucket["strategy_active_bars"][strategy] += int(bool(values[index]))
+            if bool(values[index]):
+                bucket["strategy_active_bars"][strategy] += 1
+                bucket["strategy_signal_growth"][strategy] *= 1.0 + forward_return / 100.0
+                bucket["strategy_signal_positive_bars"][strategy] += int(forward_return > 0)
+                bucket["strategy_signal_returns"][strategy].append(forward_return)
 
     result = {}
     for regime, bucket in buckets.items():
         bars = bucket["bars"]
+        strategy_diagnostics = {}
+        for strategy in signals:
+            active = bucket["strategy_active_bars"][strategy]
+            strategy_diagnostics[strategy] = {
+                "active_signal_bars": active,
+                "active_forward_return_pct": (
+                    round((bucket["strategy_signal_growth"][strategy] - 1.0) * 100.0, 2)
+                    if active else None
+                ),
+                "positive_active_forward_bar_pct": (
+                    round(bucket["strategy_signal_positive_bars"][strategy] / active * 100.0, 2)
+                    if active else None
+                ),
+                "positive_active_forward_bar_ci95_pct": _wilson_interval(
+                    bucket["strategy_signal_positive_bars"][strategy], active
+                ),
+                "mean_active_forward_bar_return_pct": (
+                    round(sum(bucket["strategy_signal_returns"][strategy]) / active, 4)
+                    if active else None
+                ),
+                "evidence_status": "INSUFFICIENT_SAMPLE" if active < 30 else "DESCRIPTIVE_ONLY",
+            }
         result[regime] = {
             "bars": bars,
+            "evidence_status": "INSUFFICIENT_SAMPLE" if bars < 30 else "DESCRIPTIVE_ONLY",
+            "strategy_signal_diagnostics": strategy_diagnostics,
             "market_forward_return_pct": (
                 round((bucket["growth_factor"] - 1.0) * 100.0, 2) if bars else None
             ),
             "positive_forward_bar_pct": (
                 round(bucket["positive_forward_bars"] / bars * 100.0, 2) if bars else None
+            ),
+            "positive_forward_bar_ci95_pct": _wilson_interval(
+                bucket["positive_forward_bars"], bars
             ),
             "mean_absolute_forward_bar_return_pct": (
                 round(bucket["absolute_return_sum_pct"] / bars, 4) if bars else None
@@ -275,7 +361,9 @@ def _market_regime_diagnostics(prices, signals, start_index):
         ),
         "measurement": (
             "OOS next-bar market returns are grouped by the regime known at the prior close. "
-            "Strategy exposure is the percentage of closes with an active signal; it is not strategy PnL."
+            "Per-strategy active-signal forward returns are descriptive conditional bar returns, "
+            "not strategy PnL, not trade-level PnL, net returns, or a deployable strategy backtest. "
+            "INSUFFICIENT_SAMPLE is used below 30 active signal bars."
         ),
         "out_of_sample_start_index": first_index,
         "regimes": result,
@@ -292,6 +380,7 @@ def run_strategy_lab(prices, fee=0.001, slippage=0.0005):
 
     split = int(len(prices) * 0.7)
     signals = _signals(prices)
+    signals["regime_aware_consensus"] = _consensus_signals(signals)
     results = {}
     # Three chronological evaluation windows after the initial warm-up.
     # These are fixed-rule rolling windows, not parameter re-optimization.
@@ -371,6 +460,17 @@ def run_strategy_lab(prices, fee=0.001, slippage=0.0005):
         "execution": "Previous completed close signal; next close fill; 25% equity allocation; fee and slippage applied.",
         "benchmark_note": "Buy-and-hold benchmark uses the same 25% initial allocation as strategy entries; remaining cash stays uninvested for an exposure-matched comparison.",
         "walk_forward_note": "The 30% out-of-sample holdout is split into three sequential non-overlapping windows; parameters are fixed and not retuned.",
+        "ensemble_methodology": {
+            "name": "regime_aware_consensus",
+            "families": {
+                "trend": {"indicators": 8, "family_vote_threshold": "at least 4 of 8"},
+                "momentum": {"indicators": 1, "family_vote_threshold": "RSI momentum confirmation active"},
+                "mean_reversion": {"indicators": 3, "family_vote_threshold": "at least 2 of 3"},
+            },
+            "entry_rule": "At least two of the three equally weighted strategy families must agree.",
+            "execution": "Same prior completed close signal, next close fill, 25% allocation, fees, slippage, chronological holdout, and walk-forward windows as component strategies.",
+            "safety": "Research candidate only; it must independently pass the same out-of-sample and elevated-cost qualification gates.",
+        },
         "selection_warning": "No strategy is declared a winner from these tests alone. Require positive out-of-sample evidence across multiple market regimes and longer periods before considering deployment.",
         "strategies": results,
     }

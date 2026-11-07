@@ -1,4 +1,4 @@
-"""Fetch five years of public BTC/USD hourly candles and run fixed-rule research.
+"""Fetch an extended history of public BTC/USD hourly candles and run fixed-rule research.
 
 Research only: no credentials, orders, or trading endpoints are used.
 """
@@ -8,15 +8,16 @@ import time
 import urllib.error
 import urllib.parse
 import urllib.request
+from bisect import bisect_left
 from datetime import datetime, timezone
 from pathlib import Path
 
-from paper_account import update_paper_account
+from paper_account import seed_forward_paper_account, update_paper_account
 from strategy_lab import run_strategy_lab
 
 BASE_URL = "https://api.exchange.coinbase.com/products/BTC-USD/candles"
 INTERVAL_MS = 60 * 60 * 1000
-DAYS = 1825
+DAYS = 3000
 FEE_RATE = 0.001
 SLIPPAGE_RATE = 0.0005
 
@@ -295,6 +296,114 @@ def _simulate_ohlc(bars, signals, start, end, fee, slippage):
     }
 
 
+def _simulate_equal_weight_multitimeframe(
+    bar_sets, signal_sets, bar_hours, start_time_ms, end_time_ms, fee, slippage
+):
+    """Combine independent native-timeframe sleeves on one time-aligned equity curve."""
+    if not bar_sets or len(bar_sets) != len(signal_sets) or len(bar_sets) != len(bar_hours):
+        raise ValueError("Bar, signal, and timeframe collections must have equal non-zero lengths")
+    if not 0 <= fee < 1 or not 0 <= slippage < 1:
+        raise ValueError("Fee and slippage must be between 0 and 1")
+
+    initial_per_sleeve = 1000.0 / len(bar_sets)
+    sleeve_final_equities = []
+    sleeve_open_positions = []
+    all_trades = []
+    curve_events = []
+
+    for sleeve_index, (bars, signals, hours) in enumerate(zip(bar_sets, signal_sets, bar_hours)):
+        if len(bars) != len(signals):
+            raise ValueError("Every sleeve signal series must match its native bar count")
+        close_times = [
+            int(row["timestamp"]) + int(hours) * 60 * 60 * 1000
+            for row in bars
+        ]
+        start_index = bisect_left(close_times, start_time_ms)
+        end_index = bisect_left(close_times, end_time_ms)
+        if end_index <= start_index:
+            sleeve_final_equities.append(initial_per_sleeve)
+            sleeve_open_positions.append(False)
+            continue
+
+        cash = initial_per_sleeve
+        units = 0.0
+        entry_cost = 0.0
+        trades = []
+        for index in range(max(start_index, 1), end_index):
+            price = float(bars[index]["close"])
+            want_long = bool(signals[index - 1])
+            if want_long and units == 0:
+                allocation = cash * 0.25
+                fill = price * (1 + slippage)
+                fee_paid = allocation * fee
+                units = (allocation - fee_paid) / fill
+                cash -= allocation
+                entry_cost = allocation
+            elif not want_long and units > 0:
+                fill = price * (1 - slippage)
+                proceeds = units * fill
+                proceeds -= proceeds * fee
+                trades.append(proceeds - entry_cost)
+                cash += proceeds
+                units = 0.0
+                entry_cost = 0.0
+
+            if units > 0:
+                liquidation = units * price * (1 - slippage)
+                liquidation -= liquidation * fee
+                equity = cash + liquidation
+            else:
+                equity = cash
+            curve_events.append((close_times[index], sleeve_index, equity))
+
+        if units > 0:
+            exit_value = units * float(bars[end_index - 1]["close"]) * (1 - slippage)
+            exit_value -= exit_value * fee
+            final_equity = cash + exit_value
+        else:
+            final_equity = cash
+        sleeve_final_equities.append(final_equity)
+        sleeve_open_positions.append(units > 0)
+        all_trades.extend(trades)
+
+    curve_events.sort(key=lambda item: (item[0], item[1]))
+    sleeve_equities = [initial_per_sleeve] * len(bar_sets)
+    portfolio_peak = 1000.0
+    max_drawdown = 0.0
+    event_index = 0
+    while event_index < len(curve_events):
+        timestamp = curve_events[event_index][0]
+        while event_index < len(curve_events) and curve_events[event_index][0] == timestamp:
+            _, sleeve_index, equity = curve_events[event_index]
+            sleeve_equities[sleeve_index] = equity
+            event_index += 1
+        portfolio_equity = sum(sleeve_equities)
+        portfolio_peak = max(portfolio_peak, portfolio_equity)
+        if portfolio_peak > 0:
+            max_drawdown = max(
+                max_drawdown,
+                (portfolio_peak - portfolio_equity) / portfolio_peak * 100.0,
+            )
+
+    final_equity = sum(sleeve_final_equities)
+    wins = [pnl for pnl in all_trades if pnl > 0]
+    losses = [-pnl for pnl in all_trades if pnl < 0]
+    gross_profit = sum(wins)
+    gross_loss = sum(losses)
+    return {
+        "return_pct": round((final_equity / 1000.0 - 1.0) * 100.0, 2),
+        "final_equity_usd": round(final_equity, 2),
+        "max_drawdown_pct": round(max_drawdown, 2),
+        "closed_trades": len(all_trades),
+        "win_rate_pct": round(len(wins) / len(all_trades) * 100.0, 2) if all_trades else 0.0,
+        "profit_factor": round(gross_profit / gross_loss, 2) if gross_loss else (None if gross_profit else 0.0),
+        "open_position": any(sleeve_open_positions),
+        "sleeve_count": len(bar_sets),
+        "allocation_per_sleeve_pct": round(100.0 / len(bar_sets), 2),
+    }
+
+
+
 def run_ohlc_breakout_lab(bars, fee=FEE_RATE, slippage=SLIPPAGE_RATE):
     """Evaluate classic Turtle-style breakouts on true OHLC bars."""
     if len(bars) < 500:
@@ -433,7 +542,108 @@ def _ema_series(values, period):
     return result
 
 
-def run_daily_regime_filter_lab(hourly_candles, fee=FEE_RATE, slippage=SLIPPAGE_RATE):
+def _rsi_series(values, period=14):
+    """Wilder RSI using only current and prior completed closes."""
+    if period < 2 or len(values) <= period:
+        raise ValueError("RSI requires a period of at least 2 and more observations than the period")
+    result = [None] * len(values)
+    gains = [0.0] * len(values)
+    losses = [0.0] * len(values)
+    for index in range(1, len(values)):
+        change = float(values[index]) - float(values[index - 1])
+        gains[index] = max(change, 0.0)
+        losses[index] = max(-change, 0.0)
+    average_gain = sum(gains[1:period + 1]) / period
+    average_loss = sum(losses[1:period + 1]) / period
+    result[period] = 100.0 if average_loss == 0 and average_gain else (50.0 if average_loss == 0 else 100.0 - 100.0 / (1.0 + average_gain / average_loss))
+    for index in range(period + 1, len(values)):
+        average_gain = (average_gain * (period - 1) + gains[index]) / period
+        average_loss = (average_loss * (period - 1) + losses[index]) / period
+        result[index] = 100.0 if average_loss == 0 else 100.0 - 100.0 / (1.0 + average_gain / average_loss)
+    return result
+
+def _atr_series(bars, period=14):
+    """Wilder ATR from completed OHLC bars; no future bars are read."""
+    if period < 2 or len(bars) <= period:
+        raise ValueError("ATR requires a period of at least 2 and more bars than the period")
+    true_ranges = [0.0] * len(bars)
+    for index in range(1, len(bars)):
+        high = float(bars[index]["high"])
+        low = float(bars[index]["low"])
+        previous_close = float(bars[index - 1]["close"])
+        true_ranges[index] = max(high - low, abs(high - previous_close), abs(low - previous_close))
+    result = [None] * len(bars)
+    current = sum(true_ranges[1:period + 1]) / period
+    result[period] = current
+    for index in range(period + 1, len(bars)):
+        current = (current * (period - 1) + true_ranges[index]) / period
+        result[index] = current
+    return result
+
+def _regime_switching_atr_signals(four_hour, daily, daily_sma200):
+    """Bull-long / bear-short trend with a 3x ATR trailing stop.
+
+    Every 4h bar uses only the previous fully closed daily bar for regime
+    classification. Stops are evaluated at the current completed 4h close;
+    fills are modeled at the next 4h close.
+    """
+    closes = [float(row["close"]) for row in four_hour]
+    ema20 = _ema_series(closes, 20)
+    ema50 = _ema_series(closes, 50)
+    atr14 = _atr_series(four_hour, 14)
+    daily_closes = [float(row["close"]) for row in daily]
+    daily_index = {row["timestamp"] // 86400000: i for i, row in enumerate(daily)}
+    signals = []
+    direction = 0
+    extreme = None
+    blocked_direction = 0
+    for index, row in enumerate(four_hour):
+        day_index = row["timestamp"] // 86400000
+        previous_day = daily_index.get(day_index - 1)
+        regime = 0
+        if previous_day is not None and previous_day >= 219:
+            average = daily_sma200[previous_day]
+            prior_average = daily_sma200[previous_day - 20]
+            if average is not None and prior_average is not None:
+                if daily_closes[previous_day] > average and average > prior_average:
+                    regime = 1
+                elif daily_closes[previous_day] < average and average < prior_average:
+                    regime = -1
+        if regime == 1:
+            desired = 1 if ema20[index] > ema50[index] and closes[index] > ema50[index] else 0
+        elif regime == -1:
+            desired = -1 if ema20[index] < ema50[index] and closes[index] < ema50[index] else 0
+        else:
+            desired = 0
+        if blocked_direction and desired != blocked_direction:
+            blocked_direction = 0
+        if direction == 0:
+            if desired and desired != blocked_direction and atr14[index] is not None:
+                direction = desired
+                extreme = closes[index]
+        elif direction == 1:
+            extreme = max(extreme, closes[index])
+            if desired != 1:
+                direction = 0
+                extreme = None
+            elif atr14[index] is not None and closes[index] < extreme - 3.0 * atr14[index]:
+                direction = 0
+                extreme = None
+                blocked_direction = 1
+        elif direction == -1:
+            extreme = min(extreme, closes[index])
+            if desired != -1:
+                direction = 0
+                extreme = None
+            elif atr14[index] is not None and closes[index] > extreme + 3.0 * atr14[index]:
+                direction = 0
+                extreme = None
+                blocked_direction = -1
+        signals.append(direction)
+    return signals
+
+
+def run_daily_regime_filter_lab(hourly_candles, fee=FEE_RATE, slippage=SLIPPAGE_RATE, funding_rate_per_8h=0.00005):
     """Test 4h entries gated by the previous fully closed daily SMA200 regime."""
     four_hour = aggregate_candles(hourly_candles, 4)
     daily = aggregate_candles(hourly_candles, 24)
@@ -441,6 +651,8 @@ def run_daily_regime_filter_lab(hourly_candles, fee=FEE_RATE, slippage=SLIPPAGE_
         raise ValueError("Insufficient bars for multi-timeframe regime research")
     if not 0 <= fee < 1 or not 0 <= slippage < 1:
         raise ValueError("Fee and slippage must be between 0 and 1")
+    if not math.isfinite(funding_rate_per_8h) or funding_rate_per_8h < 0:
+        raise ValueError("Funding rate must be finite and non-negative")
 
     daily_closes = [float(row["close"]) for row in daily]
     daily_sma200 = [None] * len(daily)
@@ -452,6 +664,8 @@ def run_daily_regime_filter_lab(hourly_candles, fee=FEE_RATE, slippage=SLIPPAGE_
     ema20 = _ema_series(closes, 20)
     ema50 = _ema_series(closes, 50)
     ema200 = _ema_series(closes, 200)
+    rsi14 = _rsi_series(closes, 14)
+    atr14 = _atr_series(four_hour, 14)
     sma20 = [None] * len(closes)
     sma50 = [None] * len(closes)
     for i in range(19, len(closes)):
@@ -462,6 +676,12 @@ def run_daily_regime_filter_lab(hourly_candles, fee=FEE_RATE, slippage=SLIPPAGE_
     signals = {
         "ema50_200_with_daily_sma200": [],
         "ema20_50_with_daily_sma200": [],
+        "ema20_50_daily_sma200_rsi50": [],
+        "ema20_50_daily_sma200_rsi50_rising": [],
+        "ema20_50_daily_sma200_ema20_exit": [],
+        "ema20_50_daily_sma200_rsi45_exit": [],
+        "ema20_50_daily_sma200_atr3_trailing": [],
+        "regime_switching_atr3_long_short": [],
         "sma20_50_with_daily_sma200": [],
     }
     for i, row in enumerate(four_hour):
@@ -478,11 +698,62 @@ def run_daily_regime_filter_lab(hourly_candles, fee=FEE_RATE, slippage=SLIPPAGE_
         signals["ema20_50_with_daily_sma200"].append(
             bool(i >= 49 and daily_regime and ema20[i] > ema50[i] and closes[i] > ema50[i])
         )
+        rsi_confirmed = bool(rsi14[i] is not None and rsi14[i] >= 50.0)
+        rsi_rising = bool(
+            i >= 17 and rsi14[i] is not None and rsi14[i - 3] is not None
+            and rsi14[i] > rsi14[i - 3]
+        )
+        trend_setup = bool(
+            i >= 49 and daily_regime and ema20[i] > ema50[i]
+            and closes[i] > ema50[i]
+        )
+        signals["ema20_50_daily_sma200_rsi50"].append(bool(trend_setup and rsi_confirmed))
+        signals["ema20_50_daily_sma200_rsi50_rising"].append(
+            bool(trend_setup and rsi_confirmed and rsi_rising)
+        )
+        # Stateful exit variants keep the base trend entry but test earlier,
+        # predeclared exit conditions to reduce exposure during weakening trends.
+        if i == 0:
+            ema20_exit_position = False
+            rsi_exit_position = False
+        if not ema20_exit_position and trend_setup:
+            ema20_exit_position = True
+        elif ema20_exit_position and (
+            not daily_regime or closes[i] < ema20[i] or ema20[i] < ema50[i]
+        ):
+            ema20_exit_position = False
+        if not rsi_exit_position and trend_setup:
+            rsi_exit_position = True
+        elif rsi_exit_position and (
+            not daily_regime or (rsi14[i] is not None and rsi14[i] < 45.0)
+            or ema20[i] < ema50[i]
+        ):
+            rsi_exit_position = False
+        signals["ema20_50_daily_sma200_ema20_exit"].append(ema20_exit_position)
+        signals["ema20_50_daily_sma200_rsi45_exit"].append(rsi_exit_position)
+        if i == 0:
+            atr_trailing_position = False
+            atr_trailing_peak = None
+        if not atr_trailing_position and trend_setup and atr14[i] is not None:
+            atr_trailing_position = True
+            atr_trailing_peak = closes[i]
+        elif atr_trailing_position:
+            atr_trailing_peak = max(atr_trailing_peak, closes[i])
+            if (
+                not daily_regime or atr14[i] is None
+                or closes[i] < atr_trailing_peak - 3.0 * atr14[i]
+            ):
+                atr_trailing_position = False
+                atr_trailing_peak = None
+        signals["ema20_50_daily_sma200_atr3_trailing"].append(atr_trailing_position)
         signals["sma20_50_with_daily_sma200"].append(
             bool(sma20[i] is not None and sma50[i] is not None
                  and daily_regime and closes[i] > sma20[i] > sma50[i])
         )
 
+    signals["regime_switching_atr3_long_short"] = _regime_switching_atr_signals(
+        four_hour, daily, daily_sma200
+    )
     split = int(len(four_hour) * 0.7)
     edges = [split + ((len(four_hour) - split) * k) // 3 for k in range(4)]
     results = {}
@@ -495,12 +766,30 @@ def run_daily_regime_filter_lab(hourly_candles, fee=FEE_RATE, slippage=SLIPPAGE_
                     "window": fold + 1,
                     "start_index": start,
                     "end_index_exclusive": end,
-                    "metrics": _simulate_ohlc(four_hour, signal, start, end, fee, slippage),
+                    "metrics": (
+                        _simulate_long_short(
+                            four_hour, signal, start, end, fee, slippage,
+                            funding_rate_per_8h, bar_hours=4,
+                        ) if name == "regime_switching_atr3_long_short"
+                        else _simulate_ohlc(four_hour, signal, start, end, fee, slippage)
+                    ),
                 })
         returns = [window["metrics"]["return_pct"] for window in windows]
         results[name] = {
-            "in_sample": _simulate_ohlc(four_hour, signal, 200, split, fee, slippage),
-            "out_of_sample": _simulate_ohlc(four_hour, signal, split, len(four_hour), fee, slippage),
+            "in_sample": (
+                _simulate_long_short(
+                    four_hour, signal, 200, split, fee, slippage,
+                    funding_rate_per_8h, bar_hours=4,
+                ) if name == "regime_switching_atr3_long_short"
+                else _simulate_ohlc(four_hour, signal, 200, split, fee, slippage)
+            ),
+            "out_of_sample": (
+                _simulate_long_short(
+                    four_hour, signal, split, len(four_hour), fee, slippage,
+                    funding_rate_per_8h, bar_hours=4,
+                ) if name == "regime_switching_atr3_long_short"
+                else _simulate_ohlc(four_hour, signal, split, len(four_hour), fee, slippage)
+            ),
             "walk_forward_windows": windows,
             "worst_window_return_pct": min(returns) if returns else None,
         }
@@ -515,8 +804,138 @@ def run_daily_regime_filter_lab(hourly_candles, fee=FEE_RATE, slippage=SLIPPAGE_
         "bar_count": len(four_hour),
         "daily_bar_count": len(daily),
         "split_index": split,
-        "execution": "4h signals use the previous fully closed daily SMA200; fills occur at the next 4h close.",
+        "execution": "4h signals use the previous fully closed daily SMA200; fills occur at the next 4h close. The regime-switching candidate uses unlevered 25% notional and modeled funding.",
+        "funding_rate_per_8h_assumption": funding_rate_per_8h,
         "strategies": results,
+    }
+
+
+def run_multi_timeframe_ensemble_lab(hourly_candles, fee=FEE_RATE, slippage=SLIPPAGE_RATE):
+    """Test 4h EMA50/200 entries confirmed by the last fully closed 6h EMA50/200 regime."""
+    four_hour = aggregate_candles(hourly_candles, 4)
+    six_hour = aggregate_candles(hourly_candles, 6)
+    if len(four_hour) < 500 or len(six_hour) < 200:
+        raise ValueError("Insufficient bars for 4h/6h consensus research")
+    if not 0 <= fee < 1 or not 0 <= slippage < 1:
+        raise ValueError("Fee and slippage must be between 0 and 1")
+
+    closes_4h = [float(row["close"]) for row in four_hour]
+    closes_6h = [float(row["close"]) for row in six_hour]
+    ema50_4h = _ema_series(closes_4h, 50)
+    ema200_4h = _ema_series(closes_4h, 200)
+    ema50_6h = _ema_series(closes_6h, 50)
+    ema200_6h = _ema_series(closes_6h, 200)
+    signal_4h = [
+        bool(index >= 199 and ema50_4h[index] > ema200_4h[index]
+             and closes_4h[index] > ema200_4h[index])
+        for index in range(len(four_hour))
+    ]
+    signal_6h = [
+        bool(index >= 199 and ema50_6h[index] > ema200_6h[index]
+             and closes_6h[index] > ema200_6h[index])
+        for index in range(len(six_hour))
+    ]
+
+    # 4h candle timestamps identify their open. At its close, use only a 6h
+    # candle whose end timestamp is <= the 4h candle end; never use a forming 6h bar.
+    six_hour_close_ms = [int(row["timestamp"]) + 6 * 60 * 60 * 1000 for row in six_hour]
+    consensus = []
+    signal_6h_on_4h = []
+    six_index = -1
+    for index, row in enumerate(four_hour):
+        four_hour_close_ms = int(row["timestamp"]) + 4 * 60 * 60 * 1000
+        while (
+            six_index + 1 < len(six_hour_close_ms)
+            and six_hour_close_ms[six_index + 1] <= four_hour_close_ms
+        ):
+            six_index += 1
+        confirmation = bool(six_index >= 0 and signal_6h[six_index])
+        signal_6h_on_4h.append(confirmation)
+        consensus.append(bool(signal_4h[index] and confirmation))
+
+    split = int(len(four_hour) * 0.7)
+    edges = [split + ((len(four_hour) - split) * k) // 3 for k in range(4)]
+    windows = []
+    for fold in range(3):
+        start, end = edges[fold], edges[fold + 1]
+        if end > start:
+            windows.append({
+                "window": fold + 1,
+                "start_index": start,
+                "end_index_exclusive": end,
+                "metrics": _simulate_ohlc(four_hour, consensus, start, end, fee, slippage),
+            })
+    returns = [window["metrics"]["return_pct"] for window in windows]
+    candidate = {
+        "in_sample": _simulate_ohlc(four_hour, consensus, 200, split, fee, slippage),
+        "out_of_sample": _simulate_ohlc(four_hour, consensus, split, len(four_hour), fee, slippage),
+        "walk_forward_windows": windows,
+        "worst_window_return_pct": min(returns) if returns else None,
+    }
+    benchmark = _simulate_ohlc(
+        four_hour, [True] * len(four_hour), split, len(four_hour), fee, slippage
+    )
+    benchmark["profit_factor"] = None
+    benchmark["closed_trades"] = 1
+    benchmark["open_position"] = False
+    benchmark["win_rate_pct"] = 100.0 if benchmark["return_pct"] > 0 else 0.0
+    close_times_4h = [
+        int(row["timestamp"]) + 4 * 60 * 60 * 1000 for row in four_hour
+    ]
+    close_times_6h = [
+        int(row["timestamp"]) + 6 * 60 * 60 * 1000 for row in six_hour
+    ]
+    split_4h = int(len(four_hour) * 0.7)
+    portfolio_oos_start = close_times_4h[split_4h]
+    portfolio_oos_end = close_times_4h[-1] + 1
+    portfolio_edges = [
+        portfolio_oos_start + ((portfolio_oos_end - portfolio_oos_start) * k) // 3
+        for k in range(4)
+    ]
+    portfolio_windows = []
+    for fold in range(3):
+        start_time, end_time = portfolio_edges[fold], portfolio_edges[fold + 1]
+        if end_time > start_time:
+            portfolio_windows.append({
+                "window": fold + 1,
+                "start_time_ms": start_time,
+                "end_time_ms_exclusive": end_time,
+                "metrics": _simulate_equal_weight_multitimeframe(
+                    [four_hour, six_hour], [signal_4h, signal_6h], [4, 6],
+                    start_time, end_time, fee, slippage,
+                ),
+            })
+    portfolio_returns = [window["metrics"]["return_pct"] for window in portfolio_windows]
+    portfolio_is_start = max(close_times_4h[200], close_times_6h[200])
+    portfolio_is_end = close_times_4h[split_4h]
+    portfolio_candidate = {
+        "in_sample": _simulate_equal_weight_multitimeframe(
+            [four_hour, six_hour], [signal_4h, signal_6h], [4, 6],
+            portfolio_is_start, portfolio_is_end, fee, slippage,
+        ),
+        "out_of_sample": _simulate_equal_weight_multitimeframe(
+            [four_hour, six_hour], [signal_4h, signal_6h], [4, 6],
+            portfolio_oos_start, portfolio_oos_end, fee, slippage,
+        ),
+        "walk_forward_windows": portfolio_windows,
+        "worst_window_return_pct": min(portfolio_returns) if portfolio_returns else None,
+    }
+    return {
+        "mode": "FOUR_HOUR_SIX_HOUR_CONSENSUS_AND_NATIVE_TIMEFRAME_PORTFOLIO",
+        "bar_count_4h": len(four_hour),
+        "bar_count_6h": len(six_hour),
+        "split_index": split,
+        "execution": (
+            "Consensus uses the most recent fully closed 6h regime to confirm each completed 4h signal. "
+            "The 50/50 portfolio blend executes each 4h and 6h sleeve on its own native bar closes; "
+            "each sleeve receives half the capital and allocates 25% of its own cash."
+        ),
+        "confirmation_rule": "Both 4h and last fully closed 6h bars must have EMA50 > EMA200 and close > EMA200.",
+        "strategies": {
+            "ema50_200_4h_6h_consensus": candidate,
+            "ema50_200_4h_6h_50_50_portfolio": portfolio_candidate,
+            "buy_and_hold_25pct": {"out_of_sample": benchmark},
+        },
     }
 
 
@@ -846,6 +1265,7 @@ def summarize_qualification(result, watchlist_limit=5):
         "ohlc_breakout": result.get("extended_lab_strategy_qualification", {}).get("ohlc_breakout", {}),
         "long_short": result.get("extended_lab_strategy_qualification", {}).get("long_short", {}),
         "daily_regime_filter": result.get("extended_lab_strategy_qualification", {}).get("daily_regime_filter", {}),
+        "multi_timeframe_ensemble": result.get("extended_lab_strategy_qualification", {}).get("multi_timeframe_ensemble", {}),
     }
     counts = {}
     candidates = []
@@ -920,6 +1340,7 @@ def build_qualification_markdown(result):
         "OHLC breakout strategies": result.get("extended_lab_strategy_qualification", {}).get("ohlc_breakout", {}),
         "Long/short research (paper only)": result.get("extended_lab_strategy_qualification", {}).get("long_short", {}),
         "Daily regime filters": result.get("extended_lab_strategy_qualification", {}).get("daily_regime_filter", {}),
+        "4h / 6h consensus ensemble": result.get("extended_lab_strategy_qualification", {}).get("multi_timeframe_ensemble", {}),
     }
     lines = [
         "# WHJ Bitcoin Bot — Strategy Qualification Report", "",
@@ -1011,6 +1432,36 @@ def build_qualification_markdown(result):
                 f"max drawdown {dd_text}; status {status}."
             )
         lines.append("")
+
+    forward_portfolio = paper_accounts.get(
+        "forward_only_ema50_200_4h_6h_50_50_portfolio", {}
+    )
+    if isinstance(forward_portfolio, dict) and isinstance(forward_portfolio.get("sleeves"), dict):
+        seed_time = forward_portfolio.get("seed", {}).get("4h", {}).get("last_seeded_timestamp")
+        seed_label = (
+            datetime.fromtimestamp(seed_time, timezone.utc).isoformat()
+            if isinstance(seed_time, (int, float)) else "not available"
+        )
+        lines.extend([
+            "## Genuine forward-only EMA50/200 paper portfolio",
+            "",
+            f"- Seeded from the latest completed historical bar at {seed_label}. Historical data initializes indicators only; it contributes zero trades and zero PnL.",
+            f"- Combined starting capital: ${forward_portfolio.get('initial_cash_usd', 0):,.2f}; current equity: ${forward_portfolio.get('equity_after_estimated_exit_costs_usd', 0):,.2f}; return: {forward_portfolio.get('return_pct', 0):+.2f}%.",
+            f"- Completed forward-only trades: {forward_portfolio.get('completed_trades', 0)}; allocation: 10% of each $500 timeframe sleeve per entry.",
+        ])
+        for timeframe in ("4h", "6h"):
+            account = forward_portfolio["sleeves"].get(timeframe, {})
+            pauses = account.get("risk_pause_reasons", [])
+            status = "PAUSED — " + ", ".join(pauses) if pauses else "active"
+            lines.append(
+                f"- **{timeframe} sleeve:** equity ${account.get('equity_after_estimated_exit_costs_usd', 0):,.2f}; "
+                f"{account.get('completed_trades', 0)} closed trades; "
+                f"max drawdown {account.get('max_drawdown_pct', 0):.2f}%; status {status}."
+            )
+        lines.extend([
+            "- Risk controls: 10% maximum drawdown, 3% daily loss pause, and a five-loss pause. Existing legacy paper ledgers are kept separately and are not reset.",
+            "",
+        ])
 
     # Diagnostic shortlist only: rank by the weaker of base/stress benchmark edges.
     # This is deliberately not a promotion gate and never changes qualification.
@@ -1161,13 +1612,120 @@ def run_forward_paper_accounts(candles, state_dir="."):
         state_path=str(directory / "paper_6h_rsi14_mean_reversion.json"),
         strategy="rsi14_mean_reversion",
     )
+    ensemble_four_hour = update_paper_account(
+        account_rows(four_hour),
+        state_path=str(directory / "paper_4h_ema50_200_ensemble_sleeve.json"),
+        initial_cash=500.0,
+        strategy="ema50_200_regime",
+    )
+    ensemble_six_hour = update_paper_account(
+        account_rows(six_hour),
+        state_path=str(directory / "paper_6h_ema50_200_ensemble_sleeve.json"),
+        initial_cash=500.0,
+        strategy="ema50_200_regime",
+    )
+    # These separate ledgers start at the latest completed bar. The historical
+    # series initializes EMA state only; it cannot create historical PnL or pauses.
+    forward_seed_4h = seed_forward_paper_account(
+        account_rows(four_hour),
+        state_path=str(directory / "paper_forward_4h_ema50_200.json"),
+        initial_cash=500.0,
+    )
+    forward_seed_6h = seed_forward_paper_account(
+        account_rows(six_hour),
+        state_path=str(directory / "paper_forward_6h_ema50_200.json"),
+        initial_cash=500.0,
+    )
+    forward_four_hour = update_paper_account(
+        account_rows(four_hour),
+        state_path=str(directory / "paper_forward_4h_ema50_200.json"),
+        initial_cash=500.0,
+        allocation_fraction=0.10,
+        max_drawdown_fraction=0.10,
+        daily_loss_fraction=0.03,
+        max_consecutive_losses=5,
+        strategy="ema50_200_regime",
+    )
+    forward_six_hour = update_paper_account(
+        account_rows(six_hour),
+        state_path=str(directory / "paper_forward_6h_ema50_200.json"),
+        initial_cash=500.0,
+        allocation_fraction=0.10,
+        max_drawdown_fraction=0.10,
+        daily_loss_fraction=0.03,
+        max_consecutive_losses=5,
+        strategy="ema50_200_regime",
+    )
+    forward_initial = (
+        forward_four_hour["initial_cash_usd"] + forward_six_hour["initial_cash_usd"]
+    )
+    forward_equity = (
+        forward_four_hour["equity_after_estimated_exit_costs_usd"]
+        + forward_six_hour["equity_after_estimated_exit_costs_usd"]
+    )
+    forward_portfolio = {
+        "mode": "GENUINE_FORWARD_ONLY_50_50_PAPER",
+        "initial_cash_usd": round(forward_initial, 2),
+        "equity_after_estimated_exit_costs_usd": round(forward_equity, 2),
+        "return_pct": round((forward_equity / forward_initial - 1.0) * 100.0, 2),
+        "completed_trades": (
+            forward_four_hour["completed_trades"] + forward_six_hour["completed_trades"]
+        ),
+        "fees_paid_usd": round(
+            forward_four_hour["fees_paid_usd"] + forward_six_hour["fees_paid_usd"], 4
+        ),
+        "sleeves": {"4h": forward_four_hour, "6h": forward_six_hour},
+        "seed": {"4h": forward_seed_4h, "6h": forward_seed_6h},
+        "allocation": "50% capital per timeframe sleeve; 10% of each sleeve equity per entry.",
+        "risk_limits": {
+            "max_drawdown_pct": 10.0,
+            "daily_loss_pause_pct": 3.0,
+            "max_consecutive_losses": 5,
+            "allocation_pct_per_sleeve": 10.0,
+        },
+        "note": (
+            "This is a new forward-only paper ledger seeded at the latest completed "
+            "bar. Historical candles warm up indicators only and create no historical trades."
+        ),
+    }
+    ensemble_initial = (
+        ensemble_four_hour["initial_cash_usd"] + ensemble_six_hour["initial_cash_usd"]
+    )
+    ensemble_equity = (
+        ensemble_four_hour["equity_after_estimated_exit_costs_usd"]
+        + ensemble_six_hour["equity_after_estimated_exit_costs_usd"]
+    )
+    ensemble_portfolio = {
+        "mode": "PERSISTENT_50_50_MULTI_TIMEFRAME_PAPER_ONLY",
+        "initial_cash_usd": round(ensemble_initial, 2),
+        "equity_after_estimated_exit_costs_usd": round(ensemble_equity, 2),
+        "return_pct": round((ensemble_equity / ensemble_initial - 1.0) * 100.0, 2),
+        "completed_trades": (
+            ensemble_four_hour["completed_trades"] + ensemble_six_hour["completed_trades"]
+        ),
+        "fees_paid_usd": round(
+            ensemble_four_hour["fees_paid_usd"] + ensemble_six_hour["fees_paid_usd"], 4
+        ),
+        "sleeves": {
+            "4h": ensemble_four_hour,
+            "6h": ensemble_six_hour,
+        },
+        "max_drawdown_by_sleeve_pct": {
+            "4h": ensemble_four_hour["max_drawdown_pct"],
+            "6h": ensemble_six_hour["max_drawdown_pct"],
+        },
+        "allocation": "50% of capital to each native-timeframe sleeve; each sleeve allocates 25% of its own equity per entry.",
+        "note": "The sleeve drawdowns are reported separately; no unsynchronized combined drawdown is inferred.",
+    }
     return {
         "mode": "PERSISTENT_MULTI_TIMEFRAME_PAPER_ONLY",
         "daily_sma20_50": daily_result,
         "four_hour_ema50_200": four_hour_result,
         "daily_bollinger_mean_reversion": daily_bollinger_result,
         "six_hour_rsi14_mean_reversion": six_hour_rsi_result,
-        "note": "These accounts process only newly closed aggregated bars and persist state between scheduled runs. No real orders are sent.",
+        "ema50_200_4h_6h_50_50_portfolio": ensemble_portfolio,
+        "forward_only_ema50_200_4h_6h_50_50_portfolio": forward_portfolio,
+        "note": "Legacy diagnostic ledgers backfill history; the separate forward_only ledger starts at the latest completed bar and processes only future completed candles. No real orders are sent.",
     }
 
 
@@ -1215,7 +1773,11 @@ def main():
         daily_bars, fee=0.002, slippage=0.001, funding_rate_per_8h=0.0001
     )
     daily_regime_research = run_daily_regime_filter_lab(candles)
-    daily_regime_stress = run_daily_regime_filter_lab(candles, fee=0.002, slippage=0.001)
+    daily_regime_stress = run_daily_regime_filter_lab(candles, fee=0.002, slippage=0.001, funding_rate_per_8h=0.0001)
+    multi_timeframe_ensemble_research = run_multi_timeframe_ensemble_lab(candles)
+    multi_timeframe_ensemble_stress = run_multi_timeframe_ensemble_lab(
+        candles, fee=0.002, slippage=0.001
+    )
     forward_paper = run_forward_paper_accounts(candles)
     qualification = {}
     for label in ("1h", "4h", "6h", "1d"):
@@ -1242,11 +1804,14 @@ def main():
         "daily_regime_filter": assess_research_lab_qualification(
             daily_regime_research, daily_regime_stress
         ),
+        "multi_timeframe_ensemble": assess_research_lab_qualification(
+            multi_timeframe_ensemble_research, multi_timeframe_ensemble_stress
+        ),
     }
 
     result = {
         "project": "WHJ Bitcoin Bot",
-        "mode": "FIVE_YEAR_HISTORICAL_RESEARCH_ONLY",
+        "mode": "EXTENDED_HISTORICAL_RESEARCH_ONLY",
         "source": "Coinbase Exchange public BTC-USD candles",
         "interval": "1h",
         "requested_days": DAYS,
@@ -1282,6 +1847,8 @@ def main():
         "long_short_stress": long_short_stress,
         "daily_regime_research": daily_regime_research,
         "daily_regime_stress": daily_regime_stress,
+        "multi_timeframe_ensemble_research": multi_timeframe_ensemble_research,
+        "multi_timeframe_ensemble_stress": multi_timeframe_ensemble_stress,
         "warning": "Historical results are not forecasts. Strategy selection requires robust out-of-sample performance and forward paper trading. No live orders were placed.",
     }
     Path("historical_research.json").write_text(
@@ -1313,6 +1880,21 @@ def main():
             )
         },
         "qualification_summary": summarize_qualification(result),
+        "forward_paper_4h_6h_ensemble": {
+            "return_pct": forward_paper["ema50_200_4h_6h_50_50_portfolio"]["return_pct"],
+            "equity_usd": forward_paper["ema50_200_4h_6h_50_50_portfolio"]["equity_after_estimated_exit_costs_usd"],
+            "completed_trades": forward_paper["ema50_200_4h_6h_50_50_portfolio"]["completed_trades"],
+            "max_drawdown_by_sleeve_pct": forward_paper["ema50_200_4h_6h_50_50_portfolio"]["max_drawdown_by_sleeve_pct"],
+        },
+        "genuine_forward_only_paper_portfolio": {
+            "return_pct": forward_paper["forward_only_ema50_200_4h_6h_50_50_portfolio"]["return_pct"],
+            "equity_usd": forward_paper["forward_only_ema50_200_4h_6h_50_50_portfolio"]["equity_after_estimated_exit_costs_usd"],
+            "completed_trades": forward_paper["forward_only_ema50_200_4h_6h_50_50_portfolio"]["completed_trades"],
+            "sleeve_drawdowns_pct": {
+                timeframe: forward_paper["forward_only_ema50_200_4h_6h_50_50_portfolio"]["sleeves"][timeframe]["max_drawdown_pct"]
+                for timeframe in ("4h", "6h")
+            },
+        },
         "strategies": {
             name: {
                 "oos_return_pct": metrics["out_of_sample"]["return_pct"],

@@ -8,7 +8,7 @@ from pathlib import Path
 
 from paper_account import _ema_last, _save_state_atomically, run_paper_portfolio, update_paper_account
 from paper_trading import run_backtest
-from strategy_lab import _simulate, run_strategy_lab
+from strategy_lab import _consensus_signals, _simulate, run_strategy_lab
 from risk_analysis import block_bootstrap_trade_risk, monte_carlo_trade_risk
 
 
@@ -54,6 +54,40 @@ class BlockBootstrapRiskTests(unittest.TestCase):
             block_bootstrap_trade_risk([{"pnl": 1.0}], block_size=0)
         with self.assertRaises(ValueError):
             block_bootstrap_trade_risk([{"pnl": float("inf")}])
+
+
+
+class ConsensusEnsembleTests(unittest.TestCase):
+    def test_equal_family_votes_prevent_trend_family_dominance(self):
+        names = (
+            "sma_trend", "ema_trend", "sma200_regime", "ema50_200_regime",
+            "sma200_filter", "ema200_filter", "sma50_200_cross", "donchian_55_20",
+            "rsi_momentum", "rsi2_mean_reversion", "rsi14_mean_reversion",
+            "bollinger_mean_reversion",
+        )
+        signals = {name: [False, False] for name in names}
+        for name in names[:4]:
+            signals[name][0] = True
+        signals["rsi_momentum"][0] = True
+        for name in names[:8]:
+            signals[name][1] = True
+        self.assertEqual(_consensus_signals(signals), [True, False])
+
+    def test_consensus_requires_two_mean_reversion_votes_and_valid_lengths(self):
+        names = (
+            "sma_trend", "ema_trend", "sma200_regime", "ema50_200_regime",
+            "sma200_filter", "ema200_filter", "sma50_200_cross", "donchian_55_20",
+            "rsi_momentum", "rsi2_mean_reversion", "rsi14_mean_reversion",
+            "bollinger_mean_reversion",
+        )
+        signals = {name: [False] for name in names}
+        signals["rsi_momentum"] = [True]
+        signals["rsi2_mean_reversion"] = [True]
+        signals["rsi14_mean_reversion"] = [True]
+        self.assertEqual(_consensus_signals(signals), [True])
+        signals["ema_trend"] = [True, False]
+        with self.assertRaises(ValueError):
+            _consensus_signals(signals)
 
 
 class StrategyLabTests(unittest.TestCase):
@@ -262,6 +296,103 @@ class PersistentPaperAccountTests(unittest.TestCase):
             self.assertTrue(result["paused_for_loss_streak"])
             self.assertFalse(result["open_position"])
             self.assertEqual(result["risk_limits"]["max_consecutive_losses"], 5)
+
+    def test_rolling_strategy_health_pause_blocks_new_entries(self):
+        with tempfile.TemporaryDirectory() as folder:
+            state_path = Path(folder) / "strategy_health.json"
+            candles = self.make_candles([100.0 + i for i in range(55)])
+            update_paper_account(candles, state_path=str(state_path))
+            saved = json.loads(state_path.read_text(encoding="utf-8"))
+            saved["btc"] = 0.0
+            saved["entry_cost"] = 0.0
+            saved["cash"] = 1000.0
+            saved["last_timestamp"] = 54 * 3600
+            saved["trades"] = [
+                {"pnl_usd": pnl, "result": "LOSS" if pnl < 0 else "WIN", "side": "SELL"}
+                for pnl in (-2.0, 1.0, -2.0, 1.0, -2.0, 1.0, -2.0, 1.0, -2.0, 1.0)
+            ]
+            state_path.write_text(json.dumps(saved), encoding="utf-8")
+            extended = self.make_candles([100.0 + i for i in range(56)])
+            result = update_paper_account(
+                extended,
+                state_path=str(state_path),
+                strategy_health_pause=True,
+            )
+            self.assertTrue(result["paused_for_strategy_health"])
+            self.assertFalse(result["open_position"])
+            self.assertIn("strategy_health_deterioration", result["risk_pause_reasons"])
+
+    def test_strategy_health_pause_is_sticky_across_restarts(self):
+        with tempfile.TemporaryDirectory() as folder:
+            state_path = Path(folder) / "sticky_health.json"
+            candles = self.make_candles([100.0 + i for i in range(55)])
+            update_paper_account(candles, state_path=str(state_path))
+            saved = json.loads(state_path.read_text(encoding="utf-8"))
+            saved["btc"] = 0.0
+            saved["entry_cost"] = 0.0
+            saved["cash"] = 1000.0
+            saved["last_timestamp"] = 54 * 3600
+            saved["trades"] = [
+                {"pnl_usd": -1.0, "result": "LOSS", "side": "SELL"}
+                for _ in range(10)
+            ]
+            state_path.write_text(json.dumps(saved), encoding="utf-8")
+            first = update_paper_account(
+                self.make_candles([100.0 + i for i in range(56)]),
+                state_path=str(state_path),
+                strategy_health_pause=True,
+            )
+            self.assertTrue(first["paused_for_strategy_health"])
+            persisted = json.loads(state_path.read_text(encoding="utf-8"))
+            self.assertTrue(persisted["paused_for_strategy_health"])
+            second = update_paper_account(
+                self.make_candles([100.0 + i for i in range(57)]),
+                state_path=str(state_path),
+                strategy_health_pause=True,
+            )
+            self.assertTrue(second["paused_for_strategy_health"])
+            self.assertFalse(second["open_position"])
+            self.assertIn("strategy_health_deterioration", second["risk_pause_reasons"])
+
+    def test_strategy_health_pause_forces_exit_of_existing_position(self):
+        with tempfile.TemporaryDirectory() as folder:
+            state_path = Path(folder) / "open_position_health.json"
+            candles = self.make_candles([100.0 + i for i in range(55)])
+            initial = update_paper_account(candles, state_path=str(state_path))
+            self.assertTrue(initial["open_position"])
+            saved = json.loads(state_path.read_text(encoding="utf-8"))
+            saved["last_timestamp"] = 54 * 3600
+            saved["trades"] = [
+                {"pnl_usd": -1.0, "result": "LOSS", "side": "SELL"}
+                for _ in range(10)
+            ]
+            state_path.write_text(json.dumps(saved), encoding="utf-8")
+            result = update_paper_account(
+                self.make_candles([100.0 + i for i in range(56)]),
+                state_path=str(state_path),
+                strategy_health_pause=True,
+            )
+            self.assertTrue(result["paused_for_strategy_health"])
+            self.assertFalse(result["open_position"])
+            self.assertEqual(len(result["new_trades"]), 1)
+            self.assertIn("strategy_health_deterioration", result["risk_pause_reasons"])
+
+    def test_persisted_daily_loss_pause_forces_exit_of_open_position(self):
+        with tempfile.TemporaryDirectory() as folder:
+            state_path = Path(folder) / "daily_pause_exit.json"
+            candles = self.make_candles([100.0 + i for i in range(55)])
+            update_paper_account(candles, state_path=str(state_path))
+            saved = json.loads(state_path.read_text(encoding="utf-8"))
+            self.assertGreater(saved["btc"], 0)
+            saved["daily_loss_paused"] = True
+            saved["last_timestamp"] = 54 * 3600
+            state_path.write_text(json.dumps(saved), encoding="utf-8")
+            result = update_paper_account(
+                self.make_candles([100.0 + i for i in range(56)]),
+                state_path=str(state_path),
+            )
+            self.assertFalse(result["open_position"])
+            self.assertIn("daily_loss_limit", result["risk_pause_reasons"])
 
     def test_existing_loss_streak_is_reconciled_without_new_candles(self):
         with tempfile.TemporaryDirectory() as folder:

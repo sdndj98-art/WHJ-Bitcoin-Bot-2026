@@ -1,0 +1,92 @@
+name: WHJ Forward Paper Monitor
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "17 */4 * * *"
+  push:
+    branches: [research/regime-aware-consensus-ensemble]
+    paths:
+      - "forward_paper_monitor.py"
+      - "paper_account.py"
+      - "historical_research.py"
+      - "tests/test_forward_paper_monitor.py"
+      - ".github/workflows/forward-paper-monitor.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: whj-forward-paper-monitor
+  cancel-in-progress: false
+
+jobs:
+  forward-paper:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Restore forward-only paper ledgers
+        uses: actions/cache/restore@v4
+        with:
+          path: |
+            paper_forward_4h_ema50_200.json
+            paper_forward_6h_ema50_200.json
+          key: whj-forward-paper-v1-${{ github.run_id }}-${{ github.run_attempt }}
+          restore-keys: |
+            whj-forward-paper-v1-
+      - name: Run focused safety tests
+        run: python -m unittest discover -s tests -p 'test_forward_paper_monitor.py' -v
+      - name: Run forward-only paper monitor
+        run: python forward_paper_monitor.py
+      - name: Save forward-only ledgers
+        if: success()
+        uses: actions/cache/save@v4
+        with:
+          path: |
+            paper_forward_4h_ema50_200.json
+            paper_forward_6h_ema50_200.json
+          key: whj-forward-paper-v1-${{ github.run_id }}-${{ github.run_attempt }}
+      - name: Publish concise paper status to workflow summary
+        if: success()
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          report = json.loads(Path("forward_paper_report.json").read_text(encoding="utf-8"))
+          lines = [
+              "## WHJ forward-only paper snapshot",
+              "",
+              f"- **Status:** {report['status']}",
+              f"- **Generated (UTC):** {report['generated_at_utc']}",
+              f"- **Market data:** {report['data_quality']['quality']}",
+              f"- **Combined simulated equity:** ${report['equity_after_estimated_exit_costs_usd']:.2f}",
+              f"- **Combined return:** {report['return_pct']:.4f}%",
+              f"- **Closed trades:** {report['completed_trades']}",
+              "",
+              "| Sleeve | Equity | Return | Trades | Max DD | Open position | Risk pauses |",
+              "|---|---:|---:|---:|---:|---|---|",
+          ]
+          for timeframe, item in report["sleeves_summary"].items():
+              pauses = ", ".join(item["risk_pause_reasons"]) or "None"
+              lines.append(
+                  f"| {timeframe} | ${item['equity_usd']:.2f} | {item['return_pct']:.2f}% | "
+                  f"{item['completed_trades']} | {item['max_drawdown_pct']:.2f}% | "
+                  f"{item['open_position']} | {pauses} |"
+              )
+          lines += ["", "> Paper simulation only. No real orders. Historical warm-up candles do not create trades."]
+          with open(__import__("os").environ["GITHUB_STEP_SUMMARY"], "a", encoding="utf-8") as handle:
+              handle.write("\n".join(lines) + "\n")
+          PY
+      - name: Upload forward paper snapshot
+        uses: actions/upload-artifact@v4
+        with:
+          name: whj-forward-paper-snapshot-${{ github.run_number }}
+          path: forward_paper_report.json
+          if-no-files-found: error
+          retention-days: 30

@@ -68,6 +68,7 @@ def _new_state(initial_cash, strategy="sma_trend"):
         "paused_for_loss_streak": False,
         "daily_start_equity": float(initial_cash),
         "paused_for_drawdown": False,
+        "paused_for_strategy_health": False,
         "trades": [],
         "fees_paid": 0.0,
     }
@@ -147,7 +148,7 @@ def _load_state(path, initial_cash, strategy="sma_trend"):
         if state.get(key) is not None:
             if _number(state[key], key, 0) <= 0:
                 raise ValueError("Saved EMA state must be positive when initialized")
-    for key in ("daily_loss_paused", "paused_for_loss_streak", "paused_for_drawdown"):
+    for key in ("daily_loss_paused", "paused_for_loss_streak", "paused_for_drawdown", "paused_for_strategy_health"):
         if key in state and not isinstance(state[key], bool):
             raise ValueError("Saved paper account risk flag is invalid: " + key)
     if state.get("daily_bucket") is not None and not isinstance(state["daily_bucket"], str):
@@ -165,6 +166,64 @@ def _ema_last(values, period):
     for value in values[1:]:
         current = alpha * float(value) + (1 - alpha) * current
     return current
+
+
+def seed_forward_paper_account(
+    candles, state_path, initial_cash=500.0, strategy="ema50_200_regime"
+):
+    """Initialize a genuinely forward-only ledger at the latest completed bar.
+
+    Historical candles warm up indicators only. They do not create historical
+    trades, profits, losses, or risk pauses in this new forward paper account.
+    Existing state is validated and preserved; it is never reset here.
+    """
+    if strategy != "ema50_200_regime":
+        raise ValueError("Forward seeding currently supports only ema50_200_regime")
+    initial_cash = _number(initial_cash, "initial_cash", 0)
+    if initial_cash <= 0:
+        raise ValueError("initial_cash must be greater than zero")
+    normalized = []
+    for row in candles:
+        if not isinstance(row, (list, tuple)) or len(row) < 5:
+            raise ValueError("Each candle must include timestamp and close")
+        if isinstance(row[0], bool) or isinstance(row[4], bool):
+            raise ValueError("Candle timestamp and close cannot be boolean values")
+        timestamp_value = _number(float(row[0]), "candle timestamp", 0)
+        close = _number(float(row[4]), "candle close", 0)
+        if not timestamp_value.is_integer() or close <= 0:
+            raise ValueError("Candle timestamps must be whole seconds and closes positive")
+        normalized.append((int(timestamp_value), close))
+    if len(normalized) < 200:
+        raise ValueError("At least 200 completed candles are required to seed EMA50/200")
+    timestamps = [row[0] for row in normalized]
+    if timestamps != sorted(timestamps) or len(set(timestamps)) != len(timestamps):
+        raise ValueError("Candle timestamps must be strictly increasing and unique")
+
+    target = Path(state_path)
+    if target.exists():
+        existing = _load_state(target, initial_cash, strategy)
+        return {
+            "created": False,
+            "last_seeded_timestamp": existing.get("forward_seed_timestamp"),
+            "last_processed_timestamp": existing.get("last_timestamp"),
+        }
+
+    closes = [row[1] for row in normalized]
+    state = _new_state(initial_cash, strategy)
+    state["recent_closes"] = closes[-200:]
+    state["ema50_state"] = _ema_last(closes, 50)
+    state["ema200_state"] = _ema_last(closes, 200)
+    state["last_timestamp"] = timestamps[-1]
+    state["forward_seed_timestamp"] = timestamps[-1]
+    state["daily_bucket"] = datetime.fromtimestamp(
+        timestamps[-1], timezone.utc
+    ).date().isoformat()
+    _save_state_atomically(target, state)
+    return {
+        "created": True,
+        "last_seeded_timestamp": timestamps[-1],
+        "last_processed_timestamp": timestamps[-1],
+    }
 
 
 def _rsi_last(values, period=14):
@@ -198,7 +257,7 @@ def update_paper_account(candles, state_path="paper_account_state.json",
                          initial_cash=1000.0, fee_rate=0.001,
                          slippage_rate=0.0005, allocation_fraction=0.25,
                          max_drawdown_fraction=0.10, daily_loss_fraction=0.03,
-                         max_consecutive_losses=5, strategy="sma_trend"):
+                         max_consecutive_losses=5, strategy="sma_trend", strategy_health_pause=False):
     """Process each newly closed hourly candle once and persist the simulated account."""
     initial_cash = _number(initial_cash, "initial_cash", 0)
     if initial_cash <= 0:
@@ -210,6 +269,8 @@ def update_paper_account(candles, state_path="paper_account_state.json",
     daily_loss_fraction = _number(daily_loss_fraction, "daily_loss_fraction", 0.001, 1)
     if isinstance(max_consecutive_losses, bool) or not isinstance(max_consecutive_losses, int) or max_consecutive_losses < 1:
         raise ValueError("max_consecutive_losses must be a positive integer")
+    if not isinstance(strategy_health_pause, bool):
+        raise ValueError("strategy_health_pause must be boolean")
     if strategy not in ("sma_trend", "ema_trend", "rsi_momentum", "sma200_regime", "ema50_200_regime", "bollinger_mean_reversion", "rsi14_mean_reversion"):
         raise ValueError("Unknown paper strategy")
 
@@ -349,10 +410,19 @@ def update_paper_account(candles, state_path="paper_account_state.json",
                     break
             if loss_streak >= max_consecutive_losses:
                 state["paused_for_loss_streak"] = True
+            if strategy_health_pause and not state.get("paused_for_strategy_health", False):
+                rolling_trades = state["trades"][-20:]
+                if len(rolling_trades) >= 10:
+                    rolling_pnl = [float(trade["pnl_usd"]) for trade in rolling_trades]
+                    rolling_profit = sum(value for value in rolling_pnl if value > 0)
+                    rolling_loss = -sum(value for value in rolling_pnl if value < 0)
+                    if sum(rolling_pnl) <= 0 or (rolling_loss > 0 and rolling_profit / rolling_loss < 1.0):
+                        state["paused_for_strategy_health"] = True
             paused = (
                 state.get("paused_for_drawdown", False)
                 or state.get("daily_loss_paused", False)
                 or state.get("paused_for_loss_streak", False)
+                or state.get("paused_for_strategy_health", False)
             )
 
             if want_long and state["btc"] == 0 and not paused:
@@ -368,7 +438,7 @@ def update_paper_account(candles, state_path="paper_account_state.json",
                     state["fees_paid"] += fee
                     if strategy in ("bollinger_mean_reversion", "rsi14_mean_reversion"):
                         state["holding_bars"] = 0
-            elif (want_flat or daily_loss_hit or state.get("paused_for_drawdown", False) or state.get("paused_for_loss_streak", False)) and state["btc"] > 0:
+            elif (want_flat or daily_loss_hit or state.get("paused_for_drawdown", False) or state.get("paused_for_loss_streak", False) or state.get("paused_for_strategy_health", False) or state.get("daily_loss_paused", False)) and state["btc"] > 0:
                 fill = close * (1 - slippage_rate)
                 gross = state["btc"] * fill
                 fee = gross * fee_rate
@@ -452,6 +522,7 @@ def update_paper_account(candles, state_path="paper_account_state.json",
                 ("maximum_drawdown", bool(state.get("paused_for_drawdown", False))),
                 ("daily_loss_limit", bool(state.get("daily_loss_paused", False))),
                 ("consecutive_loss_limit", bool(state.get("paused_for_loss_streak", False))),
+                ("strategy_health_deterioration", bool(state.get("paused_for_strategy_health", False))),
             ) if active
         ],
         "recent_trades": completed[-20:],
@@ -460,6 +531,7 @@ def update_paper_account(candles, state_path="paper_account_state.json",
         "paused_for_drawdown": bool(state.get("paused_for_drawdown", False)),
         "daily_loss_paused": bool(state.get("daily_loss_paused", False)),
         "paused_for_loss_streak": bool(state.get("paused_for_loss_streak", False)),
+        "paused_for_strategy_health": bool(state.get("paused_for_strategy_health", False)),
         "risk_limits": {
             "max_drawdown_pct": round(max_drawdown_fraction * 100, 2),
             "daily_loss_pause_pct": round(daily_loss_fraction * 100, 2),

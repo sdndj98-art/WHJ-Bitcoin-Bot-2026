@@ -1,16 +1,17 @@
-name: WHJ Five-Year Historical Strategy Research
+name: WHJ Extended Historical Strategy Research
 
 on:
   workflow_dispatch:
   schedule:
     - cron: "37 6 * * *"
   push:
-    branches: [main, build/bitcoin-satoshi-bot, research/cost-sensitivity]
+    branches: [main, build/bitcoin-satoshi-bot, research/cost-sensitivity, research/regime-aware-consensus-ensemble]
     paths:
       - "historical_research.py"
       - "strategy_lab.py"
       - "paper_account.py"
       - "tests/test_historical_research.py"
+      - "tests/test_strategy_regimes.py"
       - "tests/test_simulation_regressions.py"
       - ".github/workflows/historical-research.yml"
 
@@ -18,11 +19,11 @@ permissions:
   contents: read
 
 concurrency:
-  group: whj-five-year-historical-research
+  group: whj-extended-historical-research
   cancel-in-progress: false
 
 jobs:
-  five-year-research:
+  extended-history-research:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
@@ -42,8 +43,13 @@ jobs:
             paper_4h_ema50_200.json
             paper_daily_bollinger.json
             paper_6h_rsi14_mean_reversion.json
-          key: whj-mtf-paper-v6-${{ github.run_id }}-${{ github.run_attempt }}
+            paper_4h_ema50_200_ensemble_sleeve.json
+            paper_6h_ema50_200_ensemble_sleeve.json
+            paper_forward_4h_ema50_200.json
+            paper_forward_6h_ema50_200.json
+          key: whj-mtf-paper-v7-${{ github.run_id }}-${{ github.run_attempt }}
           restore-keys: |
+            whj-mtf-paper-v7-
             whj-mtf-paper-v6-
             whj-mtf-paper-v5-
             whj-mtf-paper-v4-
@@ -51,11 +57,14 @@ jobs:
       - name: Run historical data ingestion tests
         run: python -m unittest discover -s tests -p 'test_historical_research.py' -v
 
-      - name: Run five-year historical research
+      - name: Run market regime diagnostics tests
+        run: python -m unittest discover -s tests -p 'test_strategy_regimes.py' -v
+
+      - name: Run extended historical research
         run: python historical_research.py
 
       - name: Save multi-timeframe paper account state
-        if: success() && hashFiles('paper_daily_sma20_50.json', 'paper_4h_ema50_200.json', 'paper_daily_bollinger.json', 'paper_6h_rsi14_mean_reversion.json') != ''
+        if: success() && hashFiles('paper_daily_sma20_50.json', 'paper_4h_ema50_200.json', 'paper_daily_bollinger.json', 'paper_6h_rsi14_mean_reversion.json', 'paper_4h_ema50_200_ensemble_sleeve.json', 'paper_6h_ema50_200_ensemble_sleeve.json', 'paper_forward_4h_ema50_200.json', 'paper_forward_6h_ema50_200.json') != ''
         uses: actions/cache/save@v4
         with:
           path: |
@@ -63,12 +72,16 @@ jobs:
             paper_4h_ema50_200.json
             paper_daily_bollinger.json
             paper_6h_rsi14_mean_reversion.json
-          key: whj-mtf-paper-v6-${{ github.run_id }}-${{ github.run_attempt }}
+            paper_4h_ema50_200_ensemble_sleeve.json
+            paper_6h_ema50_200_ensemble_sleeve.json
+            paper_forward_4h_ema50_200.json
+            paper_forward_6h_ema50_200.json
+          key: whj-mtf-paper-v7-${{ github.run_id }}-${{ github.run_attempt }}
 
       - name: Save historical research report
         uses: actions/upload-artifact@v4
         with:
-          name: whj-five-year-research-${{ github.run_number }}
+          name: whj-extended-history-research-${{ github.run_number }}
           path: |
             historical_research.json
             strategy_qualification_report.md
