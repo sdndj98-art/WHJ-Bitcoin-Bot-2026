@@ -58,8 +58,9 @@ def fetch_closes():
 def analyze(prices):
     if len(prices) < 50:
         raise ValueError("At least 50 closed prices are required")
-    if any(not isinstance(p, (int, float)) or p <= 0 for p in prices):
-        raise ValueError("Prices must be positive numbers")
+    if any(isinstance(p, bool) or not isinstance(p, (int, float))
+           or not math.isfinite(p) or p <= 0 for p in prices):
+        raise ValueError("Prices must be finite positive numbers")
 
     sma20 = sum(prices[-20:]) / 20
     sma50 = sum(prices[-50:]) / 50
