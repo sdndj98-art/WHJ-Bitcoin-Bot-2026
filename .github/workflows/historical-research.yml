@@ -49,6 +49,7 @@ jobs:
           key: whj-mtf-paper-v7-${{ github.run_id }}-${{ github.run_attempt }}
           restore-keys: |
             whj-mtf-paper-v7-
+            whj-mtf-paper-v6-
             whj-mtf-paper-v5-
             whj-mtf-paper-v4-
 
