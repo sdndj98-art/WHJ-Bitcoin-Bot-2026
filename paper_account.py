@@ -59,8 +59,15 @@ def _load_state(path, initial_cash, strategy="sma_trend"):
     _number(state["entry_cost"], "state entry cost", 0)
     _number(state["peak_equity"], "state peak equity", 0)
     _number(state["fees_paid"], "state fees", 0)
-    if not isinstance(state["recent_closes"], list) or not isinstance(state["trades"], list):
+    if not isinstance(state["recent_closes"], list) or len(state["recent_closes"]) > 50 or not isinstance(state["trades"], list):
         raise ValueError("Paper account state collections are invalid")
+    for close in state["recent_closes"]:
+        _number(close, "saved close", 0)
+    _number(state.get("daily_start_equity", state["initial_cash"] if "initial_cash" in state else initial_cash),
+            "state daily starting equity", 0)
+    last_timestamp = state.get("last_timestamp")
+    if last_timestamp is not None and (isinstance(last_timestamp, bool) or not isinstance(last_timestamp, int) or last_timestamp < 0):
+        raise ValueError("Saved paper account timestamp is invalid")
     return state
 
 
