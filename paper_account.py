@@ -250,6 +250,8 @@ def run_paper_portfolio(candles, state_dir="."):
             candles,
             state_path=str(directory / f"paper_account_state_{strategy}.json"),
             strategy=strategy,
+            strategy_health_pause=True,
+            strategy_health_drawdown_fraction=0.08,
         )
     return {
         "mode": "MULTI_STRATEGY_PERSISTENT_PAPER_ONLY",
