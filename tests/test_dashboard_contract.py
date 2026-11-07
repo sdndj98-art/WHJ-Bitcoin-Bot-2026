@@ -67,6 +67,8 @@ class DashboardContractTests(unittest.TestCase):
             "scannerRiskStop", "scannerRiskTarget", "scannerRiskRatio",
             "scannerTimeframeRows", "scannerMtfConsensus",
             "scannerAtrPct", "scannerClosePosition", "scannerScore",
+            "scannerMtfAverage", "scannerStrongestTf", "scannerTrendTfCount",
+            "scannerBreakoutTfCount",
         }
         self.assertTrue(required.issubset(set(self.parser.ids)))
         self.assertIn("7 GATES", self.source)
