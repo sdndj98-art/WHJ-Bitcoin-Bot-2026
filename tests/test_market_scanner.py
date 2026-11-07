@@ -26,7 +26,7 @@ HEALTHY = {"quality_status": "HEALTHY", "paper_execution_allowed": True}
 
 
 class MarketScannerTests(unittest.TestCase):
-    def test_candidate_requires_all_six_confirmations_and_good_data(self):
+    def test_candidate_requires_all_seven_confirmations_and_good_data(self):
         result = scan_btc_market(candles(), HEALTHY)
         self.assertEqual(result["status"], "PAPER_CANDIDATE")
         self.assertEqual(result["confluence_score"], 6)
