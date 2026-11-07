@@ -35,6 +35,8 @@ def validate_hourly_feed(candles, now_timestamp=None):
         timestamp = int(raw_timestamp)
         if timestamp < 0:
             raise ValueError("Hourly candle timestamp cannot be negative")
+        if timestamp % 3_600_000 != 0:
+            raise ValueError("Hourly candle timestamps must align to UTC hour boundaries")
         timestamps.append(timestamp)
         values = {}
         for key in ("open", "high", "low", "close", "volume"):
