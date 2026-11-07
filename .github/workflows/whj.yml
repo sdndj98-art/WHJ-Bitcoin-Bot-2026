@@ -31,7 +31,7 @@ jobs:
         uses: actions/cache/restore@v4
         with:
           path: paper_account_state_*.json
-          key: whj-paper-portfolio-v4-${{ github.run_id }}-${{ github.run_attempt }}
+          key: whj-paper-portfolio-v5-${{ github.run_id }}-${{ github.run_attempt }}
           restore-keys: |
             whj-paper-portfolio-v3-
 
