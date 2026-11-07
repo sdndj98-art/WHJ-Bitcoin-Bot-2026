@@ -81,7 +81,7 @@ jobs:
               )
           lines += ["", "> Paper simulation only. No real orders. Historical warm-up candles do not create trades."]
           with open(__import__("os").environ["GITHUB_STEP_SUMMARY"], "a", encoding="utf-8") as handle:
-              handle.write("\\n".join(lines) + "\\n")
+              handle.write("\n".join(lines) + "\n")
           PY
       - name: Upload forward paper snapshot
         uses: actions/upload-artifact@v4
