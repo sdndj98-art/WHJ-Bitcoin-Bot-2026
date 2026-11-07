@@ -399,6 +399,11 @@ class HistoricalResearchTests(unittest.TestCase):
                     "bollinger": {
                         "qualified_for_extended_paper_review": False,
                         "failed_checks": ["minimum_oos_trades"],
+                        "benchmark_comparison": {
+                            "benchmark_available": True,
+                            "oos_outperformance_pct_points": 8.87,
+                            "stress_oos_outperformance_pct_points": 8.53,
+                        },
                     }
                 }
             },
@@ -411,6 +416,9 @@ class HistoricalResearchTests(unittest.TestCase):
         self.assertIn("minimum_oos_trades", report)
         self.assertIn("Qualified strategies: 0 / 1", report)
         self.assertIn("No strategy is approved for live trading", report)
+        self.assertIn("Benchmark-edge research watchlist (diagnostic only)", report)
+        self.assertIn("+8.87 pp base", report)
+        self.assertIn("+8.53 pp elevated costs", report)
 
 
     def test_qualification_requires_outperformance_of_matched_benchmark(self):
