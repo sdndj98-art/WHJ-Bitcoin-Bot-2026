@@ -67,6 +67,10 @@ def _signals(prices):
         "rsi2_mean_reversion": [],
         "rsi14_mean_reversion": [],
         "bollinger_mean_reversion": [],
+        "ema_pullback_trend": [],
+        "donchian_20_10_breakout": [],
+        "macd_trend_confirmation": [],
+        "rsi_trend_pullback": [],
     }
     donchian_position = False
     rsi2_position = False
@@ -75,6 +79,10 @@ def _signals(prices):
     rsi14_holding = 0
     bollinger_position = False
     bollinger_holding = 0
+    ema_pullback_position = False
+    donchian_20_10_position = False
+    macd_trend_position = False
+    rsi_pullback_position = False
     for i, price in enumerate(prices):
         result["sma_trend"].append(
             bool(sma20[i] is not None and sma50[i] is not None
@@ -135,6 +143,33 @@ def _signals(prices):
         result["rsi2_mean_reversion"].append(rsi2_position)
         result["rsi14_mean_reversion"].append(rsi14_position)
         result["bollinger_mean_reversion"].append(bollinger_position)
+        # Fixed-rule long-only candidates; signals use completed closes only.
+        ema20_now = _ema(prices[:i + 1], 20)[-1]
+        if i >= 199:
+            if not ema_pullback_position and price > ema200[i] and ema20_now > ema50[i] and price > ema20_now:
+                ema_pullback_position = True
+            elif ema_pullback_position and (price < ema50[i] or price < ema200[i]):
+                ema_pullback_position = False
+            if not donchian_20_10_position and i >= 20 and price > max(prices[i - 20:i]):
+                donchian_20_10_position = True
+            elif donchian_20_10_position and i >= 10 and price < min(prices[i - 10:i]):
+                donchian_20_10_position = False
+            macd_now = ema_fast[i] - ema_slow[i]
+            macd_prior = ema_fast[i - 1] - ema_slow[i - 1]
+            if not macd_trend_position and macd_now > macd_prior and ema_fast[i] > ema_slow[i] and price > ema50[i]:
+                macd_trend_position = True
+            elif macd_trend_position and (ema_fast[i] < ema_slow[i] or price < ema50[i]):
+                macd_trend_position = False
+            previous_rsi = rsi[i - 1]
+            if (not rsi_pullback_position and rsi[i] is not None and previous_rsi is not None
+                    and previous_rsi <= 40 < rsi[i] and price > sma200[i] and ema50[i] > ema200[i]):
+                rsi_pullback_position = True
+            elif rsi_pullback_position and ((rsi[i] is not None and rsi[i] >= 68) or price < sma50[i]):
+                rsi_pullback_position = False
+        result["ema_pullback_trend"].append(ema_pullback_position)
+        result["donchian_20_10_breakout"].append(donchian_20_10_position)
+        result["macd_trend_confirmation"].append(macd_trend_position)
+        result["rsi_trend_pullback"].append(rsi_pullback_position)
     return result
 
 
@@ -470,6 +505,13 @@ def run_strategy_lab(prices, fee=0.001, slippage=0.0005):
             "entry_rule": "At least two of the three equally weighted strategy families must agree.",
             "execution": "Same prior completed close signal, next close fill, 25% allocation, fees, slippage, chronological holdout, and walk-forward windows as component strategies.",
             "safety": "Research candidate only; it must independently pass the same out-of-sample and elevated-cost qualification gates.",
+        },
+        "candidate_strategy_rules": {
+            "ema_pullback_trend": "Long above EMA200 with EMA20 > EMA50 and close > EMA20; exit below EMA50 or EMA200.",
+            "donchian_20_10_breakout": "Enter above the prior 20 closes; exit below the prior 10 closes.",
+            "macd_trend_confirmation": "Enter on rising MACD spread with EMA12 > EMA26 and close > EMA50; exit on bearish cross or below EMA50.",
+            "rsi_trend_pullback": "Enter on RSI crossing above 40 in an EMA50/EMA200 uptrend; exit at RSI 68 or below SMA50.",
+            "safety": "Long-only research candidates; next-close fills; same holdout and transaction-cost assumptions."
         },
         "selection_warning": "No strategy is declared a winner from these tests alone. Require positive out-of-sample evidence across multiple market regimes and longer periods before considering deployment.",
         "strategies": results,
