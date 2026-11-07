@@ -201,6 +201,7 @@ class HistoricalResearchTests(unittest.TestCase):
         self.assertTrue(signals[55])
         result = run_ohlc_breakout_lab(bars)
         self.assertIn("donchian_55_20_sma200", result["strategies"])
+        self.assertIn("donchian_55_20_sma200_atr3_trailing", result["strategies"])
         self.assertIn("buy_and_hold_25pct", result["strategies"])
         self.assertTrue(all(
             window["start_index"] >= result["split_index"]
@@ -218,6 +219,8 @@ class HistoricalResearchTests(unittest.TestCase):
         signals = _turtle_signals(bars, 55, 20, atr_stop_multiple=3.0)
         self.assertTrue(signals[55])
         self.assertFalse(signals[56])
+        combined = _turtle_signals(bars, 55, 20, regime_period=50, atr_stop_multiple=3.0)
+        self.assertTrue(combined[55])
         with self.assertRaises(ValueError):
             _turtle_signals(bars, 55, 20, atr_stop_multiple=0)
     def test_ohlc_drawdown_includes_open_position_liquidation_costs(self):
