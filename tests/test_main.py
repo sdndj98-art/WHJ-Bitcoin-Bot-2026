@@ -33,13 +33,13 @@ class AnalysisTests(unittest.TestCase):
 
     def test_rejects_non_positive_prices(self):
         with self.assertRaises(ValueError):
-            main.analyze([100.0] * 49 + [0.0])
+            main.analyze([100.0] * 50 + [0.0])
 
     def test_rejects_non_finite_or_boolean_prices(self):
         with self.assertRaises(ValueError):
-            main.analyze([100.0] * 49 + [float("nan")])
+            main.analyze([100.0] * 50 + [float("nan")])
         with self.assertRaises(ValueError):
-            main.analyze([100.0] * 49 + [True])
+            main.analyze([100.0] * 50 + [True])
 
     @patch("main.urllib.request.urlopen")
     def test_fetch_excludes_current_incomplete_candle(self, mocked_open):
