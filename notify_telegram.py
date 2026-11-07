@@ -2,7 +2,6 @@
 import json
 import os
 import sys
-import urllib.error
 import urllib.request
 from pathlib import Path
 
@@ -40,6 +39,9 @@ def send_message(token, chat_id, message):
 def main():
     token = os.environ.get("TELEGRAM_BOT_TOKEN", "")
     chat_id = os.environ.get("TELEGRAM_CHAT_ID", "")
+    if not token or not chat_id:
+        print("Telegram is not configured; notification skipped.")
+        return
     report = json.loads(Path("report.json").read_text(encoding="utf-8"))
     send_message(token, chat_id, format_message(report))
     print("Telegram notification sent")
@@ -48,6 +50,7 @@ def main():
 if __name__ == "__main__":
     try:
         main()
-    except (OSError, ValueError, RuntimeError, urllib.error.URLError) as exc:
-        print("Telegram notification failed: " + str(exc), file=sys.stderr)
+    except Exception as exc:
+        # Never print raw exception details: request URLs may contain the bot token.
+        print("Telegram notification failed (" + type(exc).__name__ + ").", file=sys.stderr)
         raise SystemExit(1)
