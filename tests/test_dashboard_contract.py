@@ -58,6 +58,20 @@ class DashboardContractTests(unittest.TestCase):
         for target in self.parser.nav_views:
             self.assertIn(target, ids, f"Navigation target #{target} has no matching view")
 
+    def test_scanner_view_exposes_six_confirmation_gates_and_indicator_context(self):
+        required = {
+            "gateQuality", "gateVolume", "gateBreakout", "gateTrend", "gateRsi",
+            "gateCandle", "scannerTrend", "scannerRsi", "scannerCandle",
+            "scannerEma20", "scannerEma50", "scannerRsiValue", "scannerAtr",
+            "scannerAtrPct", "scannerClosePosition", "scannerScore",
+        }
+        self.assertTrue(required.issubset(set(self.parser.ids)))
+        self.assertIn("6 GATES", self.source)
+        self.assertIn("confluence_score", self.source)
+        self.assertIn("EMA20 و EMA50", self.source)
+        self.assertIn("RSI", self.source)
+        self.assertIn("ATR", self.source)
+
     def test_forward_monitor_view_has_required_controls(self):
         required = {
             "forward", "forwardFile", "clearForward", "forwardMessage",
