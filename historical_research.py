@@ -674,6 +674,54 @@ def assess_strategy_qualification(metrics, stress_metrics, min_oos_trades=30,
     }
 
 
+def build_qualification_markdown(result):
+    """Create a concise human-readable report from qualification JSON."""
+    policy = result["strategy_qualification_policy"]
+    groups = {
+        "Hourly / multi-timeframe strategies": result.get("strategy_qualification", {}),
+        "OHLC breakout strategies": result.get("extended_lab_strategy_qualification", {}).get("ohlc_breakout", {}),
+        "Long/short research (paper only)": result.get("extended_lab_strategy_qualification", {}).get("long_short", {}),
+        "Daily regime filters": result.get("extended_lab_strategy_qualification", {}).get("daily_regime_filter", {}),
+    }
+    lines = [
+        "# WHJ Bitcoin Bot — Strategy Qualification Report", "",
+        f"- Data source: {result.get('source', 'unknown')}",
+        f"- Closed hourly candles: {result.get('candles', 0)}",
+        f"- Period: {result.get('first_closed_candle_utc', 'unknown')} to {result.get('last_closed_candle_utc', 'unknown')}",
+        "- Mode: historical research and simulated paper review only", "",
+        "## Fixed promotion gates",
+        f"- At least {policy['minimum_oos_trades']} out-of-sample closed trades",
+        "- Positive out-of-sample return and positive elevated-cost stress return",
+        f"- Profit factor at least {policy['minimum_profit_factor']}",
+        f"- Out-of-sample maximum drawdown no greater than {policy['maximum_oos_drawdown_pct']}%",
+        "- All three chronological out-of-sample windows non-negative", "",
+    ]
+    total = passed = 0
+    for group_name, strategies in groups.items():
+        lines.extend([f"## {group_name}", ""])
+        if not strategies:
+            lines.extend(["No comparable strategies were reported.", ""])
+            continue
+        for name, qualification in strategies.items():
+            total += 1
+            ok = qualification.get("qualified_for_extended_paper_review", False)
+            passed += int(ok)
+            status = "PASS — eligible for extended forward paper review" if ok else "NOT QUALIFIED"
+            lines.append(f"- **{name}: {status}.**")
+            failed = qualification.get("failed_checks", [])
+            if failed:
+                lines.append("  - Failed gates: " + ", ".join(failed) + ".")
+        lines.append("")
+    lines.extend([
+        "## Overall decision", "",
+        f"- Qualified strategies: {passed} / {total}.",
+        "- No strategy is approved for live trading by this report.",
+        "- If none qualify, keep every strategy in research/paper mode; do not force a winner.",
+        "- Historical performance is not a forecast or a guarantee. Paper results are simulated and may differ from execution.", "",
+    ])
+    return "\n".join(lines)
+
+
 def assess_research_lab_qualification(research, stress_research):
     """Apply the same fixed OOS gates to every comparable research lab."""
     strategies = research.get("strategies", {})
@@ -840,7 +888,7 @@ def main():
         json.dumps(result, indent=2, allow_nan=False) + "\n",
         encoding="utf-8",
     )
-    summary = {
+    Path("strategy_qualification_report.md").write_text(\n        build_qualification_markdown(result), encoding="utf-8"\n    )\n    summary = {
         "source": result["source"],
         "candles": result["candles"],
         "first": result["first_closed_candle_utc"],
