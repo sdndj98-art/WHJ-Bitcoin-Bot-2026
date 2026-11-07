@@ -37,6 +37,10 @@ Risk controls pause new entries after a 3% daily loss and permanently pause an a
 ## Automated schedule
 GitHub Actions runs tests and hourly analysis on pushes to `main`, hourly at minute 7 (UTC), and when manually started. A separate five-year BTC/USD historical research job runs daily at 06:37 UTC and when relevant research files change. Hourly analysis artifacts are retained for 14 days; historical research reports are retained for 30 days. Telegram notifications are currently disabled.
 
+## Browser dashboard
+
+A responsive Arabic command-center dashboard is available in `web/index.html`. It displays the latest generated paper-analysis report, market signal, simulated portfolio metrics, strategy comparison, trade log, risk diagnostics, and market-data quality. The hourly GitHub Actions workflow packages the page together with `report.json` and publishes it to GitHub Pages on the `main` branch. The dashboard refreshes its report every 60 seconds. GitHub Pages must be enabled for the repository; the workflow attempts to configure the Pages site automatically on deployment. The dashboard is read-only and does not submit exchange orders.
+
 ## Monte Carlo trade-risk diagnostics
 
 The hourly report includes a seeded bootstrap resampling of the completed historical paper-backtest trade PnL. It reports median and tail final-equity scenarios, loss frequency, and maximum-drawdown percentiles across 2,000 resampled sequences. This is a diagnostic only: it assumes IID trade outcomes, keeps the trade count fixed, uses additive historical PnL, and does not model serial dependence, regime changes, or future execution. It is not a forecast, does not establish an edge, and must never override the fixed strategy qualification gates. A second circular moving-block bootstrap diagnostic samples short contiguous sequences of trade outcomes to test sensitivity to local ordering. Its default block length is three trades. This can preserve limited short-run ordering, but cannot reliably estimate dependence from a small sample and is not a forecast.
