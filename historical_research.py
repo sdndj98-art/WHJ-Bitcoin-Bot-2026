@@ -639,6 +639,41 @@ def run_long_short_lab(bars, fee=FEE_RATE, slippage=SLIPPAGE_RATE,
     }
 
 
+def assess_strategy_qualification(metrics, stress_metrics, min_oos_trades=30,
+                                 min_profit_factor=1.2, max_drawdown_pct=10.0):
+    """Apply fixed, conservative promotion gates; passing is necessary, never sufficient."""
+    oos = metrics.get("out_of_sample", {})
+    stress_oos = stress_metrics.get("out_of_sample", {})
+    trades = int(oos.get("closed_trades", 0))
+    profit_factor = oos.get("profit_factor")
+    drawdown = float(oos.get("max_drawdown_pct", float("inf")))
+    windows = [
+        float(item["metrics"]["return_pct"])
+        for item in metrics.get("walk_forward_windows", [])
+    ]
+    checks = {
+        "minimum_oos_trades": trades >= min_oos_trades,
+        "positive_oos_return": float(oos.get("return_pct", -float("inf"))) > 0,
+        "positive_stress_oos_return": float(stress_oos.get("return_pct", -float("inf"))) > 0,
+        "minimum_profit_factor": profit_factor is not None and float(profit_factor) >= min_profit_factor,
+        "maximum_oos_drawdown": drawdown <= max_drawdown_pct,
+        "all_walk_forward_windows_nonnegative": bool(windows) and all(value >= 0 for value in windows),
+    }
+    return {
+        "qualified_for_extended_paper_review": all(checks.values()),
+        "checks": checks,
+        "failed_checks": [name for name, passed in checks.items() if not passed],
+        "thresholds": {
+            "minimum_oos_trades": min_oos_trades,
+            "minimum_profit_factor": min_profit_factor,
+            "maximum_oos_drawdown_pct": max_drawdown_pct,
+            "minimum_oos_and_stress_return_pct_exclusive": 0,
+            "minimum_each_walk_forward_window_return_pct": 0,
+        },
+        "note": "Passing these gates only qualifies a strategy for extended forward paper review; it does not authorize live trading or establish future profitability.",
+    }
+
+
 def run_forward_paper_accounts(candles, state_dir="."):
     """Maintain independent 1d and 4h paper accounts across daily workflow runs."""
     directory = Path(state_dir)
@@ -725,6 +760,18 @@ def main():
     daily_regime_research = run_daily_regime_filter_lab(candles)
     daily_regime_stress = run_daily_regime_filter_lab(candles, fee=0.002, slippage=0.001)
     forward_paper = run_forward_paper_accounts(candles)
+    qualification = {}
+    for label in ("1h", "4h", "6h", "1d"):
+        qualification[label] = {}
+        base_strategies = timeframe_research[label]["research"]["strategies"]
+        stressed_strategies = stress_cost_research[label]["strategies"]
+        for strategy_name, metrics in base_strategies.items():
+            if strategy_name == "buy_and_hold" or strategy_name not in stressed_strategies:
+                continue
+            qualification[label][strategy_name] = assess_strategy_qualification(
+                metrics, stressed_strategies[strategy_name]
+            )
+
     result = {
         "project": "WHJ Bitcoin Bot",
         "mode": "FIVE_YEAR_HISTORICAL_RESEARCH_ONLY",
@@ -745,6 +792,14 @@ def main():
         "research": research,
         "timeframe_research": timeframe_research,
         "stress_cost_research": stress_cost_research,
+        "strategy_qualification": qualification,
+        "strategy_qualification_policy": {
+            "minimum_oos_trades": 30,
+            "minimum_profit_factor": 1.2,
+            "maximum_oos_drawdown_pct": 10.0,
+            "positive_oos_and_stress_required": True,
+            "all_three_oos_windows_must_be_nonnegative": True,
+        },
         "forward_paper_accounts": forward_paper,
         "ohlc_breakout_research": ohlc_breakout_research,
         "ohlc_breakout_stress": ohlc_breakout_stress,
