@@ -101,8 +101,6 @@ def _load_state(path, initial_cash, strategy="sma_trend"):
             or trade["timestamp"] < 0
         ):
             raise ValueError("Saved trade timestamp is invalid")
-    for close in state["recent_closes"]:
-        _number(close, "saved close", 0)
     for key in ("ema50_state", "ema200_state"):
         if state.get(key) is not None:
             _number(state[key], key, 0)
