@@ -151,10 +151,58 @@ def load_two_year_candles(days=DAYS, now=None):
     return candles
 
 
+def aggregate_candles(candles, hours):
+    """Aggregate complete UTC-aligned hourly bars without using partial periods."""
+    if isinstance(hours, bool) or not isinstance(hours, int) or hours < 1:
+        raise ValueError("Aggregation hours must be a positive integer")
+    span = hours * INTERVAL_MS
+    groups = {}
+    for row in candles:
+        bucket = row["timestamp"] // span
+        groups.setdefault(bucket, []).append(row)
+    aggregated = []
+    for bucket in sorted(groups):
+        group = sorted(groups[bucket], key=lambda item: item["timestamp"])
+        if len(group) != hours:
+            continue
+        expected_start = bucket * span
+        if group[0]["timestamp"] != expected_start:
+            continue
+        if any(group[i]["timestamp"] != expected_start + i * INTERVAL_MS
+               for i in range(hours)):
+            continue
+        aggregated.append({
+            "timestamp": expected_start,
+            "open": group[0]["open"],
+            "high": max(item["high"] for item in group),
+            "low": min(item["low"] for item in group),
+            "close": group[-1]["close"],
+            "volume": sum(item["volume"] for item in group),
+            "imputed": any(item.get("imputed", False) for item in group),
+        })
+    if len(aggregated) < 200:
+        raise ValueError(f"Not enough complete {hours}-hour bars for strategy comparison")
+    return aggregated
+
+
 def main():
     candles = load_two_year_candles()
     prices = [row["close"] for row in candles]
     research = run_strategy_lab(prices, fee=FEE_RATE, slippage=SLIPPAGE_RATE)
+    timeframe_research = {}
+    for label, hours in (("1h", 1), ("4h", 4), ("6h", 6), ("1d", 24)):
+        bars = candles if hours == 1 else aggregate_candles(candles, hours)
+        timeframe_research[label] = {
+            "bar_count": len(bars),
+            "first_bar_utc": datetime.fromtimestamp(bars[0]["timestamp"] / 1000, timezone.utc).isoformat(),
+            "last_bar_utc": datetime.fromtimestamp(bars[-1]["timestamp"] / 1000, timezone.utc).isoformat(),
+            "imputed_bar_count": sum(1 for bar in bars if bar.get("imputed", False)),
+            "research": run_strategy_lab(
+                [bar["close"] for bar in bars],
+                fee=FEE_RATE,
+                slippage=SLIPPAGE_RATE,
+            ),
+        }
     result = {
         "project": "WHJ Bitcoin Bot",
         "mode": "TWO_YEAR_HISTORICAL_RESEARCH_ONLY",
@@ -173,6 +221,7 @@ def main():
             "ohlcv_validated": True,
         },
         "research": research,
+        "timeframe_research": timeframe_research,
         "warning": "Historical results are not forecasts. Strategy selection requires robust out-of-sample performance and forward paper trading. No live orders were placed.",
     }
     Path("historical_research.json").write_text(
