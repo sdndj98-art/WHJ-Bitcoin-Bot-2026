@@ -53,7 +53,18 @@ def _signals(prices):
     for i in range(199, len(prices)):
         sma200[i] = sum(prices[i - 199:i + 1]) / 200
 
-    result = {"sma_trend": [], "ema_trend": [], "rsi_momentum": [], "sma200_regime": [], "ema50_200_regime": []}
+    result = {
+        "sma_trend": [],
+        "ema_trend": [],
+        "rsi_momentum": [],
+        "sma200_regime": [],
+        "ema50_200_regime": [],
+        "sma200_filter": [],
+        "ema200_filter": [],
+        "sma50_200_cross": [],
+        "donchian_55_20": [],
+    }
+    donchian_position = False
     for i, price in enumerate(prices):
         result["sma_trend"].append(
             bool(sma20[i] is not None and sma50[i] is not None
@@ -71,6 +82,16 @@ def _signals(prices):
         result["ema50_200_regime"].append(
             bool(ema50[i] > ema200[i] and price > ema200[i])
         )
+        result["sma200_filter"].append(bool(sma200[i] is not None and price > sma200[i]))
+        result["ema200_filter"].append(bool(price > ema200[i]))
+        result["sma50_200_cross"].append(
+            bool(sma50[i] is not None and sma200[i] is not None and sma50[i] > sma200[i])
+        )
+        if i >= 55 and not donchian_position and price > max(prices[i - 55:i]):
+            donchian_position = True
+        elif i >= 20 and donchian_position and price < min(prices[i - 20:i]):
+            donchian_position = False
+        result["donchian_55_20"].append(donchian_position)
     return result
 
 
