@@ -31,6 +31,9 @@ class ForwardPaperMonitorTests(unittest.TestCase):
             first = process_forward_accounts(candles, folder, now)
             self.assertEqual(first["initial_cash_usd"], 1000.0)
             self.assertEqual(first["completed_trades"], 0)
+            self.assertEqual(first["schema_version"], 1)
+            self.assertEqual(first["status"], "PAPER_MONITORING")
+            self.assertEqual(set(first["sleeves_summary"]), {"4h", "6h"})
             for timeframe in ("4h", "6h"):
                 account = first["sleeves"][timeframe]["account"]
                 self.assertEqual(account["processed_new_candles"], 0)
@@ -56,8 +59,17 @@ class ForwardPaperMonitorTests(unittest.TestCase):
             now2 = extended[-1]["timestamp"] / 1000 + 3600 + 60
             result = process_forward_accounts(extended, folder, now2)
             self.assertGreater(result["sleeves"]["4h"]["account"]["processed_new_candles"], 0)
+            self.assertGreater(result["sleeves"]["6h"]["account"]["processed_new_candles"], 0)
             again = process_forward_accounts(extended, folder, now2)
             self.assertEqual(again["sleeves"]["4h"]["account"]["processed_new_candles"], 0)
+            self.assertEqual(again["sleeves"]["6h"]["account"]["processed_new_candles"], 0)
+
+    def test_recent_hourly_gap_is_rejected(self):
+        candles = self.make_candles(48)
+        candles[-2]["timestamp"] += 3_600_000
+        now = candles[-1]["timestamp"] / 1000 + 3600 + 60
+        with self.assertRaisesRegex(ValueError, "gap"):
+            validate_hourly_feed(candles, now)
 
     def test_stale_or_imputed_feed_is_rejected(self):
         candles = self.make_candles(48)
