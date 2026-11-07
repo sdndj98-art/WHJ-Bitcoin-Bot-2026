@@ -68,6 +68,19 @@ class MarketScannerTests(unittest.TestCase):
         self.assertGreaterEqual(result["breakout_clearance_atr"], 0.10)
         self.assertLessEqual(result["breakout_upper_wick_pct"], 35.0)
 
+    def test_hypothetical_atr_risk_map_is_consistent_and_paper_only(self):
+        result = scan_btc_market(candles(), HEALTHY)
+        risk = result["hypothetical_risk_map"]
+        self.assertTrue(risk["research_only"])
+        self.assertFalse(risk["execution_enabled"])
+        self.assertEqual(risk["atr_multiple_stop"], 1.5)
+        self.assertEqual(risk["atr_multiple_target"], 3.0)
+        self.assertAlmostEqual(risk["reward_risk_ratio"], 2.0)
+        self.assertLess(risk["stop_level"], risk["reference_price"])
+        self.assertGreater(risk["target_level"], risk["reference_price"])
+        self.assertGreater(risk["risk_pct"], 0)
+        self.assertGreater(risk["reward_pct"], risk["risk_pct"])
+
     def test_no_candidate_when_volume_is_not_elevated(self):
         result = scan_btc_market(candles(current_volume=12.0), HEALTHY)
         self.assertNotEqual(result["status"], "PAPER_CANDIDATE")
