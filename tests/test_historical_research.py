@@ -280,6 +280,8 @@ class HistoricalResearchTests(unittest.TestCase):
         self.assertIn("ema50_200_with_daily_sma200", result["strategies"])
         self.assertIn("ema20_50_daily_sma200_rsi50", result["strategies"])
         self.assertIn("ema20_50_daily_sma200_rsi50_rising", result["strategies"])
+        self.assertIn("ema20_50_daily_sma200_ema20_exit", result["strategies"])
+        self.assertIn("ema20_50_daily_sma200_rsi45_exit", result["strategies"])
         self.assertTrue(all(
             window["start_index"] >= result["split_index"]
             for window in result["strategies"]["ema50_200_with_daily_sma200"]["walk_forward_windows"]
