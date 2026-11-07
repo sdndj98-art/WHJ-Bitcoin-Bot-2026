@@ -39,6 +39,7 @@ def _rsi(values, period=14):
 
 def _signals(prices):
     ema_fast = _ema(prices, 12)
+    ema20 = _ema(prices, 20)
     ema_slow = _ema(prices, 26)
     ema50 = _ema(prices, 50)
     ema200 = _ema(prices, 200)
@@ -144,7 +145,7 @@ def _signals(prices):
         result["rsi14_mean_reversion"].append(rsi14_position)
         result["bollinger_mean_reversion"].append(bollinger_position)
         # Fixed-rule long-only candidates; signals use completed closes only.
-        ema20_now = _ema(prices[:i + 1], 20)[-1]
+        ema20_now = ema20[i]
         if i >= 199:
             if not ema_pullback_position and price > ema200[i] and ema20_now > ema50[i] and price > ema20_now:
                 ema_pullback_position = True
