@@ -393,5 +393,43 @@ class HistoricalResearchTests(unittest.TestCase):
         self.assertIn("No strategy is approved for live trading", report)
 
 
+    def test_qualification_requires_outperformance_of_matched_benchmark(self):
+        candidate = {
+            "out_of_sample": {
+                "return_pct": 3.0, "closed_trades": 40,
+                "profit_factor": 1.8, "max_drawdown_pct": 5.0,
+            },
+            "walk_forward_windows": [
+                {"metrics": {"return_pct": 1.0, "closed_trades": 12}},
+                {"metrics": {"return_pct": 0.5, "closed_trades": 13}},
+                {"metrics": {"return_pct": 1.0, "closed_trades": 15}},
+            ],
+        }
+        stress = {"out_of_sample": {"return_pct": 1.0}}
+        benchmark = {"out_of_sample": {"return_pct": 2.0}}
+        stress_benchmark = {"out_of_sample": {"return_pct": 0.5}}
+
+        result = assess_strategy_qualification(
+            candidate, stress,
+            benchmark_metrics=benchmark,
+            stress_benchmark_metrics=stress_benchmark,
+        )
+        self.assertFalse(result["qualified_for_extended_paper_review"])
+        self.assertIn("outperform_buy_and_hold_oos", result["failed_checks"])
+        self.assertTrue(result["checks"]["outperform_buy_and_hold_stress"])
+
+        stronger = {
+            **candidate,
+            "out_of_sample": {**candidate["out_of_sample"], "return_pct": 2.5},
+        }
+        passing = assess_strategy_qualification(
+            stronger,
+            stress,
+            benchmark_metrics=benchmark,
+            stress_benchmark_metrics=stress_benchmark,
+        )
+        self.assertTrue(passing["qualified_for_extended_paper_review"])
+
+
 if __name__ == "__main__":
     unittest.main()
