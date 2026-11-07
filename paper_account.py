@@ -159,6 +159,17 @@ def update_paper_account(candles, state_path="paper_account_state.json",
     state = _load_state(state_path, initial_cash, strategy)
     new_trades = []
     processed = 0
+    state_changed = False
+    # Reconcile saved ledgers immediately, even when the feed has no newer candle.
+    saved_loss_streak = 0
+    for prior_trade in reversed(state["trades"]):
+        if float(prior_trade.get("pnl_usd", 0)) < 0:
+            saved_loss_streak += 1
+        else:
+            break
+    if saved_loss_streak >= max_consecutive_losses and not state.get("paused_for_loss_streak", False):
+        state["paused_for_loss_streak"] = True
+        state_changed = True
     for timestamp, close in normalized:
         last = state.get("last_timestamp")
         if last is not None and timestamp <= int(last):
@@ -322,7 +333,7 @@ def update_paper_account(candles, state_path="paper_account_state.json",
     else:
         equity = state["cash"]
 
-    if processed:
+    if processed or state_changed:
         target = Path(state_path)
         target.parent.mkdir(parents=True, exist_ok=True)
         temporary = target.with_suffix(target.suffix + ".tmp")
