@@ -423,7 +423,7 @@ class HistoricalResearchTests(unittest.TestCase):
         report = build_qualification_markdown(result)
         self.assertIn("NOT QUALIFIED", report)
         self.assertIn("minimum_oos_trades", report)
-        self.assertIn("Qualified strategies: 0 / 1", report)
+        self.assertIn("Qualified strategies: 0 / 2", report)
         self.assertIn("No strategy is approved for live trading", report)
         self.assertIn("Benchmark-edge research watchlist (diagnostic only)", report)
         self.assertIn("+8.87 pp base", report)
