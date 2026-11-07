@@ -674,6 +674,20 @@ def assess_strategy_qualification(metrics, stress_metrics, min_oos_trades=30,
     }
 
 
+def assess_research_lab_qualification(research, stress_research):
+    """Apply the same fixed OOS gates to every comparable research lab."""
+    strategies = research.get("strategies", {})
+    stress_strategies = stress_research.get("strategies", {})
+    results = {}
+    for name, metrics in strategies.items():
+        if name.startswith("buy_and_hold") or name not in stress_strategies:
+            continue
+        results[name] = assess_strategy_qualification(
+            metrics, stress_strategies[name]
+        )
+    return results
+
+
 def run_forward_paper_accounts(candles, state_dir="."):
     """Maintain independent 1d and 4h paper accounts across daily workflow runs."""
     directory = Path(state_dir)
@@ -772,6 +786,18 @@ def main():
                 metrics, stressed_strategies[strategy_name]
             )
 
+    extended_lab_qualification = {
+        "ohlc_breakout": assess_research_lab_qualification(
+            ohlc_breakout_research, ohlc_breakout_stress
+        ),
+        "long_short": assess_research_lab_qualification(
+            long_short_research, long_short_stress
+        ),
+        "daily_regime_filter": assess_research_lab_qualification(
+            daily_regime_research, daily_regime_stress
+        ),
+    }
+
     result = {
         "project": "WHJ Bitcoin Bot",
         "mode": "FIVE_YEAR_HISTORICAL_RESEARCH_ONLY",
@@ -793,6 +819,7 @@ def main():
         "timeframe_research": timeframe_research,
         "stress_cost_research": stress_cost_research,
         "strategy_qualification": qualification,
+        "extended_lab_strategy_qualification": extended_lab_qualification,
         "strategy_qualification_policy": {
             "minimum_oos_trades": 30,
             "minimum_profit_factor": 1.2,
