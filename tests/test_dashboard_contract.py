@@ -56,6 +56,13 @@ class DashboardContractTests(unittest.TestCase):
         self.assertIn("التعرّض السوقي الإجمالي", self.source)
         self.assertIn("تفاصيل الحسابات لا تطابق إجمالي التعرّض والسيولة", self.source)
 
+    def test_forward_report_freshness_is_visible_and_old_reports_are_flagged(self):
+        self.assertIn('id="forwardFreshness"', self.source)
+        self.assertIn("reportAgeMinutes", self.source)
+        self.assertIn("التقرير قديم جداً", self.source)
+        self.assertIn("التقرير متأخر", self.source)
+        self.assertIn("التقرير حديث", self.source)
+
     def test_market_regime_diagnostics_are_visible_and_caveated(self):
         self.assertIn("regimeRows", set(self.parser.ids))
         self.assertIn("تحليل الاستراتيجيات حسب حالة السوق", self.source)

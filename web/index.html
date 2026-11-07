@@ -136,7 +136,8 @@ body{background:radial-gradient(ellipse at 76% -18%,rgba(37,111,148,.24),transpa
 <section class="view" id="forward">
 <div class="scanner-head"><div><div class="eyebrow">FORWARD-ONLY / PAPER PERFORMANCE</div><h2>مراقبة الأداء المستقبلي</h2><p>استيراد تقرير المراقبة الناتج من GitHub Actions. لا يتم تحميل أو تعديل سجلات الحسابات من هذه الصفحة.</p></div><div class="scanner-head-tags"><span class="scan-chip muted">5 STRATEGY SLEEVES · PAPER ONLY</span><span class="scan-chip"><i></i> PAPER ONLY</span></div></div>
 <div class="card" style="margin-bottom:13px"><div class="head"><h2>تحميل تقرير المراقبة</h2><span>JSON · schema v1</span></div><div class="headtools"><input class="filter" style="max-width:360px" id="forwardFile" type="file" accept=".json,application/json" aria-label="تحميل تقرير المراقبة JSON"><button class="toolbtn" id="clearForward" type="button">مسح التقرير</button></div><p class="sub" id="forwardMessage" role="status" style="margin-top:12px">اختر ملف forward_paper_report.json من مخرجات تشغيل المراقبة في GitHub Actions.</p></div>
-<div class="banner"><div><b id="forwardStatus">بانتظار التقرير</b><p id="forwardGenerated">لم يتم تحميل تقرير بعد.</p><p id="forwardCycle">بانتظار التقرير.</p></div><span class="status">FORWARD PAPER</span></div>
+<div class="banner"><div><b id="forwardStatus">بانتظار التقرير</b><p id="forwardGenerated">لم يتم تحميل تقرير بعد.</p><p id="forwardCycle">بانتظار التقرير.</p>
+<p id="forwardFreshness" class="sub" role="status">عمر التقرير: —</p></div><span class="status">FORWARD PAPER</span></div>
 <div class="grid">
 <article class="card metric"><div class="label">إجمالي رأس المال الافتراضي</div><div class="value" id="forwardInitial">—</div><div class="hint">خمسة حسابات مستقلة</div></article>
 <article class="card metric"><div class="label">القيمة الحالية</div><div class="value" id="forwardEquity">—</div><div class="hint">بعد تكاليف الخروج المقدّرة</div></article>
@@ -200,6 +201,7 @@ function renderForward(x){
  f("forwardStatus",x.status==="RISK_PAUSED"?"توقف وقائي — راجع أسباب المخاطر":x.status==="REVIEW_REQUIRED"?"مراجعة مطلوبة — أداء الاستراتيجية تراجع":"المراقبة الورقية مستمرة");
  const dq=x.data_quality||{},imputed=Number.isInteger(dq.imputed_hourly_candles)?dq.imputed_hourly_candles:0,imputedPct=Number.isFinite(dq.imputed_hourly_pct)?pct(dq.imputed_hourly_pct):"—";
  f("forwardGenerated","وقت إنشاء التقرير: "+(x.generated_at_utc||"غير متوفر")+" · جودة البيانات: "+(dq.quality||"غير معروفة")+" · شموع تاريخية اصطناعية: "+fmt(imputed,0)+" ("+imputedPct+")");
+ const reportAgeMinutes=(Date.now()-Date.parse(x.generated_at_utc))/60000;const freshness=$("forwardFreshness");if(!Number.isFinite(reportAgeMinutes)||reportAgeMinutes < -5){freshness.textContent="تحذير: توقيت التقرير مستقبلي أو غير صالح؛ تحقق من ساعة النظام.";freshness.className="sub negative"}else if(reportAgeMinutes>180){freshness.textContent="التقرير قديم جداً · مرّ "+fmt(reportAgeMinutes/60,1)+" ساعة منذ إنشائه. لا تعتمد عليه كحالة حالية.";freshness.className="sub negative"}else if(reportAgeMinutes>100){freshness.textContent="التقرير متأخر · مرّ "+fmt(reportAgeMinutes,0)+" دقيقة. انتظر دورة مراقبة أحدث.";freshness.className="sub"}else{freshness.textContent="التقرير حديث · العمر "+fmt(reportAgeMinutes,0)+" دقيقة.";freshness.className="sub positive"}
  const cycleLabels={WAITING_FOR_NEW_CLOSED_CANDLES:"لا توجد شموع ساعة مغلقة جديدة؛ تنتظر المراقبة الإغلاق التالي دون فتح صفقات على بيانات غير مكتملة.",PROCESSED_NEW_CANDLES:"تمت معالجة شموع مغلقة جديدة في الحسابات الافتراضية."};
  f("forwardCycle",(cycleLabels[x.cycle_status]||"حالة دورة المراقبة غير متوفرة")+(Number.isInteger(x.total_processed_new_candles)?" · العدد: "+fmt(x.total_processed_new_candles,0):""));
  f("forwardInitial",money(x.initial_cash_usd));f("forwardEquity",money(x.equity_after_estimated_exit_costs_usd));f("forwardReturn",pct(x.return_pct));f("forwardTrades",fmt(x.completed_trades,0));f("forwardCash",money(x.cash_usd));f("forwardExposure",money(x.gross_exposure_usd)+" · "+pct(x.gross_exposure_pct_of_equity));f("forwardOpenPositions",fmt(x.open_positions,0));f("forwardFees",money(x.fees_paid_usd));
@@ -214,7 +216,7 @@ $("forwardFile").addEventListener("change",async e=>{
  catch(err){forwardReport=null;$("forwardMessage").textContent="تعذر قبول التقرير: "+err.message;resetForwardView();}
 });
 function resetForwardView(){
- ["forwardInitial","forwardEquity","forwardReturn","forwardTrades","forwardCash","forwardExposure","forwardOpenPositions","forwardFees","forwardGenerated","forwardQuality","forwardCandle","forwardAllocation","forwardMaxDD","forwardDaily","forwardStreak"].forEach(id=>$(id).textContent="—");
+ ["forwardInitial","forwardEquity","forwardReturn","forwardTrades","forwardCash","forwardExposure","forwardOpenPositions","forwardFees","forwardGenerated","forwardFreshness","forwardQuality","forwardCandle","forwardAllocation","forwardMaxDD","forwardDaily","forwardStreak"].forEach(id=>$(id).textContent="—");
  $("forwardStatus").textContent="بانتظار التقرير";$("forwardStatus").className="";
  $("forwardRows").innerHTML="<tr><td colspan='11' class='empty'>لا توجد بيانات صالحة للعرض</td></tr>";
 }
