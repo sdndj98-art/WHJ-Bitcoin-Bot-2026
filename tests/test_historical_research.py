@@ -353,12 +353,15 @@ class HistoricalResearchTests(unittest.TestCase):
         research = {"strategies": {
             "candidate": good,
             "small_sample": weak,
-            "buy_and_hold_25pct": good,
+            "buy_and_hold_25pct": {
+                **good,
+                "out_of_sample": {**good["out_of_sample"], "return_pct": 3.0},
+            },
         }}
         stress = {"strategies": {
             "candidate": {"out_of_sample": {"return_pct": 1.0}},
             "small_sample": {"out_of_sample": {"return_pct": 1.0}},
-            "buy_and_hold_25pct": {"out_of_sample": {"return_pct": 1.0}},
+            "buy_and_hold_25pct": {"out_of_sample": {"return_pct": 0.5}},
         }}
         result = assess_research_lab_qualification(research, stress)
         self.assertTrue(result["candidate"]["qualified_for_extended_paper_review"])
