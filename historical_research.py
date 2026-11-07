@@ -186,31 +186,55 @@ def aggregate_candles(candles, hours):
     return aggregated
 
 
-def _turtle_signals(bars, entry_period, exit_period, regime_period=None):
-    """Create close-confirmed Donchian signals using only prior-bar channel bounds."""
+def _turtle_signals(bars, entry_period, exit_period, regime_period=None, atr_stop_multiple=None):
+    """Create close-confirmed Donchian signals with an optional ATR trailing exit.
+
+    ATR and the trailing stop are evaluated at the current completed close;
+    any resulting position change is executed by the simulator at the next close.
+    """
+    if atr_stop_multiple is not None and (
+        isinstance(atr_stop_multiple, bool)
+        or not isinstance(atr_stop_multiple, (int, float))
+        or not math.isfinite(atr_stop_multiple)
+        or atr_stop_multiple <= 0
+    ):
+        raise ValueError("ATR stop multiple must be finite and positive")
     closes = [float(row["close"]) for row in bars]
     highs = [float(row["high"]) for row in bars]
     lows = [float(row["low"]) for row in bars]
+    atr = [None] * len(bars)
+    if atr_stop_multiple is not None:
+        true_ranges = []
+        for i in range(len(bars)):
+            previous_close = closes[i - 1] if i else closes[i]
+            true_ranges.append(max(highs[i] - lows[i], abs(highs[i] - previous_close), abs(lows[i] - previous_close)))
+            if i >= 19:
+                atr[i] = sum(true_ranges[i - 19:i + 1]) / 20
     regime_sma = [None] * len(bars)
     if regime_period:
         for i in range(regime_period - 1, len(bars)):
             regime_sma[i] = sum(closes[i - regime_period + 1:i + 1]) / regime_period
-
     signals = []
     in_position = False
+    highest_close = 0.0
     for i, close in enumerate(closes):
         if in_position:
+            if atr_stop_multiple is not None and atr[i] is not None:
+                highest_close = max(highest_close, close)
+                atr_exit = close < highest_close - atr_stop_multiple * atr[i]
+            else:
+                atr_exit = False
             exit_break = i >= exit_period and close < min(lows[i - exit_period:i])
             regime_exit = bool(regime_period and regime_sma[i] is not None and close < regime_sma[i])
-            if exit_break or regime_exit:
+            if exit_break or regime_exit or atr_exit:
                 in_position = False
+                highest_close = 0.0
         elif i >= entry_period:
             breakout = close > max(highs[i - entry_period:i])
-            regime_ok = not regime_period or (
-                regime_sma[i] is not None and close > regime_sma[i]
-            )
+            regime_ok = not regime_period or (regime_sma[i] is not None and close > regime_sma[i])
             if breakout and regime_ok:
                 in_position = True
+                highest_close = close
         signals.append(in_position)
     return signals
 
@@ -291,15 +315,17 @@ def run_ohlc_breakout_lab(bars, fee=FEE_RATE, slippage=SLIPPAGE_RATE):
 
     split = int(len(bars) * 0.7)
     strategies = {
-        "donchian_20_10": (20, 10, None),
-        "donchian_55_20": (55, 20, None),
-        "donchian_20_10_sma200": (20, 10, 200),
-        "donchian_55_20_sma200": (55, 20, 200),
+        "donchian_20_10": (20, 10, None, None),
+        "donchian_55_20": (55, 20, None, None),
+        "donchian_20_10_sma200": (20, 10, 200, None),
+        "donchian_55_20_sma200": (55, 20, 200, None),
+        "donchian_55_20_atr3_trailing": (55, 20, None, 3.0),
+        "donchian_55_20_sma200_atr3_trailing": (55, 20, 200, 3.0),
     }
     results = {}
-    for name, (entry, exit_period, regime) in strategies.items():
-        signals = _turtle_signals(bars, entry, exit_period, regime)
-        warmup = max(entry, regime or 0)
+    for name, (entry, exit_period, regime, atr_multiple) in strategies.items():
+        signals = _turtle_signals(bars, entry, exit_period, regime, atr_multiple)
+        warmup = max(entry, regime or 0, 20 if atr_multiple is not None else 0)
         walk_start = split
         edges = [walk_start + ((len(bars) - walk_start) * k) // 3 for k in range(4)]
         windows = []
@@ -830,6 +856,46 @@ def build_qualification_markdown(result):
             )
         lines.append("")
 
+    paper_accounts = result.get("forward_paper_accounts", {})
+    paper_labels = {
+        "daily_sma20_50": "Daily SMA20/SMA50",
+        "four_hour_ema50_200": "4h EMA50/EMA200",
+        "daily_bollinger_mean_reversion": "Daily Bollinger mean reversion",
+        "six_hour_rsi14_mean_reversion": "6h RSI14 mean reversion",
+    }
+    paper_rows = [
+        (label, paper_accounts[key])
+        for key, label in paper_labels.items()
+        if isinstance(paper_accounts.get(key), dict)
+    ]
+    if paper_rows:
+        lines.extend([
+            "## Persistent forward paper-account snapshot",
+            "",
+            "Simulated account state only; these results are not the same as the historical out-of-sample qualification tests.",
+            "",
+        ])
+        for label, account in paper_rows:
+            equity = account.get("equity_after_estimated_exit_costs_usd")
+            return_pct = account.get("return_pct")
+            profit_factor = account.get("profit_factor")
+            drawdown = account.get("max_drawdown_pct")
+            trades = account.get("completed_trades", 0)
+            win_rate = account.get("win_rate_pct")
+            pause_reasons = account.get("risk_pause_reasons", [])
+            status = "PAUSED — " + ", ".join(pause_reasons) if pause_reasons else "active"
+            equity_text = f"${equity:,.2f}" if isinstance(equity, (int, float)) else "unavailable"
+            return_text = f"{return_pct:+.2f}%" if isinstance(return_pct, (int, float)) else "unavailable"
+            pf_text = f"{profit_factor:.2f}" if isinstance(profit_factor, (int, float)) else "unavailable"
+            dd_text = f"{drawdown:.2f}%" if isinstance(drawdown, (int, float)) else "unavailable"
+            win_text = f"{win_rate:.1f}%" if isinstance(win_rate, (int, float)) else "unavailable"
+            lines.append(
+                f"- **{label}:** equity {equity_text}; return {return_text}; "
+                f"{trades} closed trades; win rate {win_text}; profit factor {pf_text}; "
+                f"max drawdown {dd_text}; status {status}."
+            )
+        lines.append("")
+
     # Diagnostic shortlist only: rank by the weaker of base/stress benchmark edges.
     # This is deliberately not a promotion gate and never changes qualification.
     watchlist = []
@@ -848,24 +914,31 @@ def build_qualification_markdown(result):
                 base_edge = comparison.get("oos_outperformance_pct_points")
                 stress_edge = comparison.get("stress_oos_outperformance_pct_points")
                 if base_edge is not None and stress_edge is not None:
-                    watchlist.append((min(base_edge, stress_edge), name, base_edge, stress_edge, qualification))
-    watchlist.sort(key=lambda item: item[0], reverse=True)
+                    failed_gate_count = len(qualification.get("failed_checks", []))
+                    watchlist.append((
+                        failed_gate_count, min(base_edge, stress_edge),
+                        name, base_edge, stress_edge, qualification,
+                    ))
+    # Prioritize candidates closest to satisfying every fixed gate, then use
+    # the weaker benchmark edge as a tie-breaker. This is diagnostic only.
+    watchlist.sort(key=lambda item: (item[0], -item[1]))
     if watchlist:
         lines.extend([
             "## Benchmark-edge research watchlist (diagnostic only)",
             "",
-            "Sorted by the weaker of base-cost and elevated-cost benchmark edges. "
+            "Sorted by the number of failed qualification gates, then by the weaker benchmark edge. "
             "This shortlist is for choosing what to investigate next; it does not waive "
             "trade-count, drawdown, profit-factor, or walk-forward gates.",
             "",
         ])
-        for _, name, base_edge, stress_edge, qualification in watchlist[:5]:
+        for failed_gate_count, _, name, base_edge, stress_edge, qualification in watchlist[:5]:
             status = "qualified for extended paper review" if qualification.get(
                 "qualified_for_extended_paper_review", False
             ) else "not qualified"
+            gate_label = "failed gate" if failed_gate_count == 1 else "failed gates"
             lines.append(
-                f"- **{name}** ({status}): {base_edge:+.2f} pp base; "
-                f"{stress_edge:+.2f} pp elevated costs."
+                f"- **{name}** ({status}; {failed_gate_count} {gate_label}): "
+                f"{base_edge:+.2f} pp base; {stress_edge:+.2f} pp elevated costs."
             )
         lines.append("")
 

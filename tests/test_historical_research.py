@@ -201,6 +201,7 @@ class HistoricalResearchTests(unittest.TestCase):
         self.assertTrue(signals[55])
         result = run_ohlc_breakout_lab(bars)
         self.assertIn("donchian_55_20_sma200", result["strategies"])
+        self.assertIn("donchian_55_20_sma200_atr3_trailing", result["strategies"])
         self.assertIn("buy_and_hold_25pct", result["strategies"])
         self.assertTrue(all(
             window["start_index"] >= result["split_index"]
@@ -208,6 +209,20 @@ class HistoricalResearchTests(unittest.TestCase):
         ))
         self.assertTrue(math.isfinite(result["strategies"]["donchian_55_20"]["out_of_sample"]["return_pct"]))
 
+    def test_atr_trailing_exit_uses_completed_close_and_next_bar_execution(self):
+        bars = []
+        for index in range(56):
+            close = 100.0 + index
+            bars.append({"open": close - 0.1, "high": close + 0.2, "low": close - 0.2, "close": close, "volume": 1.0})
+        close = 140.0
+        bars.append({"open": 155.0, "high": 155.2, "low": 139.8, "close": close, "volume": 1.0})
+        signals = _turtle_signals(bars, 55, 20, atr_stop_multiple=3.0)
+        self.assertTrue(signals[55])
+        self.assertFalse(signals[56])
+        combined = _turtle_signals(bars, 55, 20, regime_period=50, atr_stop_multiple=3.0)
+        self.assertTrue(combined[55])
+        with self.assertRaises(ValueError):
+            _turtle_signals(bars, 55, 20, atr_stop_multiple=0)
     def test_ohlc_drawdown_includes_open_position_liquidation_costs(self):
         bars = [
             {"open": 100.0, "high": 101.0, "low": 99.0, "close": 100.0, "volume": 1.0},
@@ -404,8 +419,33 @@ class HistoricalResearchTests(unittest.TestCase):
                             "oos_outperformance_pct_points": 8.87,
                             "stress_oos_outperformance_pct_points": 8.53,
                         },
+                    },
+                    "weak_edge": {
+                        "qualified_for_extended_paper_review": False,
+                        "failed_checks": ["minimum_oos_trades", "minimum_profit_factor"],
+                        "benchmark_comparison": {
+                            "benchmark_available": True,
+                            "oos_outperformance_pct_points": 4.0,
+                            "stress_oos_outperformance_pct_points": 3.0,
+                        },
                     }
                 }
+            },
+            "forward_paper_accounts": {
+                "daily_sma20_50": {
+                    "equity_after_estimated_exit_costs_usd": 891.87,
+                    "return_pct": -10.81, "completed_trades": 6,
+                    "win_rate_pct": 16.67, "profit_factor": 0.01,
+                    "max_drawdown_pct": 10.81,
+                    "risk_pause_reasons": ["maximum_drawdown"],
+                },
+                "four_hour_ema50_200": {
+                    "equity_after_estimated_exit_costs_usd": 1324.68,
+                    "return_pct": 32.47, "completed_trades": 96,
+                    "win_rate_pct": 25.0, "profit_factor": 1.83,
+                    "max_drawdown_pct": 9.23,
+                    "risk_pause_reasons": ["consecutive_loss_limit"],
+                },
             },
             "extended_lab_strategy_qualification": {
                 "ohlc_breakout": {}, "long_short": {}, "daily_regime_filter": {},
@@ -414,11 +454,19 @@ class HistoricalResearchTests(unittest.TestCase):
         report = build_qualification_markdown(result)
         self.assertIn("NOT QUALIFIED", report)
         self.assertIn("minimum_oos_trades", report)
-        self.assertIn("Qualified strategies: 0 / 1", report)
+        self.assertIn("Qualified strategies: 0 / 2", report)
         self.assertIn("No strategy is approved for live trading", report)
         self.assertIn("Benchmark-edge research watchlist (diagnostic only)", report)
         self.assertIn("+8.87 pp base", report)
         self.assertIn("+8.53 pp elevated costs", report)
+        self.assertIn("1 failed gate", report)
+        self.assertIn("2 failed gates", report)
+        self.assertLess(report.index("1d / bollinger"), report.index("1d / weak_edge"))
+        self.assertIn("Persistent forward paper-account snapshot", report)
+        self.assertIn("Daily SMA20/SMA50", report)
+        self.assertIn("PAUSED — maximum_drawdown", report)
+        self.assertIn("4h EMA50/EMA200", report)
+        self.assertIn("PAUSED — consecutive_loss_limit", report)
 
 
     def test_qualification_requires_outperformance_of_matched_benchmark(self):

@@ -8,6 +8,51 @@ from pathlib import Path
 from paper_account import _ema_last, run_paper_portfolio, update_paper_account
 from paper_trading import run_backtest
 from strategy_lab import _simulate, run_strategy_lab
+from risk_analysis import block_bootstrap_trade_risk, monte_carlo_trade_risk
+
+
+class MonteCarloRiskTests(unittest.TestCase):
+    def test_bootstrap_risk_is_reproducible_and_reports_tail_risk(self):
+        trades = [
+            {"pnl": 12.0}, {"pnl": -8.0}, {"pnl": 15.0},
+            {"pnl": -10.0}, {"pnl": 4.0}, {"pnl": -3.0},
+        ]
+        first = monte_carlo_trade_risk(trades, simulations=1000, seed=7)
+        second = monte_carlo_trade_risk(trades, simulations=1000, seed=7)
+        self.assertEqual(first, second)
+        self.assertEqual(first["trade_count"], len(trades))
+        self.assertEqual(first["simulations"], 1000)
+        self.assertGreaterEqual(first["p95_max_drawdown_pct"], first["median_max_drawdown_pct"])
+        self.assertIn("serial dependence", " ".join(first["limitations"]))
+
+    def test_bootstrap_risk_handles_empty_trades_and_rejects_invalid_input(self):
+        self.assertEqual(
+            monte_carlo_trade_risk([])["status"],
+            "INSUFFICIENT_TRADES",
+        )
+        with self.assertRaises(ValueError):
+            monte_carlo_trade_risk([{"pnl": float("nan")}])
+        with self.assertRaises(ValueError):
+            monte_carlo_trade_risk([{"pnl": 1.0}], simulations=99)
+
+
+class BlockBootstrapRiskTests(unittest.TestCase):
+    def test_block_bootstrap_is_reproducible_and_reports_method(self):
+        trades = [{"pnl": value} for value in [8, -12, -10, 7, 9, -11, -8, 6]]
+        first = block_bootstrap_trade_risk(trades, simulations=500, seed=19, block_size=2)
+        second = block_bootstrap_trade_risk(trades, simulations=500, seed=19, block_size=2)
+        self.assertEqual(first, second)
+        self.assertEqual(first["trade_count"], len(trades))
+        self.assertEqual(first["block_size"], 2)
+        self.assertIn("block", first["method"])
+        self.assertGreaterEqual(first["p95_max_drawdown_pct"], first["median_max_drawdown_pct"])
+
+    def test_block_bootstrap_validates_parameters_and_empty_input(self):
+        self.assertEqual(block_bootstrap_trade_risk([])["status"], "INSUFFICIENT_TRADES")
+        with self.assertRaises(ValueError):
+            block_bootstrap_trade_risk([{"pnl": 1.0}], block_size=0)
+        with self.assertRaises(ValueError):
+            block_bootstrap_trade_risk([{"pnl": float("inf")}])
 
 
 class StrategyLabTests(unittest.TestCase):
@@ -268,6 +313,37 @@ class PersistentPaperAccountTests(unittest.TestCase):
             with self.assertRaises(ValueError):
                 update_paper_account(self.make_candles([100.0 + i for i in range(55)]),
                                      state_path=str(state_path))
+
+    def test_rejects_corrupt_persisted_trade_and_risk_state(self):
+        with tempfile.TemporaryDirectory() as folder:
+            state_path = Path(folder) / "paper_state.json"
+            candles = self.make_candles([100.0 + i for i in range(55)])
+            update_paper_account(candles, state_path=str(state_path))
+
+            original = json.loads(state_path.read_text(encoding="utf-8"))
+            corruptions = []
+            bad_trade = json.loads(json.dumps(original))
+            bad_trade["trades"] = [{
+                "pnl_usd": float("nan"), "side": "SELL", "result": "LOSS"
+            }]
+            corruptions.append(bad_trade)
+
+            bad_flag = json.loads(json.dumps(original))
+            bad_flag["paused_for_drawdown"] = "false"
+            corruptions.append(bad_flag)
+
+            bad_initial_cash = json.loads(json.dumps(original))
+            bad_initial_cash["initial_cash"] = True
+            corruptions.append(bad_initial_cash)
+
+            for index, corrupted in enumerate(corruptions):
+                state_path.write_text(json.dumps(corrupted), encoding="utf-8")
+                with self.subTest(corruption=index):
+                    with self.assertRaises(ValueError):
+                        update_paper_account(
+                            candles,
+                            state_path=str(state_path),
+                        )
 
     def test_rejects_invalid_cash_and_fractional_timestamps(self):
         candles = self.make_candles([100.0 + i for i in range(55)])

@@ -12,6 +12,7 @@ from pathlib import Path
 from paper_trading import run_backtest
 from paper_account import run_paper_portfolio
 from strategy_lab import run_strategy_lab
+from risk_analysis import block_bootstrap_trade_risk, monte_carlo_trade_risk
 
 API = "https://api.kraken.com/0/public/OHLC?pair=XBTUSD&interval=60"
 REPORT_PATH = Path("report.json")
@@ -143,6 +144,10 @@ def analyze(prices):
         "message": "Strategy holdout comparison requires at least 120 closed candles."
     })
 
+    backtest = run_backtest(prices)
+    risk_diagnostics = monte_carlo_trade_risk(backtest["trade_log"])
+    block_risk_diagnostics = block_bootstrap_trade_risk(backtest["trade_log"])
+
     return {
         "project": "WHJ Bitcoin Bot",
         "mode": "ANALYSIS_AND_HISTORICAL_PAPER_ONLY",
@@ -154,7 +159,9 @@ def analyze(prices):
         "SMA20": round(sma20, 2),
         "SMA50": round(sma50, 2),
         "signal": signal,
-        "paper_backtest": run_backtest(prices),
+        "paper_backtest": backtest,
+        "monte_carlo_risk": risk_diagnostics,
+        "block_bootstrap_risk": block_risk_diagnostics,
         "strategy_lab": strategy_lab,
         "disclaimer": "Historical simulation is not a forecast or financial advice. No real orders were placed."
     }

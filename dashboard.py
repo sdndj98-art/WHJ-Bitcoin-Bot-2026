@@ -34,6 +34,17 @@ def build_dashboard(report):
         ("Persistent paper win rate (%)", account.get("win_rate_pct", "—")),
         ("Persistent paper profit factor", account.get("profit_factor", "—")),
         ("Persistent paper max drawdown (%)", account.get("max_drawdown_pct", "—")),
+        ("Monte Carlo risk status", report.get("monte_carlo_risk", {}).get("status", "—")),
+        ("Monte Carlo 5th percentile equity (USD)", report.get("monte_carlo_risk", {}).get("p05_final_equity_usd", "—")),
+        ("Monte Carlo median equity (USD)", report.get("monte_carlo_risk", {}).get("median_final_equity_usd", "—")),
+        ("Monte Carlo 95th percentile drawdown (%)", report.get("monte_carlo_risk", {}).get("p95_max_drawdown_pct", "—")),
+        ("Monte Carlo probability of loss (%)", report.get("monte_carlo_risk", {}).get("probability_of_loss_pct", "—")),
+        ("Monte Carlo probability of 50% capital loss (%)", report.get("monte_carlo_risk", {}).get("probability_of_50pct_capital_loss_pct", "—")),
+        ("Block bootstrap risk status", report.get("block_bootstrap_risk", {}).get("status", "—")),
+        ("Block bootstrap size (trades)", report.get("block_bootstrap_risk", {}).get("block_size", "—")),
+        ("Block bootstrap P05 equity (USD)", report.get("block_bootstrap_risk", {}).get("p05_final_equity_usd", "—")),
+        ("Block bootstrap P95 drawdown (%)", report.get("block_bootstrap_risk", {}).get("p95_max_drawdown_pct", "—")),
+        ("Block bootstrap probability of loss (%)", report.get("block_bootstrap_risk", {}).get("probability_of_loss_pct", "—")),
         ("Persistent paper loss streak", account.get("max_consecutive_losses", "—")),
         ("Persistent paper open position", account.get("open_position", "—")),
         ("Paper account paused", account.get("paused_for_drawdown", "—")),
@@ -106,6 +117,7 @@ table{width:100%;border-collapse:collapse}td,th{text-align:left;padding:10px;bor
 <section><h2>Recent simulated trades</h2><table><thead><tr><th>Result</th><th>P&amp;L (USD)</th></tr></thead><tbody>""" + rows + """</tbody></table></section>
 <section><h2>Strategy comparison · Out-of-sample</h2><p class="muted">Chronological holdout results; fixed rules, not a guarantee or a strategy recommendation.</p><table><thead><tr><th>Strategy</th><th>Return (%)</th><th>Max drawdown (%)</th><th>Closed trades</th><th>Worst walk-forward window (%)</th></tr></thead><tbody>""" + strategy_rows + """</tbody></table></section>
 <section><h2>Persistent paper strategy race</h2><p class="muted">Independent simulated accounts with identical initial capital, fees, slippage, sizing and risk limits. Equity includes estimated liquidation costs.</p><table><thead><tr><th>Strategy</th><th>Equity (USD)</th><th>Return (%)</th><th>Max drawdown (%)</th><th>Closed trades</th><th>Fees (USD)</th><th>Open position</th><th>Drawdown paused</th><th>Daily loss paused</th></tr></thead><tbody>""" + paper_strategy_rows + """</tbody></table></section>
+<section><h2>Monte Carlo trade-risk diagnostic</h2><p class="muted">IID and circular moving-block bootstrap resampling of completed backtest trades. The block method retains short local sequences but cannot reliably estimate dependence from a small sample. Percentiles are diagnostics, not forecasts.</p></section>
 <p class="foot notice">Simulation only. No real orders are placed. Historical results do not predict future performance and are not financial advice.</p>
 </body></html>"""
 
