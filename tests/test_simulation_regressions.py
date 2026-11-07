@@ -3,9 +3,10 @@ import json
 import math
 import tempfile
 import unittest
+from unittest.mock import patch
 from pathlib import Path
 
-from paper_account import _ema_last, run_paper_portfolio, update_paper_account
+from paper_account import _ema_last, _save_state_atomically, run_paper_portfolio, update_paper_account
 from paper_trading import run_backtest
 from strategy_lab import _simulate, run_strategy_lab
 from risk_analysis import block_bootstrap_trade_risk, monte_carlo_trade_risk
@@ -139,6 +140,42 @@ class StrategyLabTests(unittest.TestCase):
 class PersistentPaperAccountTests(unittest.TestCase):
     def make_candles(self, prices):
         return [[i * 3600, "0", "0", "0", str(price)] for i, price in enumerate(prices)]
+
+    def test_atomic_state_write_preserves_existing_file_when_replace_fails(self):
+        with tempfile.TemporaryDirectory() as folder:
+            target = Path(folder) / "paper_state.json"
+            target.write_text("previous-valid-state\\n", encoding="utf-8")
+            with patch("paper_account.os.replace", side_effect=OSError("simulated replace failure")):
+                with self.assertRaises(OSError):
+                    _save_state_atomically(target, {"version": 1})
+            self.assertEqual(target.read_text(encoding="utf-8"), "previous-valid-state\\n")
+            self.assertEqual(list(Path(folder).glob(".paper_state.json.*.tmp")), [])
+
+    def test_rejects_inconsistent_persisted_position_and_risk_state(self):
+        with tempfile.TemporaryDirectory() as folder:
+            state_path = Path(folder) / "paper_state.json"
+            candles = self.make_candles([100.0 + i for i in range(55)])
+            update_paper_account(candles, state_path=str(state_path))
+            original = json.loads(state_path.read_text(encoding="utf-8"))
+            self.assertGreater(original["btc"], 0)
+            corruptions = []
+            flat_with_entry_cost = json.loads(json.dumps(original))
+            flat_with_entry_cost["btc"] = 0.0
+            corruptions.append(flat_with_entry_cost)
+            open_without_entry_cost = json.loads(json.dumps(original))
+            open_without_entry_cost["entry_cost"] = 0.0
+            corruptions.append(open_without_entry_cost)
+            excessive_drawdown = json.loads(json.dumps(original))
+            excessive_drawdown["max_drawdown_pct"] = 101.0
+            corruptions.append(excessive_drawdown)
+            zero_daily_equity = json.loads(json.dumps(original))
+            zero_daily_equity["daily_start_equity"] = 0.0
+            corruptions.append(zero_daily_equity)
+            for index, corrupted in enumerate(corruptions):
+                state_path.write_text(json.dumps(corrupted), encoding="utf-8")
+                with self.subTest(corruption=index):
+                    with self.assertRaises(ValueError):
+                        update_paper_account(candles, state_path=str(state_path))
 
     def test_state_persists_and_reprocessing_is_idempotent(self):
         with tempfile.TemporaryDirectory() as folder:

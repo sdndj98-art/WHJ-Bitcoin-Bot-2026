@@ -2,6 +2,7 @@
 import json
 import math
 import os
+import tempfile
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -16,6 +17,35 @@ def _number(value, name, minimum=None, maximum=None):
     if maximum is not None and value > maximum:
         raise ValueError(f"{name} is above its allowed maximum")
     return float(value)
+
+
+def _save_state_atomically(path, state):
+    """Persist a paper ledger with a unique same-directory temp file and atomic replace."""
+    target = Path(path)
+    target.parent.mkdir(parents=True, exist_ok=True)
+    temporary_path = None
+    try:
+        with tempfile.NamedTemporaryFile(
+            mode="w",
+            encoding="utf-8",
+            dir=str(target.parent),
+            prefix=f".{target.name}.",
+            suffix=".tmp",
+            delete=False,
+        ) as temporary:
+            temporary_path = Path(temporary.name)
+            json.dump(state, temporary, indent=2, allow_nan=False)
+            temporary.write("\n")
+            temporary.flush()
+            os.fsync(temporary.fileno())
+        os.replace(temporary_path, target)
+    except Exception:
+        if temporary_path is not None:
+            try:
+                temporary_path.unlink(missing_ok=True)
+            except OSError:
+                pass
+        raise
 
 
 def _new_state(initial_cash, strategy="sma_trend"):
@@ -69,6 +99,18 @@ def _load_state(path, initial_cash, strategy="sma_trend"):
     _number(state["entry_cost"], "state entry cost", 0)
     _number(state["peak_equity"], "state peak equity", 0)
     _number(state["fees_paid"], "state fees", 0)
+    _number(state.get("max_drawdown_pct", 0.0), "state max drawdown", 0, 100)
+    daily_start_equity = _number(
+        state.get("daily_start_equity", state["initial_cash"]),
+        "state daily starting equity",
+        0,
+    )
+    if daily_start_equity <= 0:
+        raise ValueError("Saved paper account daily starting equity must be positive")
+    if (state["btc"] == 0 and state["entry_cost"] != 0) or (
+        state["btc"] > 0 and state["entry_cost"] <= 0
+    ):
+        raise ValueError("Saved paper account position units and entry cost are inconsistent")
     if isinstance(state.get("holding_bars", 0), bool) or not isinstance(state.get("holding_bars", 0), int) or state.get("holding_bars", 0) < 0:
         raise ValueError("Saved strategy holding counter is invalid")
     if (
@@ -103,9 +145,8 @@ def _load_state(path, initial_cash, strategy="sma_trend"):
             raise ValueError("Saved trade timestamp is invalid")
     for key in ("ema50_state", "ema200_state"):
         if state.get(key) is not None:
-            _number(state[key], key, 0)
-    _number(state.get("daily_start_equity", state["initial_cash"]),
-            "state daily starting equity", 0)
+            if _number(state[key], key, 0) <= 0:
+                raise ValueError("Saved EMA state must be positive when initialized")
     for key in ("daily_loss_paused", "paused_for_loss_streak", "paused_for_drawdown"):
         if key in state and not isinstance(state[key], bool):
             raise ValueError("Saved paper account risk flag is invalid: " + key)
@@ -371,11 +412,7 @@ def update_paper_account(candles, state_path="paper_account_state.json",
         equity = state["cash"]
 
     if processed or state_changed:
-        target = Path(state_path)
-        target.parent.mkdir(parents=True, exist_ok=True)
-        temporary = target.with_suffix(target.suffix + ".tmp")
-        temporary.write_text(json.dumps(state, indent=2, allow_nan=False) + "\n", encoding="utf-8")
-        os.replace(temporary, target)
+        _save_state_atomically(state_path, state)
 
     initial = float(state.get("initial_cash", initial_cash))
     completed = state["trades"]
