@@ -327,7 +327,7 @@ def _market_regime_diagnostics(prices, signals, start_index):
         "measurement": (
             "OOS next-bar market returns are grouped by the regime known at the prior close. "
             "Per-strategy active-signal forward returns are descriptive conditional bar returns, "
-            "not trade-level PnL, net returns, or a deployable strategy backtest. "
+            "not strategy PnL, not trade-level PnL, net returns, or a deployable strategy backtest. "
             "INSUFFICIENT_SAMPLE is used below 30 active signal bars."
         ),
         "out_of_sample_start_index": first_index,
