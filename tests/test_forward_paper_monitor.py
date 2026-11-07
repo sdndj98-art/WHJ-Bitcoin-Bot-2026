@@ -197,6 +197,14 @@ class ForwardPaperMonitorTests(unittest.TestCase):
             self.assertGreaterEqual(closed["completed_trades"], 1)
             self.assertGreater(closed["processed_new_candles"], 0)
 
+    def test_hourly_timestamps_must_align_to_utc_hour_boundaries(self):
+        candles = self.make_candles(48)
+        for candle in candles:
+            candle["timestamp"] += 30_000
+        now = candles[-1]["timestamp"] / 1000 + 3600 + 60
+        with self.assertRaisesRegex(ValueError, "align to UTC hour boundaries"):
+            validate_hourly_feed(candles, now)
+
     def test_recent_hourly_gap_is_rejected(self):
         candles = self.make_candles(48)
         candles[-1]["timestamp"] += 3_600_000
