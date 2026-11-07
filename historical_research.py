@@ -8,6 +8,7 @@ import time
 import urllib.error
 import urllib.parse
 import urllib.request
+from bisect import bisect_left
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -295,68 +296,96 @@ def _simulate_ohlc(bars, signals, start, end, fee, slippage):
     }
 
 
-def _simulate_equal_weight_sleeves(bars, signal_sets, start, end, fee, slippage):
-    """Simulate independent equal-capital long-only sleeves as one portfolio.
-
-    Each sleeve receives an equal share of the initial portfolio and allocates
-    25% of its own available cash per entry. With two sleeves, maximum initial
-    notional therefore remains 25% of total portfolio capital.
-    """
-    if not signal_sets or any(len(values) != len(bars) for values in signal_sets):
-        raise ValueError("Every sleeve signal series must match the OHLC bar count")
+def _simulate_equal_weight_multitimeframe(
+    bar_sets, signal_sets, bar_hours, start_time_ms, end_time_ms, fee, slippage
+):
+    """Combine independent native-timeframe sleeves on one time-aligned equity curve."""
+    if not bar_sets or len(bar_sets) != len(signal_sets) or len(bar_sets) != len(bar_hours):
+        raise ValueError("Bar, signal, and timeframe collections must have equal non-zero lengths")
     if not 0 <= fee < 1 or not 0 <= slippage < 1:
         raise ValueError("Fee and slippage must be between 0 and 1")
-    sleeve_cash = 1000.0 / len(signal_sets)
-    sleeves = [
-        {"cash": sleeve_cash, "units": 0.0, "entry_cost": 0.0, "trades": []}
-        for _ in signal_sets
-    ]
-    peak = 1000.0
-    max_drawdown = 0.0
 
-    for index in range(max(start, 1), end):
-        price = float(bars[index]["close"])
-        for sleeve, signals in zip(sleeves, signal_sets):
+    initial_per_sleeve = 1000.0 / len(bar_sets)
+    sleeve_final_equities = []
+    sleeve_open_positions = []
+    all_trades = []
+    curve_events = []
+
+    for sleeve_index, (bars, signals, hours) in enumerate(zip(bar_sets, signal_sets, bar_hours)):
+        if len(bars) != len(signals):
+            raise ValueError("Every sleeve signal series must match its native bar count")
+        close_times = [
+            int(row["timestamp"]) + int(hours) * 60 * 60 * 1000
+            for row in bars
+        ]
+        start_index = bisect_left(close_times, start_time_ms)
+        end_index = bisect_left(close_times, end_time_ms)
+        if end_index <= start_index:
+            sleeve_final_equities.append(initial_per_sleeve)
+            sleeve_open_positions.append(False)
+            continue
+
+        cash = initial_per_sleeve
+        units = 0.0
+        entry_cost = 0.0
+        trades = []
+        for index in range(max(start_index, 1), end_index):
+            price = float(bars[index]["close"])
             want_long = bool(signals[index - 1])
-            if want_long and sleeve["units"] == 0:
-                allocation = sleeve["cash"] * 0.25
+            if want_long and units == 0:
+                allocation = cash * 0.25
                 fill = price * (1 + slippage)
                 fee_paid = allocation * fee
-                sleeve["units"] = (allocation - fee_paid) / fill
-                sleeve["cash"] -= allocation
-                sleeve["entry_cost"] = allocation
-            elif not want_long and sleeve["units"] > 0:
+                units = (allocation - fee_paid) / fill
+                cash -= allocation
+                entry_cost = allocation
+            elif not want_long and units > 0:
                 fill = price * (1 - slippage)
-                proceeds = sleeve["units"] * fill
+                proceeds = units * fill
                 proceeds -= proceeds * fee
-                sleeve["trades"].append(proceeds - sleeve["entry_cost"])
-                sleeve["cash"] += proceeds
-                sleeve["units"] = 0.0
-                sleeve["entry_cost"] = 0.0
+                trades.append(proceeds - entry_cost)
+                cash += proceeds
+                units = 0.0
+                entry_cost = 0.0
 
-        equity = 0.0
-        for sleeve in sleeves:
-            if sleeve["units"] > 0:
-                liquidation = sleeve["units"] * price * (1 - slippage)
+            if units > 0:
+                liquidation = units * price * (1 - slippage)
                 liquidation -= liquidation * fee
-                equity += sleeve["cash"] + liquidation
+                equity = cash + liquidation
             else:
-                equity += sleeve["cash"]
-        peak = max(peak, equity)
-        if peak > 0:
-            max_drawdown = max(max_drawdown, (peak - equity) / peak * 100.0)
+                equity = cash
+            curve_events.append((close_times[index], sleeve_index, equity))
 
-    final_equity = 0.0
-    all_trades = []
-    for sleeve in sleeves:
-        if sleeve["units"] > 0:
-            exit_value = sleeve["units"] * float(bars[end - 1]["close"]) * (1 - slippage)
+        if units > 0:
+            exit_value = units * float(bars[end_index - 1]["close"]) * (1 - slippage)
             exit_value -= exit_value * fee
-            final_equity += sleeve["cash"] + exit_value
+            final_equity = cash + exit_value
         else:
-            final_equity += sleeve["cash"]
-        all_trades.extend(sleeve["trades"])
+            final_equity = cash
+        sleeve_final_equities.append(final_equity)
+        sleeve_open_positions.append(units > 0)
+        all_trades.extend(trades)
 
+    curve_events.sort(key=lambda item: (item[0], item[1]))
+    sleeve_equities = [initial_per_sleeve] * len(bar_sets)
+    portfolio_peak = 1000.0
+    max_drawdown = 0.0
+    event_index = 0
+    while event_index < len(curve_events):
+        timestamp = curve_events[event_index][0]
+        while event_index < len(curve_events) and curve_events[event_index][0] == timestamp:
+            _, sleeve_index, equity = curve_events[event_index]
+            sleeve_equities[sleeve_index] = equity
+            event_index += 1
+        portfolio_equity = sum(sleeve_equities)
+        portfolio_peak = max(portfolio_peak, portfolio_equity)
+        if portfolio_peak > 0:
+            max_drawdown = max(
+                max_drawdown,
+                (portfolio_peak - portfolio_equity) / portfolio_peak * 100.0,
+            )
+
+    final_equity = sum(sleeve_final_equities)
     wins = [pnl for pnl in all_trades if pnl > 0]
     losses = [-pnl for pnl in all_trades if pnl < 0]
     gross_profit = sum(wins)
@@ -368,9 +397,11 @@ def _simulate_equal_weight_sleeves(bars, signal_sets, start, end, fee, slippage)
         "closed_trades": len(all_trades),
         "win_rate_pct": round(len(wins) / len(all_trades) * 100.0, 2) if all_trades else 0.0,
         "profit_factor": round(gross_profit / gross_loss, 2) if gross_loss else (None if gross_profit else 0.0),
-        "open_position": any(sleeve["units"] > 0 for sleeve in sleeves),
-        "sleeve_count": len(sleeves),
+        "open_position": any(sleeve_open_positions),
+        "sleeve_count": len(bar_sets),
+        "allocation_per_sleeve_pct": round(100.0 / len(bar_sets), 2),
     }
+
 
 
 def run_ohlc_breakout_lab(bars, fee=FEE_RATE, slippage=SLIPPAGE_RATE):
@@ -848,37 +879,57 @@ def run_multi_timeframe_ensemble_lab(hourly_candles, fee=FEE_RATE, slippage=SLIP
     benchmark["closed_trades"] = 1
     benchmark["open_position"] = False
     benchmark["win_rate_pct"] = 100.0 if benchmark["return_pct"] > 0 else 0.0
+    close_times_4h = [
+        int(row["timestamp"]) + 4 * 60 * 60 * 1000 for row in four_hour
+    ]
+    close_times_6h = [
+        int(row["timestamp"]) + 6 * 60 * 60 * 1000 for row in six_hour
+    ]
+    split_4h = int(len(four_hour) * 0.7)
+    split_6h = int(len(six_hour) * 0.7)
+    portfolio_oos_start = max(close_times_4h[split_4h], close_times_6h[split_6h])
+    portfolio_oos_end = min(close_times_4h[-1], close_times_6h[-1]) + 1
+    portfolio_edges = [
+        portfolio_oos_start + ((portfolio_oos_end - portfolio_oos_start) * k) // 3
+        for k in range(4)
+    ]
     portfolio_windows = []
     for fold in range(3):
-        start, end = edges[fold], edges[fold + 1]
-        if end > start:
+        start_time, end_time = portfolio_edges[fold], portfolio_edges[fold + 1]
+        if end_time > start_time:
             portfolio_windows.append({
                 "window": fold + 1,
-                "start_index": start,
-                "end_index_exclusive": end,
-                "metrics": _simulate_equal_weight_sleeves(
-                    four_hour, [signal_4h, signal_6h_on_4h], start, end, fee, slippage
+                "start_time_ms": start_time,
+                "end_time_ms_exclusive": end_time,
+                "metrics": _simulate_equal_weight_multitimeframe(
+                    [four_hour, six_hour], [signal_4h, signal_6h], [4, 6],
+                    start_time, end_time, fee, slippage,
                 ),
             })
     portfolio_returns = [window["metrics"]["return_pct"] for window in portfolio_windows]
+    portfolio_is_start = max(close_times_4h[200], close_times_6h[200])
+    portfolio_is_end = min(close_times_4h[split_4h], close_times_6h[split_6h])
     portfolio_candidate = {
-        "in_sample": _simulate_equal_weight_sleeves(
-            four_hour, [signal_4h, signal_6h_on_4h], 200, split, fee, slippage
+        "in_sample": _simulate_equal_weight_multitimeframe(
+            [four_hour, six_hour], [signal_4h, signal_6h], [4, 6],
+            portfolio_is_start, portfolio_is_end, fee, slippage,
         ),
-        "out_of_sample": _simulate_equal_weight_sleeves(
-            four_hour, [signal_4h, signal_6h_on_4h], split, len(four_hour), fee, slippage
+        "out_of_sample": _simulate_equal_weight_multitimeframe(
+            [four_hour, six_hour], [signal_4h, signal_6h], [4, 6],
+            portfolio_oos_start, portfolio_oos_end, fee, slippage,
         ),
         "walk_forward_windows": portfolio_windows,
         "worst_window_return_pct": min(portfolio_returns) if portfolio_returns else None,
     }
     return {
-        "mode": "FOUR_HOUR_ENTRY_SIX_HOUR_COMPLETED_BAR_CONSENSUS_AND_EQUAL_WEIGHT_PORTFOLIO",
+        "mode": "FOUR_HOUR_SIX_HOUR_CONSENSUS_AND_NATIVE_TIMEFRAME_PORTFOLIO",
         "bar_count_4h": len(four_hour),
         "bar_count_6h": len(six_hour),
         "split_index": split,
         "execution": (
-            "4h EMA50/200 regime is confirmed by the most recent fully closed 6h EMA50/200 regime; "
-            "the prior completed 4h signal fills at the next 4h close. 25% notional, fees and slippage included."
+            "Consensus uses the most recent fully closed 6h regime to confirm each completed 4h signal. "
+            "The 50/50 portfolio blend executes each 4h and 6h sleeve on its own native bar closes; "
+            "each sleeve receives half the capital and allocates 25% of its own cash."
         ),
         "confirmation_rule": "Both 4h and last fully closed 6h bars must have EMA50 > EMA200 and close > EMA200.",
         "strategies": {
