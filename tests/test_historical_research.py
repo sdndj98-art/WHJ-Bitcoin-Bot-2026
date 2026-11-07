@@ -4,7 +4,7 @@ import unittest
 from datetime import datetime, timezone
 from unittest.mock import patch
 
-from historical_research import (INTERVAL_MS, aggregate_candles, load_two_year_candles, run_forward_paper_accounts, run_ohlc_breakout_lab, run_long_short_lab, run_daily_regime_filter_lab, assess_strategy_qualification, _turtle_signals)
+from historical_research import (INTERVAL_MS, aggregate_candles, load_two_year_candles, run_forward_paper_accounts, run_ohlc_breakout_lab, run_long_short_lab, run_daily_regime_filter_lab, assess_strategy_qualification, assess_research_lab_qualification, _turtle_signals)
 
 
 class HistoricalResearchTests(unittest.TestCase):
@@ -256,6 +256,41 @@ class HistoricalResearchTests(unittest.TestCase):
         with patch("historical_research.fetch_page", side_effect=invalid_page):
             with self.assertRaisesRegex(ValueError, "Impossible OHLC"):
                 load_two_year_candles(days=45, now=now)
+
+
+    def test_all_research_labs_receive_conservative_qualification(self):
+        good = {
+            "out_of_sample": {
+                "return_pct": 4.0, "closed_trades": 35,
+                "profit_factor": 1.5, "max_drawdown_pct": 6.0,
+            },
+            "walk_forward_windows": [
+                {"metrics": {"return_pct": 1.0}},
+                {"metrics": {"return_pct": 0.5}},
+                {"metrics": {"return_pct": 2.0}},
+            ],
+        }
+        weak = {
+            "out_of_sample": {
+                "return_pct": 4.0, "closed_trades": 5,
+                "profit_factor": 1.5, "max_drawdown_pct": 6.0,
+            },
+            "walk_forward_windows": good["walk_forward_windows"],
+        }
+        research = {"strategies": {
+            "candidate": good,
+            "small_sample": weak,
+            "buy_and_hold_25pct": good,
+        }}
+        stress = {"strategies": {
+            "candidate": {"out_of_sample": {"return_pct": 1.0}},
+            "small_sample": {"out_of_sample": {"return_pct": 1.0}},
+            "buy_and_hold_25pct": {"out_of_sample": {"return_pct": 1.0}},
+        }}
+        result = assess_research_lab_qualification(research, stress)
+        self.assertTrue(result["candidate"]["qualified_for_extended_paper_review"])
+        self.assertFalse(result["small_sample"]["qualified_for_extended_paper_review"])
+        self.assertNotIn("buy_and_hold_25pct", result)
 
 
 if __name__ == "__main__":
