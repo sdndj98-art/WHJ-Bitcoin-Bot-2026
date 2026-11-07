@@ -66,7 +66,16 @@ def validate_hourly_feed(candles, now_timestamp=None):
     age_minutes = (now * 1000 - (timestamps[-1] + 3_600_000)) / 60_000
     if not -5 <= age_minutes <= 120:
         raise ValueError("Latest completed hourly candle is stale or in the future")
-    return {"quality": "HEALTHY", "latest_closed_candle_age_minutes": round(age_minutes, 2)}
+    imputed_count = sum(1 for row in candles if row.get("imputed", False))
+    total_count = len(candles)
+    return {
+        "quality": "HEALTHY",
+        "latest_closed_candle_age_minutes": round(age_minutes, 2),
+        "total_hourly_candles": total_count,
+        "observed_hourly_candles": total_count - imputed_count,
+        "imputed_hourly_candles": imputed_count,
+        "imputed_hourly_pct": round(imputed_count / total_count * 100.0, 4),
+    }
 
 
 
