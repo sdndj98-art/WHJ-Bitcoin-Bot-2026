@@ -115,6 +115,18 @@ def scan_btc_market(candles, market_data_quality=None, volume_lookback=20,
     rsi_healthy = 50.0 <= rsi14 <= 72.0
     atr14 = _atr(normalized, 14)
     atr_pct = (atr14 / current_close) * 100.0
+    # Hypothetical long-side risk map for research display only. These levels
+    # are not orders, personalized advice, or evidence that a setup is profitable.
+    hypothetical_stop_atr = 1.5
+    hypothetical_target_atr = 3.0
+    hypothetical_stop = current_close - (atr14 * hypothetical_stop_atr)
+    hypothetical_target = current_close + (atr14 * hypothetical_target_atr)
+    hypothetical_risk_pct = (atr14 * hypothetical_stop_atr / current_close) * 100.0
+    hypothetical_reward_pct = (atr14 * hypothetical_target_atr / current_close) * 100.0
+    hypothetical_reward_risk = (
+        hypothetical_target_atr / hypothetical_stop_atr
+        if hypothetical_stop_atr > 0 else 0.0
+    )
     candle_range = current_high - current_low
     close_position = ((current_close - current_low) / candle_range
                       if candle_range > 0 else 0.5)
@@ -198,6 +210,18 @@ def scan_btc_market(candles, market_data_quality=None, volume_lookback=20,
         "rsi14": round(rsi14, 2),
         "atr14": round(atr14, 2),
         "atr_pct": round(atr_pct, 4),
+        "hypothetical_risk_map": {
+            "research_only": True,
+            "reference_price": round(current_close, 2),
+            "atr_multiple_stop": hypothetical_stop_atr,
+            "atr_multiple_target": hypothetical_target_atr,
+            "stop_level": round(hypothetical_stop, 2),
+            "target_level": round(hypothetical_target, 2),
+            "risk_pct": round(hypothetical_risk_pct, 4),
+            "reward_pct": round(hypothetical_reward_pct, 4),
+            "reward_risk_ratio": round(hypothetical_reward_risk, 2),
+            "execution_enabled": False,
+        },
         "close_position_pct": round(close_position * 100.0, 2),
         "confluence_score": score,
         "confluence_total": len(scored_checks),
@@ -208,6 +232,7 @@ def scan_btc_market(candles, market_data_quality=None, volume_lookback=20,
         "limitations": [
             "BTC/USD only; no new-token discovery or on-chain rug-pull assessment.",
             "A scanner candidate is not a validated profitable strategy or an order instruction.",
+            "ATR risk-map levels are hypothetical research references, not orders or validated trade parameters.",
             "No stop-loss, take-profit, or live execution is performed by this scanner.",
             "RSI, EMA and ATR are descriptive indicators, not predictive guarantees.",
         ],
