@@ -29,7 +29,7 @@ Each hourly workflow run processes only newly closed candles for four independen
 
 Each account starts with hypothetical $1,000, uses 25% allocation, models 0.1% fees and 0.05% slippage, and keeps a separate trade ledger. The workflow stores account state in GitHub Actions cache so later runs can continue from the previous processed candle. Cache retention is managed by GitHub and is not a permanent database; review artifacts and account state periodically.
 
-Risk controls pause new entries after a 3% daily loss and permanently pause an account after a 10% peak-to-trough drawdown until manual review. A loss guard can liquidate an open simulated position. These limits are safeguards, not guarantees against losses.
+Risk controls pause new entries after a 3% daily loss and permanently pause an account after a 10% peak-to-trough drawdown until manual review. A loss guard can liquidate an open simulated position. Recent missing hourly candles or stale market data also block paper execution. These limits are safeguards, not guarantees against losses.
 
 ## Automated schedule
 GitHub Actions runs tests and analysis on pushes to `main`, hourly at minute 7 (UTC), and when manually started from the Actions tab. Each successful run uploads `report.json` and `dashboard.html` as an artifact retained for 14 days. Telegram notifications are currently disabled.
