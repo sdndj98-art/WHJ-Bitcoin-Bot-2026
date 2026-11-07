@@ -1,6 +1,7 @@
 import unittest
 from collections import Counter
 from html.parser import HTMLParser
+from dashboard import build_dashboard
 from pathlib import Path
 
 
@@ -24,6 +25,30 @@ class DashboardContractTests(unittest.TestCase):
         cls.source = Path("web/index.html").read_text(encoding="utf-8")
         cls.parser = DashboardContractParser()
         cls.parser.feed(cls.source)
+
+    def test_generated_dashboard_displays_all_paper_risk_pause_reasons(self):
+        report = {
+            "persistent_paper_portfolio": {
+                "accounts": {
+                    "sma_trend": {
+                        "equity_after_estimated_exit_costs_usd": 1000.0,
+                        "return_pct": 0.0,
+                        "max_drawdown_pct": 0.0,
+                        "completed_trades": 0,
+                        "fees_paid_usd": 0.0,
+                        "open_position": False,
+                        "paused_for_drawdown": False,
+                        "daily_loss_paused": False,
+                        "paused_for_loss_streak": True,
+                        "paused_for_strategy_health": True,
+                    }
+                }
+            }
+        }
+        rendered = build_dashboard(report)
+        self.assertIn("<th>Loss streak paused</th>", rendered)
+        self.assertIn("<th>Strategy health paused</th>", rendered)
+        self.assertIn("<td>True</td><td>True</td>", rendered)
 
     def test_navigation_targets_exist_and_ids_are_unique(self):
         ids = set(self.parser.ids)
