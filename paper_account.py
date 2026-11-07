@@ -35,7 +35,7 @@ def _save_state_atomically(path, state):
         ) as temporary:
             temporary_path = Path(temporary.name)
             json.dump(state, temporary, indent=2, allow_nan=False)
-            temporary.write("\\n")
+            temporary.write("\n")
             temporary.flush()
             os.fsync(temporary.fileno())
         os.replace(temporary_path, target)
