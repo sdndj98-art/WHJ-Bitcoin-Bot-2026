@@ -12,7 +12,7 @@ from bisect import bisect_left
 from datetime import datetime, timezone
 from pathlib import Path
 
-from paper_account import update_paper_account
+from paper_account import seed_forward_paper_account, update_paper_account
 from strategy_lab import run_strategy_lab
 
 BASE_URL = "https://api.exchange.coinbase.com/products/BTC-USD/candles"
@@ -1594,6 +1594,70 @@ def run_forward_paper_accounts(candles, state_dir="."):
         initial_cash=500.0,
         strategy="ema50_200_regime",
     )
+    # These separate ledgers start at the latest completed bar. The historical
+    # series initializes EMA state only; it cannot create historical PnL or pauses.
+    forward_seed_4h = seed_forward_paper_account(
+        account_rows(four_hour),
+        state_path=str(directory / "paper_forward_4h_ema50_200.json"),
+        initial_cash=500.0,
+    )
+    forward_seed_6h = seed_forward_paper_account(
+        account_rows(six_hour),
+        state_path=str(directory / "paper_forward_6h_ema50_200.json"),
+        initial_cash=500.0,
+    )
+    forward_four_hour = update_paper_account(
+        account_rows(four_hour),
+        state_path=str(directory / "paper_forward_4h_ema50_200.json"),
+        initial_cash=500.0,
+        allocation_fraction=0.10,
+        max_drawdown_fraction=0.10,
+        daily_loss_fraction=0.03,
+        max_consecutive_losses=5,
+        strategy="ema50_200_regime",
+    )
+    forward_six_hour = update_paper_account(
+        account_rows(six_hour),
+        state_path=str(directory / "paper_forward_6h_ema50_200.json"),
+        initial_cash=500.0,
+        allocation_fraction=0.10,
+        max_drawdown_fraction=0.10,
+        daily_loss_fraction=0.03,
+        max_consecutive_losses=5,
+        strategy="ema50_200_regime",
+    )
+    forward_initial = (
+        forward_four_hour["initial_cash_usd"] + forward_six_hour["initial_cash_usd"]
+    )
+    forward_equity = (
+        forward_four_hour["equity_after_estimated_exit_costs_usd"]
+        + forward_six_hour["equity_after_estimated_exit_costs_usd"]
+    )
+    forward_portfolio = {
+        "mode": "GENUINE_FORWARD_ONLY_50_50_PAPER",
+        "initial_cash_usd": round(forward_initial, 2),
+        "equity_after_estimated_exit_costs_usd": round(forward_equity, 2),
+        "return_pct": round((forward_equity / forward_initial - 1.0) * 100.0, 2),
+        "completed_trades": (
+            forward_four_hour["completed_trades"] + forward_six_hour["completed_trades"]
+        ),
+        "fees_paid_usd": round(
+            forward_four_hour["fees_paid_usd"] + forward_six_hour["fees_paid_usd"], 4
+        ),
+        "sleeves": {"4h": forward_four_hour, "6h": forward_six_hour},
+        "seed": {"4h": forward_seed_4h, "6h": forward_seed_6h},
+        "allocation": "50% capital per timeframe sleeve; 10% of each sleeve equity per entry.",
+        "risk_limits": {
+            "max_drawdown_pct": 10.0,
+            "daily_loss_pause_pct": 3.0,
+            "max_consecutive_losses": 5,
+            "allocation_pct_per_sleeve": 10.0,
+        },
+        "note": (
+            "This is a new forward-only paper ledger seeded at the latest completed "
+            "bar. Historical candles warm up indicators only and create no historical trades."
+        ),
+    }
     ensemble_initial = (
         ensemble_four_hour["initial_cash_usd"] + ensemble_six_hour["initial_cash_usd"]
     )
@@ -1630,7 +1694,8 @@ def run_forward_paper_accounts(candles, state_dir="."):
         "daily_bollinger_mean_reversion": daily_bollinger_result,
         "six_hour_rsi14_mean_reversion": six_hour_rsi_result,
         "ema50_200_4h_6h_50_50_portfolio": ensemble_portfolio,
-        "note": "Accounts process only newly closed aggregated bars and persist state between scheduled runs. No real orders are sent.",
+        "forward_only_ema50_200_4h_6h_50_50_portfolio": forward_portfolio,
+        "note": "Legacy diagnostic ledgers backfill history; the separate forward_only ledger starts at the latest completed bar and processes only future completed candles. No real orders are sent.",
     }
 
 
