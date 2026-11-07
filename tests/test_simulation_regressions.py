@@ -322,6 +322,78 @@ class PersistentPaperAccountTests(unittest.TestCase):
             self.assertFalse(result["open_position"])
             self.assertIn("strategy_health_deterioration", result["risk_pause_reasons"])
 
+    def test_strategy_health_pause_is_sticky_across_restarts(self):
+        with tempfile.TemporaryDirectory() as folder:
+            state_path = Path(folder) / "sticky_health.json"
+            candles = self.make_candles([100.0 + i for i in range(55)])
+            update_paper_account(candles, state_path=str(state_path))
+            saved = json.loads(state_path.read_text(encoding="utf-8"))
+            saved["btc"] = 0.0
+            saved["entry_cost"] = 0.0
+            saved["cash"] = 1000.0
+            saved["last_timestamp"] = 54 * 3600
+            saved["trades"] = [
+                {"pnl_usd": -1.0, "result": "LOSS", "side": "SELL"}
+                for _ in range(10)
+            ]
+            state_path.write_text(json.dumps(saved), encoding="utf-8")
+            first = update_paper_account(
+                self.make_candles([100.0 + i for i in range(56)]),
+                state_path=str(state_path),
+                strategy_health_pause=True,
+            )
+            self.assertTrue(first["paused_for_strategy_health"])
+            persisted = json.loads(state_path.read_text(encoding="utf-8"))
+            self.assertTrue(persisted["paused_for_strategy_health"])
+            second = update_paper_account(
+                self.make_candles([100.0 + i for i in range(57)]),
+                state_path=str(state_path),
+                strategy_health_pause=True,
+            )
+            self.assertTrue(second["paused_for_strategy_health"])
+            self.assertFalse(second["open_position"])
+            self.assertIn("strategy_health_deterioration", second["risk_pause_reasons"])
+
+    def test_strategy_health_pause_forces_exit_of_existing_position(self):
+        with tempfile.TemporaryDirectory() as folder:
+            state_path = Path(folder) / "open_position_health.json"
+            candles = self.make_candles([100.0 + i for i in range(55)])
+            initial = update_paper_account(candles, state_path=str(state_path))
+            self.assertTrue(initial["open_position"])
+            saved = json.loads(state_path.read_text(encoding="utf-8"))
+            saved["last_timestamp"] = 54 * 3600
+            saved["trades"] = [
+                {"pnl_usd": -1.0, "result": "LOSS", "side": "SELL"}
+                for _ in range(10)
+            ]
+            state_path.write_text(json.dumps(saved), encoding="utf-8")
+            result = update_paper_account(
+                self.make_candles([100.0 + i for i in range(56)]),
+                state_path=str(state_path),
+                strategy_health_pause=True,
+            )
+            self.assertTrue(result["paused_for_strategy_health"])
+            self.assertFalse(result["open_position"])
+            self.assertEqual(len(result["new_trades"]), 1)
+            self.assertIn("strategy_health_deterioration", result["risk_pause_reasons"])
+
+    def test_persisted_daily_loss_pause_forces_exit_of_open_position(self):
+        with tempfile.TemporaryDirectory() as folder:
+            state_path = Path(folder) / "daily_pause_exit.json"
+            candles = self.make_candles([100.0 + i for i in range(55)])
+            update_paper_account(candles, state_path=str(state_path))
+            saved = json.loads(state_path.read_text(encoding="utf-8"))
+            self.assertGreater(saved["btc"], 0)
+            saved["daily_loss_paused"] = True
+            saved["last_timestamp"] = 54 * 3600
+            state_path.write_text(json.dumps(saved), encoding="utf-8")
+            result = update_paper_account(
+                self.make_candles([100.0 + i for i in range(56)]),
+                state_path=str(state_path),
+            )
+            self.assertFalse(result["open_position"])
+            self.assertIn("daily_loss_limit", result["risk_pause_reasons"])
+
     def test_existing_loss_streak_is_reconciled_without_new_candles(self):
         with tempfile.TemporaryDirectory() as folder:
             state_path = Path(folder) / "legacy_streak.json"
