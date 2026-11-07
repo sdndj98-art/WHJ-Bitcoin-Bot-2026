@@ -55,6 +55,8 @@ class DashboardContractTests(unittest.TestCase):
         self.assertIn("تحليل الاستراتيجيات حسب حالة السوق", self.source)
         self.assertIn("ليس ربح صفقات فعلياً", self.source)
         self.assertIn("strategy_signal_diagnostics", self.source)
+        self.assertIn("فاصل الثقة 95%", self.source)
+        self.assertIn("positive_active_forward_bar_ci95_pct", self.source)
 
     def test_forward_report_is_paper_only_and_consistency_checked(self):
         self.assertIn("FORWARD_ONLY_PAPER_NO_LIVE_ORDERS", self.source)
