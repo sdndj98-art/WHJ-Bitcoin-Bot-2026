@@ -46,13 +46,17 @@ def _atr(rows, period=14):
 
 
 def scan_btc_market(candles, market_data_quality=None, volume_lookback=20,
-                    volume_spike_multiple=1.5):
+                    volume_spike_multiple=1.5, interval_hours=1):
     """Score a completed hourly candle against seven independent confirmation checks.
 
     Uses 50 prior candles for EMA trend context, 20 prior candles for breakout
     and volume context, and 14 periods for RSI/ATR. A candidate is a research
     label for paper review only, not a trade instruction.
     """
+    if isinstance(interval_hours, bool) or not isinstance(interval_hours, int) or interval_hours not in (1, 4, 6):
+        raise ValueError("interval_hours must be one of 1, 4, or 6")
+    interval_seconds = interval_hours * 3600
+    timeframe = f"{interval_hours}h"
     if isinstance(volume_lookback, bool) or not isinstance(volume_lookback, int) or volume_lookback < 2:
         raise ValueError("volume_lookback must be an integer of at least 2")
     if (isinstance(volume_spike_multiple, bool)
@@ -93,10 +97,12 @@ def scan_btc_market(candles, market_data_quality=None, volume_lookback=20,
     timestamps = [item[0] for item in normalized]
     if any(current <= previous for previous, current in zip(timestamps, timestamps[1:])):
         raise ValueError("Scanner candle timestamps must be strictly increasing")
-    if any(current - previous != 3600 for previous, current in zip(timestamps, timestamps[1:])):
-        raise ValueError("Scanner requires contiguous completed hourly candles")
-    if any(timestamp % 3600 != 0 for timestamp in timestamps):
-        raise ValueError("Scanner hourly candle timestamps must align to UTC hour boundaries")
+    if any(current - previous != interval_seconds for previous, current in zip(timestamps, timestamps[1:])):
+        raise ValueError(f"Scanner requires contiguous completed {timeframe} candles")
+    if any(timestamp % interval_seconds != 0 for timestamp in timestamps):
+        if interval_hours == 1:
+            raise ValueError("Scanner hourly candle timestamps must align to UTC hour boundaries")
+        raise ValueError(f"Scanner {timeframe} candle timestamps must align to UTC boundaries")
 
     closes = [item[4] for item in normalized]
     previous = normalized[:-1]
@@ -191,7 +197,7 @@ def scan_btc_market(candles, market_data_quality=None, volume_lookback=20,
 
     return {
         "market": "BTC/USD",
-        "timeframe": "1h",
+        "timeframe": timeframe,
         "status": status,
         "lookback_candles": volume_lookback,
         "trend_lookback_candles": 50,
@@ -235,5 +241,107 @@ def scan_btc_market(candles, market_data_quality=None, volume_lookback=20,
             "ATR risk-map levels are hypothetical research references, not orders or validated trade parameters.",
             "No stop-loss, take-profit, or live execution is performed by this scanner.",
             "RSI, EMA and ATR are descriptive indicators, not predictive guarantees.",
+        ],
+    }
+
+def _aggregate_hourly_candles(candles, hours):
+    """Build only complete UTC-aligned bars from closed hourly OHLCV candles."""
+    if hours not in (4, 6):
+        raise ValueError("Aggregation hours must be 4 or 6")
+    if not isinstance(candles, list):
+        raise ValueError("Hourly candles must be a list")
+    interval_seconds = 3600
+    span_seconds = hours * interval_seconds
+    groups = {}
+    previous_timestamp = None
+    for row in candles:
+        if not isinstance(row, (list, tuple)) or len(row) < 8:
+            raise ValueError("Each hourly candle must contain OHLCV and trade count")
+        if isinstance(row[0], bool):
+            raise ValueError("Hourly timestamps cannot be booleans")
+        try:
+            timestamp = int(row[0])
+            if float(row[0]) != timestamp:
+                raise ValueError
+        except (TypeError, ValueError, OverflowError) as exc:
+            raise ValueError("Invalid hourly candle timestamp") from exc
+        if previous_timestamp is not None and timestamp <= previous_timestamp:
+            raise ValueError("Hourly timestamps must be strictly increasing")
+        if timestamp % interval_seconds:
+            raise ValueError("Hourly timestamps must align to UTC hour boundaries")
+        previous_timestamp = timestamp
+        bucket = timestamp // span_seconds
+        groups.setdefault(bucket, []).append(row)
+
+    aggregated = []
+    for bucket in sorted(groups):
+        group = sorted(groups[bucket], key=lambda item: int(item[0]))
+        start = bucket * span_seconds
+        if len(group) != hours:
+            continue
+        if any(int(group[i][0]) != start + i * interval_seconds for i in range(hours)):
+            continue
+        try:
+            opens = [float(item[1]) for item in group]
+            highs = [float(item[2]) for item in group]
+            lows = [float(item[3]) for item in group]
+            closes = [float(item[4]) for item in group]
+            volumes = [float(item[6]) for item in group]
+            trades = [int(item[7]) for item in group]
+        except (TypeError, ValueError, OverflowError) as exc:
+            raise ValueError("Hourly OHLCV values must be numeric") from exc
+        values = opens + highs + lows + closes + volumes
+        if any(not math.isfinite(value) for value in values):
+            raise ValueError("Hourly OHLCV values must be finite")
+        if any(isinstance(item[7], bool) or float(item[7]) != int(item[7]) for item in group):
+            raise ValueError("Hourly trade counts must be whole numbers")
+        aggregated.append([
+            start, opens[0], max(highs), min(lows), closes[-1],
+            0.0, sum(volumes), sum(trades),
+        ])
+    return aggregated
+
+
+def scan_btc_multi_timeframe(candles, market_data_quality=None):
+    """Compare 1h, 4h and 6h scanner states using completed UTC bars only."""
+    results = {"1h": scan_btc_market(candles, market_data_quality)}
+    for hours in (4, 6):
+        bars = _aggregate_hourly_candles(candles, hours)
+        try:
+            results[f"{hours}h"] = scan_btc_market(
+                bars, market_data_quality, interval_hours=hours
+            )
+        except ValueError as exc:
+            if "Not enough completed candles" not in str(exc):
+                raise
+            results[f"{hours}h"] = {
+                "market": "BTC/USD",
+                "timeframe": f"{hours}h",
+                "status": "INSUFFICIENT_HISTORY",
+                "confluence_score": 0,
+                "confluence_total": 7,
+                "paper_candidate_only": True,
+                "live_orders_placed": False,
+                "reason": str(exc),
+            }
+    candidate_count = sum(
+        item.get("status") == "PAPER_CANDIDATE" for item in results.values()
+    )
+    return {
+        "mode": "COMPLETED_CANDLE_MULTI_TIMEFRAME_DIAGNOSTICS",
+        "timeframes": results,
+        "consensus": {
+            "status": "MULTI_TIMEFRAME_PAPER_CANDIDATE"
+            if candidate_count == 3 else "NO_FULL_TIMEFRAME_CONSENSUS",
+            "candidate_timeframes": candidate_count,
+            "required_timeframes": 3,
+            "paper_review_only": True,
+            "live_execution_enabled": False,
+        },
+        "limitations": [
+            "Only fully closed UTC-aligned 1h, 4h and 6h candles are evaluated.",
+            "The 4h and 6h bars are aggregated from the supplied hourly history.",
+            "A multi-timeframe match is a research filter, not a validated profitable signal.",
+            "No orders or account changes are performed.",
         ],
     }

@@ -65,6 +65,7 @@ class DashboardContractTests(unittest.TestCase):
             "scannerBreakoutClearance", "scannerUpperWick", "scannerTrend", "scannerRsi", "scannerCandle",
             "scannerEma20", "scannerEma50", "scannerRsiValue", "scannerAtr",
             "scannerRiskStop", "scannerRiskTarget", "scannerRiskRatio",
+            "scannerTimeframeRows", "scannerMtfConsensus",
             "scannerAtrPct", "scannerClosePosition", "scannerScore",
         }
         self.assertTrue(required.issubset(set(self.parser.ids)))
@@ -78,6 +79,9 @@ class DashboardContractTests(unittest.TestCase):
         self.assertIn("وقف افتراضي بحثي (1.5 ATR)", self.source)
         self.assertIn("هدف افتراضي بحثي (3 ATR)", self.source)
         self.assertIn("hypothetical_risk_map", self.source)
+        self.assertIn("رادار توافق الأطر الزمنية", self.source)
+        self.assertIn("market_scanner_multi_timeframe", self.source)
+        self.assertIn("شموع مكتملة فقط", self.source)
 
     def test_forward_monitor_view_has_required_controls(self):
         required = {

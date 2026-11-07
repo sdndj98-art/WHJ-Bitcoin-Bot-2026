@@ -1,6 +1,6 @@
 import unittest
 
-from market_scanner import scan_btc_market
+from market_scanner import scan_btc_market, scan_btc_multi_timeframe, _aggregate_hourly_candles
 
 
 def candles(prior_high=97.8, current_close=98.2, current_volume=30.0):
@@ -131,6 +131,48 @@ class MarketScannerTests(unittest.TestCase):
         rows[-1][7] = 1.5
         with self.assertRaisesRegex(ValueError, "trade count"):
             scan_btc_market(rows, HEALTHY)
+
+    def test_four_and_six_hour_aggregation_uses_only_complete_utc_bars(self):
+        rows = []
+        for index in range(72):
+            timestamp = index * 3600
+            price = 100.0 + index * 0.1
+            rows.append([timestamp, price, price + 1, price - 1, price + 0.5,
+                         0.0, 2.0, 10])
+        four = _aggregate_hourly_candles(rows, 4)
+        six = _aggregate_hourly_candles(rows, 6)
+        self.assertEqual(len(four), 18)
+        self.assertEqual(len(six), 12)
+        self.assertEqual(four[0][0], 0)
+        self.assertEqual(four[0][6], 8.0)
+        self.assertEqual(four[0][7], 40)
+        self.assertEqual(four[0][2], max(row[2] for row in rows[:4]))
+        self.assertEqual(four[0][3], min(row[3] for row in rows[:4]))
+
+    def test_aggregation_discards_incomplete_periods_and_rejects_bad_order(self):
+        rows = []
+        for index in range(25):
+            price = 100.0 + index
+            rows.append([index * 3600, price, price + 1, price - 1,
+                         price + 0.5, 0.0, 2.0, 10])
+        self.assertEqual(len(_aggregate_hourly_candles(rows, 4)), 6)
+        with self.assertRaisesRegex(ValueError, "strictly increasing"):
+            _aggregate_hourly_candles([rows[1], rows[0]], 4)
+
+    def test_multi_timeframe_scanner_reports_closed_bar_consensus_only(self):
+        rows = []
+        for index in range(720):
+            close = 100.0 + index * 0.02
+            open_price = close - 0.01
+            rows.append([index * 3600, open_price, close + 0.2,
+                         close - 0.2, close, 0.0, 10.0, 100])
+        result = scan_btc_multi_timeframe(rows, HEALTHY)
+        self.assertEqual(set(result["timeframes"]), {"1h", "4h", "6h"})
+        self.assertEqual(result["consensus"]["required_timeframes"], 3)
+        self.assertFalse(result["consensus"]["live_execution_enabled"])
+        self.assertTrue(all(x["paper_candidate_only"] for x in result["timeframes"].values()))
+        self.assertEqual(result["timeframes"]["4h"]["timeframe"], "4h")
+        self.assertEqual(result["timeframes"]["6h"]["timeframe"], "6h")
 
     def test_rejects_non_finite_volume(self):
         rows = candles()
