@@ -1347,7 +1347,12 @@ def build_qualification_markdown(result):
         f"- Data source: {result.get('source', 'unknown')}",
         f"- Closed hourly candles: {result.get('candles', 0)}",
         f"- Period: {result.get('first_closed_candle_utc', 'unknown')} to {result.get('last_closed_candle_utc', 'unknown')}",
-        "- Mode: historical research and simulated paper review only", "",
+        "- Mode: historical research and simulated paper review only",
+        f"- Imputed missing hourly candles: {result.get('data_quality', {}).get('imputed_missing_hour_count', 0)} "
+        f"({(result.get('data_quality', {}).get('imputed_missing_hour_count', 0) / max(1, result.get('candles', 0)) * 100):.4f}% of the series)",
+        f"- Data repair: {result.get('data_quality', {}).get('imputation_method', 'not reported')}",
+        "- Imputed candles use a flat prior-close price and zero volume; they are synthetic observations, not exchange trades.",
+        "",
         "## Fixed promotion gates",
         f"- At least {policy['minimum_oos_trades']} out-of-sample closed trades",
         f"- At least {policy.get('minimum_trades_each_walk_forward_window', 5)} closed trades in each of three walk-forward windows",
