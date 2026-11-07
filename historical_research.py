@@ -369,6 +369,8 @@ def _directional_signals(bars):
     signals = {
         "sma200_long_short": [0] * len(bars),
         "ema50_200_long_short": [0] * len(bars),
+        "sma200_slope_20_long_short": [0] * len(bars),
+        "ema50_200_slope_20_long_short": [0] * len(bars),
         "donchian_55_20_long_short": [],
     }
     donchian_direction = 0
@@ -377,6 +379,15 @@ def _directional_signals(bars):
         if sma200[i] is not None:
             signals["sma200_long_short"][i] = 1 if close >= sma200[i] else -1
             signals["ema50_200_long_short"][i] = 1 if ema50[i] >= ema200[i] else -1
+        if i >= 219 and sma200[i] is not None and sma200[i - 20] is not None:
+            if close > sma200[i] and sma200[i] > sma200[i - 20]:
+                signals["sma200_slope_20_long_short"][i] = 1
+            elif close < sma200[i] and sma200[i] < sma200[i - 20]:
+                signals["sma200_slope_20_long_short"][i] = -1
+            if ema50[i] > ema200[i] and ema200[i] > ema200[i - 20]:
+                signals["ema50_200_slope_20_long_short"][i] = 1
+            elif ema50[i] < ema200[i] and ema200[i] < ema200[i - 20]:
+                signals["ema50_200_slope_20_long_short"][i] = -1
 
         if donchian_direction == 1 and i >= 20 and close < min(
             float(bars[j]["low"]) for j in range(i - 20, i)
