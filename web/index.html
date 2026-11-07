@@ -201,6 +201,9 @@ function validateForwardReport(x){
  }
  if(typeof x.generated_at_utc!=="string"||!Number.isFinite(Date.parse(x.generated_at_utc))||!n(x.latest_hourly_candle_timestamp)||x.latest_hourly_candle_timestamp<=0)throw Error("الطوابع الزمنية في التقرير غير صالحة");
  if(!["PAPER_MONITORING","RISK_PAUSED","REVIEW_REQUIRED"].includes(x.status))throw Error("حالة المراقبة غير معروفة");
+ const sleeveStatuses=keys.map(k=>x.sleeves_summary[k].health_assessment.status);
+ const expectedStatus=sleeveStatuses.includes("RISK_PAUSED")?"RISK_PAUSED":sleeveStatuses.includes("REVIEW_REQUIRED")?"REVIEW_REQUIRED":"PAPER_MONITORING";
+ if(x.status!==expectedStatus)throw Error("حالة المحفظة لا تطابق حالات الاستراتيجيات الخمس");
  if(x.cycle_status!==undefined||x.total_processed_new_candles!==undefined){
   if(!["WAITING_FOR_NEW_CLOSED_CANDLES","PROCESSED_NEW_CANDLES"].includes(x.cycle_status)||!integer(x.total_processed_new_candles))throw Error("حالة دورة المراقبة غير صالحة");
   const processed=keys.reduce((sum,k)=>sum+(integer(x.sleeves_summary[k].processed_new_candles)?x.sleeves_summary[k].processed_new_candles:0),0);
