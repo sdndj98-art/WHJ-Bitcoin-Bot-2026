@@ -71,6 +71,36 @@ class ForwardPaperMonitorTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "gap"):
             validate_hourly_feed(candles, now)
 
+    def test_invalid_ohlcv_values_are_rejected(self):
+        mutations = [
+            ("close", float("nan"), "finite number"),
+            ("volume", -1.0, "volume cannot be negative"),
+            ("high", 1.0, "high is inconsistent"),
+            ("low", 999999.0, "low is inconsistent"),
+            ("open", True, "finite number"),
+            ("imputed", "false", "imputed flag must be boolean"),
+        ]
+        for field, value, message in mutations:
+            with self.subTest(field=field):
+                candles = self.make_candles(48)
+                candles[-1][field] = value
+                now = candles[-1]["timestamp"] / 1000 + 3600 + 60
+                with self.assertRaisesRegex(ValueError, message):
+                    validate_hourly_feed(candles, now)
+
+    def test_non_integer_or_boolean_timestamp_is_rejected(self):
+        for value in (True, 1.5, float("inf")):
+            with self.subTest(timestamp=value):
+                candles = self.make_candles(48)
+                candles[-1]["timestamp"] = value
+                with self.assertRaisesRegex(ValueError, "timestamp"):
+                    validate_hourly_feed(candles, 1_800_000_000)
+
+    def test_non_finite_current_time_is_rejected(self):
+        candles = self.make_candles(48)
+        with self.assertRaisesRegex(ValueError, "Current timestamp must be finite"):
+            validate_hourly_feed(candles, float("nan"))
+
     def test_stale_or_imputed_feed_is_rejected(self):
         candles = self.make_candles(48)
         last_close = candles[-1]["timestamp"] / 1000 + 3600
