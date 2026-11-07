@@ -2,7 +2,7 @@ name: Paper Safety Tests
 
 on:
   push:
-    branches: [research/paper-state-integrity]
+    branches: [research/paper-state-integrity, research/qualification-observability]
   pull_request:
     branches: [main]
 
