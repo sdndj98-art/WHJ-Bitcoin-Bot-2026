@@ -24,28 +24,39 @@ def scan_btc_market(candles, market_data_quality=None, volume_lookback=20,
     for row in candles[-(volume_lookback + 1):]:
         if not isinstance(row, (list, tuple)) or len(row) < 8:
             raise ValueError("Each scanner candle must contain OHLCV and trade count")
+        raw_fields = (row[0], row[1], row[2], row[3], row[4], row[6], row[7])
+        if any(isinstance(value, bool) for value in raw_fields):
+            raise ValueError("Scanner candle fields cannot be booleans")
         try:
-            timestamp, open_price, high, low, close, volume = (
-                float(row[0]), float(row[1]), float(row[2]),
-                float(row[3]), float(row[4]), float(row[6])
+            timestamp, open_price, high, low, close, volume, trades = (
+                float(value) for value in raw_fields
             )
-            trades = float(row[7])
         except (TypeError, ValueError, OverflowError) as exc:
             raise ValueError("Scanner candle fields must be numeric") from exc
         values = (timestamp, open_price, high, low, close, volume, trades)
         if any(not math.isfinite(value) for value in values):
             raise ValueError("Scanner candle fields must be finite")
-        if timestamp < 0 or min(open_price, high, low, close) <= 0 or volume < 0 or trades < 0:
+        if not timestamp.is_integer() or timestamp < 0:
+            raise ValueError("Scanner candle timestamp must be a non-negative integer")
+        if not trades.is_integer():
+            raise ValueError("Scanner trade count must be an integer")
+        if min(open_price, high, low, close) <= 0 or volume < 0 or trades < 0:
             raise ValueError("Scanner candle contains invalid price or activity values")
         if high < max(open_price, close, low) or low > min(open_price, close, high):
             raise ValueError("Scanner candle has inconsistent OHLC bounds")
-        normalized.append((high, close, volume))
+        normalized.append((int(timestamp), high, close, volume))
+
+    timestamps = [item[0] for item in normalized]
+    if any(current <= previous for previous, current in zip(timestamps, timestamps[1:])):
+        raise ValueError("Scanner candle timestamps must be strictly increasing")
+    if any(current - previous != 3600 for previous, current in zip(timestamps, timestamps[1:])):
+        raise ValueError("Scanner requires contiguous completed hourly candles")
 
     previous = normalized[:-1]
-    current_high, current_close, current_volume = normalized[-1]
-    average_volume = sum(item[2] for item in previous) / volume_lookback
+    current_high, current_close, current_volume = normalized[-1][1:]
+    average_volume = sum(item[3] for item in previous) / volume_lookback
     volume_spike = average_volume > 0 and current_volume >= average_volume * volume_spike_multiple
-    prior_high = max(item[0] for item in previous)
+    prior_high = max(item[1] for item in previous)
     breakout = current_close > prior_high
     quality_ok = (
         isinstance(market_data_quality, dict)
