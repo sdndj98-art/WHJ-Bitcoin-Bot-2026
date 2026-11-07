@@ -108,7 +108,7 @@ class HistoricalResearchTests(unittest.TestCase):
     def test_turtle_breakout_uses_prior_channel_and_reports_costs(self):
         bars = []
         for index in range(600):
-            close = 100.0 + index * 0.2
+            close = 100.0 + index * 1.0
             bars.append({
                 "timestamp": index * 86400000,
                 "open": close - 0.1,
