@@ -1,6 +1,6 @@
 # WHJ Bitcoin Bot 2026
 
-A read-only BTC/USD hourly analysis and historical paper-backtesting project. It retrieves public Kraken OHLC data, excludes the still-forming candle, calculates SMA20/SMA50, reports a BUY / SELL / HOLD indicator, and simulates a simple long-only strategy on historical candles.
+A read-only BTC/USD hourly analysis, historical paper-backtesting, and reporting project. It retrieves public Kraken OHLC data, excludes the still-forming candle, calculates SMA20/SMA50, reports a BUY / SELL / HOLD indicator, and simulates a simple long-only strategy on historical candles.
 
 ## Safety
 - **No real trading:** the program never submits exchange orders.
@@ -15,12 +15,20 @@ Requires Python 3.10 or newer. No third-party packages are required.
 ```bash
 python -m unittest discover -s tests -v
 python main.py
+python dashboard.py
 ```
 
-A successful run prints the analysis and writes `report.json`, including the historical paper-backtest summary and trade log.
+A successful run prints the analysis and writes `report.json`. The dashboard generator creates a self-contained `dashboard.html`.
+
+## Optional Telegram notifications
+Create two GitHub Actions repository secrets:
+- `TELEGRAM_BOT_TOKEN`: token from BotFather.
+- `TELEGRAM_CHAT_ID`: destination chat ID.
+
+If both secrets exist, each successful analysis sends a concise report. Without them, the Telegram step is skipped. Never put tokens in source code, commits, or workflow text.
 
 ## Automated schedule
-GitHub Actions runs tests and analysis on pushes to `main`, hourly at minute 7 (UTC), and when manually started from the Actions tab. Each run uploads `report.json` as an artifact retained for 14 days.
+GitHub Actions runs tests and analysis on pushes to `main`, hourly at minute 7 (UTC), and when manually started from the Actions tab. Each run uploads `report.json` and `dashboard.html` as an artifact retained for 14 days.
 
 ## Indicator
 - BUY when latest closed price > SMA20 > SMA50.
