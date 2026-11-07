@@ -78,6 +78,13 @@ class MarketScannerTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "contiguous"):
             scan_btc_market(rows, HEALTHY)
 
+    def test_rejects_hourly_timestamps_not_aligned_to_utc_boundaries(self):
+        rows = candles()
+        for row in rows:
+            row[0] += 60
+        with self.assertRaisesRegex(ValueError, "UTC hour boundaries"):
+            scan_btc_market(rows, HEALTHY)
+
     def test_rejects_boolean_timestamp_and_fractional_trade_count(self):
         rows = candles()
         rows[-1][0] = True
