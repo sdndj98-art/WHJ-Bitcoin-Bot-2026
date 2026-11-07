@@ -33,14 +33,22 @@ class HistoricalResearchTests(unittest.TestCase):
             ],
         }
         stress = {"out_of_sample": {"return_pct": 0.4}}
-        self.assertTrue(assess_strategy_qualification(metrics, stress)["qualified_for_extended_paper_review"])
+        benchmark = {"out_of_sample": {"return_pct": 1.0}}
+        stress_benchmark = {"out_of_sample": {"return_pct": 0.1}}
+        self.assertTrue(assess_strategy_qualification(
+            metrics, stress, benchmark_metrics=benchmark,
+            stress_benchmark_metrics=stress_benchmark,
+        )["qualified_for_extended_paper_review"])
 
         small_sample = {
             **metrics,
             "out_of_sample": {**metrics["out_of_sample"], "closed_trades": 5},
         }
         self.assertFalse(
-            assess_strategy_qualification(small_sample, stress)["qualified_for_extended_paper_review"]
+            assess_strategy_qualification(
+                small_sample, stress, benchmark_metrics=benchmark,
+                stress_benchmark_metrics=stress_benchmark,
+            )["qualified_for_extended_paper_review"]
         )
 
         fragile = {
@@ -53,7 +61,10 @@ class HistoricalResearchTests(unittest.TestCase):
         }
         self.assertIn(
             "all_walk_forward_windows_nonnegative",
-            assess_strategy_qualification(fragile, stress)["failed_checks"],
+            assess_strategy_qualification(
+                fragile, stress, benchmark_metrics=benchmark,
+                stress_benchmark_metrics=stress_benchmark,
+            )["failed_checks"],
         )
 
         sparse_windows = {
@@ -66,13 +77,19 @@ class HistoricalResearchTests(unittest.TestCase):
         }
         self.assertIn(
             "minimum_trades_each_walk_forward_window",
-            assess_strategy_qualification(sparse_windows, stress)["failed_checks"],
+            assess_strategy_qualification(
+                sparse_windows, stress, benchmark_metrics=benchmark,
+                stress_benchmark_metrics=stress_benchmark,
+            )["failed_checks"],
         )
 
         stress_loss = {"out_of_sample": {"return_pct": -0.01}}
         self.assertIn(
             "positive_stress_oos_return",
-            assess_strategy_qualification(metrics, stress_loss)["failed_checks"],
+            assess_strategy_qualification(
+                metrics, stress_loss, benchmark_metrics=benchmark,
+                stress_benchmark_metrics=stress_benchmark,
+            )["failed_checks"],
         )
 
     def test_download_paginates_and_discards_current_open_hour(self):
