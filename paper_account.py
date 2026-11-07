@@ -161,18 +161,18 @@ def update_paper_account(candles, state_path="paper_account_state.json",
                 fast = _ema_last(history, 50)
                 slow = _ema_last(history, 200)
                 want_long = fast > slow and prior_close > slow
-                want_flat = fast < slow or prior_close < slow
+                want_flat = not want_long
             elif strategy == "sma200_regime":
                 sma20 = sum(history[-20:]) / 20
                 sma50 = sum(history[-50:]) / 50
                 sma200 = sum(history[-200:]) / 200
                 want_long = prior_close > sma20 > sma50 and prior_close > sma200
-                want_flat = prior_close < sma20 < sma50 or prior_close < sma200
+                want_flat = not want_long
             elif strategy == "sma_trend":
                 sma20 = sum(history[-20:]) / 20
                 sma50 = sum(history[-50:]) / 50
                 want_long = prior_close > sma20 > sma50
-                want_flat = prior_close < sma20 < sma50
+                want_flat = not want_long
             elif strategy == "ema_trend":
                 fast = _ema_last(history, 12)
                 slow = _ema_last(history, 26)
@@ -182,7 +182,7 @@ def update_paper_account(candles, state_path="paper_account_state.json",
                 momentum = _rsi_last(history, 14)
                 slow = _ema_last(history, 26)
                 want_long = 50 < momentum < 70 and prior_close > slow
-                want_flat = momentum < 45 or prior_close < slow
+                want_flat = not want_long
 
             if state.get("daily_bucket") != datetime.fromtimestamp(timestamp, timezone.utc).date().isoformat():
                 state["daily_bucket"] = datetime.fromtimestamp(timestamp, timezone.utc).date().isoformat()
