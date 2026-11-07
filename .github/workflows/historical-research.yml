@@ -44,9 +44,9 @@ jobs:
             paper_6h_rsi14_mean_reversion.json
           key: whj-mtf-paper-v6-${{ github.run_id }}-${{ github.run_attempt }}
           restore-keys: |
-            whj-mtf-paper-v4-
-            whj-mtf-paper-v5-
             whj-mtf-paper-v6-
+            whj-mtf-paper-v5-
+            whj-mtf-paper-v4-
 
       - name: Run historical data ingestion tests
         run: python -m unittest discover -s tests -p 'test_historical_research.py' -v
