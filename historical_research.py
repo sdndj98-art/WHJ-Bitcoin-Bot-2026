@@ -702,7 +702,18 @@ def build_qualification_markdown(result):
         if not strategies:
             lines.extend(["No comparable strategies were reported.", ""])
             continue
-        for name, qualification in strategies.items():
+        if group_name == "Hourly / multi-timeframe strategies":
+            entries = [
+                (f"{timeframe} / {name}", qualification)
+                for timeframe, timeframe_strategies in strategies.items()
+                for name, qualification in timeframe_strategies.items()
+            ]
+        else:
+            entries = list(strategies.items())
+        if not entries:
+            lines.extend(["No comparable strategies were reported.", ""])
+            continue
+        for name, qualification in entries:
             total += 1
             ok = qualification.get("qualified_for_extended_paper_review", False)
             passed += int(ok)
