@@ -159,6 +159,27 @@ class MarketScannerTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "strictly increasing"):
             _aggregate_hourly_candles([rows[1], rows[0]], 4)
 
+    def test_aggregation_rejects_invalid_source_candles_before_grouping(self):
+        rows = []
+        for index in range(4):
+            price = 100.0 + index
+            rows.append([index * 3600, price, price + 2, price - 2,
+                         price + 1, 0.0, 2.0, 10])
+        # Other candles would mask this malformed high after aggregation.
+        rows[0][2] = rows[0][1] - 1
+        with self.assertRaisesRegex(ValueError, "inconsistent OHLC bounds"):
+            _aggregate_hourly_candles(rows, 4)
+
+    def test_aggregation_rejects_invalid_activity_in_incomplete_period(self):
+        rows = [[0, 100.0, 101.0, 99.0, 100.5, 0.0, -1.0, 10]]
+        with self.assertRaisesRegex(ValueError, "invalid price or activity"):
+            _aggregate_hourly_candles(rows, 4)
+
+        rows[0][6] = 1.0
+        rows[0][7] = 2.5
+        with self.assertRaisesRegex(ValueError, "trade counts must be whole"):
+            _aggregate_hourly_candles(rows, 4)
+
     def test_multi_timeframe_scanner_reports_closed_bar_consensus_only(self):
         rows = []
         for index in range(720):
