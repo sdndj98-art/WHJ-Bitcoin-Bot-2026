@@ -89,6 +89,33 @@ class AnalysisTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             main.fetch_closed_candles()
 
+    @patch("main.urllib.request.urlopen")
+    def test_fetch_rejects_fractional_trade_count_and_boolean_ohlcv(self, mocked_open):
+        valid = [[i * 3600, "100", "102", "99", "101", "100", "1", 1]
+                 for i in range(52)]
+        for label, mutation in (
+            ("fractional_trade_count", lambda rows: rows[0].__setitem__(7, 1.5)),
+            ("boolean_timestamp", lambda rows: rows[0].__setitem__(0, True)),
+            ("boolean_price", lambda rows: rows[0].__setitem__(1, True)),
+            ("boolean_volume", lambda rows: rows[0].__setitem__(6, True)),
+        ):
+            rows = json.loads(json.dumps(valid))
+            mutation(rows)
+            payload = {"error": [], "result": {"XXBTZUSD": rows, "last": "123"}}
+            mocked_open.return_value.__enter__.return_value = BytesIO(
+                json.dumps(payload).encode("utf-8")
+            )
+            with self.subTest(case=label):
+                with self.assertRaises(ValueError):
+                    main.fetch_closed_candles()
+
+    def test_quality_rejects_boolean_timestamps(self):
+        candles = [[i * 3600, "100", "102", "99", "101", "100", "1", 1]
+                   for i in range(60)]
+        candles[10][0] = True
+        with self.assertRaisesRegex(ValueError, "cannot be boolean"):
+            main.assess_candle_quality(candles)
+
     def test_quality_report_explains_future_and_stale_data(self):
         candles = [[i * 3600, "100", "102", "99", "101", "100", "1", 1]
                    for i in range(60)]
