@@ -67,7 +67,12 @@ def run_backtest(prices, initial_cash=1000.0, fee_rate=0.001, slippage_rate=0.00
             max_drawdown_pct = max(max_drawdown_pct, drawdown)
 
     last_price = float(prices[-1])
-    final_equity = cash + btc * last_price
+    if position_open:
+        estimated_exit_value = btc * last_price * (1 - slippage_rate)
+        estimated_exit_value -= estimated_exit_value * fee_rate
+        final_equity = cash + estimated_exit_value
+    else:
+        final_equity = cash
     wins = [trade["pnl"] for trade in trades if trade["pnl"] > 0]
     losses = [-trade["pnl"] for trade in trades if trade["pnl"] < 0]
     gross_profit = sum(wins)
@@ -93,6 +98,7 @@ def run_backtest(prices, initial_cash=1000.0, fee_rate=0.001, slippage_rate=0.00
         "gross_loss_usd": round(gross_loss, 2),
         "fees_paid_usd": round(fees_paid, 2),
         "open_position": position_open,
+        "estimated_liquidation_value": position_open,
         "unrealized_pnl_usd": round(final_equity - entry_cost, 2) if position_open else 0.0,
         "trade_log": trades,
         "execution_assumption": "Signal uses only prior completed candles; execution is modeled at the next candle close with fee and slippage; no real orders."
