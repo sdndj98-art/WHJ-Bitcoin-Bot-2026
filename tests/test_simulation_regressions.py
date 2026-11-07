@@ -18,7 +18,7 @@ class StrategyLabTests(unittest.TestCase):
         self.assertIsInstance(benchmark["max_drawdown_pct"], float)
         self.assertFalse(benchmark["open_position"])
         self.assertTrue(benchmark["fees_and_slippage_included"])
-        for name in ("sma_trend", "ema_trend", "rsi_momentum"):
+        for name in ("sma_trend", "ema_trend", "rsi_momentum", "sma200_regime"):
             strategy = report["strategies"][name]
             self.assertEqual(len(strategy["walk_forward_windows"]), 3)
             self.assertIsNotNone(strategy["worst_window_return_pct"])
@@ -27,7 +27,7 @@ class StrategyLabTests(unittest.TestCase):
     def test_open_strategy_position_uses_net_liquidation_value(self):
         prices = [100.0 + i * 0.5 for i in range(180)]
         report = run_strategy_lab(prices)
-        for name in ("sma_trend", "ema_trend", "rsi_momentum"):
+        for name in ("sma_trend", "ema_trend", "rsi_momentum", "sma200_regime"):
             metrics = report["strategies"][name]["out_of_sample"]
             self.assertTrue(math.isfinite(metrics["final_equity_usd"]))
             self.assertGreaterEqual(metrics["max_drawdown_pct"], 0.0)
