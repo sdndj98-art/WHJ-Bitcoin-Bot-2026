@@ -210,6 +210,8 @@ class ForwardPaperMonitorTests(unittest.TestCase):
             self.assertEqual(first["completed_trades"], 0)
             self.assertEqual(first["schema_version"], 1)
             self.assertEqual(first["status"], "PAPER_MONITORING")
+            self.assertEqual(first["cycle_status"], "WAITING_FOR_NEW_CLOSED_CANDLES")
+            self.assertEqual(first["total_processed_new_candles"], 0)
             self.assertEqual(
                 set(first["sleeves_summary"]),
                 {"1h_sma_trend", "1h_ema_trend", "1h_rsi14_mean_reversion", "4h", "6h"},
@@ -245,6 +247,8 @@ class ForwardPaperMonitorTests(unittest.TestCase):
             self.assertGreater(result["sleeves"]["1h_sma_trend"]["account"]["processed_new_candles"], 0)
             self.assertGreater(result["sleeves"]["1h_ema_trend"]["account"]["processed_new_candles"], 0)
             self.assertGreater(result["sleeves"]["1h_rsi14_mean_reversion"]["account"]["processed_new_candles"], 0)
+            self.assertEqual(result["cycle_status"], "PROCESSED_NEW_CANDLES")
+            self.assertGreater(result["total_processed_new_candles"], 0)
             self.assertGreater(result["sleeves"]["4h"]["account"]["processed_new_candles"], 0)
             self.assertGreater(result["sleeves"]["6h"]["account"]["processed_new_candles"], 0)
             again = process_forward_accounts(extended, folder, now2)
