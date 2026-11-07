@@ -156,6 +156,16 @@ def _load_state(path, initial_cash, strategy="sma_trend"):
     last_timestamp = state.get("last_timestamp")
     if last_timestamp is not None and (isinstance(last_timestamp, bool) or not isinstance(last_timestamp, int) or last_timestamp < 0):
         raise ValueError("Saved paper account timestamp is invalid")
+    trade_timestamps = [
+        trade["timestamp"] for trade in state["trades"] if "timestamp" in trade
+    ]
+    if trade_timestamps and len(trade_timestamps) != len(state["trades"]):
+        raise ValueError("Saved trade ledger mixes timestamped and legacy records")
+    if trade_timestamps:
+        if trade_timestamps != sorted(trade_timestamps) or len(set(trade_timestamps)) != len(trade_timestamps):
+            raise ValueError("Saved trade timestamps must be strictly increasing and unique")
+        if last_timestamp is None or trade_timestamps[-1] > last_timestamp:
+            raise ValueError("Saved trade timestamp cannot exceed the last processed candle")
     return state
 
 

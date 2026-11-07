@@ -211,6 +211,32 @@ class PersistentPaperAccountTests(unittest.TestCase):
                     with self.assertRaises(ValueError):
                         update_paper_account(candles, state_path=str(state_path))
 
+    def test_rejects_non_monotonic_or_future_paper_trade_timestamps(self):
+        with tempfile.TemporaryDirectory() as folder:
+            state_path = Path(folder) / "paper_state.json"
+            candles = self.make_candles([100.0 + i for i in range(55)])
+            update_paper_account(candles, state_path=str(state_path))
+            original = json.loads(state_path.read_text(encoding="utf-8"))
+            original["trades"] = [
+                {"timestamp": 3600, "pnl_usd": -1.0, "result": "LOSS", "side": "SELL"},
+                {"timestamp": 7200, "pnl_usd": 2.0, "result": "WIN", "side": "SELL"},
+            ]
+            state_path.write_text(json.dumps(original), encoding="utf-8")
+
+            out_of_order = json.loads(json.dumps(original))
+            out_of_order["trades"].reverse()
+            future_trade = json.loads(json.dumps(original))
+            future_trade["trades"][-1]["timestamp"] = original["last_timestamp"] + 3600
+
+            for label, corrupted in (
+                ("out_of_order", out_of_order),
+                ("future_trade", future_trade),
+            ):
+                with self.subTest(corruption=label):
+                    state_path.write_text(json.dumps(corrupted), encoding="utf-8")
+                    with self.assertRaisesRegex(ValueError, "trade timestamp"):
+                        update_paper_account(candles, state_path=str(state_path))
+
     def test_state_persists_and_reprocessing_is_idempotent(self):
         with tempfile.TemporaryDirectory() as folder:
             state_path = str(Path(folder) / "paper_state.json")
