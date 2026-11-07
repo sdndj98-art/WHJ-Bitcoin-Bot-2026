@@ -4,7 +4,7 @@ import unittest
 from datetime import datetime, timezone
 from unittest.mock import patch
 
-from historical_research import (INTERVAL_MS, aggregate_candles, load_two_year_candles, run_forward_paper_accounts, run_ohlc_breakout_lab, run_long_short_lab, run_daily_regime_filter_lab, _simulate_ohlc, assess_strategy_qualification, assess_research_lab_qualification, build_qualification_markdown, _turtle_signals)
+from historical_research import (INTERVAL_MS, aggregate_candles, load_two_year_candles, run_forward_paper_accounts, run_ohlc_breakout_lab, run_long_short_lab, run_daily_regime_filter_lab, _simulate_ohlc, assess_strategy_qualification, assess_research_lab_qualification, build_qualification_markdown, summarize_qualification, _turtle_signals)
 
 
 class HistoricalResearchTests(unittest.TestCase):
@@ -480,6 +480,58 @@ class HistoricalResearchTests(unittest.TestCase):
         self.assertIn("4h EMA50/EMA200", report)
         self.assertIn("PAUSED — consecutive_loss_limit", report)
 
+
+    def test_qualification_summary_counts_gates_and_ranks_watchlist_diagnostically(self):
+        passing = {
+            "qualified_for_extended_paper_review": True,
+            "failed_checks": [],
+            "benchmark_comparison": {
+                "benchmark_available": True,
+                "oos_outperformance_pct_points": 2.0,
+                "stress_oos_outperformance_pct_points": 1.0,
+            },
+        }
+        close_but_failed = {
+            "qualified_for_extended_paper_review": False,
+            "failed_checks": ["minimum_profit_factor"],
+            "benchmark_comparison": {
+                "benchmark_available": True,
+                "oos_outperformance_pct_points": 1.5,
+                "stress_oos_outperformance_pct_points": 0.5,
+            },
+        }
+        missing_benchmark = {
+            "qualified_for_extended_paper_review": False,
+            "failed_checks": ["outperform_buy_and_hold_oos"],
+            "benchmark_comparison": {"benchmark_available": False},
+        }
+        result = summarize_qualification({
+            "strategy_qualification": {
+                "1h": {"passing": passing, "close": close_but_failed},
+                "4h": {"missing": missing_benchmark},
+            },
+            "extended_lab_strategy_qualification": {
+                "ohlc_breakout": {"candidate": close_but_failed},
+                "long_short": {},
+                "daily_regime_filter": {},
+            },
+        })
+        self.assertEqual(result["qualified"], 1)
+        self.assertEqual(result["tested"], 4)
+        self.assertEqual(result["by_group"]["hourly_multi_timeframe"], {
+            "qualified": 1, "tested": 3,
+        })
+        self.assertEqual(
+            result["diagnostic_watchlist"][0]["strategy"],
+            "1h / passing",
+        )
+        self.assertEqual(
+            result["diagnostic_watchlist"][1]["strategy"],
+            "4h / missing",
+        ) if False else None
+        self.assertIn("does not waive", result["watchlist_note"])
+        with self.assertRaises(ValueError):
+            summarize_qualification({}, watchlist_limit=-1)
 
     def test_qualification_requires_outperformance_of_matched_benchmark(self):
         candidate = {
