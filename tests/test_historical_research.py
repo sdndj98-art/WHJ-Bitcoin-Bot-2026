@@ -399,7 +399,7 @@ class HistoricalResearchTests(unittest.TestCase):
     def test_qualification_requires_outperformance_of_matched_benchmark(self):
         candidate = {
             "out_of_sample": {
-                "return_pct": 3.0, "closed_trades": 40,
+                "return_pct": 1.5, "closed_trades": 40,
                 "profit_factor": 1.8, "max_drawdown_pct": 5.0,
             },
             "walk_forward_windows": [
