@@ -55,6 +55,33 @@ def fetch_closes():
     """Compatibility helper returning only completed hourly close prices."""
     return [float(candle[4]) for candle in fetch_closed_candles()]
 
+
+def assess_candle_quality(candles, now_timestamp=None):
+    """Report hourly gaps and freshness; block paper execution on recent bad data."""
+    if not candles:
+        raise ValueError("Cannot assess an empty candle series")
+    timestamps = [int(candle[0]) for candle in candles]
+    gaps = []
+    for previous, current in zip(timestamps, timestamps[1:]):
+        delta = current - previous
+        if delta > 3600:
+            gaps.append(max(1, int(round(delta / 3600)) - 1))
+        elif delta <= 0:
+            raise ValueError("Candle timestamps must be strictly increasing")
+    recent_gaps = sum(gaps[-50:])
+    now = datetime.now(timezone.utc).timestamp() if now_timestamp is None else float(now_timestamp)
+    age_minutes = (now - (timestamps[-1] + 3600)) / 60
+    fresh = -1 <= age_minutes <= 120
+    return {
+        "candle_count": len(candles),
+        "missing_hour_gaps_total": sum(gaps),
+        "recent_missing_hour_gaps": recent_gaps,
+        "latest_closed_candle_age_minutes": round(age_minutes, 2),
+        "latest_candle_fresh": fresh,
+        "paper_execution_allowed": recent_gaps == 0 and fresh,
+    }
+
+
 def analyze(prices):
     if len(prices) < 51:
         raise ValueError("At least 51 closed prices are required")
@@ -102,9 +129,19 @@ def main():
     candles = fetch_closed_candles()
     closes = [float(candle[4]) for candle in candles]
     report = analyze(closes)
-    portfolio = run_paper_portfolio(candles)
+    quality = assess_candle_quality(candles)
+    report["market_data_quality"] = quality
+    if quality["paper_execution_allowed"]:
+        portfolio = run_paper_portfolio(candles)
+        report["persistent_paper_account"] = portfolio["accounts"]["sma_trend"]
+    else:
+        portfolio = {
+            "mode": "PAUSED_DATA_QUALITY",
+            "accounts": {},
+            "message": "Paper entries are paused because recent candle gaps or stale data were detected.",
+        }
+        report["persistent_paper_account"] = {}
     report["persistent_paper_portfolio"] = portfolio
-    report["persistent_paper_account"] = portfolio["accounts"]["sma_trend"]
     REPORT_PATH.write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
     print(json.dumps(report, indent=2))
 
