@@ -74,6 +74,12 @@ class PaperTradingTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             run_backtest([100.0] * 50 + [float("nan")])
 
+    def test_signal_does_not_use_execution_candle_close(self):
+        result = run_backtest([100.0] * 50 + [200.0])
+        self.assertEqual(result["completed_trades"], 0)
+        self.assertFalse(result["open_position"])
+        self.assertEqual(result["final_equity_usd"], 1000.0)
+
     def test_returns_risk_and_trade_quality_metrics(self):
         result = run_backtest([float(i) for i in range(1, 101)])
         self.assertIn("max_drawdown_pct", result)
