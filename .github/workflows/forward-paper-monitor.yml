@@ -75,15 +75,21 @@ jobs:
               f"- **Combined return:** {report['return_pct']:.4f}%",
               f"- **Closed trades:** {report['completed_trades']}",
               "",
-              "| Sleeve | Equity | Return | Trades | Max DD | Open position | Risk pauses |",
-              "|---|---:|---:|---:|---:|---|---|",
+              "| Sleeve | Equity | Return | Trades | Max DD | Rolling status | Rolling DD | Rolling net | Health | Open position | Risk pauses |",
+              "|---|---:|---:|---:|---:|---|---:|---:|---|---|---|",
           ]
           for timeframe, item in report["sleeves_summary"].items():
               pauses = ", ".join(item["risk_pause_reasons"]) or "None"
+              health = item.get("health_assessment") or {}
+              rolling_dd = health.get("rolling_max_drawdown_pct")
+              rolling_dd_text = f"{rolling_dd:.2f}%" if isinstance(rolling_dd, (int, float)) else "—"
+              rolling_net = health.get("rolling_net_pnl_usd")
+              rolling_net_text = f"${rolling_net:.2f}" if isinstance(rolling_net, (int, float)) else "—"
               lines.append(
                   f"| {timeframe} | ${item['equity_usd']:.2f} | {item['return_pct']:.2f}% | "
                   f"{item['completed_trades']} | {item['max_drawdown_pct']:.2f}% | "
-                  f"{item['open_position']} | {pauses} |"
+                  f"{health.get('rolling_status', '—')} | {rolling_dd_text} | {rolling_net_text} | "
+                  f"{health.get('status', '—')} | {item['open_position']} | {pauses} |"
               )
           lines += ["", "> Paper simulation only. No real orders. Historical warm-up candles do not create trades."]
           with open(__import__("os").environ["GITHUB_STEP_SUMMARY"], "a", encoding="utf-8") as handle:
