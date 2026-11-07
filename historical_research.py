@@ -352,7 +352,8 @@ def _ema_series(values, period):
     alpha = 2.0 / (period + 1.0)
     result = []
     current = float(values[0])
-    for value in values:
+    result.append(current)
+    for value in values[1:]:
         current = alpha * float(value) + (1 - alpha) * current
         result.append(current)
     return result
@@ -364,6 +365,8 @@ def run_daily_regime_filter_lab(hourly_candles, fee=FEE_RATE, slippage=SLIPPAGE_
     daily = aggregate_candles(hourly_candles, 24)
     if len(four_hour) < 500 or len(daily) < 200:
         raise ValueError("Insufficient bars for multi-timeframe regime research")
+    if not 0 <= fee < 1 or not 0 <= slippage < 1:
+        raise ValueError("Fee and slippage must be between 0 and 1")
 
     daily_closes = [float(row["close"]) for row in daily]
     daily_sma200 = [None] * len(daily)
