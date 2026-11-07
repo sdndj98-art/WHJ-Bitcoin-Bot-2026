@@ -129,7 +129,7 @@ def update_paper_account(candles, state_path="paper_account_state.json",
     allocation_fraction = _number(allocation_fraction, "allocation_fraction", 0.01, 1)
     max_drawdown_fraction = _number(max_drawdown_fraction, "max_drawdown_fraction", 0.001, 1)
     daily_loss_fraction = _number(daily_loss_fraction, "daily_loss_fraction", 0.001, 1)
-    if strategy not in ("sma_trend", "ema_trend", "rsi_momentum", "sma200_regime", "ema50_200_regime", "bollinger_mean_reversion"):
+    if strategy not in ("sma_trend", "ema_trend", "rsi_momentum", "sma200_regime", "ema50_200_regime", "bollinger_mean_reversion", "rsi14_mean_reversion"):
         raise ValueError("Unknown paper strategy")
 
     normalized = []
@@ -162,10 +162,23 @@ def update_paper_account(candles, state_path="paper_account_state.json",
             continue
 
         history = [float(x) for x in state["recent_closes"]]
-        required_history = 200 if strategy in ("sma200_regime", "ema50_200_regime", "bollinger_mean_reversion") else 50
+        required_history = 200 if strategy in ("sma200_regime", "ema50_200_regime", "bollinger_mean_reversion", "rsi14_mean_reversion") else 50
         if len(history) >= required_history:
             prior_close = history[-1]
-            if strategy == "bollinger_mean_reversion":
+            if strategy == "rsi14_mean_reversion":
+                momentum = _rsi_last(history, 14)
+                regime_sma = sum(history[-200:]) / 200
+                if state["btc"] <= 0:
+                    want_long = momentum < 30 and prior_close > regime_sma
+                    want_flat = False
+                else:
+                    want_flat = (
+                        momentum > 55
+                        or prior_close < regime_sma
+                        or int(state.get("holding_bars", 0)) >= 10
+                    )
+                    want_long = not want_flat
+            elif strategy == "bollinger_mean_reversion":
                 window = history[-20:]
                 mean = sum(window) / 20
                 variance = sum((value - mean) ** 2 for value in window) / 20
@@ -249,7 +262,7 @@ def update_paper_account(candles, state_path="paper_account_state.json",
                     state["btc"] = units
                     state["entry_cost"] = allocation
                     state["fees_paid"] += fee
-                    if strategy == "bollinger_mean_reversion":
+                    if strategy in ("bollinger_mean_reversion", "rsi14_mean_reversion"):
                         state["holding_bars"] = 0
             elif (want_flat or daily_loss_hit or state.get("paused_for_drawdown", False)) and state["btc"] > 0:
                 fill = close * (1 - slippage_rate)
@@ -274,7 +287,7 @@ def update_paper_account(candles, state_path="paper_account_state.json",
 
         history_limit = 20000 if strategy == "ema50_200_regime" else 200
         state["recent_closes"] = (history + [close])[-history_limit:]
-        if strategy == "bollinger_mean_reversion" and state["btc"] > 0:
+        if strategy in ("bollinger_mean_reversion", "rsi14_mean_reversion") and state["btc"] > 0:
             state["holding_bars"] = int(state.get("holding_bars", 0)) + 1
         if strategy == "ema50_200_regime":
             alpha50 = 2.0 / 51.0
