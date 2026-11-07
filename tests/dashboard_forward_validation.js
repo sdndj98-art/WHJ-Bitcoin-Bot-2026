@@ -45,4 +45,30 @@ const missingOneHourTrade = structuredClone(report);
 missingOneHourTrade.sleeves_summary["1h_ema_trend"].completed_trades = 1;
 assert.throws(() => validate(missingOneHourTrade), /إجماليات الحسابات/);
 
-console.log("Dashboard forward-report validation tests passed (five sleeves and aggregate checks).");
+// Execute the actual renderer with a minimal DOM. This catches runtime-only scope errors.
+const renderMatch = html.match(/function renderForward\(x\)\{[\s\S]*?\n\}\n\$\("forwardFile"\)/);
+assert.ok(renderMatch, "Could not locate renderForward in dashboard");
+const rendererSource = renderMatch[0].replace(/\n\$\("forwardFile"\)$/, "");
+const elements = new Map();
+const getElement = (id) => {
+  if (!elements.has(id)) elements.set(id, { textContent: "", className: "", innerHTML: "" });
+  return elements.get(id);
+};
+const context = {
+  $: getElement,
+  money: (value) => value === undefined || value === null ? "—" : "$" + Number(value).toFixed(2),
+  pct: (value) => value === undefined || value === null ? "—" : Number(value).toFixed(2) + "%",
+  fmt: (value) => value === undefined || value === null ? "—" : String(value),
+  esc: (value) => String(value ?? "")
+};
+const render = vm.runInNewContext(`${rendererSource}; renderForward`, context);
+const renderableReport = structuredClone(report);
+for (const key of keys) {
+  renderableReport.sleeves_summary[key].health_assessment.rolling_net_pnl_usd = 2.5;
+}
+render(renderableReport);
+assert.match(getElement("forwardRows").innerHTML, /1h · SMA Trend/);
+assert.match(getElement("forwardRows").innerHTML, /\$2\.50/);
+assert.equal((getElement("forwardRows").innerHTML.match(/<tr>/g) || []).length, 5);
+
+console.log("Dashboard forward-report validation and rendering tests passed (five sleeves, aggregates, and runtime rendering).");
