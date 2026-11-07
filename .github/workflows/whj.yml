@@ -33,7 +33,7 @@ jobs:
           path: paper_account_state_*.json
           key: whj-paper-portfolio-v3-${{ github.run_id }}-${{ github.run_attempt }}
           restore-keys: |
-            whj-paper-account-v1-
+            whj-paper-portfolio-v3-
 
       - name: Run automated tests
         run: python -m unittest discover -s tests -v
