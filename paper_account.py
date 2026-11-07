@@ -68,6 +68,7 @@ def _new_state(initial_cash, strategy="sma_trend"):
         "paused_for_loss_streak": False,
         "daily_start_equity": float(initial_cash),
         "paused_for_drawdown": False,
+        "paused_for_strategy_health": False,
         "trades": [],
         "fees_paid": 0.0,
     }
