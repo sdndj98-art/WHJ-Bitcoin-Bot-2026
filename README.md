@@ -21,11 +21,12 @@ python dashboard.py
 A successful run prints the analysis and writes `report.json`. The dashboard generator creates a self-contained `dashboard.html`.
 
 ## Persistent paper portfolio
-Each hourly workflow run processes newly closed candles for four independent simulated accounts:
+Each hourly workflow run processes newly closed candles for five independent simulated accounts:
 - SMA20/SMA50 trend
 - EMA12/EMA26 trend
 - RSI momentum with EMA trend confirmation
 - SMA200 long-term regime filter
+- EMA50/EMA200 long-term regime filter
 
 A separate daily research workflow also maintains four multi-timeframe paper ledgers: daily SMA20/SMA50, 4-hour EMA50/EMA200, daily Bollinger mean reversion, and 6-hour RSI14 mean reversion. These are separate from the hourly portfolio and must not be combined when comparing results.
 
