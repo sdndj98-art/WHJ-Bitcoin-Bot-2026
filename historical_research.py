@@ -348,6 +348,101 @@ def run_ohlc_breakout_lab(bars, fee=FEE_RATE, slippage=SLIPPAGE_RATE):
     }
 
 
+def _ema_series(values, period):
+    alpha = 2.0 / (period + 1.0)
+    result = []
+    current = float(values[0])
+    for value in values:
+        current = alpha * float(value) + (1 - alpha) * current
+        result.append(current)
+    return result
+
+
+def run_daily_regime_filter_lab(hourly_candles, fee=FEE_RATE, slippage=SLIPPAGE_RATE):
+    """Test 4h entries gated by the previous fully closed daily SMA200 regime."""
+    four_hour = aggregate_candles(hourly_candles, 4)
+    daily = aggregate_candles(hourly_candles, 24)
+    if len(four_hour) < 500 or len(daily) < 200:
+        raise ValueError("Insufficient bars for multi-timeframe regime research")
+
+    daily_closes = [float(row["close"]) for row in daily]
+    daily_sma200 = [None] * len(daily)
+    for i in range(199, len(daily)):
+        daily_sma200[i] = sum(daily_closes[i - 199:i + 1]) / 200
+    daily_index = {row["timestamp"] // 86400000: i for i, row in enumerate(daily)}
+
+    closes = [float(row["close"]) for row in four_hour]
+    ema20 = _ema_series(closes, 20)
+    ema50 = _ema_series(closes, 50)
+    ema200 = _ema_series(closes, 200)
+    sma20 = [None] * len(closes)
+    sma50 = [None] * len(closes)
+    for i in range(19, len(closes)):
+        sma20[i] = sum(closes[i - 19:i + 1]) / 20
+    for i in range(49, len(closes)):
+        sma50[i] = sum(closes[i - 49:i + 1]) / 50
+
+    signals = {
+        "ema50_200_with_daily_sma200": [],
+        "ema20_50_with_daily_sma200": [],
+        "sma20_50_with_daily_sma200": [],
+    }
+    for i, row in enumerate(four_hour):
+        day_index = row["timestamp"] // 86400000
+        previous_day = daily_index.get(day_index - 1)
+        daily_regime = bool(
+            previous_day is not None
+            and daily_sma200[previous_day] is not None
+            and daily_closes[previous_day] > daily_sma200[previous_day]
+        )
+        signals["ema50_200_with_daily_sma200"].append(
+            bool(i >= 199 and daily_regime and ema50[i] > ema200[i] and closes[i] > ema200[i])
+        )
+        signals["ema20_50_with_daily_sma200"].append(
+            bool(i >= 49 and daily_regime and ema20[i] > ema50[i] and closes[i] > ema50[i])
+        )
+        signals["sma20_50_with_daily_sma200"].append(
+            bool(sma20[i] is not None and sma50[i] is not None
+                 and daily_regime and closes[i] > sma20[i] > sma50[i])
+        )
+
+    split = int(len(four_hour) * 0.7)
+    edges = [split + ((len(four_hour) - split) * k) // 3 for k in range(4)]
+    results = {}
+    for name, signal in signals.items():
+        windows = []
+        for fold in range(3):
+            start, end = edges[fold], edges[fold + 1]
+            if end > start:
+                windows.append({
+                    "window": fold + 1,
+                    "start_index": start,
+                    "end_index_exclusive": end,
+                    "metrics": _simulate_ohlc(four_hour, signal, start, end, fee, slippage),
+                })
+        returns = [window["metrics"]["return_pct"] for window in windows]
+        results[name] = {
+            "in_sample": _simulate_ohlc(four_hour, signal, 200, split, fee, slippage),
+            "out_of_sample": _simulate_ohlc(four_hour, signal, split, len(four_hour), fee, slippage),
+            "walk_forward_windows": windows,
+            "worst_window_return_pct": min(returns) if returns else None,
+        }
+    benchmark = _simulate_ohlc(four_hour, [True] * len(four_hour), split, len(four_hour), fee, slippage)
+    benchmark["profit_factor"] = None
+    benchmark["closed_trades"] = 1
+    benchmark["open_position"] = False
+    benchmark["win_rate_pct"] = 100.0 if benchmark["return_pct"] > 0 else 0.0
+    results["buy_and_hold_25pct"] = {"out_of_sample": benchmark}
+    return {
+        "mode": "FOUR_HOUR_ENTRY_WITH_PRIOR_DAILY_REGIME",
+        "bar_count": len(four_hour),
+        "daily_bar_count": len(daily),
+        "split_index": split,
+        "execution": "4h signals use the previous fully closed daily SMA200; fills occur at the next 4h close.",
+        "strategies": results,
+    }
+
+
 def _directional_signals(bars):
     closes = [float(row["close"]) for row in bars]
     ema50 = [None] * len(bars)
@@ -603,6 +698,8 @@ def main():
     long_short_stress = run_long_short_lab(
         daily_bars, fee=0.002, slippage=0.001, funding_rate_per_8h=0.0001
     )
+    daily_regime_research = run_daily_regime_filter_lab(candles)
+    daily_regime_stress = run_daily_regime_filter_lab(candles, fee=0.002, slippage=0.001)
     forward_paper = run_forward_paper_accounts(candles)
     result = {
         "project": "WHJ Bitcoin Bot",
@@ -629,6 +726,8 @@ def main():
         "ohlc_breakout_stress": ohlc_breakout_stress,
         "long_short_research": long_short_research,
         "long_short_stress": long_short_stress,
+        "daily_regime_research": daily_regime_research,
+        "daily_regime_stress": daily_regime_stress,
         "warning": "Historical results are not forecasts. Strategy selection requires robust out-of-sample performance and forward paper trading. No live orders were placed.",
     }
     Path("historical_research.json").write_text(
