@@ -697,7 +697,15 @@ def main():
                 slippage=SLIPPAGE_RATE,
             ),
         }
-    stress_cost_research = {}
+    # Apply the same elevated-cost assumptions to every tested timeframe,
+    # including the base hourly strategy set, so no timeframe escapes stress review.
+    stress_cost_research = {
+        "1h": run_strategy_lab(
+            prices,
+            fee=0.002,
+            slippage=0.001,
+        )
+    }
     for label in ("4h", "6h", "1d"):
         hours = {"4h": 4, "6h": 6, "1d": 24}[label]
         aggregated = aggregate_candles(candles, hours)
