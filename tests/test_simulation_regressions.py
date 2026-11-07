@@ -29,6 +29,23 @@ class StrategyLabTests(unittest.TestCase):
             self.assertIsNotNone(strategy["worst_window_return_pct"])
         self.assertLess(benchmark["final_equity_usd"], 1000.0 * prices[-1] / prices[int(len(prices) * 0.7)])
 
+    def test_benchmark_drawdown_includes_estimated_exit_costs(self):
+        prices = [100.0] * 180
+        report = run_strategy_lab(prices)
+        benchmark = report["strategies"]["buy_and_hold"]["out_of_sample"]
+
+        allocation = 250.0
+        fee = 0.001
+        slippage = 0.0005
+        units = (allocation - allocation * fee) / (100.0 * (1 + slippage))
+        liquidation = units * 100.0 * (1 - slippage)
+        liquidation -= liquidation * fee
+        net_equity = 750.0 + liquidation
+        expected_drawdown = (1000.0 - net_equity) / 1000.0 * 100.0
+        self.assertAlmostEqual(
+            benchmark["max_drawdown_pct"], expected_drawdown, places=2
+        )
+
     def test_open_strategy_position_uses_net_liquidation_value(self):
         prices = [100.0 + i * 0.5 for i in range(180)]
         report = run_strategy_lab(prices)
