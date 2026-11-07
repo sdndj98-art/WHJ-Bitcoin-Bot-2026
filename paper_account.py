@@ -91,9 +91,9 @@ def _rsi_last(values, period=14):
 
 
 def run_paper_portfolio(candles, state_dir="."):
-    """Run independent, persistent paper ledgers for four fixed strategies."""
+    """Run independent, persistent paper ledgers for five fixed strategies."""
     directory = Path(state_dir)
-    strategies = ("sma_trend", "ema_trend", "rsi_momentum", "sma200_regime")
+    strategies = ("sma_trend", "ema_trend", "rsi_momentum", "sma200_regime", "ema50_200_regime")
     accounts = {}
     for strategy in strategies:
         accounts[strategy] = update_paper_account(
@@ -121,7 +121,7 @@ def update_paper_account(candles, state_path="paper_account_state.json",
     allocation_fraction = _number(allocation_fraction, "allocation_fraction", 0.01, 1)
     max_drawdown_fraction = _number(max_drawdown_fraction, "max_drawdown_fraction", 0.001, 1)
     daily_loss_fraction = _number(daily_loss_fraction, "daily_loss_fraction", 0.001, 1)
-    if strategy not in ("sma_trend", "ema_trend", "rsi_momentum", "sma200_regime"):
+    if strategy not in ("sma_trend", "ema_trend", "rsi_momentum", "sma200_regime", "ema50_200_regime"):
         raise ValueError("Unknown paper strategy")
 
     normalized = []
@@ -154,10 +154,15 @@ def update_paper_account(candles, state_path="paper_account_state.json",
             continue
 
         history = [float(x) for x in state["recent_closes"]]
-        required_history = 200 if strategy == "sma200_regime" else 50
+        required_history = 200 if strategy in ("sma200_regime", "ema50_200_regime") else 50
         if len(history) >= required_history:
             prior_close = history[-1]
-            if strategy == "sma200_regime":
+            if strategy == "ema50_200_regime":
+                fast = _ema_last(history, 50)
+                slow = _ema_last(history, 200)
+                want_long = fast > slow and prior_close > slow
+                want_flat = fast < slow or prior_close < slow
+            elif strategy == "sma200_regime":
                 sma20 = sum(history[-20:]) / 20
                 sma50 = sum(history[-50:]) / 50
                 sma200 = sum(history[-200:]) / 200
