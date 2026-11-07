@@ -224,6 +224,7 @@ def process_forward_accounts(candles, state_dir=".", now_timestamp=None):
             max_consecutive_losses=5,
             strategy=strategy,
             strategy_health_pause=True,
+            strategy_health_drawdown_fraction=0.08,
         )
         results[sleeve] = {"seed": seed, "account": account}
 
@@ -273,6 +274,7 @@ def process_forward_accounts(candles, state_dir=".", now_timestamp=None):
             "max_drawdown_pause_pct": 10,
             "daily_loss_pause_pct": 3,
             "consecutive_loss_pause_count": 5,
+            "rolling_review_pause_pct": 8,
         },
         "warning": "Paper simulation only. Historical candles warm up indicators; only bars newer than each saved ledger timestamp are processed. No live orders are possible.",
     }
