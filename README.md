@@ -20,15 +20,19 @@ python dashboard.py
 
 A successful run prints the analysis and writes `report.json`. The dashboard generator creates a self-contained `dashboard.html`.
 
-## Optional Telegram notifications
-Create two GitHub Actions repository secrets:
-- `TELEGRAM_BOT_TOKEN`: token from BotFather.
-- `TELEGRAM_CHAT_ID`: destination chat ID.
+## Persistent paper portfolio
+Each hourly workflow run processes only newly closed candles for four independent simulated accounts:
+- SMA20/SMA50 trend
+- EMA12/EMA26 trend
+- RSI momentum with EMA trend confirmation
+- SMA200 long-term regime filter
 
-If both secrets exist, each successful analysis sends a concise report. Without them, the Telegram step is skipped. Never put tokens in source code, commits, or workflow text.
+Each account starts with hypothetical $1,000, uses 25% allocation, models 0.1% fees and 0.05% slippage, and keeps a separate trade ledger. The workflow stores account state in GitHub Actions cache so later runs can continue from the previous processed candle. Cache retention is managed by GitHub and is not a permanent database; review artifacts and account state periodically.
+
+Risk controls pause new entries after a 3% daily loss and permanently pause an account after a 10% peak-to-trough drawdown until manual review. A loss guard can liquidate an open simulated position. These limits are safeguards, not guarantees against losses.
 
 ## Automated schedule
-GitHub Actions runs tests and analysis on pushes to `main`, hourly at minute 7 (UTC), and when manually started from the Actions tab. Each run uploads `report.json` and `dashboard.html` as an artifact retained for 14 days. The optional Telegram step is skipped safely unless both repository secrets are configured.
+GitHub Actions runs tests and analysis on pushes to `main`, hourly at minute 7 (UTC), and when manually started from the Actions tab. Each successful run uploads `report.json` and `dashboard.html` as an artifact retained for 14 days. Telegram notifications are currently disabled.
 
 ## Indicator
 - BUY when latest closed price > SMA20 > SMA50.
