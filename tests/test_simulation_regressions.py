@@ -78,6 +78,17 @@ class PersistentPaperAccountTests(unittest.TestCase):
             self.assertFalse(result["open_position"])
             self.assertGreaterEqual(result["completed_trades"], 1)
 
+    def test_daily_loss_guard_uses_previous_completed_candle(self):
+        with tempfile.TemporaryDirectory() as folder:
+            state_path = str(Path(folder) / "daily_loss.json")
+            rising = self.make_candles([100.0 + i for i in range(55)])
+            update_paper_account(rising, state_path=state_path)
+            next_day = [72 * 3600, "0", "0", "0", "135"]
+            result = update_paper_account(rising + [next_day], state_path=state_path)
+            self.assertTrue(result["daily_loss_paused"])
+            self.assertFalse(result["paused_for_drawdown"])
+            self.assertFalse(result["open_position"])
+
     def test_three_independent_paper_strategy_ledgers(self):
         with tempfile.TemporaryDirectory() as folder:
             candles = self.make_candles([100.0 + (i % 40) * 0.4 for i in range(180)])
