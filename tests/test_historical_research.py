@@ -4,7 +4,7 @@ import unittest
 from datetime import datetime, timezone
 from unittest.mock import patch
 
-from historical_research import (INTERVAL_MS, aggregate_candles, load_two_year_candles, run_forward_paper_accounts, run_ohlc_breakout_lab, run_long_short_lab, run_daily_regime_filter_lab, _atr_series, _rsi_series, _simulate_ohlc, assess_strategy_qualification, assess_research_lab_qualification, build_qualification_markdown, summarize_qualification, _turtle_signals)
+from historical_research import (INTERVAL_MS, aggregate_candles, load_two_year_candles, run_forward_paper_accounts, run_ohlc_breakout_lab, run_long_short_lab, run_daily_regime_filter_lab, _atr_series, _regime_switching_atr_signals, _rsi_series, _simulate_ohlc, assess_strategy_qualification, assess_research_lab_qualification, build_qualification_markdown, summarize_qualification, _turtle_signals)
 
 
 class HistoricalResearchTests(unittest.TestCase):
@@ -295,10 +295,14 @@ class HistoricalResearchTests(unittest.TestCase):
         self.assertIn("ema20_50_daily_sma200_ema20_exit", result["strategies"])
         self.assertIn("ema20_50_daily_sma200_rsi45_exit", result["strategies"])
         self.assertIn("ema20_50_daily_sma200_atr3_trailing", result["strategies"])
+        self.assertIn("regime_switching_atr3_long_short", result["strategies"])
         self.assertTrue(all(
             window["start_index"] >= result["split_index"]
             for window in result["strategies"]["ema50_200_with_daily_sma200"]["walk_forward_windows"]
         ))
+
+        with self.assertRaises(ValueError):
+            run_daily_regime_filter_lab(candles, funding_rate_per_8h=-0.1)
 
     def test_long_short_drawdown_includes_exit_costs_for_long_and_short(self):
         from historical_research import _simulate_long_short
