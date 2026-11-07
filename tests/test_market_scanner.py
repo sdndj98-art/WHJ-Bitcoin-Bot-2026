@@ -3,7 +3,7 @@ import unittest
 from market_scanner import scan_btc_market
 
 
-def candles(prior_high=100.0, current_close=101.0, current_volume=30.0):
+def candles(prior_high=97.8, current_close=98.2, current_volume=30.0):
     rows = []
     for index in range(50):
         close = 95.0 + index * 0.05 + (0.15 if index % 2 == 0 else -0.15)
@@ -13,8 +13,8 @@ def candles(prior_high=100.0, current_close=101.0, current_volume=30.0):
             close, 0.0, 10.0, 100
         ])
     current_open = min(100.0, current_close - 0.01)
-    current_low = min(current_open, current_close) - 0.5
-    current_high = max(prior_high, current_open, current_close) + 0.5
+    current_low = min(current_open, current_close) - 0.8
+    current_high = max(prior_high, current_open, current_close) + 0.1
     rows.append([
         50 * 3600, current_open, current_high, current_low,
         current_close, 0.0, current_volume, 150
