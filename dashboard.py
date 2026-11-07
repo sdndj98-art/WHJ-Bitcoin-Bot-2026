@@ -71,7 +71,7 @@ def build_dashboard(report):
     )
     portfolio = report.get("persistent_paper_portfolio", {}).get("accounts", {})
     paper_strategy_rows = "".join(
-        "<tr><td>{}</td><td>{}</td><td>{}</td><td>{}</td><td>{}</td><td>{}</td><td>{}</td><td>{}</td><td>{}</td></tr>".format(
+        "<tr><td>{}</td><td>{}</td><td>{}</td><td>{}</td><td>{}</td><td>{}</td><td>{}</td><td>{}</td><td>{}</td><td>{}</td><td>{}</td></tr>".format(
             html.escape(name),
             html.escape(str(item.get("equity_after_estimated_exit_costs_usd", "—"))),
             html.escape(str(item.get("return_pct", "—"))),
@@ -80,10 +80,12 @@ def build_dashboard(report):
             html.escape(str(item.get("fees_paid_usd", "—"))),
             html.escape(str(item.get("open_position", "—"))),
             html.escape(str(item.get("paused_for_drawdown", "—"))),
-            html.escape(str(item.get("daily_loss_paused", "—")))
+            html.escape(str(item.get("daily_loss_paused", "—"))),
+            html.escape(str(item.get("paused_for_loss_streak", "—"))),
+            html.escape(str(item.get("paused_for_strategy_health", "—")))
         )
         for name, item in portfolio.items()
-    ) or '<tr><td colspan="9">Persistent paper portfolio not available</td></tr>'
+    ) or '<tr><td colspan="11">Persistent paper portfolio not available</td></tr>'
     lab = report.get("strategy_lab", {}).get("strategies", {})
     strategy_rows = "".join(
         "<tr><td>{}</td><td>{}</td><td>{}</td><td>{}</td><td>{}</td></tr>".format(
@@ -116,7 +118,7 @@ table{width:100%;border-collapse:collapse}td,th{text-align:left;padding:10px;bor
 <div class="grid">""" + cards + """</div>
 <section><h2>Recent simulated trades</h2><table><thead><tr><th>Result</th><th>P&amp;L (USD)</th></tr></thead><tbody>""" + rows + """</tbody></table></section>
 <section><h2>Strategy comparison · Out-of-sample</h2><p class="muted">Chronological holdout results; fixed rules, not a guarantee or a strategy recommendation.</p><table><thead><tr><th>Strategy</th><th>Return (%)</th><th>Max drawdown (%)</th><th>Closed trades</th><th>Worst walk-forward window (%)</th></tr></thead><tbody>""" + strategy_rows + """</tbody></table></section>
-<section><h2>Persistent paper strategy race</h2><p class="muted">Independent simulated accounts with identical initial capital, fees, slippage, sizing and risk limits. Equity includes estimated liquidation costs.</p><table><thead><tr><th>Strategy</th><th>Equity (USD)</th><th>Return (%)</th><th>Max drawdown (%)</th><th>Closed trades</th><th>Fees (USD)</th><th>Open position</th><th>Drawdown paused</th><th>Daily loss paused</th></tr></thead><tbody>""" + paper_strategy_rows + """</tbody></table></section>
+<section><h2>Persistent paper strategy race</h2><p class="muted">Independent simulated accounts with identical initial capital, fees, slippage, sizing and risk limits. Equity includes estimated liquidation costs.</p><table><thead><tr><th>Strategy</th><th>Equity (USD)</th><th>Return (%)</th><th>Max drawdown (%)</th><th>Closed trades</th><th>Fees (USD)</th><th>Open position</th><th>Drawdown paused</th><th>Daily loss paused</th><th>Loss streak paused</th><th>Strategy health paused</th></tr></thead><tbody>""" + paper_strategy_rows + """</tbody></table></section>
 <section><h2>Monte Carlo trade-risk diagnostic</h2><p class="muted">IID and circular moving-block bootstrap resampling of completed backtest trades. The block method retains short local sequences but cannot reliably estimate dependence from a small sample. Percentiles are diagnostics, not forecasts.</p></section>
 <p class="foot notice">Simulation only. No real orders are placed. Historical results do not predict future performance and are not financial advice.</p>
 </body></html>"""
