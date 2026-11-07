@@ -27,9 +27,9 @@ class HistoricalResearchTests(unittest.TestCase):
                 "closed_trades": 40,
             },
             "walk_forward_windows": [
-                {"metrics": {"return_pct": 0.5}},
-                {"metrics": {"return_pct": 0.1}},
-                {"metrics": {"return_pct": 1.0}},
+                {"metrics": {"return_pct": 0.5, "closed_trades": 12}},
+                {"metrics": {"return_pct": 0.1, "closed_trades": 13}},
+                {"metrics": {"return_pct": 1.0, "closed_trades": 15}},
             ],
         }
         stress = {"out_of_sample": {"return_pct": 0.4}}
@@ -46,14 +46,27 @@ class HistoricalResearchTests(unittest.TestCase):
         fragile = {
             **metrics,
             "walk_forward_windows": [
-                {"metrics": {"return_pct": 0.5}},
-                {"metrics": {"return_pct": -0.1}},
-                {"metrics": {"return_pct": 1.0}},
+                {"metrics": {"return_pct": 0.5, "closed_trades": 12}},
+                {"metrics": {"return_pct": -0.1, "closed_trades": 13}},
+                {"metrics": {"return_pct": 1.0, "closed_trades": 15}},
             ],
         }
         self.assertIn(
             "all_walk_forward_windows_nonnegative",
             assess_strategy_qualification(fragile, stress)["failed_checks"],
+        )
+
+        sparse_windows = {
+            **metrics,
+            "walk_forward_windows": [
+                {"metrics": {"return_pct": 0.5, "closed_trades": 20}},
+                {"metrics": {"return_pct": 0.1, "closed_trades": 2}},
+                {"metrics": {"return_pct": 1.0, "closed_trades": 18}},
+            ],
+        }
+        self.assertIn(
+            "minimum_trades_each_walk_forward_window",
+            assess_strategy_qualification(sparse_windows, stress)["failed_checks"],
         )
 
         stress_loss = {"out_of_sample": {"return_pct": -0.01}}
@@ -325,9 +338,9 @@ class HistoricalResearchTests(unittest.TestCase):
                 "profit_factor": 1.5, "max_drawdown_pct": 6.0,
             },
             "walk_forward_windows": [
-                {"metrics": {"return_pct": 1.0}},
-                {"metrics": {"return_pct": 0.5}},
-                {"metrics": {"return_pct": 2.0}},
+                {"metrics": {"return_pct": 1.0, "closed_trades": 12}},
+                {"metrics": {"return_pct": 0.5, "closed_trades": 11}},
+                {"metrics": {"return_pct": 2.0, "closed_trades": 12}},
             ],
         }
         weak = {
