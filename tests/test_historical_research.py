@@ -3,7 +3,7 @@ import unittest
 from datetime import datetime, timezone
 from unittest.mock import patch
 
-from historical_research import (INTERVAL_MS, aggregate_candles, load_two_year_candles, run_forward_paper_accounts)
+from historical_research import (INTERVAL_MS, aggregate_candles, load_two_year_candles, run_forward_paper_accounts, run_ohlc_breakout_lab, _turtle_signals)
 
 
 class HistoricalResearchTests(unittest.TestCase):
@@ -103,6 +103,43 @@ class HistoricalResearchTests(unittest.TestCase):
         self.assertEqual(first["four_hour_ema50_200"]["processed_new_candles"], 1260)
         self.assertEqual(second["daily_sma20_50"]["processed_new_candles"], 0)
         self.assertEqual(second["four_hour_ema50_200"]["processed_new_candles"], 0)
+
+    def test_turtle_breakout_uses_prior_channel_and_reports_costs(self):
+        bars = []
+        for index in range(600):
+            close = 100.0 + index * 0.2
+            bars.append({
+                "timestamp": index * 86400000,
+                "open": close - 0.1,
+                "high": close + 0.5,
+                "low": close - 0.5,
+                "close": close,
+                "volume": 10.0,
+                "imputed": False,
+            })
+        signals = _turtle_signals(bars, 55, 20)
+        self.assertFalse(signals[54])
+        self.assertTrue(signals[55])
+        result = run_ohlc_breakout_lab(bars)
+        self.assertIn("donchian_55_20_sma200", result["strategies"])
+        self.assertIn("buy_and_hold_25pct", result["strategies"])
+        self.assertTrue(math.isfinite(result["strategies"]["donchian_55_20"]["out_of_sample"]["return_pct"]))
+
+    def test_turtle_breakout_rejects_invalid_ohlc(self):
+        bars = []
+        for index in range(600):
+            price = 100.0 + index
+            bars.append({
+                "timestamp": index,
+                "open": price,
+                "high": price + 1,
+                "low": price - 1,
+                "close": price,
+                "volume": 1.0,
+            })
+        bars[100]["high"] = bars[100]["open"] - 2
+        with self.assertRaisesRegex(ValueError, "Invalid OHLC high"):
+            run_ohlc_breakout_lab(bars)
 
     def test_invalid_ohlc_relationship_is_rejected(self):
         now = datetime(2026, 11, 7, 12, 0, tzinfo=timezone.utc)
