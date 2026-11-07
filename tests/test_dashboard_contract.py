@@ -49,6 +49,10 @@ class DashboardContractTests(unittest.TestCase):
         self.assertIn("REVIEW_REQUIRED", self.source)
         self.assertIn("ROLLING_REVIEW_REQUIRED", self.source)
         self.assertIn("صافي آخر الصفقات", self.source)
+        for sleeve in ("1h_sma_trend", "1h_ema_trend", "1h_rsi14_mean_reversion", "4h", "6h"):
+            self.assertIn(sleeve, self.source)
+        self.assertIn("خمسة حسابات مستقلة", self.source)
+        self.assertIn("تفاصيل الاستراتيجيات الخمس", self.source)
 
     def test_market_regime_diagnostics_are_visible_and_caveated(self):
         self.assertIn("regimeRows", set(self.parser.ids))
