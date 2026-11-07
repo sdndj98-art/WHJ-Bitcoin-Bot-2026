@@ -186,6 +186,168 @@ def aggregate_candles(candles, hours):
     return aggregated
 
 
+def _turtle_signals(bars, entry_period, exit_period, regime_period=None):
+    """Create close-confirmed Donchian signals using only prior-bar channel bounds."""
+    closes = [float(row["close"]) for row in bars]
+    highs = [float(row["high"]) for row in bars]
+    lows = [float(row["low"]) for row in bars]
+    regime_sma = [None] * len(bars)
+    if regime_period:
+        for i in range(regime_period - 1, len(bars)):
+            regime_sma[i] = sum(closes[i - regime_period + 1:i + 1]) / regime_period
+
+    signals = []
+    in_position = False
+    for i, close in enumerate(closes):
+        if in_position:
+            exit_break = i >= exit_period and close < min(lows[i - exit_period:i])
+            regime_exit = bool(regime_period and regime_sma[i] is not None and close < regime_sma[i])
+            if exit_break or regime_exit:
+                in_position = False
+        elif i >= entry_period:
+            breakout = close > max(highs[i - entry_period:i])
+            regime_ok = not regime_period or (
+                regime_sma[i] is not None and close > regime_sma[i]
+            )
+            if breakout and regime_ok:
+                in_position = True
+        signals.append(in_position)
+    return signals
+
+
+def _simulate_ohlc(bars, signals, start, end, fee, slippage):
+    cash = 1000.0
+    units = 0.0
+    entry_cost = 0.0
+    trades = []
+    peak = cash
+    max_drawdown = 0.0
+    for i in range(max(start, 1), end):
+        want_long = signals[i - 1]
+        price = float(bars[i]["close"])
+        if want_long and units == 0:
+            allocation = cash * 0.25
+            fill = price * (1 + slippage)
+            fee_paid = allocation * fee
+            units = (allocation - fee_paid) / fill
+            cash -= allocation
+            entry_cost = allocation
+        elif not want_long and units > 0:
+            fill = price * (1 - slippage)
+            proceeds = units * fill
+            proceeds -= proceeds * fee
+            trades.append(proceeds - entry_cost)
+            cash += proceeds
+            units = 0.0
+            entry_cost = 0.0
+        equity = cash + units * price
+        peak = max(peak, equity)
+        if peak > 0:
+            max_drawdown = max(max_drawdown, (peak - equity) / peak * 100)
+
+    if units > 0:
+        exit_value = units * float(bars[end - 1]["close"]) * (1 - slippage)
+        exit_value -= exit_value * fee
+        final_equity = cash + exit_value
+    else:
+        final_equity = cash
+    wins = sum(1 for pnl in trades if pnl > 0)
+    gross_profit = sum(pnl for pnl in trades if pnl > 0)
+    gross_loss = -sum(pnl for pnl in trades if pnl < 0)
+    return {
+        "return_pct": round((final_equity / 1000 - 1) * 100, 2),
+        "final_equity_usd": round(final_equity, 2),
+        "max_drawdown_pct": round(max_drawdown, 2),
+        "closed_trades": len(trades),
+        "win_rate_pct": round(wins / len(trades) * 100, 2) if trades else 0.0,
+        "profit_factor": round(gross_profit / gross_loss, 2) if gross_loss else (None if gross_profit else 0.0),
+        "open_position": units > 0,
+    }
+
+
+def run_ohlc_breakout_lab(bars, fee=FEE_RATE, slippage=SLIPPAGE_RATE):
+    """Evaluate classic Turtle-style breakouts on true OHLC bars."""
+    if len(bars) < 500:
+        raise ValueError("At least 500 OHLC bars are required for breakout research")
+    for row in bars:
+        values = [row.get(key) for key in ("open", "high", "low", "close", "volume")]
+        if any(isinstance(value, bool) or not isinstance(value, (int, float))
+               or not math.isfinite(value) for value in values):
+            raise ValueError("Breakout research requires finite numeric OHLCV bars")
+        if min(values[:4]) <= 0 or values[4] < 0:
+            raise ValueError("Breakout research requires positive prices and non-negative volume")
+        if row["high"] < max(row["open"], row["close"], row["low"]):
+            raise ValueError("Invalid OHLC high")
+        if row["low"] > min(row["open"], row["close"], row["high"]):
+            raise ValueError("Invalid OHLC low")
+    if not 0 <= fee < 1 or not 0 <= slippage < 1:
+        raise ValueError("Fee and slippage must be between 0 and 1")
+
+    split = int(len(bars) * 0.7)
+    strategies = {
+        "donchian_20_10": (20, 10, None),
+        "donchian_55_20": (55, 20, None),
+        "donchian_20_10_sma200": (20, 10, 200),
+        "donchian_55_20_sma200": (55, 20, 200),
+    }
+    results = {}
+    for name, (entry, exit_period, regime) in strategies.items():
+        signals = _turtle_signals(bars, entry, exit_period, regime)
+        warmup = max(entry, regime or 0)
+        walk_start = max(warmup, len(bars) // 2)
+        edges = [walk_start + ((len(bars) - walk_start) * k) // 3 for k in range(4)]
+        windows = []
+        for fold in range(3):
+            start, end = edges[fold], edges[fold + 1]
+            if end > start:
+                windows.append({
+                    "window": fold + 1,
+                    "start_index": start,
+                    "end_index_exclusive": end,
+                    "metrics": _simulate_ohlc(bars, signals, start, end, fee, slippage),
+                })
+        returns = [window["metrics"]["return_pct"] for window in windows]
+        results[name] = {
+            "in_sample": _simulate_ohlc(bars, signals, warmup, split, fee, slippage),
+            "out_of_sample": _simulate_ohlc(bars, signals, split, len(bars), fee, slippage),
+            "walk_forward_windows": windows,
+            "worst_window_return_pct": min(returns) if returns else None,
+        }
+
+    benchmark_cash = 750.0
+    benchmark_units = (250.0 * (1 - fee)) / (float(bars[split]["close"]) * (1 + slippage))
+    peak = 1000.0
+    max_drawdown = 0.0
+    for row in bars[split:]:
+        equity = benchmark_cash + benchmark_units * float(row["close"])
+        peak = max(peak, equity)
+        max_drawdown = max(max_drawdown, (peak - equity) / peak * 100)
+    exit_value = benchmark_units * float(bars[-1]["close"]) * (1 - slippage)
+    exit_value -= exit_value * fee
+    benchmark_equity = benchmark_cash + exit_value
+    results["buy_and_hold_25pct"] = {
+        "out_of_sample": {
+            "return_pct": round((benchmark_equity / 1000 - 1) * 100, 2),
+            "final_equity_usd": round(benchmark_equity, 2),
+            "max_drawdown_pct": round(max_drawdown, 2),
+            "closed_trades": 1,
+            "win_rate_pct": 100.0 if benchmark_equity > 1000 else 0.0,
+            "profit_factor": None,
+            "open_position": False,
+            "fees_and_slippage_included": True,
+            "allocation_fraction": 0.25,
+        }
+    }
+    return {
+        "mode": "OHLC_DONCHIAN_CHRONOLOGICAL_HOLDOUT",
+        "sample_count": len(bars),
+        "split_index": split,
+        "execution": "Prior completed candle breakout signal; next close fill; 25% allocation; fees and slippage included.",
+        "note": "Donchian channel bounds use prior highs/lows only; SMA200 regime uses completed daily closes.",
+        "strategies": results,
+    }
+
+
 def run_forward_paper_accounts(candles, state_dir="."):
     """Maintain independent 1d and 4h paper accounts across daily workflow runs."""
     directory = Path(state_dir)
@@ -241,6 +403,9 @@ def main():
             slippage=0.001,
         )
 
+    daily_bars = aggregate_candles(candles, 24)
+    ohlc_breakout_research = run_ohlc_breakout_lab(daily_bars)
+    ohlc_breakout_stress = run_ohlc_breakout_lab(daily_bars, fee=0.002, slippage=0.001)
     forward_paper = run_forward_paper_accounts(candles)
     result = {
         "project": "WHJ Bitcoin Bot",
@@ -263,6 +428,8 @@ def main():
         "timeframe_research": timeframe_research,
         "stress_cost_research": stress_cost_research,
         "forward_paper_accounts": forward_paper,
+        "ohlc_breakout_research": ohlc_breakout_research,
+        "ohlc_breakout_stress": ohlc_breakout_stress,
         "warning": "Historical results are not forecasts. Strategy selection requires robust out-of-sample performance and forward paper trading. No live orders were placed.",
     }
     Path("historical_research.json").write_text(
