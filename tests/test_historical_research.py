@@ -525,10 +525,6 @@ class HistoricalResearchTests(unittest.TestCase):
             result["diagnostic_watchlist"][0]["strategy"],
             "1h / passing",
         )
-        self.assertEqual(
-            result["diagnostic_watchlist"][1]["strategy"],
-            "4h / missing",
-        ) if False else None
         self.assertIn("does not waive", result["watchlist_note"])
         with self.assertRaises(ValueError):
             summarize_qualification({}, watchlist_limit=-1)
