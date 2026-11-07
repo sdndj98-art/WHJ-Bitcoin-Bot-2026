@@ -1,3 +1,4 @@
+import json
 import tempfile
 import unittest
 from datetime import datetime, timezone
@@ -100,6 +101,49 @@ class ForwardPaperMonitorTests(unittest.TestCase):
         self.assertEqual(result["rolling_status"], "ROLLING_REVIEW_REQUIRED")
         self.assertEqual(result["status"], "REVIEW_REQUIRED")
         self.assertFalse(result["live_trading_eligible"])
+
+    def test_rolling_drawdown_guard_pauses_new_entries(self):
+        start = 1_750_000_000
+        start -= start % 3600
+        prices = [250.0 + i * 0.2 for i in range(220)]
+        history = [
+            [start + i * 3600, 0, 0, 0, str(price)]
+            for i, price in enumerate(prices)
+        ]
+        with tempfile.TemporaryDirectory() as folder:
+            state_path = str(Path(folder) / "rolling-guard.json")
+            seed_forward_paper_account(
+                history, state_path, initial_cash=200.0,
+                strategy="ema50_200_regime",
+            )
+            state = json.loads(Path(state_path).read_text(encoding="utf-8"))
+            state["trades"] = (
+                [{"timestamp": start + i, "side": "SELL", "pnl_usd": 10.0, "result": "WIN"}
+                 for i in range(5)]
+                + [{"timestamp": start + 10 + i, "side": "SELL", "pnl_usd": -4.0, "result": "LOSS"}
+                   for i in range(5)]
+            )
+            Path(state_path).write_text(json.dumps(state), encoding="utf-8")
+            next_bar = [[start + len(prices) * 3600, 0, 0, 0, str(prices[-1] + 1.0)]]
+            result = update_paper_account(
+                next_bar, state_path=state_path, initial_cash=200.0,
+                allocation_fraction=0.10, strategy="ema50_200_regime",
+                strategy_health_pause=True,
+                strategy_health_drawdown_fraction=0.08,
+            )
+            self.assertTrue(result["paused_for_strategy_health"])
+            self.assertIn("strategy_health_deterioration", result["risk_pause_reasons"])
+            self.assertFalse(result["open_position"])
+            self.assertEqual(result["completed_trades"], 10)
+
+    def test_strategy_health_drawdown_threshold_is_validated(self):
+        with tempfile.TemporaryDirectory() as folder:
+            with self.assertRaisesRegex(ValueError, "strategy_health_drawdown_fraction"):
+                update_paper_account(
+                    [[1_750_000_000, 0, 0, 0, "100"]],
+                    state_path=str(Path(folder) / "invalid-threshold.json"),
+                    strategy_health_drawdown_fraction=0,
+                )
 
     def test_rolling_window_rejects_invalid_trade_pnl(self):
         account = {
