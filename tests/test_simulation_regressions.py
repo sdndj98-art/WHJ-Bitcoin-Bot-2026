@@ -5,7 +5,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from paper_account import run_paper_portfolio, update_paper_account
+from paper_account import _ema_last, run_paper_portfolio, update_paper_account
 from paper_trading import run_backtest
 from strategy_lab import run_strategy_lab
 
@@ -124,6 +124,9 @@ class PersistentPaperAccountTests(unittest.TestCase):
             update_paper_account(candles, state_path=str(path), strategy="ema50_200_regime")
             saved = json.loads(path.read_text(encoding="utf-8"))
             self.assertEqual(len(saved["recent_closes"]), 260)
+            prices = [100.0 + (i % 70) * 0.5 for i in range(260)]
+            self.assertAlmostEqual(saved["ema50_state"], _ema_last(prices, 50), places=10)
+            self.assertAlmostEqual(saved["ema200_state"], _ema_last(prices, 200), places=10)
 
     def test_corrupt_state_is_not_silently_reset(self):
         with tempfile.TemporaryDirectory() as folder:
