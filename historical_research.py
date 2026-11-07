@@ -479,6 +479,10 @@ def run_long_short_lab(bars, fee=FEE_RATE, slippage=SLIPPAGE_RATE,
     """Research unlevered 25%-notional long/short futures signals with funding costs."""
     if len(bars) < 500:
         raise ValueError("At least 500 daily bars are required for long/short research")
+    if not 0 <= fee < 1 or not 0 <= slippage < 1:
+        raise ValueError("Fee and slippage must be between 0 and 1")
+    if not math.isfinite(funding_rate_per_8h) or funding_rate_per_8h < 0:
+        raise ValueError("Funding rate must be a finite non-negative number")
     signals = _directional_signals(bars)
     split = int(len(bars) * 0.7)
     walk_start = max(200, len(bars) // 2)
