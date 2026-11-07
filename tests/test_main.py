@@ -55,7 +55,8 @@ class AnalysisTests(unittest.TestCase):
 
     @patch("main.urllib.request.urlopen")
     def test_fetch_excludes_current_incomplete_candle(self, mocked_open):
-        candles = [[i, "1", "1", "1", str(100 + i), "1", "1", 1] for i in range(52)]
+        candles = [[i * 3600, "100", "102", "99", str(100 + i), "100", "1", 1]
+                   for i in range(52)]
         payload = {"error": [], "result": {"XXBTZUSD": candles, "last": "123"}}
         mocked_open.return_value.__enter__.return_value = BytesIO(
             json.dumps(payload).encode("utf-8")
@@ -63,6 +64,24 @@ class AnalysisTests(unittest.TestCase):
         closes = main.fetch_closes()
         self.assertEqual(len(closes), 51)
         self.assertEqual(closes[-1], 150.0)
+
+    @patch("main.urllib.request.urlopen")
+    def test_fetch_rejects_inconsistent_ohlc(self, mocked_open):
+        candles = [[i * 3600, "100", "99", "98", "101", "100", "1", 1]
+                   for i in range(52)]
+        payload = {"error": [], "result": {"XXBTZUSD": candles, "last": "123"}}
+        mocked_open.return_value.__enter__.return_value = BytesIO(
+            json.dumps(payload).encode("utf-8")
+        )
+        with self.assertRaises(ValueError):
+            main.fetch_closed_candles()
+
+    def test_quality_report_explains_future_and_stale_data(self):
+        candles = [[i * 3600, "100", "102", "99", "101", "100", "1", 1]
+                   for i in range(60)]
+        future = main.assess_candle_quality(candles, candles[-1][0] + 3600 - 600)
+        self.assertEqual(future["quality_status"], "BLOCKED")
+        self.assertIn("stale_or_future_candle", future["quality_block_reasons"])
 
     @patch("main.urllib.request.urlopen")
     def test_fetch_raises_on_exchange_error(self, mocked_open):
