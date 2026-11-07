@@ -404,6 +404,15 @@ class HistoricalResearchTests(unittest.TestCase):
                             "oos_outperformance_pct_points": 8.87,
                             "stress_oos_outperformance_pct_points": 8.53,
                         },
+                    },
+                    "weak_edge": {
+                        "qualified_for_extended_paper_review": False,
+                        "failed_checks": ["minimum_oos_trades", "minimum_profit_factor"],
+                        "benchmark_comparison": {
+                            "benchmark_available": True,
+                            "oos_outperformance_pct_points": 4.0,
+                            "stress_oos_outperformance_pct_points": 3.0,
+                        },
                     }
                 }
             },
@@ -419,6 +428,9 @@ class HistoricalResearchTests(unittest.TestCase):
         self.assertIn("Benchmark-edge research watchlist (diagnostic only)", report)
         self.assertIn("+8.87 pp base", report)
         self.assertIn("+8.53 pp elevated costs", report)
+        self.assertIn("1 failed gate", report)
+        self.assertIn("2 failed gates", report)
+        self.assertLess(report.index("**1d / bollinger**"), report.index("**weak_edge**"))
 
 
     def test_qualification_requires_outperformance_of_matched_benchmark(self):
