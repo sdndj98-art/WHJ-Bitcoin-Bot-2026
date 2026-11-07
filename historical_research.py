@@ -432,8 +432,8 @@ def _simulate_long_short(bars, signals, start, end, fee, slippage,
                 notional = max(0.0, equity * 0.25)
                 entry_fee = notional * fee
                 entry_fill = price * (1 + target * slippage)
-                units = target * (notional - entry_fee) / entry_fill
-                cash -= units * entry_fill
+                units = target * notional / entry_fill
+                cash -= units * entry_fill + entry_fee
                 entry_price = entry_fill
                 fees_paid += entry_fee
 
@@ -508,6 +508,10 @@ def run_long_short_lab(bars, fee=FEE_RATE, slippage=SLIPPAGE_RATE,
             "walk_forward_windows": windows,
             "worst_window_return_pct": min(returns) if returns else None,
         }
+    benchmark = _simulate_ohlc(
+        bars, [True] * len(bars), split, len(bars), fee, slippage
+    )
+    results["buy_and_hold_25pct"] = {"out_of_sample": benchmark}
     return {
         "mode": "UNLEVERED_LONG_SHORT_PAPER_RESEARCH",
         "sample_count": len(bars),
