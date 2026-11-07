@@ -830,6 +830,46 @@ def build_qualification_markdown(result):
             )
         lines.append("")
 
+    paper_accounts = result.get("forward_paper_accounts", {})
+    paper_labels = {
+        "daily_sma20_50": "Daily SMA20/SMA50",
+        "four_hour_ema50_200": "4h EMA50/EMA200",
+        "daily_bollinger_mean_reversion": "Daily Bollinger mean reversion",
+        "six_hour_rsi14_mean_reversion": "6h RSI14 mean reversion",
+    }
+    paper_rows = [
+        (label, paper_accounts[key])
+        for key, label in paper_labels.items()
+        if isinstance(paper_accounts.get(key), dict)
+    ]
+    if paper_rows:
+        lines.extend([
+            "## Persistent forward paper-account snapshot",
+            "",
+            "Simulated account state only; these results are not the same as the historical out-of-sample qualification tests.",
+            "",
+        ])
+        for label, account in paper_rows:
+            equity = account.get("equity_after_estimated_exit_costs_usd")
+            return_pct = account.get("return_pct")
+            profit_factor = account.get("profit_factor")
+            drawdown = account.get("max_drawdown_pct")
+            trades = account.get("completed_trades", 0)
+            win_rate = account.get("win_rate_pct")
+            pause_reasons = account.get("risk_pause_reasons", [])
+            status = "PAUSED — " + ", ".join(pause_reasons) if pause_reasons else "active"
+            equity_text = f"${equity:,.2f}" if isinstance(equity, (int, float)) else "unavailable"
+            return_text = f"{return_pct:+.2f}%" if isinstance(return_pct, (int, float)) else "unavailable"
+            pf_text = f"{profit_factor:.2f}" if isinstance(profit_factor, (int, float)) else "unavailable"
+            dd_text = f"{drawdown:.2f}%" if isinstance(drawdown, (int, float)) else "unavailable"
+            win_text = f"{win_rate:.1f}%" if isinstance(win_rate, (int, float)) else "unavailable"
+            lines.append(
+                f"- **{label}:** equity {equity_text}; return {return_text}; "
+                f"{trades} closed trades; win rate {win_text}; profit factor {pf_text}; "
+                f"max drawdown {dd_text}; status {status}."
+            )
+        lines.append("")
+
     # Diagnostic shortlist only: rank by the weaker of base/stress benchmark edges.
     # This is deliberately not a promotion gate and never changes qualification.
     watchlist = []
