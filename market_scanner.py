@@ -47,7 +47,7 @@ def _atr(rows, period=14):
 
 def scan_btc_market(candles, market_data_quality=None, volume_lookback=20,
                     volume_spike_multiple=1.5):
-    """Score a completed hourly candle against six independent confirmation checks.
+    """Score a completed hourly candle against seven independent confirmation checks.
 
     Uses 50 prior candles for EMA trend context, 20 prior candles for breakout
     and volume context, and 14 periods for RSI/ATR. A candidate is a research
@@ -175,7 +175,7 @@ def scan_btc_market(candles, market_data_quality=None, volume_lookback=20,
     )
     reasons.extend(code for failed, code in reason_checks if failed)
     if candidate:
-        reasons.append("all_six_scanner_checks_passed_paper_review_only")
+        reasons.append("all_seven_scanner_checks_passed_paper_review_only")
 
     return {
         "market": "BTC/USD",
