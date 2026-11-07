@@ -38,7 +38,7 @@ class DashboardContractTests(unittest.TestCase):
             "forward", "forwardFile", "clearForward", "forwardMessage",
             "forwardStatus", "forwardInitial", "forwardEquity", "forwardReturn",
             "forwardTrades", "forwardRows", "forwardAllocation", "forwardMaxDD",
-            "forwardDaily", "forwardStreak", "forwardQuality", "forwardCandle",
+            "forwardDaily", "forwardStreak", "forwardQuality", "forwardCandle", "forwardCycle",
         }
         self.assertTrue(required.issubset(set(self.parser.ids)))
         self.assertIn("function validateForwardReport(x)", self.source)
@@ -70,6 +70,8 @@ class DashboardContractTests(unittest.TestCase):
         self.assertIn('accept=".json,application/json"', self.source)
         self.assertIn("imputed_hourly_candles", self.source)
         self.assertIn("شموع تاريخية اصطناعية", self.source)
+        self.assertIn("WAITING_FOR_NEW_CLOSED_CANDLES", self.source)
+        self.assertIn("تمت معالجة شموع مغلقة جديدة", self.source)
 
 
 if __name__ == "__main__":
