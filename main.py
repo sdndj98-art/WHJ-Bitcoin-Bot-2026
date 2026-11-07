@@ -42,13 +42,20 @@ def fetch_closed_candles():
         if not isinstance(candle, (list, tuple)) or len(candle) < 8:
             raise ValueError("Market data contains a malformed OHLCV candle")
         try:
+            if isinstance(candle[0], bool) or any(
+                isinstance(candle[index], bool) for index in (1, 2, 3, 4, 6, 7)
+            ):
+                raise ValueError("Boolean candle fields are not valid market data")
             raw_timestamp = float(candle[0])
             if not math.isfinite(raw_timestamp) or not raw_timestamp.is_integer():
                 raise ValueError("Candle timestamp must be a finite whole number")
             timestamp = int(raw_timestamp)
             open_price, high, low, close = (float(candle[index]) for index in (1, 2, 3, 4))
             volume = float(candle[6])
-            trade_count = int(candle[7])
+            raw_trade_count = float(candle[7])
+            if not math.isfinite(raw_trade_count) or not raw_trade_count.is_integer():
+                raise ValueError("Candle trade count must be a finite whole number")
+            trade_count = int(raw_trade_count)
         except (TypeError, ValueError, OverflowError) as exc:
             raise ValueError("Market data contains invalid OHLCV fields") from exc
         numeric = (open_price, high, low, close, volume)
@@ -79,6 +86,8 @@ def assess_candle_quality(candles, now_timestamp=None):
     for candle in candles:
         if not isinstance(candle, (list, tuple)) or len(candle) < 8:
             raise ValueError("Candle quality check requires complete OHLCV rows")
+        if isinstance(candle[0], bool):
+            raise ValueError("Candle timestamps cannot be boolean values")
         raw_timestamp = float(candle[0])
         if not math.isfinite(raw_timestamp) or not raw_timestamp.is_integer():
             raise ValueError("Candle timestamps must be finite whole seconds")
