@@ -1,14 +1,49 @@
 import json
 import tempfile
 import unittest
+from unittest.mock import patch
 from datetime import datetime, timezone
 from pathlib import Path
 
-from forward_paper_monitor import assess_sleeve_health, process_forward_accounts, validate_hourly_feed
+from forward_paper_monitor import assess_sleeve_health, process_forward_accounts, validate_hourly_feed, write_report_atomically
 from paper_account import seed_forward_paper_account, update_paper_account
 
 
 class ForwardPaperMonitorTests(unittest.TestCase):
+    def test_forward_report_write_preserves_previous_file_if_replace_fails(self):
+        with tempfile.TemporaryDirectory() as folder:
+            target = Path(folder) / "forward_paper_report.json"
+            target.write_text('{"previous": true}\n', encoding="utf-8")
+            with patch("forward_paper_monitor.os.replace", side_effect=OSError("simulated replace failure")):
+                with self.assertRaisesRegex(OSError, "simulated replace failure"):
+                    write_report_atomically({"current": True}, target)
+            self.assertEqual(
+                target.read_text(encoding="utf-8"), '{"previous": true}\n'
+            )
+            self.assertEqual(list(Path(folder).glob(".forward_paper_report.json.*.tmp")), [])
+
+    def test_forward_report_write_rejects_non_finite_json_without_corrupting_previous_file(self):
+        with tempfile.TemporaryDirectory() as folder:
+            target = Path(folder) / "forward_paper_report.json"
+            target.write_text('{"previous": true}\n', encoding="utf-8")
+            with self.assertRaises(ValueError):
+                write_report_atomically({"invalid": float("nan")}, target)
+            self.assertEqual(
+                target.read_text(encoding="utf-8"), '{"previous": true}\n'
+            )
+            self.assertEqual(list(Path(folder).glob(".forward_paper_report.json.*.tmp")), [])
+
+    def test_forward_report_write_replaces_file_with_valid_json(self):
+        with tempfile.TemporaryDirectory() as folder:
+            target = Path(folder) / "forward_paper_report.json"
+            target.write_text('{"previous": true}\n', encoding="utf-8")
+            returned = write_report_atomically({"schema_version": 1, "status": "PAPER_MONITORING"}, target)
+            self.assertEqual(returned, target)
+            self.assertEqual(
+                json.loads(target.read_text(encoding="utf-8")),
+                {"schema_version": 1, "status": "PAPER_MONITORING"},
+            )
+
     def test_github_monitor_runs_hourly_to_review_each_closed_hour(self):
         workflow = Path(".github/workflows/forward-paper-monitor.yml").read_text(
             encoding="utf-8"

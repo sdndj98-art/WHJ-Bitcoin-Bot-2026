@@ -1,6 +1,8 @@
 """Hourly, forward-only multi-timeframe paper monitoring. Never places live orders."""
 import json
+import os
 import sys
+import tempfile
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -299,12 +301,42 @@ def process_forward_accounts(candles, state_dir=".", now_timestamp=None):
     }
 
 
+def write_report_atomically(report, output_path="forward_paper_report.json"):
+    """Write a complete JSON snapshot and atomically replace the previous report."""
+    if not isinstance(report, dict):
+        raise ValueError("Forward paper report must be an object")
+    target = Path(output_path)
+    target.parent.mkdir(parents=True, exist_ok=True)
+    temporary_path = None
+    try:
+        with tempfile.NamedTemporaryFile(
+            mode="w",
+            encoding="utf-8",
+            dir=str(target.parent),
+            prefix=f".{target.name}.",
+            suffix=".tmp",
+            delete=False,
+        ) as temporary:
+            temporary_path = Path(temporary.name)
+            json.dump(report, temporary, indent=2, allow_nan=False)
+            temporary.write("\n")
+            temporary.flush()
+            os.fsync(temporary.fileno())
+        os.replace(temporary_path, target)
+    except Exception:
+        if temporary_path is not None:
+            try:
+                temporary_path.unlink(missing_ok=True)
+            except OSError:
+                pass
+        raise
+    return target
+
+
 def main():
     candles = load_two_year_candles(days=90)
     report = process_forward_accounts(candles)
-    Path("forward_paper_report.json").write_text(
-        json.dumps(report, indent=2, allow_nan=False) + "\n", encoding="utf-8"
-    )
+    write_report_atomically(report)
     print(json.dumps(report, indent=2, allow_nan=False))
 
 
