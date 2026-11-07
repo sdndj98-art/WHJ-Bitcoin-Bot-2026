@@ -186,7 +186,57 @@ def aggregate_candles(candles, hours):
     return aggregated
 
 
-def _turtle_signals(bars, entry_period, exit_period, regime_period=None):
+def _turtle_signals(bars, entry_period, exit_period, regime_period=None, atr_stop_multiple=None):
+    """Create close-confirmed Donchian signals with an optional ATR trailing exit.
+
+    ATR and the trailing stop are evaluated at the current completed close;
+    any resulting position change is executed by the simulator at the next close.
+    """
+    if atr_stop_multiple is not None and (
+        isinstance(atr_stop_multiple, bool)
+        or not isinstance(atr_stop_multiple, (int, float))
+        or not math.isfinite(atr_stop_multiple)
+        or atr_stop_multiple <= 0
+    ):
+        raise ValueError("ATR stop multiple must be finite and positive")
+    closes = [float(row["close"]) for row in bars]
+    highs = [float(row["high"]) for row in bars]
+    lows = [float(row["low"]) for row in bars]
+    atr = [None] * len(bars)
+    if atr_stop_multiple is not None:
+        true_ranges = []
+        for i in range(len(bars)):
+            previous_close = closes[i - 1] if i else closes[i]
+            true_ranges.append(max(highs[i] - lows[i], abs(highs[i] - previous_close), abs(lows[i] - previous_close)))
+            if i >= 19:
+                atr[i] = sum(true_ranges[i - 19:i + 1]) / 20
+    regime_sma = [None] * len(bars)
+    if regime_period:
+        for i in range(regime_period - 1, len(bars)):
+            regime_sma[i] = sum(closes[i - regime_period + 1:i + 1]) / regime_period
+    signals = []
+    in_position = False
+    highest_close = 0.0
+    for i, close in enumerate(closes):
+        if in_position:
+            if atr_stop_multiple is not None and atr[i] is not None:
+                highest_close = max(highest_close, close)
+                atr_exit = close < highest_close - atr_stop_multiple * atr[i]
+            else:
+                atr_exit = False
+            exit_break = i >= exit_period and close < min(lows[i - exit_period:i])
+            regime_exit = bool(regime_period and regime_sma[i] is not None and close < regime_sma[i])
+            if exit_break or regime_exit or atr_exit:
+                in_position = False
+                highest_close = 0.0
+        elif i >= entry_period:
+            breakout = close > max(highs[i - entry_period:i])
+            regime_ok = not regime_period or (regime_sma[i] is not None and close > regime_sma[i])
+            if breakout and regime_ok:
+                in_position = True
+                highest_close = close
+        signals.append(in_position)
+    return signals
     """Create close-confirmed Donchian signals using only prior-bar channel bounds."""
     closes = [float(row["close"]) for row in bars]
     highs = [float(row["high"]) for row in bars]
@@ -291,15 +341,16 @@ def run_ohlc_breakout_lab(bars, fee=FEE_RATE, slippage=SLIPPAGE_RATE):
 
     split = int(len(bars) * 0.7)
     strategies = {
-        "donchian_20_10": (20, 10, None),
-        "donchian_55_20": (55, 20, None),
-        "donchian_20_10_sma200": (20, 10, 200),
-        "donchian_55_20_sma200": (55, 20, 200),
+        "donchian_20_10": (20, 10, None, None),
+        "donchian_55_20": (55, 20, None, None),
+        "donchian_20_10_sma200": (20, 10, 200, None),
+        "donchian_55_20_sma200": (55, 20, 200, None),
+        "donchian_55_20_atr3_trailing": (55, 20, None, 3.0),
     }
     results = {}
-    for name, (entry, exit_period, regime) in strategies.items():
-        signals = _turtle_signals(bars, entry, exit_period, regime)
-        warmup = max(entry, regime or 0)
+    for name, (entry, exit_period, regime, atr_multiple) in strategies.items():
+        signals = _turtle_signals(bars, entry, exit_period, regime, atr_multiple)
+        warmup = max(entry, regime or 0, 20 if atr_multiple is not None else 0)
         walk_start = split
         edges = [walk_start + ((len(bars) - walk_start) * k) // 3 for k in range(4)]
         windows = []
