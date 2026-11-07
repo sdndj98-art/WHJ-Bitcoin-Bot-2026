@@ -37,17 +37,30 @@ def fetch_closed_candles():
     closed_candles = candles[:-1]
     timestamps = []
     for candle in closed_candles:
-        if not isinstance(candle, (list, tuple)) or len(candle) < 5:
-            raise ValueError("Market data contains a malformed OHLC candle")
+        if not isinstance(candle, (list, tuple)) or len(candle) < 8:
+            raise ValueError("Market data contains a malformed OHLCV candle")
         try:
-            timestamp, close = int(candle[0]), float(candle[4])
+            raw_timestamp = float(candle[0])
+            if not math.isfinite(raw_timestamp) or not raw_timestamp.is_integer():
+                raise ValueError("Candle timestamp must be a finite whole number")
+            timestamp = int(raw_timestamp)
+            open_price, high, low, close = (float(candle[index]) for index in (1, 2, 3, 4))
+            volume = float(candle[6])
+            trade_count = int(candle[7])
         except (TypeError, ValueError, OverflowError) as exc:
-            raise ValueError("Market data contains an invalid timestamp or close") from exc
-        if timestamp < 0 or not math.isfinite(close) or close <= 0:
-            raise ValueError("Market data contains an invalid timestamp or close")
+            raise ValueError("Market data contains invalid OHLCV fields") from exc
+        numeric = (open_price, high, low, close, volume)
+        if timestamp < 0 or any(not math.isfinite(value) for value in numeric):
+            raise ValueError("Market data contains non-finite OHLCV values")
+        if min(open_price, high, low, close) <= 0 or volume < 0 or trade_count < 0:
+            raise ValueError("Market data contains non-positive prices or negative activity")
+        if high < max(open_price, close, low) or low > min(open_price, close, high):
+            raise ValueError("Market data contains inconsistent OHLC bounds")
         timestamps.append(timestamp)
     if timestamps != sorted(timestamps) or len(set(timestamps)) != len(timestamps):
         raise ValueError("Market candle timestamps are duplicated or out of order")
+    if any((current - previous) % 3600 for previous, current in zip(timestamps, timestamps[1:])):
+        raise ValueError("Hourly candle timestamps are not aligned to whole-hour intervals")
     return closed_candles
 
 
@@ -60,29 +73,47 @@ def assess_candle_quality(candles, now_timestamp=None):
     """Report hourly gaps and freshness; block paper execution on recent bad data."""
     if not candles:
         raise ValueError("Cannot assess an empty candle series")
-    timestamps = [int(candle[0]) for candle in candles]
+    timestamps = []
+    for candle in candles:
+        if not isinstance(candle, (list, tuple)) or len(candle) < 8:
+            raise ValueError("Candle quality check requires complete OHLCV rows")
+        raw_timestamp = float(candle[0])
+        if not math.isfinite(raw_timestamp) or not raw_timestamp.is_integer():
+            raise ValueError("Candle timestamps must be finite whole seconds")
+        timestamps.append(int(raw_timestamp))
+    if any(current <= previous for previous, current in zip(timestamps, timestamps[1:])):
+        raise ValueError("Candle timestamps must be strictly increasing")
     gaps_total = 0
     recent_gaps = 0
     recent_start = max(0, len(timestamps) - 51)
     for index, (previous, current) in enumerate(zip(timestamps, timestamps[1:])):
         delta = current - previous
+        if delta % 3600:
+            raise ValueError("Hourly candle intervals must be exact multiples of 3600 seconds")
         if delta > 3600:
-            missing = max(1, int(round(delta / 3600)) - 1)
+            missing = delta // 3600 - 1
             gaps_total += missing
             if index >= recent_start:
                 recent_gaps += missing
-        elif delta <= 0:
-            raise ValueError("Candle timestamps must be strictly increasing")
     now = datetime.now(timezone.utc).timestamp() if now_timestamp is None else float(now_timestamp)
+    if not math.isfinite(now):
+        raise ValueError("Current timestamp must be finite")
     age_minutes = (now - (timestamps[-1] + 3600)) / 60
     fresh = -1 <= age_minutes <= 120
+    reasons = []
+    if recent_gaps:
+        reasons.append("recent_hourly_gaps")
+    if not fresh:
+        reasons.append("stale_or_future_candle")
     return {
         "candle_count": len(candles),
         "missing_hour_gaps_total": gaps_total,
         "recent_missing_hour_gaps": recent_gaps,
         "latest_closed_candle_age_minutes": round(age_minutes, 2),
         "latest_candle_fresh": fresh,
-        "paper_execution_allowed": recent_gaps == 0 and fresh,
+        "quality_status": "HEALTHY" if not reasons else "BLOCKED",
+        "quality_block_reasons": reasons,
+        "paper_execution_allowed": not reasons,
     }
 
 
