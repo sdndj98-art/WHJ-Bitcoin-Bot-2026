@@ -3,7 +3,7 @@ import unittest
 from datetime import datetime, timezone
 from pathlib import Path
 
-from forward_paper_monitor import process_forward_accounts, validate_hourly_feed
+from forward_paper_monitor import assess_sleeve_health, process_forward_accounts, validate_hourly_feed
 
 
 class ForwardPaperMonitorTests(unittest.TestCase):
@@ -23,6 +23,45 @@ class ForwardPaperMonitorTests(unittest.TestCase):
                 "imputed": False,
             })
         return rows
+
+    def test_health_assessment_requires_forward_sample_and_never_promotes_live(self):
+        base = {
+            "completed_trades": 0,
+            "max_drawdown_pct": 0.0,
+            "profit_factor": 0.0,
+            "return_pct": 0.0,
+            "risk_pause_reasons": [],
+        }
+        self.assertEqual(
+            assess_sleeve_health(base)["status"], "INSUFFICIENT_FORWARD_SAMPLE"
+        )
+        strong = {
+            "completed_trades": 35,
+            "max_drawdown_pct": 4.0,
+            "profit_factor": 1.3,
+            "return_pct": 2.0,
+            "risk_pause_reasons": [],
+        }
+        result = assess_sleeve_health(strong)
+        self.assertEqual(result["status"], "CONTINUE_PAPER_REVIEW")
+        self.assertFalse(result["live_trading_eligible"])
+        deteriorated = dict(strong, return_pct=-0.1)
+        self.assertEqual(
+            assess_sleeve_health(deteriorated)["status"], "REVIEW_REQUIRED"
+        )
+        paused = dict(strong, risk_pause_reasons=["maximum_drawdown"])
+        self.assertEqual(assess_sleeve_health(paused)["status"], "RISK_PAUSED")
+
+    def test_health_assessment_rejects_invalid_metrics(self):
+        invalid = {
+            "completed_trades": True,
+            "max_drawdown_pct": 0.0,
+            "profit_factor": 1.0,
+            "return_pct": 1.0,
+            "risk_pause_reasons": [],
+        }
+        with self.assertRaisesRegex(ValueError, "trade count"):
+            assess_sleeve_health(invalid)
 
     def test_initialization_is_forward_only_and_idempotent(self):
         candles = self.make_candles()
