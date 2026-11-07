@@ -231,6 +231,7 @@ def scan_btc_market(candles, market_data_quality=None, volume_lookback=20,
         "close_position_pct": round(close_position * 100.0, 2),
         "confluence_score": score,
         "confluence_total": len(scored_checks),
+        "confluence_pct": round((score / len(scored_checks)) * 100.0, 2),
         "checks": checks,
         "reasons": reasons,
         "paper_candidate_only": True,
@@ -327,6 +328,32 @@ def scan_btc_multi_timeframe(candles, market_data_quality=None):
     candidate_count = sum(
         item.get("status") == "PAPER_CANDIDATE" for item in results.values()
     )
+    evaluated = [
+        item for item in results.values()
+        if isinstance(item.get("confluence_score"), int)
+        and isinstance(item.get("confluence_total"), int)
+        and item["confluence_total"] > 0
+    ]
+    average_confluence_pct = (
+        sum(item["confluence_score"] / item["confluence_total"] * 100.0
+            for item in evaluated) / len(evaluated)
+        if evaluated else 0.0
+    )
+    strongest_timeframe = max(
+        evaluated,
+        key=lambda item: (
+            item["confluence_score"] / item["confluence_total"],
+            item["timeframe"],
+        ),
+    )["timeframe"] if evaluated else None
+    trend_aligned_count = sum(
+        item.get("checks", {}).get("trend_alignment") is True
+        for item in evaluated
+    )
+    breakout_quality_count = sum(
+        item.get("checks", {}).get("breakout_quality_confirmed") is True
+        for item in evaluated
+    )
     return {
         "mode": "COMPLETED_CANDLE_MULTI_TIMEFRAME_DIAGNOSTICS",
         "timeframes": results,
@@ -335,6 +362,11 @@ def scan_btc_multi_timeframe(candles, market_data_quality=None):
             if candidate_count == 3 else "NO_FULL_TIMEFRAME_CONSENSUS",
             "candidate_timeframes": candidate_count,
             "required_timeframes": 3,
+            "evaluated_timeframes": len(evaluated),
+            "average_confluence_pct": round(average_confluence_pct, 2),
+            "strongest_timeframe": strongest_timeframe,
+            "trend_aligned_timeframes": trend_aligned_count,
+            "breakout_quality_timeframes": breakout_quality_count,
             "paper_review_only": True,
             "live_execution_enabled": False,
         },
