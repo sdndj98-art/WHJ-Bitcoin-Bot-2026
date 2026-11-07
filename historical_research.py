@@ -708,16 +708,16 @@ def assess_strategy_qualification(metrics, stress_metrics, min_oos_trades=30,
         "minimum_profit_factor": profit_factor is not None and float(profit_factor) >= min_profit_factor,
         "maximum_oos_drawdown": drawdown <= max_drawdown_pct,
         "all_walk_forward_windows_nonnegative": bool(windows) and all(value >= 0 for value in windows),
-        # Benchmark gates are enforced in the production research pipeline. The
-        # optional form preserves compatibility for isolated unit-level callers.
+        # Missing benchmark evidence is a hard failure: no caller may
+        # accidentally promote a candidate by omitting the comparison.
         "outperform_buy_and_hold_oos": (
-            benchmark_metrics is None
-            or float(oos.get("return_pct", -float("inf")))
+            benchmark_metrics is not None
+            and float(oos.get("return_pct", -float("inf")))
             > float(benchmark_metrics.get("out_of_sample", {}).get("return_pct", float("inf")))
         ),
         "outperform_buy_and_hold_stress": (
-            stress_benchmark_metrics is None
-            or float(stress_oos.get("return_pct", -float("inf")))
+            stress_benchmark_metrics is not None
+            and float(stress_oos.get("return_pct", -float("inf")))
             > float(stress_benchmark_metrics.get("out_of_sample", {}).get("return_pct", float("inf")))
         ),
     }
