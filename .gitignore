@@ -1,0 +1,16 @@
+# Python bytecode and test caches
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Local Python environments
+.venv/
+venv/
+env/
+
+# Local credentials (keep example templates trackable)
+.env
+.env.*
+!.env.example
