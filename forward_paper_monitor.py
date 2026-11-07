@@ -118,11 +118,40 @@ def assess_sleeve_health(account, min_closed_trades=30, review_drawdown_pct=8.0)
         else (None if rolling_profit > 0 else 0.0)
     )
     rolling_net = round(sum(pnl_values), 4)
+    initial_cash = account.get("initial_cash_usd")
+    if initial_cash is not None and (
+        isinstance(initial_cash, bool)
+        or not isinstance(initial_cash, (int, float))
+        or not math.isfinite(initial_cash)
+        or initial_cash <= 0
+    ):
+        raise ValueError("Initial paper capital for rolling drawdown is invalid")
+    rolling_max_drawdown_pct = None
+    if initial_cash is not None and pnl_values:
+        cumulative_pnl = 0.0
+        peak_cumulative_pnl = 0.0
+        worst_peak_to_trough = 0.0
+        for pnl in pnl_values:
+            cumulative_pnl += pnl
+            peak_cumulative_pnl = max(peak_cumulative_pnl, cumulative_pnl)
+            worst_peak_to_trough = max(
+                worst_peak_to_trough, peak_cumulative_pnl - cumulative_pnl
+            )
+        rolling_max_drawdown_pct = round(
+            worst_peak_to_trough / float(initial_cash) * 100.0, 4
+        )
     rolling_status = "INSUFFICIENT_ROLLING_SAMPLE"
     if rolling_count >= 10:
         rolling_status = (
             "ROLLING_REVIEW_REQUIRED"
-            if rolling_net <= 0 or (rolling_pf is not None and rolling_pf < 1.0)
+            if (
+                rolling_net <= 0
+                or (rolling_pf is not None and rolling_pf < 1.0)
+                or (
+                    rolling_max_drawdown_pct is not None
+                    and rolling_max_drawdown_pct >= review_drawdown_pct
+                )
+            )
             else "ROLLING_STABLE"
         )
 
@@ -154,6 +183,7 @@ def assess_sleeve_health(account, min_closed_trades=30, review_drawdown_pct=8.0)
         "rolling_window_trades": rolling_count,
         "rolling_net_pnl_usd": rolling_net,
         "rolling_profit_factor": rolling_pf,
+        "rolling_max_drawdown_pct": rolling_max_drawdown_pct,
         "rolling_status": rolling_status,
         "minimum_closed_trades": min_closed_trades,
         "review_drawdown_threshold_pct": review_drawdown_pct,
