@@ -38,7 +38,7 @@ jobs:
           path: |
             paper_daily_sma20_50.json
             paper_4h_ema50_200.json
-          key: whj-mtf-paper-v1-${{ github.run_id }}-${{ github.run_attempt }}
+          key: whj-mtf-paper-v2-${{ github.run_id }}-${{ github.run_attempt }}
           restore-keys: |
             whj-mtf-paper-v1-
 
