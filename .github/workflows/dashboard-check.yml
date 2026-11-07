@@ -1,0 +1,49 @@
+name: WHJ Dashboard Validation
+on:
+  push:
+    branches: [research/cost-sensitivity]
+    paths:
+      - "web/**"
+      - ".github/workflows/whj.yml"
+      - ".github/workflows/dashboard-check.yml"
+  pull_request:
+    branches: [main]
+    paths:
+      - "web/**"
+      - ".github/workflows/whj.yml"
+      - ".github/workflows/dashboard-check.yml"
+      - "tests/**"
+      - "*.py"
+permissions:
+  contents: read
+jobs:
+  dashboard-validation:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Run project regression tests
+        run: python -m unittest discover -s tests -v
+      - name: Validate dashboard JavaScript syntax
+        run: |
+          python - <<'PY'
+          import re
+          from pathlib import Path
+          source = Path("web/index.html").read_text(encoding="utf-8")
+          match = re.search(r"<script>(.*?)</script>", source, re.S)
+          if not match:
+              raise SystemExit("Dashboard script block is missing")
+          Path("/tmp/dashboard.js").write_text(match.group(1), encoding="utf-8")
+          if 'dir="rtl"' not in source or 'report.json' not in source:
+              raise SystemExit("Dashboard must be Arabic RTL and load the live report")
+          print("Dashboard HTML checks passed")
+          PY
+          node --check /tmp/dashboard.js
