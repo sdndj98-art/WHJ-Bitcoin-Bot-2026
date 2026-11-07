@@ -74,6 +74,10 @@ class ForwardPaperMonitorTests(unittest.TestCase):
             self.assertEqual(first["status"], "PAPER_MONITORING")
             self.assertEqual(set(first["sleeves_summary"]), {"4h", "6h"})
             for timeframe in ("4h", "6h"):
+                health = first["sleeves_summary"][timeframe]["health_assessment"]
+                self.assertEqual(health["status"], "INSUFFICIENT_FORWARD_SAMPLE")
+                self.assertFalse(health["live_trading_eligible"])
+            for timeframe in ("4h", "6h"):
                 account = first["sleeves"][timeframe]["account"]
                 self.assertEqual(account["processed_new_candles"], 0)
                 self.assertEqual(account["return_pct"], 0.0)
