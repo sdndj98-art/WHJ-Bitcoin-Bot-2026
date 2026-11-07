@@ -73,4 +73,20 @@ assert.match(getElement("forwardRows").innerHTML, /\$2\.50/);
 assert.match(getElement("forwardRows").innerHTML, /4\.25%/);
 assert.equal((getElement("forwardRows").innerHTML.match(/<tr>/g) || []).length, 5);
 
+
+const pauseMatch = html.match(/function paperRiskPauseLabel\(a\)\{[\s\S]*?\n\}/);
+assert.ok(pauseMatch, "Could not locate paper risk pause label helper");
+const paperRiskPauseLabel = vm.runInNewContext(`(${pauseMatch[0]})`);
+assert.equal(paperRiskPauseLabel({}), "محاكاة");
+assert.equal(paperRiskPauseLabel({ paused_for_drawdown: true }), "متوقف: تراجع الحساب");
+assert.equal(
+  paperRiskPauseLabel({ daily_loss_paused: true, paused_for_loss_streak: true, paused_for_strategy_health: true }),
+  "متوقف: الخسارة اليومية، خسائر متتالية، تراجع صحة الاستراتيجية"
+);
+assert.equal(
+  paperRiskPauseLabel({ paused_for_drawdown: true, daily_loss_paused: true, paused_for_loss_streak: true, paused_for_strategy_health: true }),
+  "متوقف: تراجع الحساب، الخسارة اليومية، خسائر متتالية، تراجع صحة الاستراتيجية"
+);
+assert.match(html, /paperRiskPauseLabel\(x\)/, "Portfolio table must use the complete risk-pause label");
+
 console.log("Dashboard forward-report validation and rendering tests passed (five sleeves, aggregates, and runtime rendering).");
