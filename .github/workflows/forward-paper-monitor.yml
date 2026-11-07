@@ -3,7 +3,7 @@ name: WHJ Forward Paper Monitor
 on:
   workflow_dispatch:
   schedule:
-    - cron: "17 */4 * * *"
+    - cron: "17 * * * *"
   push:
     branches: [main, research/regime-aware-consensus-ensemble]
     paths:

@@ -1,4 +1,4 @@
-"""Frequent, forward-only 4h/6h paper monitoring. Never places live orders."""
+"""Hourly, forward-only multi-timeframe paper monitoring. Never places live orders."""
 import json
 import sys
 from datetime import datetime, timezone
