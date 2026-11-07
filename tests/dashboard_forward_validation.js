@@ -46,9 +46,9 @@ missingOneHourTrade.sleeves_summary["1h_ema_trend"].completed_trades = 1;
 assert.throws(() => validate(missingOneHourTrade), /إجماليات الحسابات/);
 
 // Execute the actual renderer with a minimal DOM. This catches runtime-only scope errors.
-const renderMatch = html.match(/function renderForward\\(x\\)\\{[\\s\\S]*?\\n\\}\\n\\$\\("forwardFile"\\)/);
+const renderMatch = html.match(/function renderForward\(x\)\{[\s\S]*?\n\}\n\$\("forwardFile"\)/);
 assert.ok(renderMatch, "Could not locate renderForward in dashboard");
-const rendererSource = renderMatch[0].replace(/\\n\\$\\("forwardFile"\\)$/, "");
+const rendererSource = renderMatch[0].replace(/\n\$\("forwardFile"\)$/, "");
 const elements = new Map();
 const getElement = (id) => {
   if (!elements.has(id)) elements.set(id, { textContent: "", className: "", innerHTML: "" });
@@ -68,7 +68,7 @@ for (const key of keys) {
 }
 render(renderableReport);
 assert.match(getElement("forwardRows").innerHTML, /1h · SMA Trend/);
-assert.match(getElement("forwardRows").innerHTML, /\$2\\.50/);
+assert.match(getElement("forwardRows").innerHTML, /\$2\.50/);
 assert.equal((getElement("forwardRows").innerHTML.match(/<tr>/g) || []).length, 5);
 
 console.log("Dashboard forward-report validation and rendering tests passed (five sleeves, aggregates, and runtime rendering).");
