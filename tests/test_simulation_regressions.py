@@ -1,7 +1,11 @@
 """Regression tests for paper execution costs and strategy comparison."""
+import json
 import math
+import tempfile
 import unittest
+from pathlib import Path
 
+from paper_account import update_paper_account
 from paper_trading import run_backtest
 from strategy_lab import run_strategy_lab
 
@@ -40,6 +44,50 @@ class StrategyLabTests(unittest.TestCase):
         self.assertTrue(report["open_position"])
         self.assertTrue(report["estimated_liquidation_value"])
         self.assertLess(report["final_equity_usd"], 1000.0 * prices[-1] / prices[50])
+
+
+class PersistentPaperAccountTests(unittest.TestCase):
+    def make_candles(self, prices):
+        return [[i * 3600, "0", "0", "0", str(price)] for i, price in enumerate(prices)]
+
+    def test_state_persists_and_reprocessing_is_idempotent(self):
+        with tempfile.TemporaryDirectory() as folder:
+            state_path = str(Path(folder) / "paper_state.json")
+            candles = self.make_candles([100.0 + i for i in range(55)])
+            first = update_paper_account(candles, state_path=state_path)
+            second = update_paper_account(candles, state_path=state_path)
+            self.assertEqual(first["processed_new_candles"], 55)
+            self.assertEqual(second["processed_new_candles"], 0)
+            self.assertEqual(first["equity_after_estimated_exit_costs_usd"],
+                             second["equity_after_estimated_exit_costs_usd"])
+            self.assertTrue(Path(state_path).exists())
+
+    def test_drawdown_guard_pauses_and_forces_exit(self):
+        with tempfile.TemporaryDirectory() as folder:
+            state_path = str(Path(folder) / "paper_state.json")
+            rising = self.make_candles([100.0 + i for i in range(55)])
+            update_paper_account(rising, state_path=state_path)
+            falling = self.make_candles([100.0 + i for i in range(55)] + [80.0, 79.0])
+            result = update_paper_account(falling, state_path=state_path)
+            self.assertTrue(result["paused_for_drawdown"])
+            self.assertFalse(result["open_position"])
+            self.assertGreaterEqual(result["completed_trades"], 1)
+
+    def test_corrupt_state_is_not_silently_reset(self):
+        with tempfile.TemporaryDirectory() as folder:
+            state_path = Path(folder) / "paper_state.json"
+            state_path.write_text("{broken", encoding="utf-8")
+            with self.assertRaises(ValueError):
+                update_paper_account(self.make_candles([100.0 + i for i in range(55)]),
+                                     state_path=str(state_path))
+
+    def test_rejects_duplicate_or_unsorted_timestamps(self):
+        with tempfile.TemporaryDirectory() as folder:
+            state_path = str(Path(folder) / "paper_state.json")
+            candles = self.make_candles([100.0 + i for i in range(55)])
+            candles[-1][0] = candles[-2][0]
+            with self.assertRaises(ValueError):
+                update_paper_account(candles, state_path=state_path)
 
 
 if __name__ == "__main__":
