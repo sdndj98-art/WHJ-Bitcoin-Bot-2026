@@ -691,8 +691,8 @@ def main():
             ),
         }
     stress_cost_research = {}
-    for label in ("4h", "1d"):
-        hours = 4 if label == "4h" else 24
+    for label in ("4h", "6h", "1d"):
+        hours = {"4h": 4, "6h": 6, "1d": 24}[label]
         aggregated = aggregate_candles(candles, hours)
         stress_cost_research[label] = run_strategy_lab(
             [bar["close"] for bar in aggregated],
