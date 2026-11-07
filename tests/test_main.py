@@ -170,6 +170,25 @@ class ReportingTests(unittest.TestCase):
         self.assertIn("Max drawdown (%)", page)
         self.assertNotIn("<script>alert(1)</script>", page)
 
+    def test_dashboard_renders_nonempty_strategy_lab_rows(self):
+        report = self.sample_report()
+        report["strategy_lab"] = {
+            "strategies": {
+                "ema_trend": {
+                    "out_of_sample": {
+                        "return_pct": 2.5,
+                        "max_drawdown_pct": 1.2,
+                        "closed_trades": 8,
+                    },
+                    "worst_window_return_pct": -0.4,
+                }
+            }
+        }
+        page = build_dashboard(report)
+        self.assertIn("ema_trend", page)
+        self.assertIn("2.5", page)
+        self.assertIn("-0.4", page)
+
     def test_telegram_message_contains_signal_and_paper_equity(self):
         message = format_message(self.sample_report())
         self.assertIn("Signal: HOLD", message)
