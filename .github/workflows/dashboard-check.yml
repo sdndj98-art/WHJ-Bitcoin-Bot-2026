@@ -47,3 +47,4 @@ jobs:
           print("Dashboard HTML checks passed")
           PY
           node --check /tmp/dashboard.js
+          node tests/dashboard_forward_validation.js
