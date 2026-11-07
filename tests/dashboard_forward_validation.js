@@ -70,7 +70,7 @@ for (const key of keys) {
 render(renderableReport);
 assert.match(getElement("forwardRows").innerHTML, /1h · SMA Trend/);
 assert.match(getElement("forwardRows").innerHTML, /\$2\.50/);
-assert.match(getElement("forwardRows").innerHTML, /4\\.25%/);
+assert.match(getElement("forwardRows").innerHTML, /4\.25%/);
 assert.equal((getElement("forwardRows").innerHTML.match(/<tr>/g) || []).length, 5);
 
 console.log("Dashboard forward-report validation and rendering tests passed (five sleeves, aggregates, and runtime rendering).");
