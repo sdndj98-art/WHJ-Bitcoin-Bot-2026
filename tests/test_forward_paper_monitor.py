@@ -84,6 +84,8 @@ class ForwardPaperMonitorTests(unittest.TestCase):
             with self.subTest(field=field):
                 candles = self.make_candles(48)
                 candles[-1][field] = value
+                if field == "low":
+                    candles[-1]["high"] = 1_000_000.0
                 now = candles[-1]["timestamp"] / 1000 + 3600 + 60
                 with self.assertRaisesRegex(ValueError, message):
                     validate_hourly_feed(candles, now)
