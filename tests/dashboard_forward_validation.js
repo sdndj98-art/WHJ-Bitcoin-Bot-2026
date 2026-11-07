@@ -65,6 +65,7 @@ const render = vm.runInNewContext(`${rendererSource}; renderForward`, context);
 const renderableReport = structuredClone(report);
 for (const key of keys) {
   renderableReport.sleeves_summary[key].health_assessment.rolling_net_pnl_usd = 2.5;
+  renderableReport.sleeves_summary[key].health_assessment.rolling_max_drawdown_pct = 4.25;
 }
 render(renderableReport);
 assert.match(getElement("forwardRows").innerHTML, /1h · SMA Trend/);
