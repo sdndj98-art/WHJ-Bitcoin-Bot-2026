@@ -5,7 +5,7 @@ on:
   schedule:
     - cron: "37 6 * * *"
   push:
-    branches: [main, build/bitcoin-satoshi-bot]
+    branches: [main, build/bitcoin-satoshi-bot, research/cost-sensitivity]
     paths:
       - "historical_research.py"
       - "strategy_lab.py"
