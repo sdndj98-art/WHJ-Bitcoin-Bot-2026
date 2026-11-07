@@ -679,19 +679,29 @@ def run_long_short_lab(bars, fee=FEE_RATE, slippage=SLIPPAGE_RATE,
 
 
 def assess_strategy_qualification(metrics, stress_metrics, min_oos_trades=30,
-                                 min_profit_factor=1.2, max_drawdown_pct=10.0):
+                                 min_profit_factor=1.2, max_drawdown_pct=10.0,
+                                 min_window_trades=5):
     """Apply fixed, conservative promotion gates; passing is necessary, never sufficient."""
     oos = metrics.get("out_of_sample", {})
     stress_oos = stress_metrics.get("out_of_sample", {})
     trades = int(oos.get("closed_trades", 0))
     profit_factor = oos.get("profit_factor")
     drawdown = float(oos.get("max_drawdown_pct", float("inf")))
+    walk_forward = metrics.get("walk_forward_windows", [])
     windows = [
         float(item["metrics"]["return_pct"])
-        for item in metrics.get("walk_forward_windows", [])
+        for item in walk_forward
+    ]
+    window_trade_counts = [
+        int(item["metrics"].get("closed_trades", 0))
+        for item in walk_forward
     ]
     checks = {
         "minimum_oos_trades": trades >= min_oos_trades,
+        "minimum_trades_each_walk_forward_window": (
+            len(walk_forward) == 3
+            and all(count >= min_window_trades for count in window_trade_counts)
+        ),
         "positive_oos_return": float(oos.get("return_pct", -float("inf"))) > 0,
         "positive_stress_oos_return": float(stress_oos.get("return_pct", -float("inf"))) > 0,
         "minimum_profit_factor": profit_factor is not None and float(profit_factor) >= min_profit_factor,
@@ -704,6 +714,7 @@ def assess_strategy_qualification(metrics, stress_metrics, min_oos_trades=30,
         "failed_checks": [name for name, passed in checks.items() if not passed],
         "thresholds": {
             "minimum_oos_trades": min_oos_trades,
+            "minimum_trades_each_walk_forward_window": min_window_trades,
             "minimum_profit_factor": min_profit_factor,
             "maximum_oos_drawdown_pct": max_drawdown_pct,
             "minimum_oos_and_stress_return_pct_exclusive": 0,
@@ -730,6 +741,7 @@ def build_qualification_markdown(result):
         "- Mode: historical research and simulated paper review only", "",
         "## Fixed promotion gates",
         f"- At least {policy['minimum_oos_trades']} out-of-sample closed trades",
+        f"- At least {policy.get('minimum_trades_each_walk_forward_window', 5)} closed trades in each of three walk-forward windows",
         "- Positive out-of-sample return and positive elevated-cost stress return",
         f"- Profit factor at least {policy['minimum_profit_factor']}",
         f"- Out-of-sample maximum drawdown no greater than {policy['maximum_oos_drawdown_pct']}%",
@@ -920,6 +932,7 @@ def main():
         "extended_lab_strategy_qualification": extended_lab_qualification,
         "strategy_qualification_policy": {
             "minimum_oos_trades": 30,
+            "minimum_trades_each_walk_forward_window": 5,
             "minimum_profit_factor": 1.2,
             "maximum_oos_drawdown_pct": 10.0,
             "positive_oos_and_stress_required": True,
