@@ -4,7 +4,7 @@ import unittest
 from datetime import datetime, timezone
 from unittest.mock import patch
 
-from historical_research import (INTERVAL_MS, aggregate_candles, load_two_year_candles, run_forward_paper_accounts, run_ohlc_breakout_lab, run_long_short_lab, run_daily_regime_filter_lab, run_multi_timeframe_ensemble_lab, _atr_series, _regime_switching_atr_signals, _rsi_series, _simulate_ohlc, assess_strategy_qualification, assess_research_lab_qualification, build_qualification_markdown, summarize_qualification, _turtle_signals)
+from historical_research import (INTERVAL_MS, aggregate_candles, load_two_year_candles, run_forward_paper_accounts, run_ohlc_breakout_lab, run_long_short_lab, run_daily_regime_filter_lab, run_multi_timeframe_ensemble_lab, _atr_series, _regime_switching_atr_signals, _rsi_series, _simulate_equal_weight_sleeves, _simulate_ohlc, assess_strategy_qualification, assess_research_lab_qualification, build_qualification_markdown, summarize_qualification, _turtle_signals)
 
 
 class HistoricalResearchTests(unittest.TestCase):
@@ -295,6 +295,23 @@ class HistoricalResearchTests(unittest.TestCase):
         self.assertEqual(len(candidate["walk_forward_windows"]), 3)
         self.assertTrue(math.isfinite(candidate["out_of_sample"]["return_pct"]))
         self.assertIn("buy_and_hold_25pct", result["strategies"])
+        portfolio = result["strategies"]["ema50_200_4h_6h_50_50_portfolio"]
+        self.assertEqual(len(portfolio["walk_forward_windows"]), 3)
+        self.assertEqual(portfolio["out_of_sample"]["sleeve_count"], 2)
+
+    def test_equal_weight_sleeves_match_same_total_initial_exposure(self):
+        bars = [
+            {"open": 100.0, "high": 101.0, "low": 99.0, "close": 100.0, "volume": 1.0}
+            for _ in range(20)
+        ]
+        signals = [True] * len(bars)
+        single = _simulate_ohlc(bars, signals, 1, len(bars), 0.01, 0.02)
+        combined = _simulate_equal_weight_sleeves(
+            bars, [signals, signals], 1, len(bars), 0.01, 0.02
+        )
+        self.assertAlmostEqual(combined["final_equity_usd"], single["final_equity_usd"], places=2)
+        self.assertAlmostEqual(combined["max_drawdown_pct"], single["max_drawdown_pct"], places=2)
+        self.assertEqual(combined["sleeve_count"], 2)
 
     def test_daily_regime_filter_uses_complete_daily_history(self):
         candles = []
