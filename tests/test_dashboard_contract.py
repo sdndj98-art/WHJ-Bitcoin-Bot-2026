@@ -47,6 +47,8 @@ class DashboardContractTests(unittest.TestCase):
         self.assertIn("تقييم الاستراتيجية", self.source)
         self.assertIn("CONTINUE_PAPER_REVIEW", self.source)
         self.assertIn("REVIEW_REQUIRED", self.source)
+        self.assertIn("ROLLING_REVIEW_REQUIRED", self.source)
+        self.assertIn("صافي آخر الصفقات", self.source)
 
     def test_forward_report_is_paper_only_and_consistency_checked(self):
         self.assertIn("FORWARD_ONLY_PAPER_NO_LIVE_ORDERS", self.source)
