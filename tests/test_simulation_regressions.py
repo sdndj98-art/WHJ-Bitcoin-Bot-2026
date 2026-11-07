@@ -61,6 +61,9 @@ class PersistentPaperAccountTests(unittest.TestCase):
             self.assertEqual(first["equity_after_estimated_exit_costs_usd"],
                              second["equity_after_estimated_exit_costs_usd"])
             self.assertTrue(Path(state_path).exists())
+            self.assertIn("max_drawdown_pct", first)
+            self.assertIn("win_rate_pct", first)
+            self.assertTrue(second["state_persisted"])
 
     def test_drawdown_guard_pauses_and_forces_exit(self):
         with tempfile.TemporaryDirectory() as folder:
@@ -70,6 +73,7 @@ class PersistentPaperAccountTests(unittest.TestCase):
             falling = self.make_candles([100.0 + i for i in range(55)] + [80.0, 79.0])
             result = update_paper_account(falling, state_path=state_path)
             self.assertTrue(result["paused_for_drawdown"])
+            self.assertGreaterEqual(result["max_drawdown_pct"], 10.0)
             self.assertFalse(result["open_position"])
             self.assertGreaterEqual(result["completed_trades"], 1)
 
