@@ -51,12 +51,6 @@ jobs:
           path: paper_account_state.json
           key: whj-paper-account-v1-${{ github.run_id }}-${{ github.run_attempt }}
 
-      - name: Send optional Telegram report
-        env:
-          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
-        run: python notify_telegram.py
-
       - name: Save analysis report and dashboard
         if: always()
         uses: actions/upload-artifact@v4
