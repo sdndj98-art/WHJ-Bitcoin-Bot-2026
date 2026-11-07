@@ -93,10 +93,10 @@ def scan_btc_market(candles, market_data_quality=None, volume_lookback=20,
     timestamps = [item[0] for item in normalized]
     if any(current <= previous for previous, current in zip(timestamps, timestamps[1:])):
         raise ValueError("Scanner candle timestamps must be strictly increasing")
-    if any(timestamp % 3600 != 0 for timestamp in timestamps):
-        raise ValueError("Scanner hourly candle timestamps must align to UTC hour boundaries")
     if any(current - previous != 3600 for previous, current in zip(timestamps, timestamps[1:])):
         raise ValueError("Scanner requires contiguous completed hourly candles")
+    if any(timestamp % 3600 != 0 for timestamp in timestamps):
+        raise ValueError("Scanner hourly candle timestamps must align to UTC hour boundaries")
 
     closes = [item[4] for item in normalized]
     previous = normalized[:-1]
