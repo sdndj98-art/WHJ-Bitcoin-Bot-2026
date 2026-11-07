@@ -124,7 +124,7 @@ def update_paper_account(candles, state_path="paper_account_state.json",
                     state["btc"] = units
                     state["entry_cost"] = allocation
                     state["fees_paid"] += fee
-            elif want_flat and state["btc"] > 0:
+            elif (want_flat or daily_loss_hit or state.get("paused_for_drawdown", False)) and state["btc"] > 0:
                 fill = close * (1 - slippage_rate)
                 gross = state["btc"] * fill
                 fee = gross * fee_rate
