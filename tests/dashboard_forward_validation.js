@@ -92,6 +92,13 @@ const missingHealth = structuredClone(report);
 delete missingHealth.sleeves_summary["1h_rsi14_mean_reversion"].health_assessment;
 assert.throws(() => validate(missingHealth), /بيانات الاستراتيجيات الخمس/);
 
+const incorrectPortfolioStatus = structuredClone(report);
+incorrectPortfolioStatus.status = "REVIEW_REQUIRED";
+assert.throws(() => validate(incorrectPortfolioStatus), /حالة المحفظة لا تطابق حالات الاستراتيجيات الخمس/);
+const incorrectPausedStatus = structuredClone(report);
+incorrectPausedStatus.sleeves_summary["4h"].health_assessment.status = "RISK_PAUSED";
+assert.throws(() => validate(incorrectPausedStatus), /حالة المحفظة لا تطابق حالات الاستراتيجيات الخمس/);
+
 // Execute the actual renderer with a minimal DOM. This catches runtime-only scope errors.
 const renderMatch = html.match(/function renderForward\(x\)\{[\s\S]*?\n\}\n\$\("forwardFile"\)/);
 assert.ok(renderMatch, "Could not locate renderForward in dashboard");
