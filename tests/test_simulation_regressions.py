@@ -88,6 +88,19 @@ class PersistentPaperAccountTests(unittest.TestCase):
                 self.assertEqual(account["strategy"], name)
                 self.assertTrue(account["state_persisted"])
 
+    def test_sma200_strategy_retains_200_candle_warmup(self):
+        with tempfile.TemporaryDirectory() as folder:
+            candles = self.make_candles([100.0 + (i % 250) * 0.1 for i in range(260)])
+            result = update_paper_account(
+                candles,
+                state_path=str(Path(folder) / "sma200.json"),
+                strategy="sma200_regime",
+            )
+            saved = json.loads((Path(folder) / "sma200.json").read_text(encoding="utf-8"))
+            self.assertEqual(result["processed_new_candles"], 260)
+            self.assertEqual(len(saved["recent_closes"]), 200)
+            self.assertEqual(result["strategy"], "sma200_regime")
+
     def test_corrupt_state_is_not_silently_reset(self):
         with tempfile.TemporaryDirectory() as folder:
             state_path = Path(folder) / "paper_state.json"
