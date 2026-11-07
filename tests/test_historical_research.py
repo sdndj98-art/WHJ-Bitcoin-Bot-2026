@@ -217,6 +217,47 @@ class HistoricalResearchTests(unittest.TestCase):
             for window in result["strategies"]["ema50_200_with_daily_sma200"]["walk_forward_windows"]
         ))
 
+    def test_long_short_drawdown_includes_exit_costs_for_long_and_short(self):
+        from historical_research import _simulate_long_short
+
+        bars = [
+            {"close": 100.0},
+            {"close": 100.0},
+            {"close": 100.0},
+        ]
+        fee = 0.01
+        slippage = 0.02
+        for direction in (1, -1):
+            result = _simulate_long_short(
+                bars, [direction, direction, direction], 1, 3,
+                fee, slippage, funding_rate_per_8h=0.0, bar_hours=24,
+            )
+            entry_fill = 100.0 * (1 - direction * slippage)
+            units = direction * 250.0 / entry_fill
+            entry_fee = 250.0 * fee
+            cash = 1000.0 - units * entry_fill - entry_fee
+            exit_fill = 100.0 * (1 + direction * slippage)
+            exit_fee = abs(units * exit_fill) * fee
+            net_equity = cash + units * exit_fill - exit_fee
+            expected_drawdown = (1000.0 - net_equity) / 1000.0 * 100.0
+            self.assertAlmostEqual(
+                result["max_drawdown_pct"], round(expected_drawdown, 2), places=2
+            )
+
+    def test_ohlc_benchmark_drawdown_includes_exit_costs(self):
+        bars = [
+            {"open": 100.0, "high": 101.0, "low": 99.0, "close": 100.0, "volume": 1.0}
+            for _ in range(600)
+        ]
+        fee = 0.01
+        slippage = 0.02
+        result = run_ohlc_breakout_lab(bars, fee=fee, slippage=slippage)
+        benchmark = result["strategies"]["buy_and_hold_25pct"]["out_of_sample"]
+        units = (250.0 * (1 - fee)) / (100.0 * (1 + slippage))
+        liquidation = units * 100.0 * (1 - slippage) * (1 - fee)
+        expected_drawdown = (1000.0 - (750.0 + liquidation)) / 1000.0 * 100.0
+        self.assertAlmostEqual(benchmark["max_drawdown_pct"], expected_drawdown, places=2)
+
     def test_long_short_research_charges_funding_and_matches_benchmark(self):
         bars = []
         for index in range(600):
