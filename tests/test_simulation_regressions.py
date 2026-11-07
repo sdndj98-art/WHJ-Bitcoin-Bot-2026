@@ -22,6 +22,10 @@ class StrategyLabTests(unittest.TestCase):
         for name in ("sma_trend", "ema_trend", "rsi_momentum", "sma200_regime", "ema50_200_regime", "sma200_filter", "ema200_filter", "sma50_200_cross", "donchian_55_20"):
             strategy = report["strategies"][name]
             self.assertEqual(len(strategy["walk_forward_windows"]), 3)
+            self.assertTrue(all(
+                window["start_index"] >= report["split_index"]
+                for window in strategy["walk_forward_windows"]
+            ))
             self.assertIsNotNone(strategy["worst_window_return_pct"])
         self.assertLess(benchmark["final_equity_usd"], 1000.0 * prices[-1] / prices[int(len(prices) * 0.7)])
 
