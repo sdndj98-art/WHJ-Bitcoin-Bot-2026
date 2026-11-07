@@ -1,0 +1,49 @@
+name: Termux Repository Audit
+
+on:
+  push:
+    branches:
+      - "**"
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: termux-audit-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  python-audit:
+    name: Python syntax and unit tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Show Python version
+        run: python --version
+
+      - name: Compile all tracked Python files
+        shell: bash
+        run: |
+          set -euo pipefail
+          files="$(git ls-files '*.py')"
+          if [ -z "$files" ]; then
+            echo "No tracked Python files found."
+            exit 1
+          fi
+          git ls-files -z '*.py' | xargs -0 -r python -m py_compile
+
+      - name: Run unit tests
+        run: python -m unittest discover -s tests -v
+
+      - name: Check patch whitespace
+        run: git diff --check
