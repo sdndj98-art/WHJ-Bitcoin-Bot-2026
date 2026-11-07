@@ -275,6 +275,8 @@ class HistoricalResearchTests(unittest.TestCase):
         self.assertIn("sma200_long_short", result["strategies"])
         self.assertIn("sma200_slope_20_long_short", result["strategies"])
         self.assertIn("ema50_200_slope_20_long_short", result["strategies"])
+        self.assertIn("sma200_slope_50_long_short", result["strategies"])
+        self.assertIn("donchian_20_10_long_short", result["strategies"])
         self.assertIn("buy_and_hold_25pct", result["strategies"])
         self.assertTrue(all(
             window["start_index"] >= result["split_index"]
