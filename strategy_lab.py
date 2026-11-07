@@ -80,10 +80,10 @@ def _signals(prices):
                  and price > sma200[i])
         )
         result["ema50_200_regime"].append(
-            bool(ema50[i] > ema200[i] and price > ema200[i])
+            bool(i >= 199 and ema50[i] > ema200[i] and price > ema200[i])
         )
         result["sma200_filter"].append(bool(sma200[i] is not None and price > sma200[i]))
-        result["ema200_filter"].append(bool(price > ema200[i]))
+        result["ema200_filter"].append(bool(i >= 199 and price > ema200[i]))
         result["sma50_200_cross"].append(
             bool(sma50[i] is not None and sma200[i] is not None and sma50[i] > sma200[i])
         )
