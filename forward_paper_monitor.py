@@ -99,6 +99,8 @@ def assess_sleeve_health(account, min_closed_trades=30, review_drawdown_pct=8.0)
     for name, value in (("max drawdown", drawdown), ("return", returns)):
         if isinstance(value, bool) or not isinstance(value, (int, float)) or not math.isfinite(value):
             raise ValueError(name + " metric is invalid")
+    if not 0 <= float(drawdown) <= 100:
+        raise ValueError("Max drawdown metric must be between 0 and 100")
     if profit_factor is not None and (
         isinstance(profit_factor, bool)
         or not isinstance(profit_factor, (int, float))
@@ -113,6 +115,8 @@ def assess_sleeve_health(account, min_closed_trades=30, review_drawdown_pct=8.0)
     recent = account.get("recent_trades", [])
     if not isinstance(recent, list) or len(recent) > 20:
         raise ValueError("Recent trade window is invalid")
+    if len(recent) > trades:
+        raise ValueError("Recent trade count cannot exceed completed trade count")
     pnl_values = []
     for trade in recent:
         if not isinstance(trade, dict):
