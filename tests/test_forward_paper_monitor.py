@@ -4,6 +4,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from forward_paper_monitor import assess_sleeve_health, process_forward_accounts, validate_hourly_feed
+from paper_account import seed_forward_paper_account, update_paper_account
 
 
 class ForwardPaperMonitorTests(unittest.TestCase):
@@ -101,16 +102,19 @@ class ForwardPaperMonitorTests(unittest.TestCase):
         now = candles[-1]["timestamp"] / 1000 + 3600 + 60
         with tempfile.TemporaryDirectory() as folder:
             first = process_forward_accounts(candles, folder, now)
-            self.assertEqual(first["initial_cash_usd"], 1000.0)
+            self.assertEqual(first["initial_cash_usd"], 1600.0)
             self.assertEqual(first["completed_trades"], 0)
             self.assertEqual(first["schema_version"], 1)
             self.assertEqual(first["status"], "PAPER_MONITORING")
-            self.assertEqual(set(first["sleeves_summary"]), {"4h", "6h"})
-            for timeframe in ("4h", "6h"):
+            self.assertEqual(
+                set(first["sleeves_summary"]),
+                {"1h_sma_trend", "1h_ema_trend", "1h_rsi14_mean_reversion", "4h", "6h"},
+            )
+            for timeframe in ("1h_sma_trend", "1h_ema_trend", "1h_rsi14_mean_reversion", "4h", "6h"):
                 health = first["sleeves_summary"][timeframe]["health_assessment"]
                 self.assertEqual(health["status"], "INSUFFICIENT_FORWARD_SAMPLE")
                 self.assertFalse(health["live_trading_eligible"])
-            for timeframe in ("4h", "6h"):
+            for timeframe in ("1h_sma_trend", "1h_ema_trend", "1h_rsi14_mean_reversion", "4h", "6h"):
                 account = first["sleeves"][timeframe]["account"]
                 self.assertEqual(account["processed_new_candles"], 0)
                 self.assertEqual(account["return_pct"], 0.0)
@@ -134,11 +138,57 @@ class ForwardPaperMonitorTests(unittest.TestCase):
                 row["timestamp"] = candles[-1]["timestamp"] + (i + 1) * 3_600_000
             now2 = extended[-1]["timestamp"] / 1000 + 3600 + 60
             result = process_forward_accounts(extended, folder, now2)
+            self.assertGreater(result["sleeves"]["1h_sma_trend"]["account"]["processed_new_candles"], 0)
+            self.assertGreater(result["sleeves"]["1h_ema_trend"]["account"]["processed_new_candles"], 0)
+            self.assertGreater(result["sleeves"]["1h_rsi14_mean_reversion"]["account"]["processed_new_candles"], 0)
             self.assertGreater(result["sleeves"]["4h"]["account"]["processed_new_candles"], 0)
             self.assertGreater(result["sleeves"]["6h"]["account"]["processed_new_candles"], 0)
             again = process_forward_accounts(extended, folder, now2)
             self.assertEqual(again["sleeves"]["4h"]["account"]["processed_new_candles"], 0)
             self.assertEqual(again["sleeves"]["6h"]["account"]["processed_new_candles"], 0)
+
+    def test_rsi_mean_reversion_opens_and_closes_a_forward_paper_trade(self):
+        start = 1_750_000_000
+        start -= start % 3600
+        prices = [250.0 + i * 0.2 for i in range(220)]
+        # A forward-seed setup with an oversold pullback that remains above
+        # the long-term regime average.
+        for _ in range(14):
+            prices.append(prices[-1] - 0.5)
+        history = [
+            [start + i * 3600, 0, 0, 0, str(price)]
+            for i, price in enumerate(prices)
+        ]
+        with tempfile.TemporaryDirectory() as folder:
+            state_path = str(Path(folder) / "rsi-forward.json")
+            seed_forward_paper_account(
+                history, state_path, initial_cash=200.0,
+                strategy="rsi14_mean_reversion",
+            )
+            first_future = [
+                [start + len(prices) * 3600, 0, 0, 0, str(prices[-1] - 0.2)]
+            ]
+            opened = update_paper_account(
+                first_future, state_path=state_path, initial_cash=200.0,
+                allocation_fraction=0.10, strategy="rsi14_mean_reversion",
+            )
+            self.assertTrue(opened["open_position"])
+            self.assertEqual(opened["completed_trades"], 0)
+
+            rebound = []
+            price = float(first_future[-1][-1])
+            for i in range(1, 17):
+                price += 2.0
+                rebound.append([
+                    start + (len(prices) + i) * 3600, 0, 0, 0, str(price)
+                ])
+            closed = update_paper_account(
+                rebound, state_path=state_path, initial_cash=200.0,
+                allocation_fraction=0.10, strategy="rsi14_mean_reversion",
+            )
+            self.assertFalse(closed["open_position"])
+            self.assertGreaterEqual(closed["completed_trades"], 1)
+            self.assertGreater(closed["processed_new_candles"], 0)
 
     def test_recent_hourly_gap_is_rejected(self):
         candles = self.make_candles(48)

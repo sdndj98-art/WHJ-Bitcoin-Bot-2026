@@ -5,7 +5,7 @@ on:
   schedule:
     - cron: "17 */4 * * *"
   push:
-    branches: [research/regime-aware-consensus-ensemble]
+    branches: [main, research/regime-aware-consensus-ensemble]
     paths:
       - "forward_paper_monitor.py"
       - "paper_account.py"
@@ -35,6 +35,9 @@ jobs:
         uses: actions/cache/restore@v4
         with:
           path: |
+            paper_forward_1h_sma_trend.json
+            paper_forward_1h_ema_trend.json
+            paper_forward_1h_rsi14_mean_reversion.json
             paper_forward_4h_ema50_200.json
             paper_forward_6h_ema50_200.json
           key: whj-forward-paper-v1-${{ github.run_id }}-${{ github.run_attempt }}
@@ -49,6 +52,9 @@ jobs:
         uses: actions/cache/save@v4
         with:
           path: |
+            paper_forward_1h_sma_trend.json
+            paper_forward_1h_ema_trend.json
+            paper_forward_1h_rsi14_mean_reversion.json
             paper_forward_4h_ema50_200.json
             paper_forward_6h_ema50_200.json
           key: whj-forward-paper-v1-${{ github.run_id }}-${{ github.run_attempt }}
