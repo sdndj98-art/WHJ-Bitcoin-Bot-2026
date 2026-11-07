@@ -182,8 +182,14 @@ def update_paper_account(candles, state_path="paper_account_state.json",
                     )
                     want_long = not want_flat
             elif strategy == "ema50_200_regime":
-                fast = _ema_last(history, 50)
-                slow = _ema_last(history, 200)
+                fast = state.get("ema50_state")
+                slow = state.get("ema200_state")
+                if fast is None:
+                    fast = _ema_last(history, 50)
+                if slow is None:
+                    slow = _ema_last(history, 200)
+                state["ema50_state"] = fast
+                state["ema200_state"] = slow
                 want_long = fast > slow and prior_close > slow
                 want_flat = not want_long
             elif strategy == "sma200_regime":
@@ -201,7 +207,7 @@ def update_paper_account(candles, state_path="paper_account_state.json",
                 fast = _ema_last(history, 12)
                 slow = _ema_last(history, 26)
                 want_long = fast > slow and prior_close > slow
-                want_flat = fast < slow or prior_close < slow
+                want_flat = not want_long
             else:
                 momentum = _rsi_last(history, 14)
                 slow = _ema_last(history, 26)
