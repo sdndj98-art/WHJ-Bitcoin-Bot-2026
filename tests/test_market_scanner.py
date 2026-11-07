@@ -30,7 +30,7 @@ class MarketScannerTests(unittest.TestCase):
         result = scan_btc_market(candles(), HEALTHY)
         self.assertEqual(result["status"], "PAPER_CANDIDATE")
         self.assertEqual(result["confluence_score"], 6)
-        self.assertEqual(result["confluence_total"], 6)
+        self.assertEqual(result["confluence_total"], 7)
         self.assertTrue(result["paper_candidate_only"])
         self.assertFalse(result["live_orders_placed"])
 
@@ -43,6 +43,30 @@ class MarketScannerTests(unittest.TestCase):
         self.assertGreater(result["atr_pct"], 0)
         self.assertGreaterEqual(result["close_position_pct"], 0)
         self.assertLessEqual(result["close_position_pct"], 100)
+
+    def test_false_breakout_with_long_upper_wick_is_rejected(self):
+        rows = candles()
+        rows[-1][2] = rows[-1][4] + 1.2
+        result = scan_btc_market(rows, HEALTHY)
+        self.assertTrue(result["checks"]["close_above_prior_high"])
+        self.assertFalse(result["checks"]["breakout_quality_confirmed"])
+        self.assertIn("breakout_upper_wick_rejection_risk", result["reasons"])
+        self.assertNotEqual(result["status"], "PAPER_CANDIDATE")
+
+    def test_breakout_with_insufficient_atr_clearance_is_rejected(self):
+        result = scan_btc_market(
+            candles(prior_high=97.8, current_close=97.82), HEALTHY
+        )
+        self.assertTrue(result["checks"]["close_above_prior_high"])
+        self.assertFalse(result["checks"]["breakout_quality_confirmed"])
+        self.assertIn("breakout_close_too_near_prior_high", result["reasons"])
+
+    def test_breakout_quality_thresholds_are_reported(self):
+        result = scan_btc_market(candles(), HEALTHY)
+        self.assertEqual(result["breakout_buffer_atr_required"], 0.10)
+        self.assertEqual(result["max_breakout_upper_wick_pct"], 35.0)
+        self.assertGreaterEqual(result["breakout_clearance_atr"], 0.10)
+        self.assertLessEqual(result["breakout_upper_wick_pct"], 35.0)
 
     def test_no_candidate_when_volume_is_not_elevated(self):
         result = scan_btc_market(candles(current_volume=12.0), HEALTHY)
