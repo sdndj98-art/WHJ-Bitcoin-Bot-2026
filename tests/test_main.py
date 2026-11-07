@@ -4,6 +4,8 @@ from io import BytesIO
 from unittest.mock import patch
 
 import main
+from dashboard import build_dashboard
+from notify_telegram import format_message
 from paper_trading import run_backtest
 
 
@@ -65,6 +67,33 @@ class PaperTradingTests(unittest.TestCase):
     def test_rejects_invalid_fee(self):
         with self.assertRaises(ValueError):
             run_backtest([100.0] * 51, fee_rate=1.0)
+
+
+class ReportingTests(unittest.TestCase):
+    def sample_report(self):
+        return {
+            "time": "2026-11-07T00:00:00Z", "market": "BTC/USD",
+            "BTC_price": 65000, "signal": "HOLD", "SMA20": 64000, "SMA50": 63000,
+            "paper_backtest": {
+                "final_equity_usd": 1010, "return_pct": 1.0,
+                "completed_trades": 1, "win_rate_pct": 100,
+                "fees_paid_usd": 2, "trade_log": [{"result": "WIN", "pnl": 10}]
+            }
+        }
+
+    def test_dashboard_contains_report_metrics_and_escapes_html(self):
+        report = self.sample_report()
+        report["signal"] = "<script>alert(1)</script>"
+        page = build_dashboard(report)
+        self.assertIn("BTC/USD", page)
+        self.assertIn("1010", page)
+        self.assertNotIn("<script>alert(1)</script>", page)
+
+    def test_telegram_message_contains_signal_and_paper_equity(self):
+        message = format_message(self.sample_report())
+        self.assertIn("Signal: HOLD", message)
+        self.assertIn("Paper equity: 1010 USD", message)
+        self.assertIn("no real orders", message.lower())
 
 
 if __name__ == "__main__":
