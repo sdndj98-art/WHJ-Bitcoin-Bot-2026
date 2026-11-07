@@ -658,10 +658,16 @@ def run_forward_paper_accounts(candles, state_dir="."):
         state_path=str(directory / "paper_4h_ema50_200.json"),
         strategy="ema50_200_regime",
     )
+    daily_bollinger_result = update_paper_account(
+        account_rows(daily),
+        state_path=str(directory / "paper_daily_bollinger.json"),
+        strategy="bollinger_mean_reversion",
+    )
     return {
         "mode": "PERSISTENT_MULTI_TIMEFRAME_PAPER_ONLY",
         "daily_sma20_50": daily_result,
         "four_hour_ema50_200": four_hour_result,
+        "daily_bollinger_mean_reversion": daily_bollinger_result,
         "note": "These accounts process only newly closed aggregated bars and persist state between scheduled runs. No real orders are sent.",
     }
 
@@ -754,6 +760,7 @@ def main():
             for name, account in (
                 ("daily_sma20_50", forward_paper["daily_sma20_50"]),
                 ("four_hour_ema50_200", forward_paper["four_hour_ema50_200"]),
+                ("daily_bollinger_mean_reversion", forward_paper["daily_bollinger_mean_reversion"]),
             )
         },
         "strategies": {
