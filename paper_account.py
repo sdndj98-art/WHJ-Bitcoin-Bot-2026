@@ -107,6 +107,8 @@ def update_paper_account(candles, state_path="paper_account_state.json",
                          strategy="sma_trend"):
     """Process each newly closed hourly candle once and persist the simulated account."""
     initial_cash = _number(initial_cash, "initial_cash", 0)
+    if initial_cash <= 0:
+        raise ValueError("initial_cash must be greater than zero")
     fee_rate = _number(fee_rate, "fee_rate", 0, 0.999999)
     slippage_rate = _number(slippage_rate, "slippage_rate", 0, 0.999999)
     allocation_fraction = _number(allocation_fraction, "allocation_fraction", 0.01, 1)
@@ -122,11 +124,14 @@ def update_paper_account(candles, state_path="paper_account_state.json",
         if isinstance(row[0], bool) or isinstance(row[4], bool):
             raise ValueError("Candle timestamp and close cannot be boolean values")
         try:
-            timestamp = _number(float(row[0]), "candle timestamp", 0)
+            timestamp_value = _number(float(row[0]), "candle timestamp", 0)
+            if not timestamp_value.is_integer():
+                raise ValueError("Candle timestamps must be whole seconds")
+            timestamp = int(timestamp_value)
             close = _number(float(row[4]), "candle close", 0)
         except (TypeError, ValueError, OverflowError) as exc:
             raise ValueError("Candle timestamp and close must be numeric") from exc
-        normalized.append((int(timestamp), close))
+        normalized.append((timestamp, close))
     if not normalized:
         raise ValueError("No closed candles were supplied")
     timestamps = [row[0] for row in normalized]
@@ -169,10 +174,14 @@ def update_paper_account(candles, state_path="paper_account_state.json",
 
             if state.get("daily_bucket") != datetime.fromtimestamp(timestamp, timezone.utc).date().isoformat():
                 state["daily_bucket"] = datetime.fromtimestamp(timestamp, timezone.utc).date().isoformat()
-                state["daily_start_equity"] = state["cash"] + state["btc"] * close
+                daily_mark = state["btc"] * close * (1 - slippage_rate)
+                daily_mark -= daily_mark * fee_rate
+                state["daily_start_equity"] = state["cash"] + daily_mark
                 state["daily_loss_paused"] = False
 
-            marked_equity = state["cash"] + state["btc"] * close
+            marked_position = state["btc"] * close * (1 - slippage_rate)
+            marked_position -= marked_position * fee_rate
+            marked_equity = state["cash"] + marked_position
             daily_start = max(float(state.get("daily_start_equity", initial_cash)), 1e-12)
             daily_loss_hit = marked_equity <= daily_start * (1 - daily_loss_fraction)
             peak = max(float(state.get("peak_equity", initial_cash)), marked_equity)
