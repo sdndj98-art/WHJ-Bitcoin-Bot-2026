@@ -17,6 +17,8 @@ const report = {
   initial_cash_usd: 1600,
   equity_after_estimated_exit_costs_usd: 1600,
   return_pct: 0,
+  cycle_status: "WAITING_FOR_NEW_CLOSED_CANDLES",
+  total_processed_new_candles: 0,
   completed_trades: 0,
   generated_at_utc: "2026-11-07T16:56:55.281047+00:00",
   latest_hourly_candle_timestamp: 1794070000000,
@@ -25,6 +27,7 @@ const report = {
     equity_usd: allocations[index],
     return_pct: 0,
     completed_trades: 0,
+    processed_new_candles: 0,
     risk_pause_reasons: [],
     health_assessment: {
       status: "INSUFFICIENT_FORWARD_SAMPLE",
@@ -35,6 +38,10 @@ const report = {
 };
 
 assert.equal(validate(report), report, "Valid five-sleeve report should pass");
+assert.match(report.cycle_status, /WAITING_FOR_NEW_CLOSED_CANDLES/);
+const inconsistentCycle = structuredClone(report);
+inconsistentCycle.total_processed_new_candles = 1;
+assert.throws(() => validate(inconsistentCycle), /إجمالي الشموع المعالجة/);
 
 // The three 1h accounts must be included in aggregate equity and trade totals.
 const missingOneHourEquity = structuredClone(report);
@@ -68,6 +75,7 @@ for (const key of keys) {
   renderableReport.sleeves_summary[key].health_assessment.rolling_max_drawdown_pct = 4.25;
 }
 render(renderableReport);
+assert.match(getElement("forwardCycle").textContent, /لا توجد شموع ساعة مغلقة جديدة/);
 assert.match(getElement("forwardRows").innerHTML, /1h · SMA Trend/);
 assert.match(getElement("forwardRows").innerHTML, /\$2\.50/);
 assert.match(getElement("forwardRows").innerHTML, /4\.25%/);

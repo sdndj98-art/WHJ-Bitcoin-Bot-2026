@@ -260,6 +260,14 @@ def process_forward_accounts(candles, state_dir=".", now_timestamp=None):
             "risk_pause_reasons": account["risk_pause_reasons"],
             "health_assessment": assess_sleeve_health(account),
         }
+    total_processed_new_candles = sum(
+        item["processed_new_candles"] for item in summary.values()
+    )
+    cycle_status = (
+        "PROCESSED_NEW_CANDLES"
+        if total_processed_new_candles > 0
+        else "WAITING_FOR_NEW_CLOSED_CANDLES"
+    )
     return {
         "schema_version": 1,
         "generated_at_utc": datetime.now(timezone.utc).isoformat(),
@@ -269,6 +277,8 @@ def process_forward_accounts(candles, state_dir=".", now_timestamp=None):
             else "REVIEW_REQUIRED" if any(v["health_assessment"]["status"] == "REVIEW_REQUIRED" for v in summary.values())
             else "PAPER_MONITORING"
         ),
+        "cycle_status": cycle_status,
+        "total_processed_new_candles": total_processed_new_candles,
         "market": "BTC/USD",
         "data_quality": quality,
         "latest_hourly_candle_timestamp": candles[-1]["timestamp"],
