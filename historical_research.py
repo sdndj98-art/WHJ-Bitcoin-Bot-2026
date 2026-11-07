@@ -11,6 +11,7 @@ import urllib.request
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
+from paper_account import update_paper_account
 from strategy_lab import run_strategy_lab
 
 BASE_URL = "https://api.exchange.coinbase.com/products/BTC-USD/candles"
@@ -185,6 +186,33 @@ def aggregate_candles(candles, hours):
     return aggregated
 
 
+def run_forward_paper_accounts(candles, state_dir="."):
+    """Maintain independent 1d and 4h paper accounts across daily workflow runs."""
+    directory = Path(state_dir)
+    daily = aggregate_candles(candles, 24)
+    four_hour = aggregate_candles(candles, 4)
+
+    def account_rows(bars):
+        return [[int(row["timestamp"] // 1000), 0, 0, 0, str(row["close"])] for row in bars]
+
+    daily_result = update_paper_account(
+        account_rows(daily),
+        state_path=str(directory / "paper_daily_sma20_50.json"),
+        strategy="sma_trend",
+    )
+    four_hour_result = update_paper_account(
+        account_rows(four_hour),
+        state_path=str(directory / "paper_4h_ema50_200.json"),
+        strategy="ema50_200_regime",
+    )
+    return {
+        "mode": "PERSISTENT_MULTI_TIMEFRAME_PAPER_ONLY",
+        "daily_sma20_50": daily_result,
+        "four_hour_ema50_200": four_hour_result,
+        "note": "These accounts process only newly closed aggregated bars and persist state between scheduled runs. No real orders are sent.",
+    }
+
+
 def main():
     candles = load_two_year_candles()
     prices = [row["close"] for row in candles]
@@ -203,6 +231,18 @@ def main():
                 slippage=SLIPPAGE_RATE,
             ),
         }
+    stress_cost_research = {}
+    for label in ("4h", "1d"):
+        bars = timeframe_research[label]["research"]
+        hours = 4 if label == "4h" else 24
+        aggregated = aggregate_candles(candles, hours)
+        stress_cost_research[label] = run_strategy_lab(
+            [bar["close"] for bar in aggregated],
+            fee=0.002,
+            slippage=0.001,
+        )
+
+    forward_paper = run_forward_paper_accounts(candles)
     result = {
         "project": "WHJ Bitcoin Bot",
         "mode": "TWO_YEAR_HISTORICAL_RESEARCH_ONLY",
@@ -222,6 +262,8 @@ def main():
         },
         "research": research,
         "timeframe_research": timeframe_research,
+        "stress_cost_research": stress_cost_research,
+        "forward_paper_accounts": forward_paper,
         "warning": "Historical results are not forecasts. Strategy selection requires robust out-of-sample performance and forward paper trading. No live orders were placed.",
     }
     Path("historical_research.json").write_text(
@@ -233,6 +275,17 @@ def main():
         "candles": result["candles"],
         "first": result["first_closed_candle_utc"],
         "last": result["last_closed_candle_utc"],
+        "forward_paper_accounts": {
+            name: {
+                "return_pct": account["return_pct"],
+                "equity_usd": account["equity_after_estimated_exit_costs_usd"],
+                "completed_trades": account["completed_trades"],
+                "win_rate_pct": account["win_rate_pct"],
+                "max_drawdown_pct": account["max_drawdown_pct"],
+                "processed_new_candles": account["processed_new_candles"],
+            }
+            for name, account in forward_paper.items()
+        },
         "strategies": {
             name: {
                 "oos_return_pct": metrics["out_of_sample"]["return_pct"],
