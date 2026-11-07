@@ -248,8 +248,8 @@ def _aggregate_hourly_candles(candles, hours):
         raise ValueError("Aggregation hours must be 4 or 6")
     if not isinstance(candles, list):
         raise ValueError("Hourly candles must be a list")
-    interval_ms = 3600 * 1000
-    span_ms = hours * interval_ms
+    interval_seconds = 3600
+    span_seconds = hours * interval_seconds
     groups = {}
     previous_timestamp = None
     for row in candles:
@@ -263,10 +263,10 @@ def _aggregate_hourly_candles(candles, hours):
                 raise ValueError
             if previous_timestamp is not None and timestamp <= previous_timestamp:
                 raise ValueError("Hourly timestamps must be strictly increasing")
-            if timestamp % interval_ms:
+            if timestamp % interval_seconds:
                 raise ValueError("Hourly timestamps must align to UTC hour boundaries")
             previous_timestamp = timestamp
-            bucket = timestamp // span_ms
+            bucket = timestamp // span_seconds
             groups.setdefault(bucket, []).append(row)
         except (TypeError, ValueError, OverflowError) as exc:
             raise ValueError("Invalid hourly candle timestamp") from exc
@@ -274,10 +274,10 @@ def _aggregate_hourly_candles(candles, hours):
     aggregated = []
     for bucket in sorted(groups):
         group = sorted(groups[bucket], key=lambda item: int(item[0]))
-        start = bucket * span_ms
+        start = bucket * span_seconds
         if len(group) != hours:
             continue
-        if any(int(group[i][0]) != start + i * interval_ms for i in range(hours)):
+        if any(int(group[i][0]) != start + i * interval_seconds for i in range(hours)):
             continue
         try:
             opens = [float(item[1]) for item in group]
@@ -294,7 +294,7 @@ def _aggregate_hourly_candles(candles, hours):
         if any(isinstance(item[7], bool) or float(item[7]) != int(item[7]) for item in group):
             raise ValueError("Hourly trade counts must be whole numbers")
         aggregated.append([
-            start // 1000, opens[0], max(highs), min(lows), closes[-1],
+            start, opens[0], max(highs), min(lows), closes[-1],
             0.0, sum(volumes), sum(trades),
         ])
     return aggregated
