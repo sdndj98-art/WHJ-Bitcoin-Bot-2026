@@ -148,7 +148,7 @@ def _load_state(path, initial_cash, strategy="sma_trend"):
         if state.get(key) is not None:
             if _number(state[key], key, 0) <= 0:
                 raise ValueError("Saved EMA state must be positive when initialized")
-    for key in ("daily_loss_paused", "paused_for_loss_streak", "paused_for_drawdown"):
+    for key in ("daily_loss_paused", "paused_for_loss_streak", "paused_for_drawdown", "paused_for_strategy_health"):
         if key in state and not isinstance(state[key], bool):
             raise ValueError("Saved paper account risk flag is invalid: " + key)
     if state.get("daily_bucket") is not None and not isinstance(state["daily_bucket"], str):
@@ -257,7 +257,7 @@ def update_paper_account(candles, state_path="paper_account_state.json",
                          initial_cash=1000.0, fee_rate=0.001,
                          slippage_rate=0.0005, allocation_fraction=0.25,
                          max_drawdown_fraction=0.10, daily_loss_fraction=0.03,
-                         max_consecutive_losses=5, strategy="sma_trend"):
+                         max_consecutive_losses=5, strategy="sma_trend", strategy_health_pause=False):
     """Process each newly closed hourly candle once and persist the simulated account."""
     initial_cash = _number(initial_cash, "initial_cash", 0)
     if initial_cash <= 0:
@@ -269,6 +269,8 @@ def update_paper_account(candles, state_path="paper_account_state.json",
     daily_loss_fraction = _number(daily_loss_fraction, "daily_loss_fraction", 0.001, 1)
     if isinstance(max_consecutive_losses, bool) or not isinstance(max_consecutive_losses, int) or max_consecutive_losses < 1:
         raise ValueError("max_consecutive_losses must be a positive integer")
+    if not isinstance(strategy_health_pause, bool):
+        raise ValueError("strategy_health_pause must be boolean")
     if strategy not in ("sma_trend", "ema_trend", "rsi_momentum", "sma200_regime", "ema50_200_regime", "bollinger_mean_reversion", "rsi14_mean_reversion"):
         raise ValueError("Unknown paper strategy")
 
