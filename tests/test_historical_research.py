@@ -4,7 +4,7 @@ import unittest
 from datetime import datetime, timezone
 from unittest.mock import patch
 
-from historical_research import (INTERVAL_MS, aggregate_candles, load_two_year_candles, run_forward_paper_accounts, run_ohlc_breakout_lab, run_long_short_lab, run_daily_regime_filter_lab, assess_strategy_qualification, assess_research_lab_qualification, build_qualification_markdown, _turtle_signals)
+from historical_research import (INTERVAL_MS, aggregate_candles, load_two_year_candles, run_forward_paper_accounts, run_ohlc_breakout_lab, run_long_short_lab, run_daily_regime_filter_lab, _simulate_ohlc, assess_strategy_qualification, assess_research_lab_qualification, build_qualification_markdown, _turtle_signals)
 
 
 class HistoricalResearchTests(unittest.TestCase):
@@ -177,6 +177,23 @@ class HistoricalResearchTests(unittest.TestCase):
             for window in result["strategies"]["donchian_55_20"]["walk_forward_windows"]
         ))
         self.assertTrue(math.isfinite(result["strategies"]["donchian_55_20"]["out_of_sample"]["return_pct"]))
+
+    def test_ohlc_drawdown_includes_open_position_liquidation_costs(self):
+        bars = [
+            {"open": 100.0, "high": 101.0, "low": 99.0, "close": 100.0, "volume": 1.0},
+            {"open": 100.0, "high": 101.0, "low": 99.0, "close": 100.0, "volume": 1.0},
+            {"open": 50.0, "high": 51.0, "low": 49.0, "close": 50.0, "volume": 1.0},
+        ]
+        fee = 0.01
+        slippage = 0.02
+        result = _simulate_ohlc(bars, [True, True, True], 1, 3, fee, slippage)
+
+        allocation = 250.0
+        units = (allocation - allocation * fee) / (100.0 * (1 + slippage))
+        expected_equity = 750.0 + units * 50.0 * (1 - slippage) * (1 - fee)
+        expected_drawdown = (1000.0 - expected_equity) / 1000.0 * 100
+        self.assertAlmostEqual(result["max_drawdown_pct"], round(expected_drawdown, 2), places=2)
+        self.assertAlmostEqual(result["final_equity_usd"], round(expected_equity, 2), places=2)
 
     def test_daily_regime_filter_uses_complete_daily_history(self):
         candles = []
