@@ -45,7 +45,7 @@ jobs:
         run: python dashboard.py
 
       - name: Save persistent paper account state
-        if: success() && hashFiles('paper_account_state.json') != ''
+        if: success() && hashFiles('paper_account_state_*.json') != ''
         uses: actions/cache/save@v4
         with:
           path: paper_account_state.json
