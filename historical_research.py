@@ -433,6 +433,26 @@ def _ema_series(values, period):
     return result
 
 
+def _rsi_series(values, period=14):
+    """Wilder RSI using only current and prior completed closes."""
+    if period < 2 or len(values) <= period:
+        raise ValueError("RSI requires a period of at least 2 and more observations than the period")
+    result = [None] * len(values)
+    gains = [0.0] * len(values)
+    losses = [0.0] * len(values)
+    for index in range(1, len(values)):
+        change = float(values[index]) - float(values[index - 1])
+        gains[index] = max(change, 0.0)
+        losses[index] = max(-change, 0.0)
+    average_gain = sum(gains[1:period + 1]) / period
+    average_loss = sum(losses[1:period + 1]) / period
+    result[period] = 100.0 if average_loss == 0 and average_gain else (50.0 if average_loss == 0 else 100.0 - 100.0 / (1.0 + average_gain / average_loss))
+    for index in range(period + 1, len(values)):
+        average_gain = (average_gain * (period - 1) + gains[index]) / period
+        average_loss = (average_loss * (period - 1) + losses[index]) / period
+        result[index] = 100.0 if average_loss == 0 else 100.0 - 100.0 / (1.0 + average_gain / average_loss)
+    return result
+
 def run_daily_regime_filter_lab(hourly_candles, fee=FEE_RATE, slippage=SLIPPAGE_RATE):
     """Test 4h entries gated by the previous fully closed daily SMA200 regime."""
     four_hour = aggregate_candles(hourly_candles, 4)
@@ -452,6 +472,7 @@ def run_daily_regime_filter_lab(hourly_candles, fee=FEE_RATE, slippage=SLIPPAGE_
     ema20 = _ema_series(closes, 20)
     ema50 = _ema_series(closes, 50)
     ema200 = _ema_series(closes, 200)
+    rsi14 = _rsi_series(closes, 14)
     sma20 = [None] * len(closes)
     sma50 = [None] * len(closes)
     for i in range(19, len(closes)):
@@ -462,6 +483,8 @@ def run_daily_regime_filter_lab(hourly_candles, fee=FEE_RATE, slippage=SLIPPAGE_
     signals = {
         "ema50_200_with_daily_sma200": [],
         "ema20_50_with_daily_sma200": [],
+        "ema20_50_daily_sma200_rsi50": [],
+        "ema20_50_daily_sma200_rsi50_rising": [],
         "sma20_50_with_daily_sma200": [],
     }
     for i, row in enumerate(four_hour):
@@ -477,6 +500,19 @@ def run_daily_regime_filter_lab(hourly_candles, fee=FEE_RATE, slippage=SLIPPAGE_
         )
         signals["ema20_50_with_daily_sma200"].append(
             bool(i >= 49 and daily_regime and ema20[i] > ema50[i] and closes[i] > ema50[i])
+        )
+        rsi_confirmed = bool(rsi14[i] is not None and rsi14[i] >= 50.0)
+        rsi_rising = bool(
+            i >= 17 and rsi14[i] is not None and rsi14[i - 3] is not None
+            and rsi14[i] > rsi14[i - 3]
+        )
+        trend_setup = bool(
+            i >= 49 and daily_regime and ema20[i] > ema50[i]
+            and closes[i] > ema50[i]
+        )
+        signals["ema20_50_daily_sma200_rsi50"].append(bool(trend_setup and rsi_confirmed))
+        signals["ema20_50_daily_sma200_rsi50_rising"].append(
+            bool(trend_setup and rsi_confirmed and rsi_rising)
         )
         signals["sma20_50_with_daily_sma200"].append(
             bool(sma20[i] is not None and sma50[i] is not None
