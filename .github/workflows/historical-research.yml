@@ -1,4 +1,4 @@
-name: WHJ Two-Year Historical Strategy Research
+name: WHJ Five-Year Historical Strategy Research
 
 on:
   workflow_dispatch:
@@ -40,7 +40,7 @@ jobs:
           path: |
             paper_daily_sma20_50.json
             paper_4h_ema50_200.json
-          key: whj-mtf-paper-v2-${{ github.run_id }}-${{ github.run_attempt }}
+          key: whj-mtf-paper-v3-${{ github.run_id }}-${{ github.run_attempt }}
           restore-keys: |
             whj-mtf-paper-v1-
 
@@ -62,7 +62,7 @@ jobs:
       - name: Save historical research report
         uses: actions/upload-artifact@v4
         with:
-          name: whj-two-year-research-${{ github.run_number }}
+          name: whj-five-year-research-${{ github.run_number }}
           path: historical_research.json
           if-no-files-found: error
           retention-days: 30
