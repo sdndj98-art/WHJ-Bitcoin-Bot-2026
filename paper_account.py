@@ -167,6 +167,64 @@ def _ema_last(values, period):
     return current
 
 
+def seed_forward_paper_account(
+    candles, state_path, initial_cash=500.0, strategy="ema50_200_regime"
+):
+    """Initialize a genuinely forward-only ledger at the latest completed bar.
+
+    Historical candles warm up indicators only. They do not create historical
+    trades, profits, losses, or risk pauses in this new forward paper account.
+    Existing state is validated and preserved; it is never reset here.
+    """
+    if strategy != "ema50_200_regime":
+        raise ValueError("Forward seeding currently supports only ema50_200_regime")
+    initial_cash = _number(initial_cash, "initial_cash", 0)
+    if initial_cash <= 0:
+        raise ValueError("initial_cash must be greater than zero")
+    normalized = []
+    for row in candles:
+        if not isinstance(row, (list, tuple)) or len(row) < 5:
+            raise ValueError("Each candle must include timestamp and close")
+        if isinstance(row[0], bool) or isinstance(row[4], bool):
+            raise ValueError("Candle timestamp and close cannot be boolean values")
+        timestamp_value = _number(float(row[0]), "candle timestamp", 0)
+        close = _number(float(row[4]), "candle close", 0)
+        if not timestamp_value.is_integer() or close <= 0:
+            raise ValueError("Candle timestamps must be whole seconds and closes positive")
+        normalized.append((int(timestamp_value), close))
+    if len(normalized) < 200:
+        raise ValueError("At least 200 completed candles are required to seed EMA50/200")
+    timestamps = [row[0] for row in normalized]
+    if timestamps != sorted(timestamps) or len(set(timestamps)) != len(timestamps):
+        raise ValueError("Candle timestamps must be strictly increasing and unique")
+
+    target = Path(state_path)
+    if target.exists():
+        existing = _load_state(target, initial_cash, strategy)
+        return {
+            "created": False,
+            "last_seeded_timestamp": existing.get("forward_seed_timestamp"),
+            "last_processed_timestamp": existing.get("last_timestamp"),
+        }
+
+    closes = [row[1] for row in normalized]
+    state = _new_state(initial_cash, strategy)
+    state["recent_closes"] = closes[-200:]
+    state["ema50_state"] = _ema_last(closes, 50)
+    state["ema200_state"] = _ema_last(closes, 200)
+    state["last_timestamp"] = timestamps[-1]
+    state["forward_seed_timestamp"] = timestamps[-1]
+    state["daily_bucket"] = datetime.fromtimestamp(
+        timestamps[-1], timezone.utc
+    ).date().isoformat()
+    _save_state_atomically(target, state)
+    return {
+        "created": True,
+        "last_seeded_timestamp": timestamps[-1],
+        "last_processed_timestamp": timestamps[-1],
+    }
+
+
 def _rsi_last(values, period=14):
     changes = [float(values[i]) - float(values[i - 1]) for i in range(1, len(values))]
     recent = changes[-period:]
