@@ -836,6 +836,82 @@ def assess_strategy_qualification(metrics, stress_metrics, min_oos_trades=30,
     }
 
 
+def summarize_qualification(result, watchlist_limit=5):
+    """Summarize fixed-gate outcomes and a diagnostic-only research watchlist."""
+    if isinstance(watchlist_limit, bool) or not isinstance(watchlist_limit, int) or watchlist_limit < 0:
+        raise ValueError("watchlist_limit must be a non-negative integer")
+
+    groups = {
+        "hourly_multi_timeframe": result.get("strategy_qualification", {}),
+        "ohlc_breakout": result.get("extended_lab_strategy_qualification", {}).get("ohlc_breakout", {}),
+        "long_short": result.get("extended_lab_strategy_qualification", {}).get("long_short", {}),
+        "daily_regime_filter": result.get("extended_lab_strategy_qualification", {}).get("daily_regime_filter", {}),
+    }
+    counts = {}
+    candidates = []
+    total = passed = 0
+
+    for group_name, strategies in groups.items():
+        group_total = group_passed = 0
+        if group_name == "hourly_multi_timeframe":
+            entries = [
+                (f"{timeframe} / {name}", qualification)
+                for timeframe, timeframe_strategies in strategies.items()
+                for name, qualification in timeframe_strategies.items()
+            ]
+        else:
+            entries = list(strategies.items())
+
+        for name, qualification in entries:
+            group_total += 1
+            total += 1
+            qualified = bool(qualification.get("qualified_for_extended_paper_review", False))
+            if qualified:
+                group_passed += 1
+                passed += 1
+
+            comparison = qualification.get("benchmark_comparison", {})
+            base_edge = comparison.get("oos_outperformance_pct_points")
+            stress_edge = comparison.get("stress_oos_outperformance_pct_points")
+            if (
+                comparison.get("benchmark_available")
+                and isinstance(base_edge, (int, float))
+                and not isinstance(base_edge, bool)
+                and math.isfinite(base_edge)
+                and isinstance(stress_edge, (int, float))
+                and not isinstance(stress_edge, bool)
+                and math.isfinite(stress_edge)
+            ):
+                candidates.append({
+                    "strategy": name,
+                    "group": group_name,
+                    "qualified": qualified,
+                    "failed_gate_count": len(qualification.get("failed_checks", [])),
+                    "base_benchmark_edge_pp": round(float(base_edge), 4),
+                    "stress_benchmark_edge_pp": round(float(stress_edge), 4),
+                    "weaker_benchmark_edge_pp": round(min(float(base_edge), float(stress_edge)), 4),
+                })
+
+        counts[group_name] = {"qualified": group_passed, "tested": group_total}
+
+    # Diagnostic ordering only. This list never changes a qualification result.
+    candidates.sort(key=lambda item: (
+        item["failed_gate_count"],
+        -item["weaker_benchmark_edge_pp"],
+        item["strategy"],
+    ))
+    return {
+        "qualified": passed,
+        "tested": total,
+        "by_group": counts,
+        "diagnostic_watchlist": candidates[:watchlist_limit],
+        "watchlist_note": (
+            "Diagnostic shortlist only; it does not waive any fixed qualification gate "
+            "or authorize live trading."
+        ),
+    }
+
+
 def build_qualification_markdown(result):
     """Create a concise human-readable report from qualification JSON."""
     policy = result["strategy_qualification_policy"]
@@ -1236,6 +1312,7 @@ def main():
                 ("six_hour_rsi14_mean_reversion", forward_paper["six_hour_rsi14_mean_reversion"]),
             )
         },
+        "qualification_summary": summarize_qualification(result),
         "strategies": {
             name: {
                 "oos_return_pct": metrics["out_of_sample"]["return_pct"],
