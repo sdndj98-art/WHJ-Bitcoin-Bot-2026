@@ -4,7 +4,7 @@ import unittest
 from datetime import datetime, timezone
 from unittest.mock import patch
 
-from historical_research import (INTERVAL_MS, aggregate_candles, load_two_year_candles, run_forward_paper_accounts, run_ohlc_breakout_lab, run_long_short_lab, run_daily_regime_filter_lab, _turtle_signals)
+from historical_research import (INTERVAL_MS, aggregate_candles, load_two_year_candles, run_forward_paper_accounts, run_ohlc_breakout_lab, run_long_short_lab, run_daily_regime_filter_lab, assess_strategy_qualification, _turtle_signals)
 
 
 class HistoricalResearchTests(unittest.TestCase):
@@ -17,6 +17,50 @@ class HistoricalResearchTests(unittest.TestCase):
                 rows.append([timestamp, price, price + 10, price - 10, price + 1, 2.0])
             timestamp += INTERVAL_MS
         return rows
+
+    def test_strategy_qualification_rejects_small_or_fragile_samples(self):
+        metrics = {
+            "out_of_sample": {
+                "return_pct": 2.0,
+                "max_drawdown_pct": 4.0,
+                "profit_factor": 1.8,
+                "closed_trades": 40,
+            },
+            "walk_forward_windows": [
+                {"metrics": {"return_pct": 0.5}},
+                {"metrics": {"return_pct": 0.1}},
+                {"metrics": {"return_pct": 1.0}},
+            ],
+        }
+        stress = {"out_of_sample": {"return_pct": 0.4}}
+        self.assertTrue(assess_strategy_qualification(metrics, stress)["qualified_for_extended_paper_review"])
+
+        small_sample = {
+            **metrics,
+            "out_of_sample": {**metrics["out_of_sample"], "closed_trades": 5},
+        }
+        self.assertFalse(
+            assess_strategy_qualification(small_sample, stress)["qualified_for_extended_paper_review"]
+        )
+
+        fragile = {
+            **metrics,
+            "walk_forward_windows": [
+                {"metrics": {"return_pct": 0.5}},
+                {"metrics": {"return_pct": -0.1}},
+                {"metrics": {"return_pct": 1.0}},
+            ],
+        }
+        self.assertIn(
+            "all_walk_forward_windows_nonnegative",
+            assess_strategy_qualification(fragile, stress)["failed_checks"],
+        )
+
+        stress_loss = {"out_of_sample": {"return_pct": -0.01}}
+        self.assertIn(
+            "positive_stress_oos_return",
+            assess_strategy_qualification(metrics, stress_loss)["failed_checks"],
+        )
 
     def test_download_paginates_and_discards_current_open_hour(self):
         now = datetime(2026, 11, 7, 12, 0, tzinfo=timezone.utc)
