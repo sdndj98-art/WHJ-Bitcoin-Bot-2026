@@ -112,6 +112,8 @@ def update_paper_account(candles, state_path="paper_account_state.json",
     allocation_fraction = _number(allocation_fraction, "allocation_fraction", 0.01, 1)
     max_drawdown_fraction = _number(max_drawdown_fraction, "max_drawdown_fraction", 0.001, 1)
     daily_loss_fraction = _number(daily_loss_fraction, "daily_loss_fraction", 0.001, 1)
+    if strategy not in ("sma_trend", "ema_trend", "rsi_momentum"):
+        raise ValueError("Unknown paper strategy")
 
     normalized = []
     for row in candles:
