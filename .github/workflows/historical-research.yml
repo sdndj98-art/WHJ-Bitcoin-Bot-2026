@@ -44,9 +44,11 @@ jobs:
             paper_6h_rsi14_mean_reversion.json
             paper_4h_ema50_200_ensemble_sleeve.json
             paper_6h_ema50_200_ensemble_sleeve.json
-          key: whj-mtf-paper-v6-${{ github.run_id }}-${{ github.run_attempt }}
+            paper_forward_4h_ema50_200.json
+            paper_forward_6h_ema50_200.json
+          key: whj-mtf-paper-v7-${{ github.run_id }}-${{ github.run_attempt }}
           restore-keys: |
-            whj-mtf-paper-v6-
+            whj-mtf-paper-v7-
             whj-mtf-paper-v5-
             whj-mtf-paper-v4-
 
@@ -57,7 +59,7 @@ jobs:
         run: python historical_research.py
 
       - name: Save multi-timeframe paper account state
-        if: success() && hashFiles('paper_daily_sma20_50.json', 'paper_4h_ema50_200.json', 'paper_daily_bollinger.json', 'paper_6h_rsi14_mean_reversion.json', 'paper_4h_ema50_200_ensemble_sleeve.json', 'paper_6h_ema50_200_ensemble_sleeve.json') != ''
+        if: success() && hashFiles('paper_daily_sma20_50.json', 'paper_4h_ema50_200.json', 'paper_daily_bollinger.json', 'paper_6h_rsi14_mean_reversion.json', 'paper_4h_ema50_200_ensemble_sleeve.json', 'paper_6h_ema50_200_ensemble_sleeve.json', 'paper_forward_4h_ema50_200.json', 'paper_forward_6h_ema50_200.json') != ''
         uses: actions/cache/save@v4
         with:
           path: |
@@ -67,7 +69,7 @@ jobs:
             paper_6h_rsi14_mean_reversion.json
             paper_4h_ema50_200_ensemble_sleeve.json
             paper_6h_ema50_200_ensemble_sleeve.json
-          key: whj-mtf-paper-v6-${{ github.run_id }}-${{ github.run_attempt }}
+          key: whj-mtf-paper-v7-${{ github.run_id }}-${{ github.run_attempt }}
 
       - name: Save historical research report
         uses: actions/upload-artifact@v4
