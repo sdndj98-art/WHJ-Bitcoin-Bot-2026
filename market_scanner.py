@@ -330,9 +330,13 @@ def scan_btc_multi_timeframe(candles, market_data_quality=None):
     )
     evaluated = [
         item for item in results.values()
-        if isinstance(item.get("confluence_score"), int)
+        if item.get("status") != "INSUFFICIENT_HISTORY"
+        and isinstance(item.get("confluence_score"), int)
+        and not isinstance(item.get("confluence_score"), bool)
         and isinstance(item.get("confluence_total"), int)
+        and not isinstance(item.get("confluence_total"), bool)
         and item["confluence_total"] > 0
+        and isinstance(item.get("checks"), dict)
     ]
     average_confluence_pct = (
         sum(item["confluence_score"] / item["confluence_total"] * 100.0
