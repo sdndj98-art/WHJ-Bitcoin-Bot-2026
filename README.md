@@ -73,3 +73,8 @@ The latest contiguous 3,000-day research run (72,000 closed hourly candles throu
 
 ### Strategy promotion policy
 A strategy is only eligible for extended forward paper review when it passes all fixed gates: at least 30 out-of-sample closed trades, positive out-of-sample and elevated-cost stress returns, profit factor of at least 1.2, out-of-sample maximum drawdown no greater than 10%, and non-negative returns in all three chronological out-of-sample windows. In addition, both the normal-cost and elevated-cost out-of-sample returns must strictly outperform a matched 25%-allocation buy-and-hold BTC benchmark; missing benchmark data is an automatic failure. Passing is only eligibility for extended forward paper review, not a live-trading approval. If no strategy passes, the correct result is to keep all strategies in research/paper mode rather than force a winner.
+
+
+## Harmonic patterns and supply/demand divergence
+
+The hourly report also includes a research-only diagnostic for approximate Gartley, Bat, Butterfly, Crab, and Cypher XABCD patterns; pivot-derived supply/demand zones; and bullish/bearish RSI14 divergence. Only confirmed swing pivots from closed candles are used. These are descriptive research signals, not verified institutional order flow, forecasts, or order instructions. The analysis is separate from the existing scanner score and does not enable live execution.
