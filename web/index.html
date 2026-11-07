@@ -101,6 +101,53 @@ body[data-whj-theme="light"] .whj-extra-btn{background:#e7f0f7;color:#23425c}
 .whj-shortcuts-card p{color:var(--m);font-size:11px;line-height:2;margin:5px 0}
 .whj-shortcuts-card button{margin-top:12px}
 @media(max-width:700px){.whj-clock{display:none}.whj-extra-btn{padding:8px 9px;font-size:9px}.topright{gap:6px}}
+
+/* Layout alignment and horizontal-overflow guard */
+html,body{width:100%;max-width:100%;overflow-x:clip}
+.shell{grid-template-columns:230px minmax(0,1fr);width:100%;min-width:0}
+main{min-width:0;width:100%}
+.view,.card,.content,.lower,.scanner-layout,.scanner-lower,.scanner-indicator-grid{min-width:0}
+.tablewrap{min-width:0;max-width:100%;overflow-x:auto}
+canvas{max-width:100%}
+.top,.topright{min-width:0;flex-wrap:wrap}
+@media(max-width:700px){
+ .shell{display:block;width:100%;min-width:0}
+ .side{left:0;right:0;width:100%;max-width:100%}
+ .nav{width:100%;min-width:0}
+ .nav button{min-width:0;overflow-wrap:anywhere}
+ main{width:100%;max-width:none;min-width:0;margin:0}
+ .top{align-items:flex-start}
+ .topright{max-width:100%;justify-content:flex-start}
+}
+
+/* WHJ command palette, alert center and live data health */
+.whj-command-btn,.whj-alert-btn{border:1px solid var(--line);background:#102137;color:#d4e5f4;border-radius:10px;padding:9px 12px;font-size:10px;cursor:pointer;white-space:nowrap}
+.whj-command-btn:hover,.whj-alert-btn:hover{border-color:var(--c);color:#fff}
+body[data-whj-theme="light"] .whj-command-btn,body[data-whj-theme="light"] .whj-alert-btn{background:#e7f0f7;color:#23425c}
+.whj-alert-btn{position:relative}.whj-alert-count{position:absolute;top:-6px;left:-5px;min-width:16px;height:16px;padding:0 4px;border-radius:99px;background:#d85b70;color:#fff;font-size:9px;display:grid;place-items:center}
+.whj-command-overlay{position:fixed;inset:0;z-index:100;background:#020914c9;display:none;align-items:flex-start;justify-content:center;padding:12vh 16px 20px}
+.whj-command-overlay.open{display:flex}
+.whj-command-box{width:min(560px,100%);max-height:min(70vh,620px);overflow:hidden;background:var(--p);border:1px solid var(--line);border-radius:18px;box-shadow:0 24px 90px #0009}
+.whj-command-search{width:100%;border:0;border-bottom:1px solid var(--line);outline:0;background:transparent;color:var(--t);padding:19px 20px;font:inherit;font-size:14px}
+.whj-command-list{max-height:50vh;overflow:auto;padding:8px}
+.whj-command-item{width:100%;display:flex;justify-content:space-between;align-items:center;gap:12px;text-align:right;border:0;border-radius:10px;padding:12px;background:transparent;color:var(--t);cursor:pointer}
+.whj-command-item:hover,.whj-command-item:focus-visible{background:#1b354d;outline:0}
+.whj-command-item small{color:var(--m);font-size:10px}
+.whj-command-empty{padding:24px;text-align:center;color:var(--m);font-size:11px}
+.whj-command-foot{padding:10px 15px;border-top:1px solid var(--line);color:var(--m);font-size:9px}
+.whj-alert-panel{position:fixed;z-index:90;top:82px;left:18px;width:min(360px,calc(100vw - 28px));max-height:65vh;overflow:auto;display:none;background:var(--p);border:1px solid var(--line);border-radius:15px;padding:15px;box-shadow:0 18px 55px #0008}
+.whj-alert-panel.open{display:block}
+.whj-alert-panel h3{font-size:13px;margin:0 0 12px}
+.whj-alert-item{padding:11px 2px;border-bottom:1px solid var(--line);font-size:10px;line-height:1.8;color:var(--m)}
+.whj-alert-item strong{display:block;color:var(--t);font-size:11px;margin-bottom:3px}
+.whj-alert-item.warning strong{color:var(--a)}.whj-alert-item.danger strong{color:var(--r)}.whj-alert-item.good strong{color:var(--g)}
+.whj-alert-meta{font-size:9px;color:var(--m);margin-top:10px}
+.whj-toast{position:fixed;z-index:120;bottom:24px;left:50%;transform:translate(-50%,18px);opacity:0;pointer-events:none;max-width:min(440px,calc(100vw - 28px));padding:12px 16px;border:1px solid #45627b;border-radius:12px;background:#132b40;color:#eff8ff;font-size:11px;line-height:1.7;box-shadow:0 12px 35px #0007;transition:opacity .2s,transform .2s}
+.whj-toast.show{opacity:1;transform:translate(-50%,0)}
+.whj-toast.warning{border-color:#886b39}.whj-toast.danger{border-color:#8d4354}
+body[data-whj-theme="light"] .whj-command-box,body[data-whj-theme="light"] .whj-alert-panel{background:#fff}
+@media(max-width:700px){.whj-command-btn,.whj-alert-btn{padding:8px 9px;font-size:9px}.whj-alert-panel{top:auto;bottom:88px;left:10px}.whj-command-overlay{padding-top:8vh}}
+
 </style></head><body><div class="shell"><aside class="side"><div class="brand"><div class="logo">₿</div><div><b>WHJ BITCOIN</b><small>مركز قيادة التداول الذكي</small></div></div><div class="navlabel">القائمة الرئيسية</div><nav class="nav"><button class="active" data-view="overview"><span class="ico">⌂</span>الرئيسية</button><button data-view="scanner"><span class="ico">⌁</span>ماسح السوق</button><button data-view="strategies"><span class="ico">◈</span>الاستراتيجيات</button><button data-view="trades"><span class="ico">⇄</span>الصفقات</button><button data-view="risk"><span class="ico">⌁</span>المخاطر</button><button data-view="system"><span class="ico">⚙</span>النظام</button><button data-view="forward"><span class="ico">◷</span>المراقبة المستقبلية</button></nav><div class="sidefoot">WHJ Bitcoin Bot 2026<br>مراقبة وتحليل · Paper Trading فقط</div></aside><main>
 <div class="mobilehead">WHJ BITCOIN · مركز القيادة</div><header class="top"><div><div class="eyebrow">WHJ / COMMAND CENTER</div><h1 id="pageTitle">نظرة عامة</h1><div class="sub">مراقبة أداء البوت وتحليل BTC/USD</div></div><div class="topright"><button class="toolbtn" id="exportJson" type="button">تنزيل التقرير JSON</button><button class="toolbtn" id="exportCsv" type="button">تصدير الصفقات CSV</button><span class="pill"><i class="dot"></i><span id="systemState">جارٍ تحميل البيانات</span></span><button class="refresh" id="refresh">↻ تحديث البيانات</button></div></header>
 <div class="banner"><div><b>وضع الحماية مفعّل — التداول الحقيقي متوقف</b><p>تعرض اللوحة بيانات التحليل والمحاكاة فقط، ولا ترسل أوامر إلى منصات التداول.</p></div><span class="status">● PAPER MODE</span></div>
@@ -357,4 +404,81 @@ document.querySelectorAll(".nav button").forEach(b=>b.addEventListener("click",(
  const status=document.getElementById("systemState");
  if(status){const observer=new MutationObserver(()=>{const text=status.textContent||"";status.title=text;status.setAttribute("aria-live","polite")});observer.observe(status,{childList:true,subtree:true,characterData:true})}
 })();
+
+/* WHJ Command Center: searchable navigation, safe quick actions and data alerts */
+(function(){
+ const top=document.querySelector(".topright");
+ if(!top)return;
+ const pages=[...document.querySelectorAll(".nav button")];
+ const commands=[
+  ...pages.map((b)=>({label:b.textContent.trim(),hint:"الانتقال إلى القسم",run:()=>b.click()})),
+  {label:"تحديث بيانات التقرير",hint:"إعادة تحميل report.json",run:()=>document.getElementById("refresh")?.click()},
+  {label:"تنزيل التقرير JSON",hint:"حفظ نسخة من التقرير الحالي",run:()=>document.getElementById("exportJson")?.click()},
+  {label:"تصدير الصفقات CSV",hint:"تنزيل سجل الصفقات الورقية",run:()=>document.getElementById("exportCsv")?.click()},
+  {label:"تبديل المظهر",hint:"فاتح / داكن",run:()=>document.getElementById("whjThemeToggle")?.click()},
+  {label:"تبديل كثافة العرض",hint:"مضغوط / مريح",run:()=>document.getElementById("whjCompactToggle")?.click()},
+  {label:"ملء الشاشة",hint:"توسيع مساحة العمل",run:()=>document.getElementById("whjFullscreen")?.click()}
+ ];
+ const commandButton=document.createElement("button");
+ commandButton.type="button";commandButton.className="whj-command-btn";commandButton.textContent="⌕ بحث سريع";commandButton.setAttribute("aria-label","فتح البحث والتنقل السريع");commandButton.title="Ctrl + K";
+ top.insertBefore(commandButton,top.firstChild);
+ const alertButton=document.createElement("button");
+ alertButton.type="button";alertButton.className="whj-alert-btn";alertButton.innerHTML="♧ التنبيهات <span class='whj-alert-count' hidden>0</span>";alertButton.setAttribute("aria-label","فتح مركز التنبيهات");
+ top.insertBefore(alertButton,top.querySelector(".pill"));
+ const overlay=document.createElement("div");overlay.className="whj-command-overlay";overlay.id="whjCommandOverlay";
+ overlay.innerHTML='<div class="whj-command-box" role="dialog" aria-modal="true" aria-label="البحث والتنقل السريع"><input class="whj-command-search" id="whjCommandSearch" type="search" placeholder="ابحث عن قسم أو إجراء..." autocomplete="off"><div class="whj-command-list" id="whjCommandList"></div><div class="whj-command-foot">Enter للتنفيذ · Esc للإغلاق · Ctrl + K للفتح</div></div>';
+ document.body.appendChild(overlay);
+ const alertPanel=document.createElement("section");alertPanel.className="whj-alert-panel";alertPanel.id="whjAlertPanel";alertPanel.setAttribute("aria-label","مركز تنبيهات النظام");
+ alertPanel.innerHTML='<h3>مركز التنبيهات</h3><div id="whjAlertItems" aria-live="polite"></div><div class="whj-alert-meta" id="whjAlertMeta">تُحدّث التنبيهات مع كل تقرير جديد.</div>';
+ document.body.appendChild(alertPanel);
+ const toast=document.createElement("div");toast.className="whj-toast";toast.id="whjToast";toast.setAttribute("role","status");toast.setAttribute("aria-live","polite");document.body.appendChild(toast);
+ const search=overlay.querySelector("#whjCommandSearch"),list=overlay.querySelector("#whjCommandList");
+ let visibleCommands=[],toastTimer=null,lastAlertKey="";
+ const closePalette=()=>{overlay.classList.remove("open");commandButton.focus()};
+ const openPalette=()=>{overlay.classList.add("open");search.value="";drawCommands("");setTimeout(()=>search.focus(),0)};
+ const drawCommands=(query)=>{
+  const q=String(query||"").trim().toLocaleLowerCase();
+  visibleCommands=commands.filter(x=>(x.label+" "+x.hint).toLocaleLowerCase().includes(q));
+  list.replaceChildren();
+  if(!visibleCommands.length){const empty=document.createElement("div");empty.className="whj-command-empty";empty.textContent="لا توجد نتائج مطابقة.";list.appendChild(empty);return}
+  visibleCommands.forEach((item,index)=>{const b=document.createElement("button");b.type="button";b.className="whj-command-item";b.innerHTML="<span></span><small></small>";b.children[0].textContent=item.label;b.children[1].textContent=item.hint;b.addEventListener("click",()=>{closePalette();item.run()});list.appendChild(b);if(index===0)b.dataset.first="true"});
+ };
+ commandButton.addEventListener("click",openPalette);
+ overlay.addEventListener("click",e=>{if(e.target===overlay)closePalette()});
+ search.addEventListener("input",()=>drawCommands(search.value));
+ search.addEventListener("keydown",e=>{if(e.key==="Escape"){closePalette();return}if(e.key==="Enter"&&visibleCommands[0]){e.preventDefault();const item=visibleCommands[0];closePalette();item.run()}});
+ alertButton.addEventListener("click",()=>{alertPanel.classList.toggle("open");if(alertPanel.classList.contains("open"))alertPanel.focus()});
+ document.addEventListener("click",e=>{if(!alertPanel.contains(e.target)&&!alertButton.contains(e.target))alertPanel.classList.remove("open")});
+ const showToast=(message,kind="warning")=>{toast.textContent=message;toast.className="whj-toast show "+kind;clearTimeout(toastTimer);toastTimer=setTimeout(()=>toast.classList.remove("show"),4800)};
+ const addAlert=(items,kind,title,detail)=>items.push({kind,title,detail});
+ const updateAlerts=()=>{
+  if(typeof report==="undefined"||!report)return;
+  const q=report.market_data_quality||{},items=[];
+  if(q.quality_status==="BLOCKED")addAlert(items,"danger","جودة بيانات السوق محجوبة",(q.quality_block_reasons||[]).join("، ")||"لا تعتمد على الإشارة حتى تُحل المشكلة.");
+  else if(q.quality_status!=="HEALTHY")addAlert(items,"warning","حالة جودة البيانات غير مؤكدة","تحقق من مصدر البيانات قبل تفسير الإشارات.");
+  const age=Number(q.latest_closed_candle_age_minutes);
+  if(Number.isFinite(age)&&age>180)addAlert(items,"warning","بيانات الشموع متأخرة","عمر آخر شمعة مغلقة "+age.toFixed(0)+" دقيقة.");
+  const gaps=Number(q.recent_missing_hour_gaps);
+  if(Number.isFinite(gaps)&&gaps>0)addAlert(items,"warning","فجوات في بيانات السوق","عدد الفجوات المسجلة: "+gaps+".");
+  const stamp=Date.parse(report.time||"");
+  const reportAge=(Date.now()-stamp)/60000;
+  if(Number.isFinite(reportAge)&&reportAge>180)addAlert(items,"warning","التقرير قديم","مرّ "+Math.floor(reportAge/60)+" ساعة منذ إنشاء التقرير.");
+  if(!items.length)addAlert(items,"good","لا توجد تنبيهات حرجة","آخر تقرير لا يعرض تحذيرات جودة معروفة؛ استمر بمراجعة البيانات.");
+  const container=alertPanel.querySelector("#whjAlertItems");container.replaceChildren();
+  items.forEach(item=>{const row=document.createElement("div");row.className="whj-alert-item "+item.kind;const strong=document.createElement("strong");strong.textContent=item.title;const detail=document.createElement("span");detail.textContent=item.detail;row.append(strong,detail);container.appendChild(row)});
+  const count=items.filter(x=>x.kind!=="good").length,badge=alertButton.querySelector(".whj-alert-count");badge.textContent=String(count);badge.hidden=count===0;
+  const meta=alertPanel.querySelector("#whjAlertMeta");meta.textContent="آخر تحديث: "+(report.time?new Date(report.time).toLocaleString("ar-IQ"):"غير متوفر")+" · التنبيهات مبنية على التقرير المتاح.";
+  const key=items.map(x=>x.title+":"+x.detail).join("|");
+  if(lastAlertKey&&key!==lastAlertKey&&count>0)showToast(items.find(x=>x.kind!=="good").title,"warning");
+  lastAlertKey=key;
+ };
+ const originalRender=render;
+ render=function(){originalRender();updateAlerts()};
+ if(typeof report!=="undefined"&&report)updateAlerts();
+ document.addEventListener("keydown",e=>{
+  if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==="k"){e.preventDefault();openPalette();return}
+  if(e.key==="Escape"){overlay.classList.remove("open");alertPanel.classList.remove("open")}
+ });
+})();
+
 </script></body></html>

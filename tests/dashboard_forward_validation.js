@@ -156,4 +156,19 @@ assert.match(html, /whjShortcutHelp/, "Dashboard must expose keyboard shortcut h
 assert.match(html, /requestFullscreen/, "Dashboard must support fullscreen mode");
 assert.match(html, /aria-current/, "Dashboard navigation must expose its active page accessibly");
 
+
+assert.match(html, /grid-template-columns:230px minmax\(0,1fr\)/, "Desktop shell must constrain the content column");
+assert.match(html, /html,body\{width:100%;max-width:100%;overflow-x:clip\}/, "Dashboard must prevent horizontal viewport drift");
+assert.match(html, /main\{min-width:0;width:100%\}/, "Main content must shrink inside the shell");
+assert.match(html, /\.tablewrap\{min-width:0;max-width:100%;overflow-x:auto\}/, "Wide tables must scroll inside their own container");
+assert.match(html, /\.nav\{width:100%;min-width:0\}/, "Mobile navigation must stay within viewport width");
+
+
+assert.match(html, /whjCommandOverlay/, "Dashboard must expose a searchable command palette");
+assert.match(html, /Ctrl \+ K/, "Dashboard must document the command-palette shortcut");
+assert.match(html, /whjAlertPanel/, "Dashboard must expose a live data alert center");
+assert.match(html, /latest_closed_candle_age_minutes/, "Dashboard alerts must inspect candle freshness");
+assert.match(html, /recent_missing_hour_gaps/, "Dashboard alerts must surface missing candle gaps");
+assert.match(html, /whjToast/, "Dashboard must expose accessible status notifications");
+
 console.log("Dashboard forward-report and premium UX tests passed.");
