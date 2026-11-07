@@ -82,6 +82,25 @@ class PersistentPaperAccountTests(unittest.TestCase):
             self.assertFalse(result["open_position"])
             self.assertGreaterEqual(result["completed_trades"], 1)
 
+    def test_daily_bollinger_paper_account_enters_and_exits_on_reversion(self):
+        with tempfile.TemporaryDirectory() as folder:
+            state_path = str(Path(folder) / "bollinger.json")
+            prices = [100.0 + i for i in range(200)] + [250.0, 251.0, 290.0, 295.0]
+            candles = [
+                [i * 86400, "0", "0", "0", str(price)]
+                for i, price in enumerate(prices)
+            ]
+            result = update_paper_account(
+                candles,
+                state_path=state_path,
+                strategy="bollinger_mean_reversion",
+            )
+            self.assertEqual(result["completed_trades"], 1)
+            self.assertFalse(result["open_position"])
+            self.assertGreater(result["return_pct"], 0)
+            saved = json.loads(Path(state_path).read_text(encoding="utf-8"))
+            self.assertEqual(saved["holding_bars"], 0)
+
     def test_daily_loss_guard_uses_previous_completed_candle(self):
         with tempfile.TemporaryDirectory() as folder:
             state_path = str(Path(folder) / "daily_loss.json")
