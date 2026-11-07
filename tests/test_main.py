@@ -115,6 +115,8 @@ class PaperTradingTests(unittest.TestCase):
         self.assertIn("buy_and_hold", result["strategies"])
         self.assertIn("out_of_sample", result["strategies"]["ema_trend"])
         self.assertIn("sma200_regime", result["strategies"])
+        self.assertIn("donchian_55_20", result["strategies"])
+        self.assertIn("ema200_filter", result["strategies"])
 
     def test_strategy_lab_rejects_short_or_invalid_data(self):
         with self.assertRaises(ValueError):
