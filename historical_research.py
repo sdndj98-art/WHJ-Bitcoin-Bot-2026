@@ -793,6 +793,43 @@ def build_qualification_markdown(result):
         f"- Out-of-sample maximum drawdown no greater than {policy['maximum_oos_drawdown_pct']}%",
         "- All three chronological out-of-sample windows non-negative", "",
     ]
+    hourly_research = (
+        result.get("timeframe_research", {})
+        .get("1h", {})
+        .get("research", {})
+    )
+    regime_diagnostics = hourly_research.get("market_regime_diagnostics", {})
+    regime_rows = regime_diagnostics.get("regimes", {})
+    if regime_rows:
+        lines.extend([
+            "## 1h out-of-sample market-regime diagnostics",
+            "",
+            "Regimes are classified from the close, 200-SMA, and its 20-bar slope. "
+            "Forward market returns are measured only after classification. "
+            "Strategy exposure is descriptive and is not strategy PnL.",
+            "",
+        ])
+        for regime_name, metrics in regime_rows.items():
+            if not metrics.get("bars"):
+                lines.append(f"- **{regime_name}:** insufficient bars.")
+                continue
+            exposure = metrics.get("strategy_exposure_pct", {})
+            most_exposed = sorted(
+                ((name, value) for name, value in exposure.items() if value is not None),
+                key=lambda item: item[1],
+                reverse=True,
+            )[:3]
+            exposure_text = ", ".join(
+                f"{name} {value:.1f}%" for name, value in most_exposed
+            ) or "not available"
+            lines.append(
+                f"- **{regime_name}:** {metrics['bars']} bars; "
+                f"market forward return {metrics['market_forward_return_pct']:+.2f}%; "
+                f"positive next-bar frequency {metrics['positive_forward_bar_pct']:.1f}%; "
+                f"highest signal exposure: {exposure_text}."
+            )
+        lines.append("")
+
     total = passed = 0
     for group_name, strategies in groups.items():
         lines.extend([f"## {group_name}", ""])
