@@ -16,6 +16,12 @@ const report = {
   status: "PAPER_MONITORING",
   initial_cash_usd: 1600,
   equity_after_estimated_exit_costs_usd: 1600,
+  cash_usd: 1600,
+  btc_units: 0,
+  gross_exposure_usd: 0,
+  gross_exposure_pct_of_equity: 0,
+  fees_paid_usd: 0,
+  open_positions: 0,
   return_pct: 0,
   cycle_status: "WAITING_FOR_NEW_CLOSED_CANDLES",
   total_processed_new_candles: 0,
@@ -25,6 +31,13 @@ const report = {
   data_quality: { quality: "HEALTHY" },
   sleeves_summary: Object.fromEntries(keys.map((key, index) => [key, {
     equity_usd: allocations[index],
+    cash_usd: allocations[index],
+    btc_units: 0,
+    exposure_usd: 0,
+    exposure_pct_of_equity: 0,
+    fees_paid_usd: 0,
+    current_consecutive_losses: 0,
+    open_position: false,
     return_pct: 0,
     completed_trades: 0,
     processed_new_candles: 0,
@@ -39,6 +52,14 @@ const report = {
 
 assert.equal(validate(report), report, "Valid five-sleeve report should pass");
 assert.match(report.cycle_status, /WAITING_FOR_NEW_CLOSED_CANDLES/);
+assert.equal(report.gross_exposure_usd, 0);
+assert.equal(report.open_positions, 0);
+const inconsistentExposure = structuredClone(report);
+inconsistentExposure.gross_exposure_usd = 10;
+assert.throws(() => validate(inconsistentExposure), /تفاصيل الحسابات لا تطابق إجمالي التعرّض والسيولة/);
+const inconsistentExposureRatio = structuredClone(report);
+inconsistentExposureRatio.gross_exposure_pct_of_equity = 1;
+assert.throws(() => validate(inconsistentExposureRatio), /نسبة التعرّض الإجمالية/);
 const inconsistentCycle = structuredClone(report);
 inconsistentCycle.total_processed_new_candles = 1;
 assert.throws(() => validate(inconsistentCycle), /إجمالي الشموع المعالجة/);
@@ -79,6 +100,10 @@ assert.match(getElement("forwardCycle").textContent, /لا توجد شموع س�
 assert.match(getElement("forwardRows").innerHTML, /1h · SMA Trend/);
 assert.match(getElement("forwardRows").innerHTML, /\$2\.50/);
 assert.match(getElement("forwardRows").innerHTML, /4\.25%/);
+assert.match(getElement("forwardRows").innerHTML, /\$0\.00/);
+assert.equal(getElement("forwardExposure").textContent, "$0.00 · 0.00%");
+assert.equal(getElement("forwardOpenPositions").textContent, "0");
+assert.equal(getElement("forwardFees").textContent, "$0.00");
 assert.equal((getElement("forwardRows").innerHTML.match(/<tr>/g) || []).length, 5);
 
 
