@@ -32,11 +32,30 @@ jobs:
         with:
           python-version: "3.12"
 
+      - name: Restore multi-timeframe paper account state
+        uses: actions/cache/restore@v4
+        with:
+          path: |
+            paper_daily_sma20_50.json
+            paper_4h_ema50_200.json
+          key: whj-mtf-paper-v1-${{ github.run_id }}-${{ github.run_attempt }}
+          restore-keys: |
+            whj-mtf-paper-v1-
+
       - name: Run historical data ingestion tests
         run: python -m unittest discover -s tests -p 'test_historical_research.py' -v
 
       - name: Run two-year historical research
         run: python historical_research.py
+
+      - name: Save multi-timeframe paper account state
+        if: success() && hashFiles('paper_daily_sma20_50.json', 'paper_4h_ema50_200.json') != ''
+        uses: actions/cache/save@v4
+        with:
+          path: |
+            paper_daily_sma20_50.json
+            paper_4h_ema50_200.json
+          key: whj-mtf-paper-v1-${{ github.run_id }}-${{ github.run_attempt }}
 
       - name: Save historical research report
         uses: actions/upload-artifact@v4
