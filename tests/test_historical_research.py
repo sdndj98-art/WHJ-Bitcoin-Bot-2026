@@ -290,7 +290,7 @@ class HistoricalResearchTests(unittest.TestCase):
         result = run_multi_timeframe_ensemble_lab(candles)
         self.assertEqual(result["bar_count_4h"], 24 * 210 // 4)
         self.assertEqual(result["bar_count_6h"], 24 * 210 // 6)
-        self.assertIn("last fully closed 6h", result["execution"])
+        self.assertIn("most recent fully closed 6h", result["execution"])
         candidate = result["strategies"]["ema50_200_4h_6h_consensus"]
         self.assertEqual(len(candidate["walk_forward_windows"]), 3)
         self.assertTrue(math.isfinite(candidate["out_of_sample"]["return_pct"]))
