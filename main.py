@@ -9,6 +9,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from paper_trading import run_backtest
+from strategy_lab import run_strategy_lab
 
 API = "https://api.kraken.com/0/public/OHLC?pair=XBTUSD&interval=60"
 REPORT_PATH = Path("report.json")
@@ -73,6 +74,7 @@ def analyze(prices):
         "SMA50": round(sma50, 2),
         "signal": signal,
         "paper_backtest": run_backtest(prices),
+        "strategy_lab": run_strategy_lab(prices),
         "disclaimer": "Historical simulation is not a forecast or financial advice. No real orders were placed."
     }
 
