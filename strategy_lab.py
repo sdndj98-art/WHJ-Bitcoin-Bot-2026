@@ -197,6 +197,35 @@ def _simulate(prices, signals, start, end, fee=0.001, slippage=0.0005):
 
 
 
+
+def _consensus_signals(signals):
+    """Build an equal-weight, three-family long-only consensus from completed-bar rules."""
+    trend_names = (
+        "sma_trend", "ema_trend", "sma200_regime", "ema50_200_regime",
+        "sma200_filter", "ema200_filter", "sma50_200_cross", "donchian_55_20",
+    )
+    reversion_names = (
+        "rsi2_mean_reversion", "rsi14_mean_reversion",
+        "bollinger_mean_reversion",
+    )
+    required = set(trend_names + ("rsi_momentum",) + reversion_names)
+    missing = sorted(required.difference(signals))
+    if missing:
+        raise ValueError("Missing consensus signal families: " + ", ".join(missing))
+    lengths = {len(signals[name]) for name in required}
+    if len(lengths) != 1:
+        raise ValueError("Consensus input signal series must have equal lengths")
+    count = lengths.pop()
+    consensus = []
+    for index in range(count):
+        trend_votes = sum(bool(signals[name][index]) for name in trend_names)
+        momentum_vote = bool(signals["rsi_momentum"][index])
+        reversion_votes = sum(bool(signals[name][index]) for name in reversion_names)
+        family_votes = int(trend_votes >= 4) + int(momentum_vote) + int(reversion_votes >= 2)
+        consensus.append(family_votes >= 2)
+    return consensus
+
+
 def _market_regime_diagnostics(prices, signals, start_index):
     """Describe OOS market regimes using only information available at each close.
 
@@ -292,6 +321,7 @@ def run_strategy_lab(prices, fee=0.001, slippage=0.0005):
 
     split = int(len(prices) * 0.7)
     signals = _signals(prices)
+    signals["regime_aware_consensus"] = _consensus_signals(signals)
     results = {}
     # Three chronological evaluation windows after the initial warm-up.
     # These are fixed-rule rolling windows, not parameter re-optimization.
@@ -371,6 +401,17 @@ def run_strategy_lab(prices, fee=0.001, slippage=0.0005):
         "execution": "Previous completed close signal; next close fill; 25% equity allocation; fee and slippage applied.",
         "benchmark_note": "Buy-and-hold benchmark uses the same 25% initial allocation as strategy entries; remaining cash stays uninvested for an exposure-matched comparison.",
         "walk_forward_note": "The 30% out-of-sample holdout is split into three sequential non-overlapping windows; parameters are fixed and not retuned.",
+        "ensemble_methodology": {
+            "name": "regime_aware_consensus",
+            "families": {
+                "trend": {"indicators": 8, "family_vote_threshold": "at least 4 of 8"},
+                "momentum": {"indicators": 1, "family_vote_threshold": "RSI momentum confirmation active"},
+                "mean_reversion": {"indicators": 3, "family_vote_threshold": "at least 2 of 3"},
+            },
+            "entry_rule": "At least two of the three equally weighted strategy families must agree.",
+            "execution": "Same prior completed close signal, next close fill, 25% allocation, fees, slippage, chronological holdout, and walk-forward windows as component strategies.",
+            "safety": "Research candidate only; it must independently pass the same out-of-sample and elevated-cost qualification gates.",
+        },
         "selection_warning": "No strategy is declared a winner from these tests alone. Require positive out-of-sample evidence across multiple market regimes and longer periods before considering deployment.",
         "strategies": results,
     }
