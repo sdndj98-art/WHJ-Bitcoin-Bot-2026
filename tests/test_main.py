@@ -41,6 +41,18 @@ class AnalysisTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             main.analyze([100.0] * 50 + [True])
 
+    def test_candle_quality_blocks_recent_gaps_and_stale_data(self):
+        candles = [[i * 3600, "1", "1", "1", "100", "1", "1", 1] for i in range(60)]
+        now = candles[-1][0] + 3600 + 300
+        self.assertTrue(main.assess_candle_quality(candles, now)["paper_execution_allowed"])
+        recent_gap = [row[:] for row in candles]
+        for i in range(30, len(recent_gap)):
+            recent_gap[i][0] += 3600
+        quality = main.assess_candle_quality(recent_gap, now + 3600)
+        self.assertFalse(quality["paper_execution_allowed"])
+        stale = main.assess_candle_quality(candles, now + 3 * 3600)
+        self.assertFalse(stale["paper_execution_allowed"])
+
     @patch("main.urllib.request.urlopen")
     def test_fetch_excludes_current_incomplete_candle(self, mocked_open):
         candles = [[i, "1", "1", "1", str(100 + i), "1", "1", 1] for i in range(52)]
