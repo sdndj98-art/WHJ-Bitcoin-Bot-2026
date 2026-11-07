@@ -438,7 +438,7 @@ def update_paper_account(candles, state_path="paper_account_state.json",
                     state["fees_paid"] += fee
                     if strategy in ("bollinger_mean_reversion", "rsi14_mean_reversion"):
                         state["holding_bars"] = 0
-            elif (want_flat or daily_loss_hit or state.get("paused_for_drawdown", False) or state.get("paused_for_loss_streak", False)) and state["btc"] > 0:
+            elif (want_flat or daily_loss_hit or state.get("paused_for_drawdown", False) or state.get("paused_for_loss_streak", False) or state.get("paused_for_strategy_health", False)) and state["btc"] > 0:
                 fill = close * (1 - slippage_rate)
                 gross = state["btc"] * fill
                 fee = gross * fee_rate
@@ -522,6 +522,7 @@ def update_paper_account(candles, state_path="paper_account_state.json",
                 ("maximum_drawdown", bool(state.get("paused_for_drawdown", False))),
                 ("daily_loss_limit", bool(state.get("daily_loss_paused", False))),
                 ("consecutive_loss_limit", bool(state.get("paused_for_loss_streak", False))),
+                ("strategy_health_deterioration", bool(state.get("paused_for_strategy_health", False))),
             ) if active
         ],
         "recent_trades": completed[-20:],
@@ -530,6 +531,7 @@ def update_paper_account(candles, state_path="paper_account_state.json",
         "paused_for_drawdown": bool(state.get("paused_for_drawdown", False)),
         "daily_loss_paused": bool(state.get("daily_loss_paused", False)),
         "paused_for_loss_streak": bool(state.get("paused_for_loss_streak", False)),
+        "paused_for_strategy_health": bool(state.get("paused_for_strategy_health", False)),
         "risk_limits": {
             "max_drawdown_pct": round(max_drawdown_fraction * 100, 2),
             "daily_loss_pause_pct": round(daily_loss_fraction * 100, 2),
