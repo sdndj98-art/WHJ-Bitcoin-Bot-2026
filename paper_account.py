@@ -35,6 +35,7 @@ def _new_state(initial_cash, strategy="sma_trend"):
         "max_drawdown_pct": 0.0,
         "daily_bucket": None,
         "daily_loss_paused": False,
+        "paused_for_loss_streak": False,
         "daily_start_equity": float(initial_cash),
         "paused_for_drawdown": False,
         "trades": [],
@@ -119,7 +120,7 @@ def update_paper_account(candles, state_path="paper_account_state.json",
                          initial_cash=1000.0, fee_rate=0.001,
                          slippage_rate=0.0005, allocation_fraction=0.25,
                          max_drawdown_fraction=0.10, daily_loss_fraction=0.03,
-                         strategy="sma_trend"):
+                         max_consecutive_losses=5, strategy="sma_trend"):
     """Process each newly closed hourly candle once and persist the simulated account."""
     initial_cash = _number(initial_cash, "initial_cash", 0)
     if initial_cash <= 0:
@@ -129,6 +130,8 @@ def update_paper_account(candles, state_path="paper_account_state.json",
     allocation_fraction = _number(allocation_fraction, "allocation_fraction", 0.01, 1)
     max_drawdown_fraction = _number(max_drawdown_fraction, "max_drawdown_fraction", 0.001, 1)
     daily_loss_fraction = _number(daily_loss_fraction, "daily_loss_fraction", 0.001, 1)
+    if isinstance(max_consecutive_losses, bool) or not isinstance(max_consecutive_losses, int) or max_consecutive_losses < 1:
+        raise ValueError("max_consecutive_losses must be a positive integer")
     if strategy not in ("sma_trend", "ema_trend", "rsi_momentum", "sma200_regime", "ema50_200_regime", "bollinger_mean_reversion", "rsi14_mean_reversion"):
         raise ValueError("Unknown paper strategy")
 
@@ -249,7 +252,19 @@ def update_paper_account(candles, state_path="paper_account_state.json",
                 state["paused_for_drawdown"] = True
             if daily_loss_hit:
                 state["daily_loss_paused"] = True
-            paused = state.get("paused_for_drawdown", False) or state.get("daily_loss_paused", False)
+            loss_streak = 0
+            for prior_trade in reversed(state["trades"]):
+                if float(prior_trade.get("pnl_usd", 0)) < 0:
+                    loss_streak += 1
+                else:
+                    break
+            if loss_streak >= max_consecutive_losses:
+                state["paused_for_loss_streak"] = True
+            paused = (
+                state.get("paused_for_drawdown", False)
+                or state.get("daily_loss_paused", False)
+                or state.get("paused_for_loss_streak", False)
+            )
 
             if want_long and state["btc"] == 0 and not paused:
                 equity = state["cash"]
@@ -264,7 +279,7 @@ def update_paper_account(candles, state_path="paper_account_state.json",
                     state["fees_paid"] += fee
                     if strategy in ("bollinger_mean_reversion", "rsi14_mean_reversion"):
                         state["holding_bars"] = 0
-            elif (want_flat or daily_loss_hit or state.get("paused_for_drawdown", False)) and state["btc"] > 0:
+            elif (want_flat or daily_loss_hit or state.get("paused_for_drawdown", False) or state.get("paused_for_loss_streak", False)) and state["btc"] > 0:
                 fill = close * (1 - slippage_rate)
                 gross = state["btc"] * fill
                 fee = gross * fee_rate
@@ -351,11 +366,13 @@ def update_paper_account(candles, state_path="paper_account_state.json",
         "fees_paid_usd": round(state["fees_paid"], 4),
         "paused_for_drawdown": bool(state.get("paused_for_drawdown", False)),
         "daily_loss_paused": bool(state.get("daily_loss_paused", False)),
+        "paused_for_loss_streak": bool(state.get("paused_for_loss_streak", False)),
         "risk_limits": {
             "max_drawdown_pct": round(max_drawdown_fraction * 100, 2),
             "daily_loss_pause_pct": round(daily_loss_fraction * 100, 2),
+            "max_consecutive_losses": max_consecutive_losses,
             "allocation_pct": round(allocation_fraction * 100, 2),
         },
         "state_persisted": Path(state_path).exists(),
-        "warning": "Paper simulation only. Daily loss pauses new entries; max drawdown pause is persistent and requires manual review/reset.",
+        "warning": "Paper simulation only. Daily loss, max drawdown and consecutive-loss pauses block new entries; persistent pauses require manual review/reset.",
     }
