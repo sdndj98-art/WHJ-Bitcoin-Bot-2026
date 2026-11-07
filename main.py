@@ -160,7 +160,8 @@ def analyze(prices):
         "SMA50": round(sma50, 2),
         "signal": signal,
         "paper_backtest": backtest,
-        "monte_carlo_risk": risk_diagnostics,\n        "block_bootstrap_risk": block_risk_diagnostics,
+        "monte_carlo_risk": risk_diagnostics,
+        "block_bootstrap_risk": block_risk_diagnostics,
         "strategy_lab": strategy_lab,
         "disclaimer": "Historical simulation is not a forecast or financial advice. No real orders were placed."
     }
