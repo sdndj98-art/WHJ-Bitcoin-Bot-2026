@@ -37,7 +37,7 @@ class DashboardContractTests(unittest.TestCase):
         required = {
             "forward", "forwardFile", "clearForward", "forwardMessage",
             "forwardStatus", "forwardInitial", "forwardEquity", "forwardReturn",
-            "forwardTrades", "forwardRows", "forwardAllocation", "forwardMaxDD",
+            "forwardTrades", "forwardCash", "forwardExposure", "forwardOpenPositions", "forwardFees", "forwardRows", "forwardAllocation", "forwardMaxDD",
             "forwardDaily", "forwardStreak", "forwardQuality", "forwardCandle", "forwardCycle",
         }
         self.assertTrue(required.issubset(set(self.parser.ids)))
@@ -53,6 +53,8 @@ class DashboardContractTests(unittest.TestCase):
             self.assertIn(sleeve, self.source)
         self.assertIn("خمسة حسابات مستقلة", self.source)
         self.assertIn("تفاصيل الاستراتيجيات الخمس", self.source)
+        self.assertIn("التعرّض السوقي الإجمالي", self.source)
+        self.assertIn("تفاصيل الحسابات لا تطابق إجمالي التعرّض والسيولة", self.source)
 
     def test_market_regime_diagnostics_are_visible_and_caveated(self):
         self.assertIn("regimeRows", set(self.parser.ids))
