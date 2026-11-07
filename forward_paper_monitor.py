@@ -253,6 +253,15 @@ def process_forward_accounts(candles, state_dir=".", now_timestamp=None):
             "last_processed_timestamp": account["last_processed_timestamp"],
             "processed_new_candles": account["processed_new_candles"],
             "equity_usd": account["equity_after_estimated_exit_costs_usd"],
+            "cash_usd": account["cash_usd"],
+            "btc_units": account["btc_units"],
+            "exposure_usd": round(account["btc_units"] * candles[-1]["close"], 2),
+            "exposure_pct_of_equity": round(
+                account["btc_units"] * candles[-1]["close"]
+                / account["equity_after_estimated_exit_costs_usd"] * 100.0, 4
+            ),
+            "fees_paid_usd": account["fees_paid_usd"],
+            "current_consecutive_losses": account["current_consecutive_losses"],
             "return_pct": account["return_pct"],
             "completed_trades": account["completed_trades"],
             "win_rate_pct": account["win_rate_pct"],
@@ -265,6 +274,11 @@ def process_forward_accounts(candles, state_dir=".", now_timestamp=None):
     total_processed_new_candles = sum(
         item["processed_new_candles"] for item in summary.values()
     )
+    total_cash = sum(item["cash_usd"] for item in summary.values())
+    total_btc = sum(item["btc_units"] for item in summary.values())
+    total_exposure = sum(item["exposure_usd"] for item in summary.values())
+    total_fees = sum(item["fees_paid_usd"] for item in summary.values())
+    open_positions = sum(1 for item in summary.values() if item["open_position"])
     cycle_status = (
         "PROCESSED_NEW_CANDLES"
         if total_processed_new_candles > 0
@@ -286,6 +300,12 @@ def process_forward_accounts(candles, state_dir=".", now_timestamp=None):
         "latest_hourly_candle_timestamp": candles[-1]["timestamp"],
         "initial_cash_usd": round(total_initial, 2),
         "equity_after_estimated_exit_costs_usd": round(total_equity, 2),
+        "cash_usd": round(total_cash, 2),
+        "btc_units": round(total_btc, 8),
+        "gross_exposure_usd": round(total_exposure, 2),
+        "gross_exposure_pct_of_equity": round(total_exposure / total_equity * 100.0, 4),
+        "fees_paid_usd": round(total_fees, 4),
+        "open_positions": open_positions,
         "return_pct": round((total_equity / total_initial - 1) * 100, 4),
         "completed_trades": sum(v["completed_trades"] for v in summary.values()),
         "sleeves_summary": summary,
