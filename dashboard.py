@@ -19,7 +19,10 @@ def build_dashboard(report):
     ) or '<tr><td colspan="2">No completed trades yet</td></tr>'
 
     account = report.get("persistent_paper_account", {})
+    quality = report.get("market_data_quality", {})
     fields = [
+        ("Market data fresh", quality.get("latest_candle_fresh", "—")),
+        ("Recent missing hourly gaps", quality.get("recent_missing_hour_gaps", "—")),
         ("Persistent paper equity (USD)", account.get("equity_after_estimated_exit_costs_usd", "—")),
         ("Persistent paper return (%)", account.get("return_pct", "—")),
         ("Persistent paper cash (USD)", account.get("cash_usd", "—")),
