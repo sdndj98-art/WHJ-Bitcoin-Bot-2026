@@ -50,6 +50,12 @@ class DashboardContractTests(unittest.TestCase):
         self.assertIn("ROLLING_REVIEW_REQUIRED", self.source)
         self.assertIn("صافي آخر الصفقات", self.source)
 
+    def test_market_regime_diagnostics_are_visible_and_caveated(self):
+        self.assertIn("regimeRows", set(self.parser.ids))
+        self.assertIn("تحليل الاستراتيجيات حسب حالة السوق", self.source)
+        self.assertIn("ليس ربح صفقات فعلياً", self.source)
+        self.assertIn("strategy_signal_diagnostics", self.source)
+
     def test_forward_report_is_paper_only_and_consistency_checked(self):
         self.assertIn("FORWARD_ONLY_PAPER_NO_LIVE_ORDERS", self.source)
         self.assertIn("إجماليات الحسابات لا تطابق ملخص المحفظة", self.source)
