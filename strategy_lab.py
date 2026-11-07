@@ -160,7 +160,8 @@ def run_strategy_lab(prices, fee=0.001, slippage=0.0005):
     results = {}
     # Three chronological evaluation windows after the initial warm-up.
     # These are fixed-rule rolling windows, not parameter re-optimization.
-    walk_start = max(50, len(prices) // 2)
+    # Split the 30% holdout into three sequential, non-overlapping test windows.
+    walk_start = split
     window_edges = [
         walk_start + ((len(prices) - walk_start) * k) // 3
         for k in range(4)
@@ -228,7 +229,7 @@ def run_strategy_lab(prices, fee=0.001, slippage=0.0005):
         "out_of_sample_fraction_pct": 30,
         "execution": "Previous completed close signal; next close fill; 25% equity allocation; fee and slippage applied.",
         "benchmark_note": "Buy-and-hold benchmark uses the same 25% initial allocation as strategy entries; remaining cash stays uninvested for an exposure-matched comparison.",
-        "walk_forward_note": "Three chronological fixed-rule evaluation windows are reported independently; parameters are not retuned between windows.",
+        "walk_forward_note": "The 30% out-of-sample holdout is split into three sequential non-overlapping windows; parameters are fixed and not retuned.",
         "selection_warning": "No strategy is declared a winner from these tests alone. Require positive out-of-sample evidence across multiple market regimes and longer periods before considering deployment.",
         "strategies": results,
     }
