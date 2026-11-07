@@ -8,6 +8,9 @@ from historical_research import aggregate_candles, load_two_year_candles
 from paper_account import seed_forward_paper_account, update_paper_account
 
 STATE_FILES = {
+    "1h_sma_trend": "paper_forward_1h_sma_trend.json",
+    "1h_ema_trend": "paper_forward_1h_ema_trend.json",
+    "1h_rsi14_mean_reversion": "paper_forward_1h_rsi14_mean_reversion.json",
     "4h": "paper_forward_4h_ema50_200.json",
     "6h": "paper_forward_6h_ema50_200.json",
 }
@@ -164,25 +167,33 @@ def process_forward_accounts(candles, state_dir=".", now_timestamp=None):
     quality = validate_hourly_feed(candles, now_timestamp)
     directory = Path(state_dir)
     results = {}
-    for timeframe, hours in (("4h", 4), ("6h", 6)):
-        bars = aggregate_candles(candles, hours)
+    configurations = (
+        ("1h_sma_trend", 1, "sma_trend", 200.0),
+        ("1h_ema_trend", 1, "ema_trend", 200.0),
+        ("1h_rsi14_mean_reversion", 1, "rsi14_mean_reversion", 200.0),
+        ("4h", 4, "ema50_200_regime", 500.0),
+        ("6h", 6, "ema50_200_regime", 500.0),
+    )
+    for sleeve, hours, strategy, initial_cash in configurations:
+        bars = candles if hours == 1 else aggregate_candles(candles, hours)
         rows = _account_rows(bars)
-        state_path = directory / STATE_FILES[timeframe]
+        state_path = directory / STATE_FILES[sleeve]
         seed = seed_forward_paper_account(
-            rows, state_path=str(state_path), initial_cash=500.0
+            rows, state_path=str(state_path), initial_cash=initial_cash,
+            strategy=strategy,
         )
         account = update_paper_account(
             rows,
             state_path=str(state_path),
-            initial_cash=500.0,
+            initial_cash=initial_cash,
             allocation_fraction=0.10,
             max_drawdown_fraction=0.10,
             daily_loss_fraction=0.03,
             max_consecutive_losses=5,
-            strategy="ema50_200_regime",
+            strategy=strategy,
             strategy_health_pause=True,
         )
-        results[timeframe] = {"seed": seed, "account": account}
+        results[sleeve] = {"seed": seed, "account": account}
 
     total_initial = sum(v["account"]["initial_cash_usd"] for v in results.values())
     total_equity = sum(
