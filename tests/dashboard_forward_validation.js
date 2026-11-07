@@ -31,6 +31,9 @@ const report = {
   data_quality: { quality: "HEALTHY" },
   sleeves_summary: Object.fromEntries(keys.map((key, index) => [key, {
     equity_usd: allocations[index],
+    win_rate_pct: 0,
+    profit_factor: null,
+    max_drawdown_pct: 0,
     cash_usd: allocations[index],
     btc_units: 0,
     exposure_usd: 0,
@@ -72,6 +75,22 @@ assert.throws(() => validate(missingOneHourEquity), /إجماليات الحسا
 const missingOneHourTrade = structuredClone(report);
 missingOneHourTrade.sleeves_summary["1h_ema_trend"].completed_trades = 1;
 assert.throws(() => validate(missingOneHourTrade), /إجماليات الحسابات/);
+
+const invalidWinRate = structuredClone(report);
+invalidWinRate.sleeves_summary["1h_sma_trend"].win_rate_pct = 101;
+assert.throws(() => validate(invalidWinRate), /بيانات الاستراتيجيات الخمس/);
+const invalidDrawdown = structuredClone(report);
+invalidDrawdown.sleeves_summary["4h"].max_drawdown_pct = 101;
+assert.throws(() => validate(invalidDrawdown), /بيانات الاستراتيجيات الخمس/);
+const invalidPosition = structuredClone(report);
+invalidPosition.sleeves_summary["6h"].btc_units = 0.01;
+assert.throws(() => validate(invalidPosition), /بيانات الاستراتيجيات الخمس/);
+const promotedHealth = structuredClone(report);
+promotedHealth.sleeves_summary["1h_ema_trend"].health_assessment.live_trading_eligible = true;
+assert.throws(() => validate(promotedHealth), /بيانات الاستراتيجيات الخمس/);
+const missingHealth = structuredClone(report);
+delete missingHealth.sleeves_summary["1h_rsi14_mean_reversion"].health_assessment;
+assert.throws(() => validate(missingHealth), /بيانات الاستراتيجيات الخمس/);
 
 // Execute the actual renderer with a minimal DOM. This catches runtime-only scope errors.
 const renderMatch = html.match(/function renderForward\(x\)\{[\s\S]*?\n\}\n\$\("forwardFile"\)/);
