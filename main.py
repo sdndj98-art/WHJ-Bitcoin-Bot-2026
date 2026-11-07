@@ -1,4 +1,4 @@
-"""WHJ Bitcoin Bot: read-only market analysis and paper-signal reporting.
+"""WHJ Bitcoin Bot: read-only market analysis and historical paper simulation.
 
 This program NEVER places real orders and does not require exchange credentials.
 """
@@ -8,9 +8,11 @@ import urllib.request
 from datetime import datetime, timezone
 from pathlib import Path
 
+from paper_trading import run_backtest
+
 API = "https://api.kraken.com/0/public/OHLC?pair=XBTUSD&interval=60"
 REPORT_PATH = Path("report.json")
-USER_AGENT = "WHJ-Bitcoin-Bot/1.1"
+USER_AGENT = "WHJ-Bitcoin-Bot/1.2"
 
 
 def fetch_closes():
@@ -61,7 +63,7 @@ def analyze(prices):
 
     return {
         "project": "WHJ Bitcoin Bot",
-        "mode": "PAPER_ONLY_NO_REAL_ORDERS",
+        "mode": "ANALYSIS_AND_HISTORICAL_PAPER_ONLY",
         "time": datetime.now(timezone.utc).isoformat(),
         "market": "BTC/USD",
         "interval": "1h",
@@ -70,7 +72,8 @@ def analyze(prices):
         "SMA20": round(sma20, 2),
         "SMA50": round(sma50, 2),
         "signal": signal,
-        "disclaimer": "This is an educational indicator, not financial advice. No orders were placed."
+        "paper_backtest": run_backtest(prices),
+        "disclaimer": "Historical simulation is not a forecast or financial advice. No real orders were placed."
     }
 
 
