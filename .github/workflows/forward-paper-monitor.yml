@@ -1,0 +1,61 @@
+name: WHJ Forward Paper Monitor
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "17 */4 * * *"
+  push:
+    branches: [research/regime-aware-consensus-ensemble]
+    paths:
+      - "forward_paper_monitor.py"
+      - "paper_account.py"
+      - "historical_research.py"
+      - "tests/test_forward_paper_monitor.py"
+      - ".github/workflows/forward-paper-monitor.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: whj-forward-paper-monitor
+  cancel-in-progress: false
+
+jobs:
+  forward-paper:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Restore forward-only paper ledgers
+        uses: actions/cache/restore@v4
+        with:
+          path: |
+            paper_forward_4h_ema50_200.json
+            paper_forward_6h_ema50_200.json
+          key: whj-forward-paper-v1-${{ github.run_id }}-${{ github.run_attempt }}
+          restore-keys: |
+            whj-forward-paper-v1-
+      - name: Run focused safety tests
+        run: python -m unittest discover -s tests -p 'test_forward_paper_monitor.py' -v
+      - name: Run forward-only paper monitor
+        run: python forward_paper_monitor.py
+      - name: Save forward-only ledgers
+        if: success()
+        uses: actions/cache/save@v4
+        with:
+          path: |
+            paper_forward_4h_ema50_200.json
+            paper_forward_6h_ema50_200.json
+          key: whj-forward-paper-v1-${{ github.run_id }}-${{ github.run_attempt }}
+      - name: Upload forward paper snapshot
+        uses: actions/upload-artifact@v4
+        with:
+          name: whj-forward-paper-snapshot-${{ github.run_number }}
+          path: forward_paper_report.json
+          if-no-files-found: error
+          retention-days: 30
