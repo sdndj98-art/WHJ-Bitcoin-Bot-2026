@@ -3,6 +3,7 @@ import json
 import math
 import tempfile
 import unittest
+from unittest.mock import patch
 from pathlib import Path
 
 from paper_account import _ema_last, _save_state_atomically, run_paper_portfolio, update_paper_account
@@ -144,7 +145,7 @@ class PersistentPaperAccountTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as folder:
             target = Path(folder) / "paper_state.json"
             target.write_text("previous-valid-state\\n", encoding="utf-8")
-            with unittest.mock.patch("paper_account.os.replace", side_effect=OSError("simulated replace failure")):
+            with patch("paper_account.os.replace", side_effect=OSError("simulated replace failure")):
                 with self.assertRaises(OSError):
                     _save_state_atomically(target, {"version": 1})
             self.assertEqual(target.read_text(encoding="utf-8"), "previous-valid-state\\n")
