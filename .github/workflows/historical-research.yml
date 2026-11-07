@@ -53,12 +53,13 @@ jobs:
         run: python historical_research.py
 
       - name: Save multi-timeframe paper account state
-        if: success() && hashFiles('paper_daily_sma20_50.json', 'paper_4h_ema50_200.json') != ''
+        if: success() && hashFiles('paper_daily_sma20_50.json', 'paper_4h_ema50_200.json', 'paper_daily_bollinger.json') != ''
         uses: actions/cache/save@v4
         with:
           path: |
             paper_daily_sma20_50.json
             paper_4h_ema50_200.json
+            paper_daily_bollinger.json
           key: whj-mtf-paper-v5-${{ github.run_id }}-${{ github.run_attempt }}
 
       - name: Save historical research report
