@@ -117,7 +117,7 @@ def assess_sleeve_health(account, min_closed_trades=30, review_drawdown_pct=8.0)
     if rolling_count >= 10:
         rolling_status = (
             "ROLLING_REVIEW_REQUIRED"
-            if rolling_net <= 0 or rolling_pf is None or rolling_pf < 1.0
+            if rolling_net <= 0 or (rolling_pf is not None and rolling_pf < 1.0)
             else "ROLLING_STABLE"
         )
 
