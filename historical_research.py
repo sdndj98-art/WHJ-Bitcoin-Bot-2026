@@ -240,7 +240,13 @@ def _simulate_ohlc(bars, signals, start, end, fee, slippage):
             cash += proceeds
             units = 0.0
             entry_cost = 0.0
-        equity = cash + units * price
+        # Drawdown uses estimated net liquidation value, including exit costs.
+        if units > 0:
+            liquidation = units * price * (1 - slippage)
+            liquidation -= liquidation * fee
+            equity = cash + liquidation
+        else:
+            equity = cash
         peak = max(peak, equity)
         if peak > 0:
             max_drawdown = max(max_drawdown, (peak - equity) / peak * 100)
