@@ -721,8 +721,40 @@ def assess_strategy_qualification(metrics, stress_metrics, min_oos_trades=30,
             > float(stress_benchmark_metrics.get("out_of_sample", {}).get("return_pct", float("inf")))
         ),
     }
+    benchmark_oos_return = (
+        float(benchmark_metrics.get("out_of_sample", {}).get("return_pct"))
+        if benchmark_metrics is not None
+        and benchmark_metrics.get("out_of_sample", {}).get("return_pct") is not None
+        else None
+    )
+    stress_benchmark_oos_return = (
+        float(stress_benchmark_metrics.get("out_of_sample", {}).get("return_pct"))
+        if stress_benchmark_metrics is not None
+        and stress_benchmark_metrics.get("out_of_sample", {}).get("return_pct") is not None
+        else None
+    )
+    candidate_oos_return = float(oos.get("return_pct", -float("inf")))
+    candidate_stress_return = float(stress_oos.get("return_pct", -float("inf")))
+    benchmark_comparison = {
+        "candidate_oos_return_pct": candidate_oos_return,
+        "benchmark_oos_return_pct": benchmark_oos_return,
+        "oos_outperformance_pct_points": (
+            round(candidate_oos_return - benchmark_oos_return, 4)
+            if benchmark_oos_return is not None else None
+        ),
+        "candidate_stress_oos_return_pct": candidate_stress_return,
+        "stress_benchmark_oos_return_pct": stress_benchmark_oos_return,
+        "stress_oos_outperformance_pct_points": (
+            round(candidate_stress_return - stress_benchmark_oos_return, 4)
+            if stress_benchmark_oos_return is not None else None
+        ),
+        "benchmark_available": (
+            benchmark_oos_return is not None and stress_benchmark_oos_return is not None
+        ),
+    }
     return {
         "qualified_for_extended_paper_review": all(checks.values()),
+        "benchmark_comparison": benchmark_comparison,
         "checks": checks,
         "failed_checks": [name for name, passed in checks.items() if not passed],
         "thresholds": {
@@ -785,6 +817,15 @@ def build_qualification_markdown(result):
             status = "PASS — eligible for extended forward paper review" if ok else "NOT QUALIFIED"
             lines.append(f"- **{name}: {status}.**")
             failed = qualification.get("failed_checks", [])
+            comparison = qualification.get("benchmark_comparison", {})
+            if comparison.get("benchmark_available"):
+                lines.append(
+                    "  - Benchmark edge (candidate minus matched buy-and-hold): "
+                    f"{comparison['oos_outperformance_pct_points']:+.2f} pp OOS; "
+                    f"{comparison['stress_oos_outperformance_pct_points']:+.2f} pp under elevated costs."
+                )
+            else:
+                lines.append("  - Benchmark comparison: unavailable; strategy cannot qualify.")
             if failed:
                 lines.append("  - Failed gates: " + ", ".join(failed) + ".")
         lines.append("")
