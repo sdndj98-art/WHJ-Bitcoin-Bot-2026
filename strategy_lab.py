@@ -43,6 +43,7 @@ def _signals(prices):
     ema50 = _ema(prices, 50)
     ema200 = _ema(prices, 200)
     rsi = _rsi(prices, 14)
+    rsi2 = _rsi(prices, 2)
     sma20 = [None] * len(prices)
     sma50 = [None] * len(prices)
     sma200 = [None] * len(prices)
@@ -63,8 +64,17 @@ def _signals(prices):
         "ema200_filter": [],
         "sma50_200_cross": [],
         "donchian_55_20": [],
+        "rsi2_mean_reversion": [],
+        "rsi14_mean_reversion": [],
+        "bollinger_mean_reversion": [],
     }
     donchian_position = False
+    rsi2_position = False
+    rsi2_holding = 0
+    rsi14_position = False
+    rsi14_holding = 0
+    bollinger_position = False
+    bollinger_holding = 0
     for i, price in enumerate(prices):
         result["sma_trend"].append(
             bool(sma20[i] is not None and sma50[i] is not None
@@ -92,6 +102,39 @@ def _signals(prices):
         elif i >= 20 and donchian_position and price < min(prices[i - 20:i]):
             donchian_position = False
         result["donchian_55_20"].append(donchian_position)
+
+        if i >= 199 and sma200[i] is not None:
+            if not rsi2_position and rsi2[i] is not None and rsi2[i] < 10 and price > sma200[i]:
+                rsi2_position = True
+                rsi2_holding = 0
+            elif rsi2_position:
+                rsi2_holding += 1
+                if (rsi2[i] is not None and rsi2[i] > 70) or price < sma200[i] or rsi2_holding >= 5:
+                    rsi2_position = False
+                    rsi2_holding = 0
+            if not rsi14_position and rsi[i] is not None and rsi[i] < 30 and price > sma200[i]:
+                rsi14_position = True
+                rsi14_holding = 0
+            elif rsi14_position:
+                rsi14_holding += 1
+                if (rsi[i] is not None and rsi[i] > 55) or price < sma200[i] or rsi14_holding >= 10:
+                    rsi14_position = False
+                    rsi14_holding = 0
+            if sma20[i] is not None:
+                window = prices[i - 19:i + 1]
+                variance = sum((value - sma20[i]) ** 2 for value in window) / 20
+                lower_band = sma20[i] - 2 * math.sqrt(variance)
+                if not bollinger_position and price < lower_band and price > sma200[i]:
+                    bollinger_position = True
+                    bollinger_holding = 0
+                elif bollinger_position:
+                    bollinger_holding += 1
+                    if price >= sma20[i] or price < sma200[i] or bollinger_holding >= 10:
+                        bollinger_position = False
+                        bollinger_holding = 0
+        result["rsi2_mean_reversion"].append(rsi2_position)
+        result["rsi14_mean_reversion"].append(rsi14_position)
+        result["bollinger_mean_reversion"].append(bollinger_position)
     return result
 
 
