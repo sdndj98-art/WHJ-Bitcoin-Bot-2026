@@ -295,6 +295,84 @@ def _simulate_ohlc(bars, signals, start, end, fee, slippage):
     }
 
 
+def _simulate_equal_weight_sleeves(bars, signal_sets, start, end, fee, slippage):
+    """Simulate independent equal-capital long-only sleeves as one portfolio.
+
+    Each sleeve receives an equal share of the initial portfolio and allocates
+    25% of its own available cash per entry. With two sleeves, maximum initial
+    notional therefore remains 25% of total portfolio capital.
+    """
+    if not signal_sets or any(len(values) != len(bars) for values in signal_sets):
+        raise ValueError("Every sleeve signal series must match the OHLC bar count")
+    if not 0 <= fee < 1 or not 0 <= slippage < 1:
+        raise ValueError("Fee and slippage must be between 0 and 1")
+    sleeve_cash = 1000.0 / len(signal_sets)
+    sleeves = [
+        {"cash": sleeve_cash, "units": 0.0, "entry_cost": 0.0, "trades": []}
+        for _ in signal_sets
+    ]
+    peak = 1000.0
+    max_drawdown = 0.0
+
+    for index in range(max(start, 1), end):
+        price = float(bars[index]["close"])
+        for sleeve, signals in zip(sleeves, signal_sets):
+            want_long = bool(signals[index - 1])
+            if want_long and sleeve["units"] == 0:
+                allocation = sleeve["cash"] * 0.25
+                fill = price * (1 + slippage)
+                fee_paid = allocation * fee
+                sleeve["units"] = (allocation - fee_paid) / fill
+                sleeve["cash"] -= allocation
+                sleeve["entry_cost"] = allocation
+            elif not want_long and sleeve["units"] > 0:
+                fill = price * (1 - slippage)
+                proceeds = sleeve["units"] * fill
+                proceeds -= proceeds * fee
+                sleeve["trades"].append(proceeds - sleeve["entry_cost"])
+                sleeve["cash"] += proceeds
+                sleeve["units"] = 0.0
+                sleeve["entry_cost"] = 0.0
+
+        equity = 0.0
+        for sleeve in sleeves:
+            if sleeve["units"] > 0:
+                liquidation = sleeve["units"] * price * (1 - slippage)
+                liquidation -= liquidation * fee
+                equity += sleeve["cash"] + liquidation
+            else:
+                equity += sleeve["cash"]
+        peak = max(peak, equity)
+        if peak > 0:
+            max_drawdown = max(max_drawdown, (peak - equity) / peak * 100.0)
+
+    final_equity = 0.0
+    all_trades = []
+    for sleeve in sleeves:
+        if sleeve["units"] > 0:
+            exit_value = sleeve["units"] * float(bars[end - 1]["close"]) * (1 - slippage)
+            exit_value -= exit_value * fee
+            final_equity += sleeve["cash"] + exit_value
+        else:
+            final_equity += sleeve["cash"]
+        all_trades.extend(sleeve["trades"])
+
+    wins = [pnl for pnl in all_trades if pnl > 0]
+    losses = [-pnl for pnl in all_trades if pnl < 0]
+    gross_profit = sum(wins)
+    gross_loss = sum(losses)
+    return {
+        "return_pct": round((final_equity / 1000.0 - 1.0) * 100.0, 2),
+        "final_equity_usd": round(final_equity, 2),
+        "max_drawdown_pct": round(max_drawdown, 2),
+        "closed_trades": len(all_trades),
+        "win_rate_pct": round(len(wins) / len(all_trades) * 100.0, 2) if all_trades else 0.0,
+        "profit_factor": round(gross_profit / gross_loss, 2) if gross_loss else (None if gross_profit else 0.0),
+        "open_position": any(sleeve["units"] > 0 for sleeve in sleeves),
+        "sleeve_count": len(sleeves),
+    }
+
+
 def run_ohlc_breakout_lab(bars, fee=FEE_RATE, slippage=SLIPPAGE_RATE):
     """Evaluate classic Turtle-style breakouts on true OHLC bars."""
     if len(bars) < 500:
@@ -731,6 +809,7 @@ def run_multi_timeframe_ensemble_lab(hourly_candles, fee=FEE_RATE, slippage=SLIP
     # candle whose end timestamp is <= the 4h candle end; never use a forming 6h bar.
     six_hour_close_ms = [int(row["timestamp"]) + 6 * 60 * 60 * 1000 for row in six_hour]
     consensus = []
+    signal_6h_on_4h = []
     six_index = -1
     for index, row in enumerate(four_hour):
         four_hour_close_ms = int(row["timestamp"]) + 4 * 60 * 60 * 1000
@@ -740,6 +819,7 @@ def run_multi_timeframe_ensemble_lab(hourly_candles, fee=FEE_RATE, slippage=SLIP
         ):
             six_index += 1
         confirmation = bool(six_index >= 0 and signal_6h[six_index])
+        signal_6h_on_4h.append(confirmation)
         consensus.append(bool(signal_4h[index] and confirmation))
 
     split = int(len(four_hour) * 0.7)
@@ -768,8 +848,31 @@ def run_multi_timeframe_ensemble_lab(hourly_candles, fee=FEE_RATE, slippage=SLIP
     benchmark["closed_trades"] = 1
     benchmark["open_position"] = False
     benchmark["win_rate_pct"] = 100.0 if benchmark["return_pct"] > 0 else 0.0
+    portfolio_windows = []
+    for fold in range(3):
+        start, end = edges[fold], edges[fold + 1]
+        if end > start:
+            portfolio_windows.append({
+                "window": fold + 1,
+                "start_index": start,
+                "end_index_exclusive": end,
+                "metrics": _simulate_equal_weight_sleeves(
+                    four_hour, [signal_4h, signal_6h_on_4h], start, end, fee, slippage
+                ),
+            })
+    portfolio_returns = [window["metrics"]["return_pct"] for window in portfolio_windows]
+    portfolio_candidate = {
+        "in_sample": _simulate_equal_weight_sleeves(
+            four_hour, [signal_4h, signal_6h_on_4h], 200, split, fee, slippage
+        ),
+        "out_of_sample": _simulate_equal_weight_sleeves(
+            four_hour, [signal_4h, signal_6h_on_4h], split, len(four_hour), fee, slippage
+        ),
+        "walk_forward_windows": portfolio_windows,
+        "worst_window_return_pct": min(portfolio_returns) if portfolio_returns else None,
+    }
     return {
-        "mode": "FOUR_HOUR_ENTRY_SIX_HOUR_COMPLETED_BAR_CONSENSUS",
+        "mode": "FOUR_HOUR_ENTRY_SIX_HOUR_COMPLETED_BAR_CONSENSUS_AND_EQUAL_WEIGHT_PORTFOLIO",
         "bar_count_4h": len(four_hour),
         "bar_count_6h": len(six_hour),
         "split_index": split,
@@ -780,6 +883,7 @@ def run_multi_timeframe_ensemble_lab(hourly_candles, fee=FEE_RATE, slippage=SLIP
         "confirmation_rule": "Both 4h and last fully closed 6h bars must have EMA50 > EMA200 and close > EMA200.",
         "strategies": {
             "ema50_200_4h_6h_consensus": candidate,
+            "ema50_200_4h_6h_50_50_portfolio": portfolio_candidate,
             "buy_and_hold_25pct": {"out_of_sample": benchmark},
         },
     }
