@@ -37,6 +37,10 @@ Risk controls pause new entries after a 3% daily loss and permanently pause an a
 ## Automated schedule
 GitHub Actions runs tests and hourly analysis on pushes to `main`, hourly at minute 7 (UTC), and when manually started. A separate five-year BTC/USD historical research job runs daily at 06:37 UTC and when relevant research files change. Hourly analysis artifacts are retained for 14 days; historical research reports are retained for 30 days. Telegram notifications are currently disabled.
 
+## Monte Carlo trade-risk diagnostics
+
+The hourly report includes a seeded bootstrap resampling of the completed historical paper-backtest trade PnL. It reports median and tail final-equity scenarios, loss frequency, and maximum-drawdown percentiles across 2,000 resampled sequences. This is a diagnostic only: it assumes IID trade outcomes, keeps the trade count fixed, uses additive historical PnL, and does not model serial dependence, regime changes, or future execution. It is not a forecast, does not establish an edge, and must never override the fixed strategy qualification gates.
+
 ## Indicator
 - BUY when latest closed price > SMA20 > SMA50.
 - SELL when latest closed price < SMA20 < SMA50.
