@@ -19,7 +19,7 @@ class StrategyLabTests(unittest.TestCase):
         self.assertFalse(benchmark["open_position"])
         self.assertTrue(benchmark["fees_and_slippage_included"])
         self.assertEqual(benchmark["allocation_fraction"], 0.25)
-        for name in ("sma_trend", "ema_trend", "rsi_momentum", "sma200_regime", "ema50_200_regime", "sma200_filter", "ema200_filter", "sma50_200_cross", "donchian_55_20"):
+        for name in ("sma_trend", "ema_trend", "rsi_momentum", "sma200_regime", "ema50_200_regime", "sma200_filter", "ema200_filter", "sma50_200_cross", "donchian_55_20", "rsi2_mean_reversion", "rsi14_mean_reversion", "bollinger_mean_reversion"):
             strategy = report["strategies"][name]
             self.assertEqual(len(strategy["walk_forward_windows"]), 3)
             self.assertTrue(all(
