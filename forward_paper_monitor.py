@@ -88,7 +88,7 @@ def main():
     candles = load_two_year_candles(days=90)
     report = process_forward_accounts(candles)
     Path("forward_paper_report.json").write_text(
-        json.dumps(report, indent=2, allow_nan=False) + "\\n", encoding="utf-8"
+        json.dumps(report, indent=2, allow_nan=False) + "\n", encoding="utf-8"
     )
     print(json.dumps(report, indent=2, allow_nan=False))
 
