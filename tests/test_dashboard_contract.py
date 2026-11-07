@@ -68,7 +68,9 @@ class DashboardContractTests(unittest.TestCase):
             "scannerTimeframeRows", "scannerMtfConsensus",
             "scannerAtrPct", "scannerClosePosition", "scannerScore",
             "scannerMtfAverage", "scannerStrongestTf", "scannerTrendTfCount",
-            "scannerBreakoutTfCount",
+            "scannerBreakoutTfCount", "harmonicPattern", "harmonicDirection",
+            "supplyZone", "demandZone", "supplyDistance", "demandDistance",
+            "rsiDivergence", "divergenceRsi", "zoneStatus",
         }
         self.assertTrue(required.issubset(set(self.parser.ids)))
         self.assertIn("7 GATES", self.source)
@@ -84,6 +86,9 @@ class DashboardContractTests(unittest.TestCase):
         self.assertIn("رادار توافق الأطر الزمنية", self.source)
         self.assertIn("market_scanner_multi_timeframe", self.source)
         self.assertIn("شموع مكتملة فقط", self.source)
+        self.assertIn("renderHarmonicResearch", self.source)
+        self.assertIn("harmonic_supply_demand_divergence", self.source)
+        self.assertIn("الهارمونيك والعرض والطلب", self.source)
 
     def test_forward_monitor_view_has_required_controls(self):
         required = {
