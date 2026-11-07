@@ -236,6 +236,31 @@ class ForwardPaperMonitorTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "trade count"):
             assess_sleeve_health(invalid)
 
+    def test_health_assessment_rejects_impossible_drawdown_metrics(self):
+        base = {
+            "completed_trades": 30,
+            "max_drawdown_pct": 0.0,
+            "profit_factor": 1.2,
+            "return_pct": 1.0,
+            "risk_pause_reasons": [],
+        }
+        for value in (-0.01, 100.01):
+            with self.subTest(max_drawdown_pct=value):
+                with self.assertRaisesRegex(ValueError, "Max drawdown metric"):
+                    assess_sleeve_health(dict(base, max_drawdown_pct=value))
+
+    def test_health_assessment_rejects_recent_window_larger_than_trade_ledger(self):
+        account = {
+            "completed_trades": 2,
+            "max_drawdown_pct": 1.0,
+            "profit_factor": 1.2,
+            "return_pct": 1.0,
+            "risk_pause_reasons": [],
+            "recent_trades": [{"pnl_usd": 1.0} for _ in range(3)],
+        }
+        with self.assertRaisesRegex(ValueError, "Recent trade count"):
+            assess_sleeve_health(account)
+
     def test_initialization_is_forward_only_and_idempotent(self):
         candles = self.make_candles()
         now = candles[-1]["timestamp"] / 1000 + 3600 + 60
