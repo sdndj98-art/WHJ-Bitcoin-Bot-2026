@@ -148,4 +148,12 @@ assert.equal(
 );
 assert.match(html, /paperRiskPauseLabel\(x\)/, "Portfolio table must use the complete risk-pause label");
 
-console.log("Dashboard forward-report validation and rendering tests passed (five sleeves, aggregates, and runtime rendering).");
+
+assert.match(html, /whjThemeToggle/, "Dashboard must expose a theme switch");
+assert.match(html, /whj-compact/, "Dashboard must expose compact layout mode");
+assert.match(html, /whjClock/, "Dashboard must show the Baghdad local clock");
+assert.match(html, /whjShortcutHelp/, "Dashboard must expose keyboard shortcut help");
+assert.match(html, /requestFullscreen/, "Dashboard must support fullscreen mode");
+assert.match(html, /aria-current/, "Dashboard navigation must expose its active page accessibly");
+
+console.log("Dashboard forward-report and premium UX tests passed.");
