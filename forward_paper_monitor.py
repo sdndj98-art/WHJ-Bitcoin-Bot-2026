@@ -65,14 +65,36 @@ def process_forward_accounts(candles, state_dir=".", now_timestamp=None):
         v["account"]["equity_after_estimated_exit_costs_usd"]
         for v in results.values()
     )
+    if total_initial <= 0 or total_equity <= 0:
+        raise ValueError("Paper portfolio equity is invalid; refusing to publish a snapshot")
+    summary = {}
+    for timeframe, value in results.items():
+        account = value["account"]
+        summary[timeframe] = {
+            "last_processed_timestamp": account["last_processed_timestamp"],
+            "processed_new_candles": account["processed_new_candles"],
+            "equity_usd": account["equity_after_estimated_exit_costs_usd"],
+            "return_pct": account["return_pct"],
+            "completed_trades": account["completed_trades"],
+            "win_rate_pct": account["win_rate_pct"],
+            "profit_factor": account["profit_factor"],
+            "max_drawdown_pct": account["max_drawdown_pct"],
+            "open_position": account["open_position"],
+            "risk_pause_reasons": account["risk_pause_reasons"],
+        }
     return {
+        "schema_version": 1,
+        "generated_at_utc": datetime.now(timezone.utc).isoformat(),
         "mode": "FORWARD_ONLY_PAPER_NO_LIVE_ORDERS",
+        "status": "RISK_PAUSED" if any(v["risk_pause_reasons"] for v in summary.values()) else "PAPER_MONITORING",
         "market": "BTC/USD",
         "data_quality": quality,
+        "latest_hourly_candle_timestamp": candles[-1]["timestamp"],
         "initial_cash_usd": round(total_initial, 2),
         "equity_after_estimated_exit_costs_usd": round(total_equity, 2),
         "return_pct": round((total_equity / total_initial - 1) * 100, 4),
-        "completed_trades": sum(v["account"]["completed_trades"] for v in results.values()),
+        "completed_trades": sum(v["completed_trades"] for v in summary.values()),
+        "sleeves_summary": summary,
         "sleeves": results,
         "risk_limits": {
             "allocation_pct_per_sleeve": 10,
@@ -80,7 +102,7 @@ def process_forward_accounts(candles, state_dir=".", now_timestamp=None):
             "daily_loss_pause_pct": 3,
             "consecutive_loss_pause_count": 5,
         },
-        "warning": "Paper simulation only. Historical candles warm up indicators; only bars newer than each saved ledger timestamp are processed.",
+        "warning": "Paper simulation only. Historical candles warm up indicators; only bars newer than each saved ledger timestamp are processed. No live orders are possible.",
     }
 
 
