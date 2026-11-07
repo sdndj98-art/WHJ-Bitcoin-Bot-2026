@@ -309,6 +309,16 @@ class ForwardPaperMonitorTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "gap"):
             validate_hourly_feed(candles, now)
 
+    def test_historical_imputed_candles_are_counted_but_recent_ones_are_blocked(self):
+        candles = self.make_candles(48)
+        candles[5]["imputed"] = True
+        now = candles[-1]["timestamp"] / 1000 + 3600 + 60
+        quality = validate_hourly_feed(candles, now)
+        self.assertEqual(quality["total_hourly_candles"], 48)
+        self.assertEqual(quality["observed_hourly_candles"], 47)
+        self.assertEqual(quality["imputed_hourly_candles"], 1)
+        self.assertEqual(quality["imputed_hourly_pct"], 2.0833)
+
     def test_invalid_ohlcv_values_are_rejected(self):
         mutations = [
             ("close", float("nan"), "finite number"),
