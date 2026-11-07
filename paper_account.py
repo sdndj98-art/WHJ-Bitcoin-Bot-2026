@@ -372,6 +372,14 @@ def update_paper_account(candles, state_path="paper_account_state.json",
         "gross_loss_usd": round(gross_loss, 4),
         "max_drawdown_pct": round(float(state.get("max_drawdown_pct", 0.0)), 2),
         "max_consecutive_losses": max_loss_streak,
+        "current_consecutive_losses": loss_streak,
+        "risk_pause_reasons": [
+            reason for reason, active in (
+                ("maximum_drawdown", bool(state.get("paused_for_drawdown", False))),
+                ("daily_loss_limit", bool(state.get("daily_loss_paused", False))),
+                ("consecutive_loss_limit", bool(state.get("paused_for_loss_streak", False))),
+            ) if active
+        ],
         "recent_trades": completed[-20:],
         "new_trades": new_trades,
         "fees_paid_usd": round(state["fees_paid"], 4),
