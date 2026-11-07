@@ -1,4 +1,4 @@
-"""Fetch ten years of public BTC/USD hourly candles and run fixed-rule research.
+"""Fetch an extended history of public BTC/USD hourly candles and run fixed-rule research.
 
 Research only: no credentials, orders, or trading endpoints are used.
 """
@@ -16,7 +16,7 @@ from strategy_lab import run_strategy_lab
 
 BASE_URL = "https://api.exchange.coinbase.com/products/BTC-USD/candles"
 INTERVAL_MS = 60 * 60 * 1000
-DAYS = 3650
+DAYS = 3000
 FEE_RATE = 0.001
 SLIPPAGE_RATE = 0.0005
 
@@ -1427,7 +1427,7 @@ def main():
 
     result = {
         "project": "WHJ Bitcoin Bot",
-        "mode": "TEN_YEAR_HISTORICAL_RESEARCH_ONLY",
+        "mode": "EXTENDED_HISTORICAL_RESEARCH_ONLY",
         "source": "Coinbase Exchange public BTC-USD candles",
         "interval": "1h",
         "requested_days": DAYS,
