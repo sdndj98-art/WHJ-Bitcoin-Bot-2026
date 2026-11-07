@@ -196,6 +196,91 @@ def _simulate(prices, signals, start, end, fee=0.001, slippage=0.0005):
     }
 
 
+
+def _market_regime_diagnostics(prices, signals, start_index):
+    """Describe OOS market regimes using only information available at each close.
+
+    The forward market return is an outcome measured after classification; it is
+    never used to decide the regime. Strategy exposure is descriptive, not PnL.
+    """
+    count = len(prices)
+    if any(len(values) != count for values in signals.values()):
+        raise ValueError("Every strategy signal series must match the price series length")
+
+    sma200 = [None] * count
+    if count >= 200:
+        rolling = sum(float(value) for value in prices[:200])
+        sma200[199] = rolling / 200
+        for index in range(200, count):
+            rolling += float(prices[index]) - float(prices[index - 200])
+            sma200[index] = rolling / 200
+
+    names = ("bullish", "bearish", "sideways_or_transition")
+    buckets = {
+        name: {
+            "bars": 0,
+            "growth_factor": 1.0,
+            "positive_forward_bars": 0,
+            "absolute_return_sum_pct": 0.0,
+            "strategy_active_bars": {strategy: 0 for strategy in signals},
+        }
+        for name in names
+    }
+    first_index = max(int(start_index), 219)
+    for index in range(first_index, count - 1):
+        average = sma200[index]
+        prior_average = sma200[index - 20]
+        if average is None or prior_average is None:
+            continue
+        if prices[index] > average and average > prior_average:
+            regime = "bullish"
+        elif prices[index] < average and average < prior_average:
+            regime = "bearish"
+        else:
+            regime = "sideways_or_transition"
+
+        forward_return = (float(prices[index + 1]) / float(prices[index]) - 1.0) * 100.0
+        bucket = buckets[regime]
+        bucket["bars"] += 1
+        bucket["growth_factor"] *= 1.0 + forward_return / 100.0
+        bucket["positive_forward_bars"] += int(forward_return > 0)
+        bucket["absolute_return_sum_pct"] += abs(forward_return)
+        for strategy, values in signals.items():
+            bucket["strategy_active_bars"][strategy] += int(bool(values[index]))
+
+    result = {}
+    for regime, bucket in buckets.items():
+        bars = bucket["bars"]
+        result[regime] = {
+            "bars": bars,
+            "market_forward_return_pct": (
+                round((bucket["growth_factor"] - 1.0) * 100.0, 2) if bars else None
+            ),
+            "positive_forward_bar_pct": (
+                round(bucket["positive_forward_bars"] / bars * 100.0, 2) if bars else None
+            ),
+            "mean_absolute_forward_bar_return_pct": (
+                round(bucket["absolute_return_sum_pct"] / bars, 4) if bars else None
+            ),
+            "strategy_exposure_pct": {
+                strategy: round(active / bars * 100.0, 2) if bars else None
+                for strategy, active in bucket["strategy_active_bars"].items()
+            },
+        }
+    return {
+        "classification": (
+            "Bullish: close above 200-SMA and 200-SMA above its value 20 bars earlier; "
+            "bearish: close below 200-SMA and 200-SMA below its value 20 bars earlier; "
+            "otherwise sideways/transition."
+        ),
+        "measurement": (
+            "OOS next-bar market returns are grouped by the regime known at the prior close. "
+            "Strategy exposure is the percentage of closes with an active signal; it is not strategy PnL."
+        ),
+        "out_of_sample_start_index": first_index,
+        "regimes": result,
+    }
+
 def run_strategy_lab(prices, fee=0.001, slippage=0.0005):
     if len(prices) < 120:
         raise ValueError("At least 120 prices are required for strategy holdout testing")
@@ -275,8 +360,10 @@ def run_strategy_lab(prices, fee=0.001, slippage=0.0005):
             "allocation_fraction": benchmark_allocation / 1000.0,
         }
     }
+    regime_diagnostics = _market_regime_diagnostics(prices, signals, split)
     return {
         "mode": "FIXED_RULE_CHRONOLOGICAL_HOLDOUT",
+        "market_regime_diagnostics": regime_diagnostics,
         "sample_count": len(prices),
         "split_index": split,
         "in_sample_fraction_pct": 70,
