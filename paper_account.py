@@ -171,14 +171,17 @@ def _ema_last(values, period):
 def seed_forward_paper_account(
     candles, state_path, initial_cash=500.0, strategy="ema50_200_regime"
 ):
-    """Initialize a genuinely forward-only ledger at the latest completed bar.
+    """Warm a paper strategy on history, then start trading only on future bars.
 
-    Historical candles warm up indicators only. They do not create historical
-    trades, profits, losses, or risk pauses in this new forward paper account.
-    Existing state is validated and preserved; it is never reset here.
+    Historical candles initialize indicator history but never create trades,
+    PnL, or risk pauses. Existing state is validated and never reset.
     """
-    if strategy != "ema50_200_regime":
-        raise ValueError("Forward seeding currently supports only ema50_200_regime")
+    supported = (
+        "sma_trend", "ema_trend", "rsi_momentum", "sma200_regime",
+        "ema50_200_regime", "bollinger_mean_reversion", "rsi14_mean_reversion",
+    )
+    if strategy not in supported:
+        raise ValueError("Unsupported forward paper strategy")
     initial_cash = _number(initial_cash, "initial_cash", 0)
     if initial_cash <= 0:
         raise ValueError("initial_cash must be greater than zero")
@@ -194,7 +197,7 @@ def seed_forward_paper_account(
             raise ValueError("Candle timestamps must be whole seconds and closes positive")
         normalized.append((int(timestamp_value), close))
     if len(normalized) < 200:
-        raise ValueError("At least 200 completed candles are required to seed EMA50/200")
+        raise ValueError("At least 200 completed candles are required to warm forward strategies")
     timestamps = [row[0] for row in normalized]
     if timestamps != sorted(timestamps) or len(set(timestamps)) != len(timestamps):
         raise ValueError("Candle timestamps must be strictly increasing and unique")
@@ -211,8 +214,9 @@ def seed_forward_paper_account(
     closes = [row[1] for row in normalized]
     state = _new_state(initial_cash, strategy)
     state["recent_closes"] = closes[-200:]
-    state["ema50_state"] = _ema_last(closes, 50)
-    state["ema200_state"] = _ema_last(closes, 200)
+    if strategy == "ema50_200_regime":
+        state["ema50_state"] = _ema_last(closes, 50)
+        state["ema200_state"] = _ema_last(closes, 200)
     state["last_timestamp"] = timestamps[-1]
     state["forward_seed_timestamp"] = timestamps[-1]
     state["daily_bucket"] = datetime.fromtimestamp(
