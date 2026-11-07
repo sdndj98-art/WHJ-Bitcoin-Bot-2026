@@ -680,7 +680,8 @@ def run_long_short_lab(bars, fee=FEE_RATE, slippage=SLIPPAGE_RATE,
 
 def assess_strategy_qualification(metrics, stress_metrics, min_oos_trades=30,
                                  min_profit_factor=1.2, max_drawdown_pct=10.0,
-                                 min_window_trades=5):
+                                 min_window_trades=5, benchmark_metrics=None,
+                                 stress_benchmark_metrics=None):
     """Apply fixed, conservative promotion gates; passing is necessary, never sufficient."""
     oos = metrics.get("out_of_sample", {})
     stress_oos = stress_metrics.get("out_of_sample", {})
@@ -707,6 +708,18 @@ def assess_strategy_qualification(metrics, stress_metrics, min_oos_trades=30,
         "minimum_profit_factor": profit_factor is not None and float(profit_factor) >= min_profit_factor,
         "maximum_oos_drawdown": drawdown <= max_drawdown_pct,
         "all_walk_forward_windows_nonnegative": bool(windows) and all(value >= 0 for value in windows),
+        # Benchmark gates are enforced in the production research pipeline. The
+        # optional form preserves compatibility for isolated unit-level callers.
+        "outperform_buy_and_hold_oos": (
+            benchmark_metrics is None
+            or float(oos.get("return_pct", -float("inf")))
+            > float(benchmark_metrics.get("out_of_sample", {}).get("return_pct", float("inf")))
+        ),
+        "outperform_buy_and_hold_stress": (
+            stress_benchmark_metrics is None
+            or float(stress_oos.get("return_pct", -float("inf")))
+            > float(stress_benchmark_metrics.get("out_of_sample", {}).get("return_pct", float("inf")))
+        ),
     }
     return {
         "qualified_for_extended_paper_review": all(checks.values()),
@@ -719,6 +732,7 @@ def assess_strategy_qualification(metrics, stress_metrics, min_oos_trades=30,
             "maximum_oos_drawdown_pct": max_drawdown_pct,
             "minimum_oos_and_stress_return_pct_exclusive": 0,
             "minimum_each_walk_forward_window_return_pct": 0,
+            "benchmark": "Out-of-sample and elevated-cost returns must both exceed the matched 25%-allocation buy-and-hold benchmark.",
         },
         "note": "Passing these gates only qualifies a strategy for extended forward paper review; it does not authorize live trading or establish future profitability.",
     }
@@ -742,7 +756,7 @@ def build_qualification_markdown(result):
         "## Fixed promotion gates",
         f"- At least {policy['minimum_oos_trades']} out-of-sample closed trades",
         f"- At least {policy.get('minimum_trades_each_walk_forward_window', 5)} closed trades in each of three walk-forward windows",
-        "- Positive out-of-sample return and positive elevated-cost stress return",
+        "- Positive out-of-sample and elevated-cost returns, both exceeding the matched 25%-allocation buy-and-hold benchmark",
         f"- Profit factor at least {policy['minimum_profit_factor']}",
         f"- Out-of-sample maximum drawdown no greater than {policy['maximum_oos_drawdown_pct']}%",
         "- All three chronological out-of-sample windows non-negative", "",
@@ -789,11 +803,24 @@ def assess_research_lab_qualification(research, stress_research):
     strategies = research.get("strategies", {})
     stress_strategies = stress_research.get("strategies", {})
     results = {}
+    benchmark_name = next(
+        (name for name in ("buy_and_hold_25pct", "buy_and_hold") if name in strategies),
+        None,
+    )
+    stress_benchmark_name = next(
+        (name for name in ("buy_and_hold_25pct", "buy_and_hold") if name in stress_strategies),
+        None,
+    )
+    benchmark = strategies.get(benchmark_name) if benchmark_name else None
+    stress_benchmark = stress_strategies.get(stress_benchmark_name) if stress_benchmark_name else None
     for name, metrics in strategies.items():
         if name.startswith("buy_and_hold") or name not in stress_strategies:
             continue
         results[name] = assess_strategy_qualification(
-            metrics, stress_strategies[name]
+            metrics,
+            stress_strategies[name],
+            benchmark_metrics=benchmark,
+            stress_benchmark_metrics=stress_benchmark,
         )
     return results
 
@@ -893,7 +920,10 @@ def main():
             if strategy_name == "buy_and_hold" or strategy_name not in stressed_strategies:
                 continue
             qualification[label][strategy_name] = assess_strategy_qualification(
-                metrics, stressed_strategies[strategy_name]
+                metrics,
+                stressed_strategies[strategy_name],
+                benchmark_metrics=base_strategies.get("buy_and_hold"),
+                stress_benchmark_metrics=stressed_strategies.get("buy_and_hold"),
             )
 
     extended_lab_qualification = {
@@ -937,6 +967,7 @@ def main():
             "maximum_oos_drawdown_pct": 10.0,
             "positive_oos_and_stress_required": True,
             "all_three_oos_windows_must_be_nonnegative": True,
+            "must_outperform_matched_buy_and_hold_in_base_and_stress": True,
         },
         "forward_paper_accounts": forward_paper,
         "ohlc_breakout_research": ohlc_breakout_research,
