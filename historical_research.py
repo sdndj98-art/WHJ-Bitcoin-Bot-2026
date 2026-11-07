@@ -860,7 +860,7 @@ def build_qualification_markdown(result):
         lines.extend([
             "## Benchmark-edge research watchlist (diagnostic only)",
             "",
-            "Sorted by the weaker of base-cost and elevated-cost benchmark edges. "
+            "Sorted by the number of failed qualification gates, then by the weaker benchmark edge. "
             "This shortlist is for choosing what to investigate next; it does not waive "
             "trade-count, drawdown, profit-factor, or walk-forward gates.",
             "",
