@@ -55,9 +55,15 @@ def _load_state(path, initial_cash, strategy="sma_trend"):
         raise ValueError("Unknown paper account state version; manual review is required")
     if state.get("strategy", "sma_trend") != strategy:
         raise ValueError("Paper account strategy does not match its saved state")
-    required = ("cash", "btc", "entry_cost", "recent_closes", "peak_equity", "trades", "fees_paid")
+    required = (
+        "initial_cash", "cash", "btc", "entry_cost", "recent_closes",
+        "peak_equity", "trades", "fees_paid",
+    )
     if any(key not in state for key in required):
         raise ValueError("Paper account state is incomplete; refusing to reset it")
+    _number(state["initial_cash"], "state initial cash", 0)
+    if state["initial_cash"] <= 0:
+        raise ValueError("Saved paper account initial cash must be positive")
     _number(state["cash"], "state cash", 0)
     _number(state["btc"], "state BTC", 0)
     _number(state["entry_cost"], "state entry cost", 0)
@@ -65,15 +71,48 @@ def _load_state(path, initial_cash, strategy="sma_trend"):
     _number(state["fees_paid"], "state fees", 0)
     if isinstance(state.get("holding_bars", 0), bool) or not isinstance(state.get("holding_bars", 0), int) or state.get("holding_bars", 0) < 0:
         raise ValueError("Saved strategy holding counter is invalid")
-    if not isinstance(state["recent_closes"], list) or len(state["recent_closes"]) > 20000 or not isinstance(state["trades"], list):
+    if (
+        not isinstance(state["recent_closes"], list)
+        or len(state["recent_closes"]) > 20000
+        or not isinstance(state["trades"], list)
+        or len(state["trades"]) > 100000
+    ):
         raise ValueError("Paper account state collections are invalid")
+    for close in state["recent_closes"]:
+        _number(close, "saved close", 0)
+        if close <= 0:
+            raise ValueError("Saved close must be positive")
+    for trade in state["trades"]:
+        if not isinstance(trade, dict) or "pnl_usd" not in trade:
+            raise ValueError("Saved trade record is invalid")
+        pnl = _number(trade["pnl_usd"], "saved trade PnL")
+        if trade.get("side", "SELL") != "SELL":
+            raise ValueError("Saved paper trade side is invalid")
+        expected_result = "WIN" if pnl > 0 else "LOSS"
+        if trade.get("result", expected_result) != expected_result:
+            raise ValueError("Saved paper trade result does not match its PnL")
+        if "price" in trade:
+            _number(trade["price"], "saved trade price", 0)
+            if trade["price"] <= 0:
+                raise ValueError("Saved trade price must be positive")
+        if "timestamp" in trade and (
+            isinstance(trade["timestamp"], bool)
+            or not isinstance(trade["timestamp"], int)
+            or trade["timestamp"] < 0
+        ):
+            raise ValueError("Saved trade timestamp is invalid")
     for close in state["recent_closes"]:
         _number(close, "saved close", 0)
     for key in ("ema50_state", "ema200_state"):
         if state.get(key) is not None:
             _number(state[key], key, 0)
-    _number(state.get("daily_start_equity", state["initial_cash"] if "initial_cash" in state else initial_cash),
+    _number(state.get("daily_start_equity", state["initial_cash"]),
             "state daily starting equity", 0)
+    for key in ("daily_loss_paused", "paused_for_loss_streak", "paused_for_drawdown"):
+        if key in state and not isinstance(state[key], bool):
+            raise ValueError("Saved paper account risk flag is invalid: " + key)
+    if state.get("daily_bucket") is not None and not isinstance(state["daily_bucket"], str):
+        raise ValueError("Saved paper account daily bucket is invalid")
     last_timestamp = state.get("last_timestamp")
     if last_timestamp is not None and (isinstance(last_timestamp, bool) or not isinstance(last_timestamp, int) or last_timestamp < 0):
         raise ValueError("Saved paper account timestamp is invalid")
