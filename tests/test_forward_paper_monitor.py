@@ -101,16 +101,19 @@ class ForwardPaperMonitorTests(unittest.TestCase):
         now = candles[-1]["timestamp"] / 1000 + 3600 + 60
         with tempfile.TemporaryDirectory() as folder:
             first = process_forward_accounts(candles, folder, now)
-            self.assertEqual(first["initial_cash_usd"], 1000.0)
+            self.assertEqual(first["initial_cash_usd"], 1600.0)
             self.assertEqual(first["completed_trades"], 0)
             self.assertEqual(first["schema_version"], 1)
             self.assertEqual(first["status"], "PAPER_MONITORING")
-            self.assertEqual(set(first["sleeves_summary"]), {"4h", "6h"})
-            for timeframe in ("4h", "6h"):
+            self.assertEqual(
+                set(first["sleeves_summary"]),
+                {"1h_sma_trend", "1h_ema_trend", "1h_rsi14_mean_reversion", "4h", "6h"},
+            )
+            for timeframe in ("1h_sma_trend", "1h_ema_trend", "1h_rsi14_mean_reversion", "4h", "6h"):
                 health = first["sleeves_summary"][timeframe]["health_assessment"]
                 self.assertEqual(health["status"], "INSUFFICIENT_FORWARD_SAMPLE")
                 self.assertFalse(health["live_trading_eligible"])
-            for timeframe in ("4h", "6h"):
+            for timeframe in ("1h_sma_trend", "1h_ema_trend", "1h_rsi14_mean_reversion", "4h", "6h"):
                 account = first["sleeves"][timeframe]["account"]
                 self.assertEqual(account["processed_new_candles"], 0)
                 self.assertEqual(account["return_pct"], 0.0)
@@ -134,6 +137,9 @@ class ForwardPaperMonitorTests(unittest.TestCase):
                 row["timestamp"] = candles[-1]["timestamp"] + (i + 1) * 3_600_000
             now2 = extended[-1]["timestamp"] / 1000 + 3600 + 60
             result = process_forward_accounts(extended, folder, now2)
+            self.assertGreater(result["sleeves"]["1h_sma_trend"]["account"]["processed_new_candles"], 0)
+            self.assertGreater(result["sleeves"]["1h_ema_trend"]["account"]["processed_new_candles"], 0)
+            self.assertGreater(result["sleeves"]["1h_rsi14_mean_reversion"]["account"]["processed_new_candles"], 0)
             self.assertGreater(result["sleeves"]["4h"]["account"]["processed_new_candles"], 0)
             self.assertGreater(result["sleeves"]["6h"]["account"]["processed_new_candles"], 0)
             again = process_forward_accounts(extended, folder, now2)
