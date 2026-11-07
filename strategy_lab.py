@@ -124,10 +124,31 @@ def run_strategy_lab(prices, fee=0.001, slippage=0.0005):
     split = int(len(prices) * 0.7)
     signals = _signals(prices)
     results = {}
+    # Three chronological evaluation windows after the initial warm-up.
+    # These are fixed-rule rolling windows, not parameter re-optimization.
+    walk_start = max(50, len(prices) // 2)
+    window_edges = [
+        walk_start + ((len(prices) - walk_start) * k) // 3
+        for k in range(4)
+    ]
     for name, values in signals.items():
+        windows = []
+        for fold in range(3):
+            start = window_edges[fold]
+            end = window_edges[fold + 1]
+            if end > start:
+                windows.append({
+                    "window": fold + 1,
+                    "start_index": start,
+                    "end_index_exclusive": end,
+                    "metrics": _simulate(prices, values, start, end, fee, slippage),
+                })
+        returns = [item["metrics"]["return_pct"] for item in windows]
         results[name] = {
             "in_sample": _simulate(prices, values, 50, split, fee, slippage),
             "out_of_sample": _simulate(prices, values, split, len(prices), fee, slippage),
+            "walk_forward_windows": windows,
+            "worst_window_return_pct": min(returns) if returns else None,
         }
 
     # Buy-and-hold benchmark over exactly the same out-of-sample window.
@@ -167,6 +188,7 @@ def run_strategy_lab(prices, fee=0.001, slippage=0.0005):
         "in_sample_fraction_pct": 70,
         "out_of_sample_fraction_pct": 30,
         "execution": "Previous completed close signal; next close fill; 25% equity allocation; fee and slippage applied.",
-        "selection_warning": "No strategy is declared a winner from this single sample. Prefer robust positive out-of-sample results across multiple market regimes.",
+        "walk_forward_note": "Three chronological fixed-rule evaluation windows are reported independently; parameters are not retuned between windows.",
+        "selection_warning": "No strategy is declared a winner from these tests alone. Require positive out-of-sample evidence across multiple market regimes and longer periods before considering deployment.",
         "strategies": results,
     }
