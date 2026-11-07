@@ -18,9 +18,10 @@ def _number(value, name, minimum=None, maximum=None):
     return float(value)
 
 
-def _new_state(initial_cash):
+def _new_state(initial_cash, strategy="sma_trend"):
     return {
         "version": STATE_VERSION,
+        "strategy": strategy,
         "initial_cash": float(initial_cash),
         "cash": float(initial_cash),
         "btc": 0.0,
@@ -38,16 +39,18 @@ def _new_state(initial_cash):
     }
 
 
-def _load_state(path, initial_cash):
+def _load_state(path, initial_cash, strategy="sma_trend"):
     file_path = Path(path)
     if not file_path.exists():
-        return _new_state(initial_cash)
+        return _new_state(initial_cash, strategy)
     try:
         state = json.loads(file_path.read_text(encoding="utf-8"))
     except (OSError, json.JSONDecodeError) as exc:
         raise ValueError("Paper account state is unreadable; refusing to reset funds silently") from exc
     if not isinstance(state, dict) or state.get("version") != STATE_VERSION:
         raise ValueError("Unknown paper account state version; manual review is required")
+    if state.get("strategy", "sma_trend") != strategy:
+        raise ValueError("Paper account strategy does not match its saved state")
     required = ("cash", "btc", "entry_cost", "recent_closes", "peak_equity", "trades", "fees_paid")
     if any(key not in state for key in required):
         raise ValueError("Paper account state is incomplete; refusing to reset it")
@@ -61,10 +64,47 @@ def _load_state(path, initial_cash):
     return state
 
 
+
+def _ema_last(values, period):
+    alpha = 2.0 / (period + 1)
+    current = float(values[0])
+    for value in values[1:]:
+        current = alpha * float(value) + (1 - alpha) * current
+    return current
+
+
+def _rsi_last(values, period=14):
+    changes = [float(values[i]) - float(values[i - 1]) for i in range(1, len(values))]
+    recent = changes[-period:]
+    gains = sum(max(change, 0.0) for change in recent) / period
+    losses = sum(max(-change, 0.0) for change in recent) / period
+    if losses == 0:
+        return 100.0 if gains else 50.0
+    return 100.0 - 100.0 / (1.0 + gains / losses)
+
+
+def run_paper_portfolio(candles, state_dir="."):
+    """Run independent, persistent paper ledgers for three fixed strategies."""
+    directory = Path(state_dir)
+    strategies = ("sma_trend", "ema_trend", "rsi_momentum")
+    accounts = {}
+    for strategy in strategies:
+        accounts[strategy] = update_paper_account(
+            candles,
+            state_path=str(directory / f"paper_account_state_{strategy}.json"),
+            strategy=strategy,
+        )
+    return {
+        "mode": "MULTI_STRATEGY_PERSISTENT_PAPER_ONLY",
+        "accounts": accounts,
+        "note": "Each strategy has an independent $1,000 simulated ledger, identical fees, slippage, sizing and risk limits. This is forward paper testing, not live trading.",
+    }
+
 def update_paper_account(candles, state_path="paper_account_state.json",
                          initial_cash=1000.0, fee_rate=0.001,
                          slippage_rate=0.0005, allocation_fraction=0.25,
-                         max_drawdown_fraction=0.10, daily_loss_fraction=0.03):
+                         max_drawdown_fraction=0.10, daily_loss_fraction=0.03,
+                         strategy="sma_trend"):
     """Process each newly closed hourly candle once and persist the simulated account."""
     initial_cash = _number(initial_cash, "initial_cash", 0)
     fee_rate = _number(fee_rate, "fee_rate", 0, 0.999999)
@@ -91,7 +131,7 @@ def update_paper_account(candles, state_path="paper_account_state.json",
     if timestamps != sorted(timestamps) or len(set(timestamps)) != len(timestamps):
         raise ValueError("Candle timestamps must be strictly increasing and unique")
 
-    state = _load_state(state_path, initial_cash)
+    state = _load_state(state_path, initial_cash, strategy)
     new_trades = []
     processed = 0
     for timestamp, close in normalized:
@@ -101,11 +141,22 @@ def update_paper_account(candles, state_path="paper_account_state.json",
 
         history = [float(x) for x in state["recent_closes"]]
         if len(history) >= 50:
-            sma20 = sum(history[-20:]) / 20
-            sma50 = sum(history[-50:]) / 50
             prior_close = history[-1]
-            want_long = prior_close > sma20 > sma50
-            want_flat = prior_close < sma20 < sma50
+            if strategy == "sma_trend":
+                sma20 = sum(history[-20:]) / 20
+                sma50 = sum(history[-50:]) / 50
+                want_long = prior_close > sma20 > sma50
+                want_flat = prior_close < sma20 < sma50
+            elif strategy == "ema_trend":
+                fast = _ema_last(history, 12)
+                slow = _ema_last(history, 26)
+                want_long = fast > slow and prior_close > slow
+                want_flat = fast < slow or prior_close < slow
+            else:
+                momentum = _rsi_last(history, 14)
+                slow = _ema_last(history, 26)
+                want_long = 50 < momentum < 70 and prior_close > slow
+                want_flat = momentum < 45 or prior_close < slow
 
             if state.get("daily_bucket") != datetime.fromtimestamp(timestamp, timezone.utc).date().isoformat():
                 state["daily_bucket"] = datetime.fromtimestamp(timestamp, timezone.utc).date().isoformat()
@@ -192,6 +243,7 @@ def update_paper_account(candles, state_path="paper_account_state.json",
             loss_streak = 0
     return {
         "mode": "PERSISTENT_PAPER_ONLY",
+        "strategy": strategy,
         "processed_new_candles": processed,
         "last_processed_timestamp": state.get("last_timestamp"),
         "initial_cash_usd": round(initial, 2),
