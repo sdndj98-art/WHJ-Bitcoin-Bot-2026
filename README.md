@@ -46,3 +46,6 @@ The backtest uses the same SMA20/SMA50 trend rule, evaluates a signal using the 
 
 ## Five-year strategy research
 The research workflow downloads public Coinbase BTC-USD hourly candles, validates OHLCV data, and evaluates fixed-rule strategies on hourly, 4-hour, 6-hour, and daily bars. It uses chronological in-sample/out-of-sample splits, additional out-of-sample windows, and a higher-fee/slippage stress scenario. The current leading research candidate is daily Bollinger mean reversion, but its out-of-sample sample is small; it remains experimental and is not approved for live trading. Historical and paper results are not forecasts or guarantees.
+
+### Strategy promotion policy
+A strategy is only eligible for extended forward paper review when it passes all fixed gates: at least 30 out-of-sample closed trades, positive out-of-sample and elevated-cost stress returns, profit factor of at least 1.2, out-of-sample maximum drawdown no greater than 10%, and non-negative returns in all three chronological out-of-sample windows. Passing is not a live-trading approval. If no strategy passes, the correct result is to keep all strategies in research/paper mode rather than force a winner.
