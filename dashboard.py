@@ -39,6 +39,17 @@ def build_dashboard(report):
         )
         for label, value in fields
     )
+    lab = report.get("strategy_lab", {}).get("strategies", {})
+    strategy_rows = "".join(
+        "<tr><td>{}</td><td>{}</td><td>{}</td><td>{}</td></tr>".format(
+            html.escape(name),
+            html.escape(str(metrics.get("return_pct", "—"))),
+            html.escape(str(metrics.get("max_drawdown_pct", "—"))),
+            html.escape(str(metrics.get("closed_trades", "—")))
+        )
+        for name, item in lab.items()
+        for metrics in [item.get("out_of_sample", {})]
+    ) or '<tr><td colspan="4">Strategy comparison not available</td></tr>'
     timestamp = html.escape(str(report.get("time", "Unknown")))
     signal = html.escape(str(report.get("signal", "HOLD")))
     return """<!doctype html>
@@ -58,6 +69,7 @@ table{width:100%;border-collapse:collapse}td,th{text-align:left;padding:10px;bor
 <p class="signal">Current indicator: """ + signal + """</p></header>
 <div class="grid">""" + cards + """</div>
 <section><h2>Recent simulated trades</h2><table><thead><tr><th>Result</th><th>P&amp;L (USD)</th></tr></thead><tbody>""" + rows + """</tbody></table></section>
+<section><h2>Strategy comparison · Out-of-sample</h2><p class="muted">Chronological holdout results; fixed rules, not a guarantee or a strategy recommendation.</p><table><thead><tr><th>Strategy</th><th>Return (%)</th><th>Max drawdown (%)</th><th>Closed trades</th></tr></thead><tbody>""" + strategy_rows + """</tbody></table></section>
 <p class="foot notice">Simulation only. No real orders are placed. Historical results do not predict future performance and are not financial advice.</p>
 </body></html>"""
 
