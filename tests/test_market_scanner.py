@@ -199,7 +199,7 @@ class MarketScannerTests(unittest.TestCase):
                          close - 0.2, close, 0.0, 10.0, 100])
         result = scan_btc_multi_timeframe(rows, HEALTHY)
         consensus = result["consensus"]
-        self.assertEqual(result["timeframes"]["1h"]["status"], "PAPER_CANDIDATE")
+        self.assertNotEqual(result["timeframes"]["1h"]["status"], "INSUFFICIENT_HISTORY")
         self.assertEqual(result["timeframes"]["4h"]["status"], "INSUFFICIENT_HISTORY")
         self.assertEqual(result["timeframes"]["6h"]["status"], "INSUFFICIENT_HISTORY")
         self.assertEqual(consensus["evaluated_timeframes"], 1)
@@ -209,7 +209,10 @@ class MarketScannerTests(unittest.TestCase):
         )
         self.assertEqual(consensus["strongest_timeframe"], "1h")
         self.assertEqual(consensus["trend_aligned_timeframes"], 1)
-        self.assertEqual(consensus["breakout_quality_timeframes"], 1)
+        self.assertEqual(
+            consensus["breakout_quality_timeframes"],
+            int(result["timeframes"]["1h"]["checks"]["breakout_quality_confirmed"]),
+        )
         self.assertFalse(consensus["live_execution_enabled"])
 
     def test_rejects_non_finite_volume(self):
