@@ -81,6 +81,26 @@ class ForwardPaperMonitorTests(unittest.TestCase):
         self.assertEqual(result["status"], "REVIEW_REQUIRED")
         self.assertFalse(result["live_trading_eligible"])
 
+    def test_rolling_drawdown_triggers_review_even_when_net_pnl_is_positive(self):
+        account = {
+            "completed_trades": 40,
+            "initial_cash_usd": 200.0,
+            "max_drawdown_pct": 2.0,
+            "profit_factor": 1.5,
+            "return_pct": 8.0,
+            "risk_pause_reasons": [],
+            "recent_trades": (
+                [{"pnl_usd": 10.0} for _ in range(5)]
+                + [{"pnl_usd": -4.0} for _ in range(5)]
+            ),
+        }
+        result = assess_sleeve_health(account)
+        self.assertEqual(result["rolling_net_pnl_usd"], 30.0)
+        self.assertEqual(result["rolling_max_drawdown_pct"], 10.0)
+        self.assertEqual(result["rolling_status"], "ROLLING_REVIEW_REQUIRED")
+        self.assertEqual(result["status"], "REVIEW_REQUIRED")
+        self.assertFalse(result["live_trading_eligible"])
+
     def test_rolling_window_rejects_invalid_trade_pnl(self):
         account = {
             "completed_trades": 12,
