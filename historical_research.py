@@ -1,4 +1,4 @@
-"""Fetch two years of public BTC/USDT hourly candles and run fixed-rule research.
+"""Fetch two years of public BTC/USD hourly candles and run fixed-rule research.
 
 Research only: no credentials, orders, or trading endpoints are used.
 """
@@ -8,7 +8,7 @@ import time
 import urllib.error
 import urllib.parse
 import urllib.request
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timezone
 from pathlib import Path
 
 from paper_account import update_paper_account
