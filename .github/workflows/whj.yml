@@ -3,20 +3,39 @@ name: WHJ Bitcoin Bot
 on:
   workflow_dispatch:
   schedule:
-    - cron: "0 * * * *"
+    - cron: "7 * * * *"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: whj-bitcoin-analysis
+  cancel-in-progress: false
 
 jobs:
   bitcoin-analysis:
     runs-on: ubuntu-latest
-
+    timeout-minutes: 5
     steps:
-      - name: Download project
+      - name: Checkout project
         uses: actions/checkout@v4
 
-      - name: Setup Python
+      - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: "3.12"
 
-      - name: Run WHJ Analysis
+      - name: Run automated tests
+        run: python -m unittest discover -s tests -v
+
+      - name: Run WHJ market analysis
         run: python main.py
+
+      - name: Save analysis report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: whj-analysis-report-${{ github.run_number }}
+          path: report.json
+          if-no-files-found: ignore
+          retention-days: 14
