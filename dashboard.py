@@ -25,8 +25,12 @@ def build_dashboard(report):
         ("SMA 50", report.get("SMA50", "—")),
         ("Paper equity (USD)", bt.get("final_equity_usd", "—")),
         ("Return (%)", bt.get("return_pct", "—")),
+        ("Max drawdown (%)", bt.get("max_drawdown_pct", "—")),
         ("Completed trades", bt.get("completed_trades", 0)),
         ("Win rate (%)", bt.get("win_rate_pct", 0)),
+        ("Average trade P&L (USD)", bt.get("average_trade_pnl_usd", "—")),
+        ("Profit factor", bt.get("profit_factor", "—")),
+        ("Max consecutive losses", bt.get("max_consecutive_losses", "—")),
         ("Fees paid (USD)", bt.get("fees_paid_usd", "—")),
     ]
     cards = "".join(
