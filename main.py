@@ -3,12 +3,14 @@
 This program NEVER places real orders and does not require exchange credentials.
 """
 import json
+import math
 import sys
 import urllib.request
 from datetime import datetime, timezone
 from pathlib import Path
 
 from paper_trading import run_backtest
+from paper_account import update_paper_account
 from strategy_lab import run_strategy_lab
 
 API = "https://api.kraken.com/0/public/OHLC?pair=XBTUSD&interval=60"
@@ -16,34 +18,42 @@ REPORT_PATH = Path("report.json")
 USER_AGENT = "WHJ-Bitcoin-Bot/1.2"
 
 
-def fetch_closes():
+def fetch_closed_candles():
     request = urllib.request.Request(API, headers={"User-Agent": USER_AGENT})
     with urllib.request.urlopen(request, timeout=20) as response:
         payload = json.loads(response.read().decode("utf-8"))
-
     errors = payload.get("error") or []
     if errors:
         raise RuntimeError("Kraken API error: " + ", ".join(map(str, errors)))
-
     result = payload.get("result")
     if not isinstance(result, dict):
         raise ValueError("Kraken response is missing result data")
-
     pair_key = next((key for key in result if key != "last"), None)
     if pair_key is None:
         raise ValueError("Kraken response contains no BTC/USD candles")
-
     candles = result[pair_key]
     if not isinstance(candles, list) or len(candles) < 51:
         raise ValueError("Not enough hourly candles; at least 51 are required")
-
-    # Kraken's final OHLC candle is the currently-forming hour. Exclude it.
     closed_candles = candles[:-1]
-    closes = [float(candle[4]) for candle in closed_candles]
-    if any(price <= 0 for price in closes):
-        raise ValueError("Market data contains a non-positive close price")
-    return closes
+    timestamps = []
+    for candle in closed_candles:
+        if not isinstance(candle, (list, tuple)) or len(candle) < 5:
+            raise ValueError("Market data contains a malformed OHLC candle")
+        try:
+            timestamp, close = int(candle[0]), float(candle[4])
+        except (TypeError, ValueError, OverflowError) as exc:
+            raise ValueError("Market data contains an invalid timestamp or close") from exc
+        if timestamp < 0 or not math.isfinite(close) or close <= 0:
+            raise ValueError("Market data contains an invalid timestamp or close")
+        timestamps.append(timestamp)
+    if timestamps != sorted(timestamps) or len(set(timestamps)) != len(timestamps):
+        raise ValueError("Market candle timestamps are duplicated or out of order")
+    return closed_candles
 
+
+def fetch_closes():
+    """Compatibility helper returning only completed hourly close prices."""
+    return [float(candle[4]) for candle in fetch_closed_candles()]
 
 def analyze(prices):
     if len(prices) < 50:
@@ -88,7 +98,10 @@ def analyze(prices):
 
 
 def main():
-    report = analyze(fetch_closes())
+    candles = fetch_closed_candles()
+    closes = [float(candle[4]) for candle in candles]
+    report = analyze(closes)
+    report["persistent_paper_account"] = update_paper_account(candles)
     REPORT_PATH.write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
     print(json.dumps(report, indent=2))
 
