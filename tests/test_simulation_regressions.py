@@ -18,7 +18,7 @@ class StrategyLabTests(unittest.TestCase):
         self.assertIsInstance(benchmark["max_drawdown_pct"], float)
         self.assertFalse(benchmark["open_position"])
         self.assertTrue(benchmark["fees_and_slippage_included"])
-        for name in ("sma_trend", "ema_trend", "rsi_momentum", "sma200_regime"):
+        for name in ("sma_trend", "ema_trend", "rsi_momentum", "sma200_regime", "ema50_200_regime"):
             strategy = report["strategies"][name]
             self.assertEqual(len(strategy["walk_forward_windows"]), 3)
             self.assertIsNotNone(strategy["worst_window_return_pct"])
@@ -82,7 +82,7 @@ class PersistentPaperAccountTests(unittest.TestCase):
             candles = self.make_candles([100.0 + (i % 40) * 0.4 for i in range(180)])
             first = run_paper_portfolio(candles, state_dir=folder)
             second = run_paper_portfolio(candles, state_dir=folder)
-            self.assertEqual(set(first["accounts"]), {"sma_trend", "ema_trend", "rsi_momentum", "sma200_regime"})
+            self.assertEqual(set(first["accounts"]), {"sma_trend", "ema_trend", "rsi_momentum", "sma200_regime", "ema50_200_regime"})
             for name, account in second["accounts"].items():
                 self.assertEqual(account["processed_new_candles"], 0)
                 self.assertEqual(account["strategy"], name)
