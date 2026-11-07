@@ -4,7 +4,7 @@ import unittest
 from datetime import datetime, timezone
 from unittest.mock import patch
 
-from historical_research import (INTERVAL_MS, aggregate_candles, load_two_year_candles, run_forward_paper_accounts, run_ohlc_breakout_lab, run_long_short_lab, run_daily_regime_filter_lab, assess_strategy_qualification, assess_research_lab_qualification, _turtle_signals)
+from historical_research import (INTERVAL_MS, aggregate_candles, load_two_year_candles, run_forward_paper_accounts, run_ohlc_breakout_lab, run_long_short_lab, run_daily_regime_filter_lab, assess_strategy_qualification, assess_research_lab_qualification, build_qualification_markdown, _turtle_signals)
 
 
 class HistoricalResearchTests(unittest.TestCase):
@@ -291,6 +291,33 @@ class HistoricalResearchTests(unittest.TestCase):
         self.assertTrue(result["candidate"]["qualified_for_extended_paper_review"])
         self.assertFalse(result["small_sample"]["qualified_for_extended_paper_review"])
         self.assertNotIn("buy_and_hold_25pct", result)
+
+
+    def test_qualification_report_discloses_failures_and_no_live_approval(self):
+        result = {
+            "source": "test source", "candles": 1000,
+            "first_closed_candle_utc": "start", "last_closed_candle_utc": "end",
+            "strategy_qualification_policy": {
+                "minimum_oos_trades": 30, "minimum_profit_factor": 1.2,
+                "maximum_oos_drawdown_pct": 10.0,
+            },
+            "strategy_qualification": {
+                "1d": {
+                    "bollinger": {
+                        "qualified_for_extended_paper_review": False,
+                        "failed_checks": ["minimum_oos_trades"],
+                    }
+                }
+            },
+            "extended_lab_strategy_qualification": {
+                "ohlc_breakout": {}, "long_short": {}, "daily_regime_filter": {},
+            },
+        }
+        report = build_qualification_markdown(result)
+        self.assertIn("NOT QUALIFIED", report)
+        self.assertIn("minimum_oos_trades", report)
+        self.assertIn("Qualified strategies: 0 / 1", report)
+        self.assertIn("No strategy is approved for live trading", report)
 
 
 if __name__ == "__main__":
