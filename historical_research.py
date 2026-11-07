@@ -485,6 +485,8 @@ def run_daily_regime_filter_lab(hourly_candles, fee=FEE_RATE, slippage=SLIPPAGE_
         "ema20_50_with_daily_sma200": [],
         "ema20_50_daily_sma200_rsi50": [],
         "ema20_50_daily_sma200_rsi50_rising": [],
+        "ema20_50_daily_sma200_ema20_exit": [],
+        "ema20_50_daily_sma200_rsi45_exit": [],
         "sma20_50_with_daily_sma200": [],
     }
     for i, row in enumerate(four_hour):
@@ -514,6 +516,26 @@ def run_daily_regime_filter_lab(hourly_candles, fee=FEE_RATE, slippage=SLIPPAGE_
         signals["ema20_50_daily_sma200_rsi50_rising"].append(
             bool(trend_setup and rsi_confirmed and rsi_rising)
         )
+        # Stateful exit variants keep the base trend entry but test earlier,
+        # predeclared exit conditions to reduce exposure during weakening trends.
+        if i == 0:
+            ema20_exit_position = False
+            rsi_exit_position = False
+        if not ema20_exit_position and trend_setup:
+            ema20_exit_position = True
+        elif ema20_exit_position and (
+            not daily_regime or closes[i] < ema20[i] or ema20[i] < ema50[i]
+        ):
+            ema20_exit_position = False
+        if not rsi_exit_position and trend_setup:
+            rsi_exit_position = True
+        elif rsi_exit_position and (
+            not daily_regime or (rsi14[i] is not None and rsi14[i] < 45.0)
+            or ema20[i] < ema50[i]
+        ):
+            rsi_exit_position = False
+        signals["ema20_50_daily_sma200_ema20_exit"].append(ema20_exit_position)
+        signals["ema20_50_daily_sma200_rsi45_exit"].append(rsi_exit_position)
         signals["sma20_50_with_daily_sma200"].append(
             bool(sma20[i] is not None and sma50[i] is not None
                  and daily_regime and closes[i] > sma20[i] > sma50[i])
