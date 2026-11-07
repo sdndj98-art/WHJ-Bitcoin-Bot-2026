@@ -2,13 +2,15 @@ name: WHJ Bitcoin Bot
 
 on:
   push:
-    branches: [main, build/bitcoin-satoshi-bot]
+    branches: [main, build/bitcoin-satoshi-bot, research/cost-sensitivity]
   workflow_dispatch:
   schedule:
     - cron: "7 * * * *"
 
 permissions:
   contents: read
+  pages: write
+  id-token: write
 
 concurrency:
   group: whj-bitcoin-analysis
@@ -45,6 +47,29 @@ jobs:
 
       - name: Build HTML dashboard
         run: python dashboard.py
+
+      - name: Prepare browser dashboard site
+        run: |
+          mkdir -p site
+          cp web/index.html site/index.html
+          cp report.json site/report.json
+
+      - name: Configure GitHub Pages
+        if: github.ref == 'refs/heads/main'
+        uses: actions/configure-pages@v5
+        with:
+          enablement: true
+
+      - name: Upload dashboard website
+        if: github.ref == 'refs/heads/main'
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+
+      - name: Deploy dashboard website
+        if: github.ref == 'refs/heads/main'
+        id: deployment
+        uses: actions/deploy-pages@v4
 
       - name: Save persistent paper account state
         if: success() && hashFiles('paper_account_state_*.json') != ''
