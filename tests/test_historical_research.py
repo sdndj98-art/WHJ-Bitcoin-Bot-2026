@@ -236,7 +236,7 @@ class HistoricalResearchTests(unittest.TestCase):
             units = direction * 250.0 / entry_fill
             entry_fee = 250.0 * fee
             cash = 1000.0 - units * entry_fill - entry_fee
-            exit_fill = 100.0 * (1 + direction * slippage)
+            exit_fill = 100.0 * (1 - direction * slippage)
             exit_fee = abs(units * exit_fill) * fee
             net_equity = cash + units * exit_fill - exit_fee
             expected_drawdown = (1000.0 - net_equity) / 1000.0 * 100.0
