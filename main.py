@@ -145,7 +145,8 @@ def analyze(prices):
     })
 
     backtest = run_backtest(prices)
-    risk_diagnostics = monte_carlo_trade_risk(backtest["trade_log"])\n    block_risk_diagnostics = block_bootstrap_trade_risk(backtest["trade_log"])
+    risk_diagnostics = monte_carlo_trade_risk(backtest["trade_log"])
+    block_risk_diagnostics = block_bootstrap_trade_risk(backtest["trade_log"])
 
     return {
         "project": "WHJ Bitcoin Bot",
