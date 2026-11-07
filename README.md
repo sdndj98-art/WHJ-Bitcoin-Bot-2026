@@ -39,7 +39,7 @@ GitHub Actions runs tests and hourly analysis on pushes to `main`, hourly at min
 
 ## Monte Carlo trade-risk diagnostics
 
-The hourly report includes a seeded bootstrap resampling of the completed historical paper-backtest trade PnL. It reports median and tail final-equity scenarios, loss frequency, and maximum-drawdown percentiles across 2,000 resampled sequences. This is a diagnostic only: it assumes IID trade outcomes, keeps the trade count fixed, uses additive historical PnL, and does not model serial dependence, regime changes, or future execution. It is not a forecast, does not establish an edge, and must never override the fixed strategy qualification gates.
+The hourly report includes a seeded bootstrap resampling of the completed historical paper-backtest trade PnL. It reports median and tail final-equity scenarios, loss frequency, and maximum-drawdown percentiles across 2,000 resampled sequences. This is a diagnostic only: it assumes IID trade outcomes, keeps the trade count fixed, uses additive historical PnL, and does not model serial dependence, regime changes, or future execution. It is not a forecast, does not establish an edge, and must never override the fixed strategy qualification gates. A second circular moving-block bootstrap diagnostic samples short contiguous sequences of trade outcomes to test sensitivity to local ordering. Its default block length is three trades. This can preserve limited short-run ordering, but cannot reliably estimate dependence from a small sample and is not a forecast.
 
 ## Indicator
 - BUY when latest closed price > SMA20 > SMA50.
