@@ -437,6 +437,8 @@ class HistoricalResearchTests(unittest.TestCase):
         self.assertFalse(result["qualified_for_extended_paper_review"])
         self.assertIn("outperform_buy_and_hold_oos", result["failed_checks"])
         self.assertTrue(result["checks"]["outperform_buy_and_hold_stress"])
+        self.assertEqual(result["benchmark_comparison"]["oos_outperformance_pct_points"], -0.5)
+        self.assertEqual(result["benchmark_comparison"]["stress_oos_outperformance_pct_points"], 0.5)
 
         stronger = {
             **candidate,
