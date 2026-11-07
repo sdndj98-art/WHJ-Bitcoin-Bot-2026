@@ -40,6 +40,28 @@ class MarketScannerTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             scan_btc_market(candles()[:10], HEALTHY)
 
+    def test_rejects_duplicate_or_unsorted_timestamps(self):
+        rows = candles()
+        rows[-1][0] = rows[-2][0]
+        with self.assertRaisesRegex(ValueError, "strictly increasing"):
+            scan_btc_market(rows, HEALTHY)
+
+    def test_rejects_hourly_timestamp_gaps(self):
+        rows = candles()
+        rows[-1][0] += 60
+        with self.assertRaisesRegex(ValueError, "contiguous"):
+            scan_btc_market(rows, HEALTHY)
+
+    def test_rejects_boolean_timestamp_and_fractional_trade_count(self):
+        rows = candles()
+        rows[-1][0] = True
+        with self.assertRaisesRegex(ValueError, "booleans"):
+            scan_btc_market(rows, HEALTHY)
+        rows = candles()
+        rows[-1][7] = 1.5
+        with self.assertRaisesRegex(ValueError, "trade count"):
+            scan_btc_market(rows, HEALTHY)
+
     def test_rejects_non_finite_volume(self):
         rows = candles()
         rows[-1][6] = float("nan")
