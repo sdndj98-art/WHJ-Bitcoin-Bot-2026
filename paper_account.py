@@ -28,6 +28,8 @@ def _new_state(initial_cash, strategy="sma_trend"):
         "entry_cost": 0.0,
         "last_timestamp": None,
         "recent_closes": [],
+        "ema50_state": None,
+        "ema200_state": None,
         "peak_equity": float(initial_cash),
         "max_drawdown_pct": 0.0,
         "daily_bucket": None,
@@ -63,6 +65,9 @@ def _load_state(path, initial_cash, strategy="sma_trend"):
         raise ValueError("Paper account state collections are invalid")
     for close in state["recent_closes"]:
         _number(close, "saved close", 0)
+    for key in ("ema50_state", "ema200_state"):
+        if state.get(key) is not None:
+            _number(state[key], key, 0)
     _number(state.get("daily_start_equity", state["initial_cash"] if "initial_cash" in state else initial_cash),
             "state daily starting equity", 0)
     last_timestamp = state.get("last_timestamp")
@@ -241,6 +246,13 @@ def update_paper_account(candles, state_path="paper_account_state.json",
 
         history_limit = 20000 if strategy == "ema50_200_regime" else 200
         state["recent_closes"] = (history + [close])[-history_limit:]
+        if strategy == "ema50_200_regime":
+            alpha50 = 2.0 / 51.0
+            alpha200 = 2.0 / 201.0
+            prior_ema50 = state.get("ema50_state")
+            prior_ema200 = state.get("ema200_state")
+            state["ema50_state"] = close if prior_ema50 is None else alpha50 * close + (1 - alpha50) * prior_ema50
+            state["ema200_state"] = close if prior_ema200 is None else alpha200 * close + (1 - alpha200) * prior_ema200
         state["last_timestamp"] = timestamp
         processed += 1
 
