@@ -7,6 +7,7 @@ import main
 from dashboard import build_dashboard
 from notify_telegram import format_message
 from paper_trading import run_backtest
+from strategy_lab import run_strategy_lab
 
 
 class AnalysisTests(unittest.TestCase):
@@ -86,6 +87,19 @@ class PaperTradingTests(unittest.TestCase):
         self.assertIn("average_trade_pnl_usd", result)
         self.assertIn("profit_factor", result)
         self.assertIn("max_consecutive_losses", result)
+
+    def test_strategy_lab_reports_chronological_holdout_and_benchmark(self):
+        prices = [100 + i * 0.1 + (i % 9) for i in range(180)]
+        result = run_strategy_lab(prices)
+        self.assertEqual(result["mode"], "FIXED_RULE_CHRONOLOGICAL_HOLDOUT")
+        self.assertIn("buy_and_hold", result["strategies"])
+        self.assertIn("out_of_sample", result["strategies"]["ema_trend"])
+
+    def test_strategy_lab_rejects_short_or_invalid_data(self):
+        with self.assertRaises(ValueError):
+            run_strategy_lab([100.0] * 119)
+        with self.assertRaises(ValueError):
+            run_strategy_lab([100.0] * 119 + [float("nan")])
 
 
 class ReportingTests(unittest.TestCase):
