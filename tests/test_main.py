@@ -147,7 +147,7 @@ class PaperTradingTests(unittest.TestCase):
         prices = (
             [100.0] * 250
             + [100.0 + index for index in range(100)]
-            + [200.0 - index for index in range(100)]
+            + [200.0 - index * 0.4 for index in range(250)]
         )
         signals = {
             "always_on": [True] * len(prices),
