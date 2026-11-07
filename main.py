@@ -32,8 +32,8 @@ def fetch_closed_candles():
     if pair_key is None:
         raise ValueError("Kraken response contains no BTC/USD candles")
     candles = result[pair_key]
-    if not isinstance(candles, list) or len(candles) < 51:
-        raise ValueError("Not enough hourly candles; at least 51 are required")
+    if not isinstance(candles, list) or len(candles) < 52:
+        raise ValueError("Not enough hourly candles; at least 52 are required to retain 51 closed candles")
     closed_candles = candles[:-1]
     timestamps = []
     for candle in closed_candles:
@@ -56,8 +56,8 @@ def fetch_closes():
     return [float(candle[4]) for candle in fetch_closed_candles()]
 
 def analyze(prices):
-    if len(prices) < 50:
-        raise ValueError("At least 50 closed prices are required")
+    if len(prices) < 51:
+        raise ValueError("At least 51 closed prices are required")
     if any(isinstance(p, bool) or not isinstance(p, (int, float))
            or not math.isfinite(p) or p <= 0 for p in prices):
         raise ValueError("Prices must be finite positive numbers")
