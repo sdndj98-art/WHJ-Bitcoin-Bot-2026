@@ -60,14 +60,17 @@ class DashboardContractTests(unittest.TestCase):
 
     def test_scanner_view_exposes_six_confirmation_gates_and_indicator_context(self):
         required = {
-            "gateQuality", "gateVolume", "gateBreakout", "gateTrend", "gateRsi",
-            "gateCandle", "scannerTrend", "scannerRsi", "scannerCandle",
+            "gateQuality", "gateVolume", "gateBreakout", "gateBreakoutQuality",
+            "gateTrend", "gateRsi", "gateCandle", "scannerBreakoutQuality",
+            "scannerBreakoutClearance", "scannerUpperWick", "scannerTrend", "scannerRsi", "scannerCandle",
             "scannerEma20", "scannerEma50", "scannerRsiValue", "scannerAtr",
             "scannerAtrPct", "scannerClosePosition", "scannerScore",
         }
         self.assertTrue(required.issubset(set(self.parser.ids)))
-        self.assertIn("6 GATES", self.source)
+        self.assertIn("7 GATES", self.source)
         self.assertIn("confluence_score", self.source)
+        self.assertIn("breakout_quality_confirmed", self.source)
+        self.assertIn("breakout_upper_wick_rejection_risk", self.source)
         self.assertIn("EMA20 و EMA50", self.source)
         self.assertIn("RSI", self.source)
         self.assertIn("ATR", self.source)
