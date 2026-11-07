@@ -14,3 +14,19 @@ env/
 .env
 .env.*
 !.env.example
+
+# Generated reports and browser output (recreate when needed)
+report.json
+historical_research.json
+forward_paper_report.json
+strategy_qualification_report.md
+dashboard.html
+
+# Persistent paper ledgers are local runtime data; never commit by accident
+paper_account_state_*.json
+paper_forward_*.json
+paper_*_state*.json
+
+# Recovery scratch files and local temporary data
+.local_recovery/
+*.tmp
