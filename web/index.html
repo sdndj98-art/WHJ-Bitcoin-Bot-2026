@@ -156,10 +156,11 @@ function validateForwardReport(x){
  const n=v=>typeof v==="number"&&Number.isFinite(v);
  if(!x||typeof x!=="object"||Array.isArray(x)||x.schema_version!==1||x.mode!=="FORWARD_ONLY_PAPER_NO_LIVE_ORDERS")throw Error("صيغة التقرير غير مدعومة أو ليست تقرير مراقبة ورقية");
  if(!n(x.initial_cash_usd)||x.initial_cash_usd<=0||!n(x.equity_after_estimated_exit_costs_usd)||x.equity_after_estimated_exit_costs_usd<=0||!n(x.return_pct)||!Number.isInteger(x.completed_trades)||x.completed_trades<0)throw Error("قيم المحفظة الأساسية غير صالحة");
- const keys=["1h_sma_trend","1h_ema_trend","1h_rsi14_mean_reversion","4h","6h"];\n if(!x.sleeves_summary||!keys.every(k=>x.sleeves_summary[k]&&n(x.sleeves_summary[k].equity_usd)&&x.sleeves_summary[k].equity_usd>0&&n(x.sleeves_summary[k].return_pct)&&Number.isInteger(x.sleeves_summary[k].completed_trades)&&x.sleeves_summary[k].completed_trades>=0&&Array.isArray(x.sleeves_summary[k].risk_pause_reasons)))throw Error("بيانات الاستراتيجيات الخمس غير مكتملة");
+ const keys=["1h_sma_trend","1h_ema_trend","1h_rsi14_mean_reversion","4h","6h"];
+ if(!x.sleeves_summary||!keys.every(k=>x.sleeves_summary[k]&&n(x.sleeves_summary[k].equity_usd)&&x.sleeves_summary[k].equity_usd>0&&n(x.sleeves_summary[k].return_pct)&&Number.isInteger(x.sleeves_summary[k].completed_trades)&&x.sleeves_summary[k].completed_trades>=0&&Array.isArray(x.sleeves_summary[k].risk_pause_reasons)))throw Error("بيانات الاستراتيجيات الخمس غير مكتملة");
  for(const k of keys){const h=x.sleeves_summary[k].health_assessment;if(h&&(!["RISK_PAUSED","INSUFFICIENT_FORWARD_SAMPLE","REVIEW_REQUIRED","CONTINUE_PAPER_REVIEW"].includes(h.status)||h.live_trading_eligible!==false||(h.rolling_status!==undefined&&!["ROLLING_REVIEW_REQUIRED","ROLLING_STABLE","INSUFFICIENT_ROLLING_SAMPLE"].includes(h.rolling_status))))throw Error("تقييم صحة الاستراتيجية غير صالح");}
- const sleeveEquity=x.sleeves_summary["4h"].equity_usd+x.sleeves_summary["6h"].equity_usd;
- const sleeveTrades=x.sleeves_summary["4h"].completed_trades+x.sleeves_summary["6h"].completed_trades;
+ const sleeveEquity=keys.reduce((sum,k)=>sum+x.sleeves_summary[k].equity_usd,0);
+ const sleeveTrades=keys.reduce((sum,k)=>sum+x.sleeves_summary[k].completed_trades,0);
  if(Math.abs(sleeveEquity-x.equity_after_estimated_exit_costs_usd)>0.02||sleeveTrades!==x.completed_trades)throw Error("إجماليات الحسابات لا تطابق ملخص المحفظة");
  const derivedReturn=(x.equity_after_estimated_exit_costs_usd/x.initial_cash_usd-1)*100;
  if(Math.abs(derivedReturn-x.return_pct)>0.02)throw Error("نسبة العائد لا تطابق قيمة المحفظة");
