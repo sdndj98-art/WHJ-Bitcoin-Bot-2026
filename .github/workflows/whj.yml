@@ -33,11 +33,23 @@ jobs:
       - name: Run WHJ market analysis
         run: python main.py
 
-      - name: Save analysis report
+      - name: Build HTML dashboard
+        run: python dashboard.py
+
+      - name: Send optional Telegram report
+        if: ${{ secrets.TELEGRAM_BOT_TOKEN != '' && secrets.TELEGRAM_CHAT_ID != '' }}
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: python notify_telegram.py
+
+      - name: Save analysis report and dashboard
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: whj-analysis-report-${{ github.run_number }}
-          path: report.json
+          name: whj-analysis-dashboard-${{ github.run_number }}
+          path: |
+            report.json
+            dashboard.html
           if-no-files-found: ignore
           retention-days: 14
