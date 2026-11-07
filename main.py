@@ -61,20 +61,24 @@ def assess_candle_quality(candles, now_timestamp=None):
     if not candles:
         raise ValueError("Cannot assess an empty candle series")
     timestamps = [int(candle[0]) for candle in candles]
-    gaps = []
-    for previous, current in zip(timestamps, timestamps[1:]):
+    gaps_total = 0
+    recent_gaps = 0
+    recent_start = max(0, len(timestamps) - 51)
+    for index, (previous, current) in enumerate(zip(timestamps, timestamps[1:])):
         delta = current - previous
         if delta > 3600:
-            gaps.append(max(1, int(round(delta / 3600)) - 1))
+            missing = max(1, int(round(delta / 3600)) - 1)
+            gaps_total += missing
+            if index >= recent_start:
+                recent_gaps += missing
         elif delta <= 0:
             raise ValueError("Candle timestamps must be strictly increasing")
-    recent_gaps = sum(gaps[-50:])
     now = datetime.now(timezone.utc).timestamp() if now_timestamp is None else float(now_timestamp)
     age_minutes = (now - (timestamps[-1] + 3600)) / 60
     fresh = -1 <= age_minutes <= 120
     return {
         "candle_count": len(candles),
-        "missing_hour_gaps_total": sum(gaps),
+        "missing_hour_gaps_total": gaps_total,
         "recent_missing_hour_gaps": recent_gaps,
         "latest_closed_candle_age_minutes": round(age_minutes, 2),
         "latest_candle_fresh": fresh,
