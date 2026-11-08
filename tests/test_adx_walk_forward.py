@@ -58,6 +58,7 @@ class AdxWalkForwardTests(unittest.TestCase):
         self.assertTrue(report["no_same_fold_test_feedback"])
         self.assertEqual(len(report["folds"]), 3)
         self.assertIn("not compounded", report["test_fold_capital_policy"])
+        self.assertIn("12-hour", report["fold_boundary_alignment"])
         previous_test_end = None
         for fold in report["folds"]:
             self.assertLessEqual(
@@ -75,6 +76,8 @@ class AdxWalkForwardTests(unittest.TestCase):
                     fold["training_end_exclusive_utc"], previous_test_end
                 )
             self.assertIn(fold["selected_threshold"], (15.0, 20.0, 25.0))
+            start_ms = int(__import__("datetime").datetime.fromisoformat(fold["test_start_utc"]).timestamp() * 1000)
+            self.assertEqual(start_ms % (12 * 60 * 60 * 1000), 0)
             self.assertIn("selected_strategy", fold["test"])
             self.assertIn("selected_strategy_2x_cost", fold["test"])
             previous_test_end = fold["test_end_exclusive_utc"]
