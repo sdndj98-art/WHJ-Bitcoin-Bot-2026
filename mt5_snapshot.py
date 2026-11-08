@@ -39,13 +39,18 @@ def _quality(rows, interval_seconds, now_timestamp):
     gaps = sum(
         max(0, (current - previous) // interval_seconds - 1)
         for previous, current in zip(timestamps, timestamps[1:])
+        if (current - previous) % interval_seconds == 0
+    )
+    irregular_intervals = any(
+        (current - previous) % interval_seconds != 0
+        for previous, current in zip(timestamps, timestamps[1:])
     )
     age_minutes = (now_timestamp - (timestamps[-1] + interval_seconds)) / 60.0
     fresh = -1.0 <= age_minutes <= (interval_seconds / 60.0 * 2 + 10)
     aligned = all(ts % interval_seconds == 0 for ts in timestamps)
     reasons = []
-    if gaps:
-        reasons.append("missing_completed_bars")
+    if gaps or irregular_intervals:
+        reasons.append("missing_or_irregular_completed_bars")
     if not fresh:
         reasons.append("stale_or_future_bar")
     if not aligned:
@@ -54,6 +59,7 @@ def _quality(rows, interval_seconds, now_timestamp):
         reasons.append("insufficient_history_for_scanner")
     return {
         "quality_status": "HEALTHY" if not reasons else "BLOCKED",
+        "paper_execution_allowed": not reasons,
         "bar_count": len(rows),
         "missing_bars": gaps,
         "latest_bar_age_minutes": round(age_minutes, 2),
