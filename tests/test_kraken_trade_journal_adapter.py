@@ -64,6 +64,11 @@ class AdapterTradeJournalTests(unittest.TestCase):
             on_accepted_trades=lambda events: None,
             require_initial_snapshot=True,
         )
+        adapter.handle_message({
+            "method": "subscribe",
+            "result": {"channel": "trade", "symbol": "BTC/USD"},
+            "success": True,
+        })
         update = {
             "channel": "trade", "type": "update",
             "data": [{
