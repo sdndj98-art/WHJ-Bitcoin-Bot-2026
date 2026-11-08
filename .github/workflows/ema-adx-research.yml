@@ -2,6 +2,11 @@ name: WHJ EMA ADX Confirmation Research
 
 on:
   workflow_dispatch:
+  push:
+    branches:
+      - feature/efficiency-ratio-indicator
+    paths:
+      - '.github/workflows/ema-adx-research.yml'
 
 permissions:
   contents: read
