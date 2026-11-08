@@ -4,6 +4,7 @@ from kraken_order_flow import (
     analyze_order_book,
     analyze_trade_flow,
     combine_microstructure,
+    _kraken_get,
 )
 
 
@@ -71,6 +72,17 @@ class KrakenOrderFlowTests(unittest.TestCase):
         self.assertEqual(result["context"], "BULLISH_MICROSTRUCTURE_ALIGNMENT")
         self.assertFalse(result["execution_enabled"])
         self.assertFalse(result["live_orders_placed"])
+
+    def test_public_fetch_rejects_non_finite_timeout_before_network(self):
+        with self.assertRaisesRegex(ValueError, "timeout"):
+            _kraken_get("Trades", {}, timeout=float("nan"))
+
+    def test_combined_context_rejects_unknown_labels(self):
+        with self.assertRaisesRegex(ValueError, "unknown batch bias"):
+            combine_microstructure(
+                {"batch_bias": "UNKNOWN"},
+                {"snapshot_bias": "DEPTH_BALANCED"},
+            )
 
     def test_empty_trade_batch_is_rejected(self):
         with self.assertRaisesRegex(ValueError, "non-empty"):
