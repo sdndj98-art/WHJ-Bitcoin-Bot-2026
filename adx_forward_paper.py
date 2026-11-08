@@ -206,13 +206,30 @@ def process_native_bars(bars, threshold, timeframe, state_path):
         raise ValueError("Unsupported ADX paper configuration")
     if not isinstance(bars, list) or len(bars) < 250:
         raise ValueError("At least 250 native timeframe bars are required")
-    timestamps = [int(row["timestamp"]) for row in bars]
+    timestamps = []
+    for row in bars:
+        if not isinstance(row, dict):
+            raise ValueError("Native timeframe candle must be an object")
+        timestamp = _finite(row.get("timestamp"), "native timestamp", 0)
+        if not timestamp.is_integer() or int(timestamp) % (timeframe * 3_600_000):
+            raise ValueError("Native timestamp must align to its UTC timeframe")
+        timestamps.append(int(timestamp))
+        values = {
+            key: _finite(row.get(key), "native " + key, 0 if key == "volume" else 1e-12)
+            for key in ("open", "high", "low", "close", "volume")
+        }
+        if values["high"] < max(values["open"], values["close"], values["low"]):
+            raise ValueError("Inconsistent native candle high")
+        if values["low"] > min(values["open"], values["close"], values["high"]):
+            raise ValueError("Inconsistent native candle low")
     if timestamps != sorted(timestamps) or len(set(timestamps)) != len(timestamps):
         raise ValueError("Native bars must be strictly increasing and unique")
     if any(timestamps[i] - timestamps[i-1] != timeframe * 3_600_000
            for i in range(1, len(timestamps))):
         raise ValueError("Native timeframe bars contain a gap")
     baseline, confirmed = _build_sleeve_signals(bars, float(threshold))
+    if len(baseline) != len(bars) or len(confirmed) != len(bars):
+        raise ValueError("ADX signal arrays do not match native candle history")
     state, seeded = _load_state(state_path, threshold, timeframe, timestamps[0])
     processed = 0
     if seeded:
