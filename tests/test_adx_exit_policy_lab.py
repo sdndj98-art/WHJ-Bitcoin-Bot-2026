@@ -66,7 +66,25 @@ class AdxExitPolicyTests(unittest.TestCase):
             patch("adx_exit_policy_lab._atr_series", return_value=[1.0] * 3),
         ):
             signals = _adx_atr_exit_signals(bars, 20.0, 2.5)
-        self.assertEqual(signals, [True, False, True])
+        self.assertEqual(signals, [True, False, False])
+
+    def test_atr_stop_requires_confirmation_reset_before_reentry(self):
+        bars = [
+            {"open": 99.0, "high": 100.0, "low": 98.0, "close": 99.0, "volume": 1.0},
+            {"open": 99.0, "high": 110.0, "low": 99.0, "close": 100.0, "volume": 1.0},
+            {"open": 100.0, "high": 101.0, "low": 99.0, "close": 100.0, "volume": 1.0},
+            {"open": 100.0, "high": 102.0, "low": 99.0, "close": 101.0, "volume": 1.0},
+        ]
+        with (
+            patch("adx_exit_policy_lab._build_sleeve_signals",
+                  return_value=([True] * 4, [True] * 4)),
+            patch("adx_exit_policy_lab._adx_di_series",
+                  return_value=([25.0, 25.0, 10.0, 25.0],
+                               [2.0] * 4, [1.0] * 4)),
+            patch("adx_exit_policy_lab._atr_series", return_value=[1.0] * 4),
+        ):
+            signals = _adx_atr_exit_signals(bars, 20.0, 2.5)
+        self.assertEqual(signals, [True, False, False, True])
 
     def test_atr_exit_signal_is_bar_causal(self):
         hourly = hourly_candles()
