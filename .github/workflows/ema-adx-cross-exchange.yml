@@ -1,0 +1,55 @@
+name: WHJ EMA ADX Independent Exchange Validation
+
+on:
+  push:
+    branches: [feature/efficiency-ratio-indicator]
+    paths:
+      - "ema_adx_cross_exchange_lab.py"
+      - "ema_adx_lab.py"
+      - "historical_research.py"
+      - "tests/test_ema_adx_cross_exchange_lab.py"
+      - ".github/workflows/ema-adx-cross-exchange.yml"
+  pull_request:
+    branches: [main]
+    paths:
+      - "ema_adx_cross_exchange_lab.py"
+      - "ema_adx_lab.py"
+      - "historical_research.py"
+      - "tests/test_ema_adx_cross_exchange_lab.py"
+      - ".github/workflows/ema-adx-cross-exchange.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: whj-ema-adx-cross-exchange-${{ github.ref }}
+  cancel-in-progress: false
+  queue: max
+
+jobs:
+  independent-binance-validation:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Checkout research branch
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Test independent exchange data validation
+        run: python -m unittest discover -s tests -p 'test_ema_adx_cross_exchange_lab.py' -v
+
+      - name: Run independent Binance historical comparison
+        run: python ema_adx_cross_exchange_lab.py
+
+      - name: Upload independent exchange report
+        uses: actions/upload-artifact@v4
+        with:
+          name: whj-ema-adx-cross-exchange-${{ github.run_number }}
+          path: ema_adx_cross_exchange_research.json
+          if-no-files-found: error
+          retention-days: 30
