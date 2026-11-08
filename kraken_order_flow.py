@@ -36,7 +36,8 @@ def _extract_pair_result(result):
 def _kraken_get(endpoint, params, timeout=10):
     if endpoint not in ("Trades", "Depth"):
         raise ValueError("Only public Trades and Depth endpoints are allowed")
-    if isinstance(timeout, bool) or not isinstance(timeout, (int, float)) or timeout <= 0:
+    if (isinstance(timeout, bool) or not isinstance(timeout, (int, float))
+            or not math.isfinite(timeout) or timeout <= 0):
         raise ValueError("timeout must be positive")
     query = urllib.parse.urlencode(params)
     request = urllib.request.Request(
@@ -234,6 +235,10 @@ def combine_microstructure(trade_flow, order_book):
         raise ValueError("trade_flow and order_book must be analysis dictionaries")
     trade_bias = trade_flow.get("batch_bias")
     book_bias = order_book.get("snapshot_bias")
+    if trade_bias not in ("BUY_PRESSURE", "SELL_PRESSURE", "BALANCED"):
+        raise ValueError("trade_flow contains an unknown batch bias")
+    if book_bias not in ("BID_DEPTH_DOMINANT", "ASK_DEPTH_DOMINANT", "DEPTH_BALANCED"):
+        raise ValueError("order_book contains an unknown snapshot bias")
     if trade_bias == "BUY_PRESSURE" and book_bias == "BID_DEPTH_DOMINANT":
         context = "BULLISH_MICROSTRUCTURE_ALIGNMENT"
     elif trade_bias == "SELL_PRESSURE" and book_bias == "ASK_DEPTH_DOMINANT":
