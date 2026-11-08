@@ -8,7 +8,7 @@ def candles(prior_high=97.8, current_close=98.2, current_volume=30.0):
     for index in range(50):
         close = 95.0 + index * 0.05 + (0.12 if index % 2 == 0 else -0.12)
         open_price = close - 0.03
-        prior_bar_high = close + 0.35 if prior_high == 97.8 else prior_high
+        prior_bar_high = close + 0.25 if prior_high == 97.8 else prior_high
         rows.append([
             index * 3600, open_price, prior_bar_high, close - 0.35,
             close, 0.0, 10.0, 100
