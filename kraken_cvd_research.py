@@ -12,6 +12,10 @@ from datetime import datetime
 
 from trade_candle_builder import build_trade_candles
 from multi_timeframe_cvd import TIMEFRAME_SECONDS, analyze_multi_timeframe_cvd
+from trade_journal_checkpoint import (
+    load_continuity_checkpoint,
+    validate_continuity_checkpoint,
+)
 
 
 def _epoch(value):
@@ -123,23 +127,18 @@ def load_normalized_trade_journal(path):
     }
 
 
-def _validate_continuity_checkpoint(checkpoint, journal):
-    """Require an explicit collector/recovery assertion matching this journal."""
+def _validate_continuity_checkpoint(checkpoint, journal, journal_path):
+    """Require a collector assertion bound to the exact complete journal bytes."""
     if checkpoint is None:
         return False
     if not isinstance(checkpoint, dict):
         raise ValueError("continuity_checkpoint must be a mapping")
-    if checkpoint.get("source") != "kraken_spot_trade_feed_adapter":
-        raise ValueError("continuity checkpoint source is not trusted")
-    if checkpoint.get("feed_continuity_verified") is not True:
-        raise ValueError("continuity checkpoint is not verified")
-    checkpoint_id = checkpoint.get("last_trade_id")
-    if isinstance(checkpoint_id, bool) or not isinstance(checkpoint_id, int) or checkpoint_id <= 0:
-        raise ValueError("continuity checkpoint has an invalid last_trade_id")
-    if checkpoint_id != journal["last_trade_id"]:
-        raise ValueError("continuity checkpoint does not match journal last trade ID")
-    if checkpoint.get("symbol") != journal["symbol"]:
-        raise ValueError("continuity checkpoint symbol does not match journal")
+    validate_continuity_checkpoint(
+        checkpoint,
+        journal_path,
+        journal["symbol"],
+        journal["last_trade_id"],
+    )
     return True
 
 
@@ -166,7 +165,7 @@ def analyze_trade_journal(
     journal = load_normalized_trade_journal(path)
     trades = journal["trades"]
     continuity_verified = _validate_continuity_checkpoint(
-        continuity_checkpoint, journal
+        continuity_checkpoint, journal, path
     )
 
     if timeframes is None:
@@ -286,10 +285,17 @@ if __name__ == "__main__":
         description="Read-only Kraken multi-timeframe CVD research"
     )
     parser.add_argument("--trade-log", required=True)
+    parser.add_argument("--continuity-checkpoint", default=None)
     parser.add_argument("--timeframes", default="1m,5m,15m,1h,4h,1d")
     args = parser.parse_args()
+    checkpoint_path = args.continuity_checkpoint or f"{args.trade_log}.checkpoint.json"
+    checkpoint = (
+        load_continuity_checkpoint(checkpoint_path)
+        if os.path.exists(checkpoint_path) else None
+    )
     result = analyze_trade_journal(
         args.trade_log,
         timeframes=[item.strip() for item in args.timeframes.split(",") if item.strip()],
+        continuity_checkpoint=checkpoint,
     )
     print(json.dumps(result, indent=2, sort_keys=True, allow_nan=False))
