@@ -1352,6 +1352,7 @@ def build_qualification_markdown(result):
         "Daily regime filters": result.get("extended_lab_strategy_qualification", {}).get("daily_regime_filter", {}),
         "4h / 6h consensus ensemble": result.get("extended_lab_strategy_qualification", {}).get("multi_timeframe_ensemble", {}),
         "6h EMA50/EMA200 exit comparison (ATR trailing vs close below EMA50)": result.get("extended_lab_strategy_qualification", {}).get("six_hour_atr_trailing", {}),
+        "OHLCV volume / liquidity / momentum confluence": result.get("extended_lab_strategy_qualification", {}).get("volume_liquidity_momentum", {}),
     }
     lines = [
         "# WHJ Bitcoin Bot — Strategy Qualification Report", "",
