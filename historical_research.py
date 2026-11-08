@@ -2094,6 +2094,9 @@ def main():
         "six_hour_atr_trailing": assess_research_lab_qualification(
             six_hour_atr_research, six_hour_atr_stress
         ),
+        "volume_liquidity_momentum": assess_research_lab_qualification(
+            volume_liquidity_research, volume_liquidity_stress
+        ),
     }
 
     result = {
