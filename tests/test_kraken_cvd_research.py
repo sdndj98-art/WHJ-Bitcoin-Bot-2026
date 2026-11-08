@@ -212,8 +212,8 @@ class KrakenCvdResearchTests(unittest.TestCase):
     def test_rejects_checkpoint_when_journal_bytes_change(self):
         self.write_events(self.valid_events())
         checkpoint = self.checkpoint()
-        with self.path.open("a", encoding="utf-8") as handle:
-            handle.write(" ")
+        original = self.path.read_text(encoding="utf-8")
+        self.path.write_text(original.replace('{"trade_id"', '{ "trade_id"', 1), encoding="utf-8")
         with self.assertRaisesRegex(ValueError, "journal_size_bytes|journal_sha256"):
             analyze_trade_journal(
                 self.path,
