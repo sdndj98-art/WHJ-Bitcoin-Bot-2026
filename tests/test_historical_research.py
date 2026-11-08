@@ -710,7 +710,7 @@ class HistoricalResearchTests(unittest.TestCase):
 
     def test_six_hour_atr_trailing_lab_uses_fixed_rule_and_reports_benchmark(self):
         hourly = []
-        start = 1_700_000_000_000
+        start = (1_700_000_000_000 // INTERVAL_MS) * INTERVAL_MS
         for index in range(6 * 520):
             close = 20000.0 + index * 0.8 + 250.0 * math.sin(index / 110.0)
             hourly.append({
