@@ -688,6 +688,10 @@ def normalize_kraken_rest_trade_rows(rows, symbol):
     return events
 
 
+class TradeJournalPersistenceError(RuntimeError):
+    """Raised when raw trade journal persistence fails after ledger validation."""
+
+
 class KrakenSpotTradeFeedAdapter:
     """Bridge decoded Kraken WS v2 trade envelopes into a persistent CVD ledger.
 
@@ -697,7 +701,7 @@ class KrakenSpotTradeFeedAdapter:
     applying the incoming WebSocket update.
     """
 
-    def __init__(self, ledger, pair, timeout=10, max_backfill_pages=10):
+    def __init__(self, ledger, pair, timeout=10, max_backfill_pages=10, on_accepted_trades=None):
         if not isinstance(ledger, PersistentCvdLedger):
             raise ValueError("ledger must be a PersistentCvdLedger")
         if not isinstance(pair, str) or not pair.strip():
@@ -712,7 +716,26 @@ class KrakenSpotTradeFeedAdapter:
         self.ledger = ledger
         self.pair = pair
         self.timeout = timeout
+        if on_accepted_trades is not None and not callable(on_accepted_trades):
+            raise ValueError("on_accepted_trades must be callable")
         self.max_backfill_pages = max_backfill_pages
+        self.on_accepted_trades = on_accepted_trades
+
+    def _emit_accepted_trades(self, events, previous_trade_id):
+        if self.on_accepted_trades is None:
+            return
+        accepted = sorted(
+            (event for event in events
+             if previous_trade_id < self.ledger._trade_id(event.get("trade_id")) <= self.ledger.last_trade_id),
+            key=lambda event: self.ledger._trade_id(event.get("trade_id")),
+        )
+        if accepted:
+            try:
+                self.on_accepted_trades(accepted)
+            except Exception as exc:
+                raise TradeJournalPersistenceError(
+                    "raw trade journal persistence failed; collector stopped"
+                ) from exc
 
     def _backfill_until(self, target_trade_id):
         if self.ledger.last_trade_timestamp is None:
@@ -736,6 +759,7 @@ class KrakenSpotTradeFeedAdapter:
             if events:
                 result = self.ledger.process(events)
                 accepted += result["accepted_in_batch"]
+                self._emit_accepted_trades(events, before_id)
             next_cursor = batch.get("last")
             pages += 1
             if self.ledger.last_trade_id >= target_trade_id:
@@ -760,8 +784,10 @@ class KrakenSpotTradeFeedAdapter:
                 "live_orders_placed": False,
             }
         target_id = max(self.ledger._trade_id(event.get("trade_id")) for event in events)
+        previous_id = self.ledger.last_trade_id
         try:
             result = self.ledger.process(events)
+            self._emit_accepted_trades(events, previous_id)
             recovery = {"attempted": False, "recovered": True, "pages": 0}
         except TradeIdGapError:
             recovery = self._backfill_until(target_id)
@@ -770,7 +796,9 @@ class KrakenSpotTradeFeedAdapter:
                     "REST backfill did not reach the WebSocket trade ID; "
                     "state is partial and must be persisted before retry"
                 )
+            previous_id = self.ledger.last_trade_id
             result = self.ledger.process(events)
+            self._emit_accepted_trades(events, previous_id)
         return {
             "status": "OK",
             "ledger": result,
@@ -950,7 +978,7 @@ class KrakenSpotWebSocketRunner:
                             ) from exc
                         received_trades += accepted
                         backfilled_trades += backfilled
-            except StatePersistenceError:
+            except (StatePersistenceError, TradeJournalPersistenceError):
                 raise
             except Exception as exc:
                 last_error = f"{type(exc).__name__}: {exc}"
