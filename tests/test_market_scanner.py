@@ -27,6 +27,16 @@ HEALTHY = {"quality_status": "HEALTHY", "paper_execution_allowed": True}
 
 
 class MarketScannerTests(unittest.TestCase):
+    def test_advanced_layer_is_exposed_without_changing_legacy_score(self):
+        result = scan_btc_market(candles(), HEALTHY)
+        advanced = result["advanced_analysis"]
+        self.assertEqual(result["confluence_score"], 8)
+        self.assertEqual(result["confluence_total"], 8)
+        self.assertTrue(advanced["research_only"])
+        self.assertFalse(advanced["execution_enabled"])
+        self.assertIn("bullish_score", advanced)
+        self.assertIn("bearish_score", advanced)
+
     def test_candidate_requires_all_eight_confirmations_and_good_data(self):
         result = scan_btc_market(candles(), HEALTHY)
         self.assertEqual(result["status"], "PAPER_CANDIDATE")

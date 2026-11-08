@@ -1,0 +1,75 @@
+//@version=6
+indicator("WHJ Advanced Volume + Liquidity + Momentum", overlay=true, max_labels_count=200)
+
+// Research-only mirror of advanced_market_analysis.py.
+// Use on completed candles. Volume quality depends on the symbol/data vendor.
+volumeLen = input.int(20, "Relative volume lookback", minval=5)
+swingLen = input.int(20, "Liquidity / structure lookback", minval=5)
+rvolMin = input.float(1.5, "Relative volume threshold", minval=0.1, step=0.1)
+minScore = input.int(6, "Minimum confluence score", minval=1, maxval=9)
+showLevels = input.bool(true, "Show prior swing levels")
+
+priorHigh = ta.highest(high[1], swingLen)
+priorLow = ta.lowest(low[1], swingLen)
+priorAvgVol = ta.sma(volume[1], volumeLen)
+rvol = priorAvgVol > 0 ? volume / priorAvgVol : 0.0
+
+// Chaikin Money Flow (explicit formula for portability).
+mfMultiplier = high != low ? ((2.0 * close - high - low) / (high - low)) : 0.0
+mfVolume = mfMultiplier * volume
+cmfDenom = math.sum(volume, 20)
+cmf20 = cmfDenom > 0 ? math.sum(mfVolume, 20) / cmfDenom : 0.0
+
+// Normalized recent OBV slope.
+obvStep = close > close[1] ? volume : close < close[1] ? -volume : 0.0
+obv = ta.cum(obvStep)
+obvScale = math.sum(volume, 5)
+obvSlope = obvScale > 0 ? (obv - obv[5]) / obvScale : 0.0
+
+typical = hlc3
+vwapDenom = math.sum(volume, 20)
+rollingVwap = vwapDenom > 0 ? math.sum(typical * volume, 20) / vwapDenom : close
+
+bullSweep = low < priorLow and close > priorLow
+bearSweep = high > priorHigh and close < priorHigh
+bullBos = close > priorHigh
+bearBos = close < priorLow
+
+atr = ta.atr(14)
+bodyAtr = atr > 0 ? math.abs(close - open) / atr : 0.0
+closeLocation = high > low ? (close - low) / (high - low) : 0.5
+bullDisplacement = close > open and bodyAtr >= 0.8 and closeLocation >= 0.70
+bearDisplacement = close < open and bodyAtr >= 0.8 and closeLocation <= 0.30
+
+[macdLine, macdSignal, macdHist] = ta.macd(close, 12, 26, 9)
+rsi = ta.rsi(close, 14)
+
+bullVolume = rvol >= rvolMin
+bullCmf = cmf20 > 0.05
+bullObv = obvSlope > 0.05
+bullVwap = close > rollingVwap
+bullRsi = rsi >= 50 and rsi <= 72
+bullMacd = macdHist > 0
+bullScore = (bullVolume ? 1 : 0) + (bullCmf ? 1 : 0) + (bullObv ? 1 : 0) + (bullVwap ? 1 : 0) + (bullSweep ? 1 : 0) + (bullBos ? 1 : 0) + (bullDisplacement ? 1 : 0) + (bullMacd ? 1 : 0) + (bullRsi ? 1 : 0)
+
+bearVolume = bullVolume
+bearCmf = cmf20 < -0.05
+bearObv = obvSlope < -0.05
+bearVwap = close < rollingVwap
+bearRsi = rsi >= 28 and rsi <= 50
+bearMacd = macdHist < 0
+bearScore = (bearVolume ? 1 : 0) + (bearCmf ? 1 : 0) + (bearObv ? 1 : 0) + (bearVwap ? 1 : 0) + (bearSweep ? 1 : 0) + (bearBos ? 1 : 0) + (bearDisplacement ? 1 : 0) + (bearMacd ? 1 : 0) + (bearRsi ? 1 : 0)
+
+bullSignal = barstate.isconfirmed and bullScore >= minScore and (bullSweep or bullBos) and (bullCmf or bullObv)
+bearSignal = barstate.isconfirmed and bearScore >= minScore and (bearSweep or bearBos) and (bearCmf or bearObv)
+
+plot(showLevels ? priorHigh : na, "Prior swing high", color=color.new(color.red, 35), style=plot.style_linebr)
+plot(showLevels ? priorLow : na, "Prior swing low", color=color.new(color.green, 35), style=plot.style_linebr)
+plot(rollingVwap, "Rolling VWAP 20", color=color.orange)
+plotshape(bullSignal, title="Bullish research candidate", text="WHJ LONG", style=shape.labelup, location=location.belowbar, color=color.new(color.green, 0), textcolor=color.white)
+plotshape(bearSignal, title="Bearish research candidate", text="WHJ SHORT", style=shape.labeldown, location=location.abovebar, color=color.new(color.red, 0), textcolor=color.white)
+
+alertcondition(bullSignal, "WHJ bullish research candidate", "WHJ advanced bullish confluence on confirmed candle")
+alertcondition(bearSignal, "WHJ bearish research candidate", "WHJ advanced bearish confluence on confirmed candle")
+
+// This indicator does not place orders. It is a visual research tool, not a profitability claim.
