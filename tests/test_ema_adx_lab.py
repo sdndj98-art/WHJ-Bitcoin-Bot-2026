@@ -1,7 +1,7 @@
 import math
 import unittest
 
-from ema_adx_lab import _adx_entry_only_filter, run_ema_adx_filter_lab
+from ema_adx_lab import _adx_entry_only_filter, _build_sleeve_signals, run_ema_adx_filter_lab
 
 
 def hourly_candles(count=3000):
@@ -41,6 +41,28 @@ class EmaAdxLabTests(unittest.TestCase):
             _adx_entry_only_filter([True], [20.0], [2.0], [1.0], 0.0)
         with self.assertRaisesRegex(ValueError, "threshold"):
             _adx_entry_only_filter([True], [20.0], [2.0], [1.0], True)
+
+    def test_sleeve_signals_are_prefix_causal(self):
+        bars = hourly_candles(1800)
+        native = []
+        for index in range(0, len(bars) - 5, 4):
+            group = bars[index:index + 4]
+            if len(group) != 4:
+                continue
+            native.append({
+                "timestamp": group[0]["timestamp"],
+                "open": group[0]["open"],
+                "high": max(row["high"] for row in group),
+                "low": min(row["low"] for row in group),
+                "close": group[-1]["close"],
+                "volume": sum(row["volume"] for row in group),
+                "imputed": any(row["imputed"] for row in group),
+            })
+        full_baseline, full_confirmed = _build_sleeve_signals(native, 20.0)
+        cutoff = len(native) - 30
+        prefix_baseline, prefix_confirmed = _build_sleeve_signals(native[:cutoff], 20.0)
+        self.assertEqual(prefix_baseline, full_baseline[:cutoff])
+        self.assertEqual(prefix_confirmed, full_confirmed[:cutoff])
 
     def test_lab_reports_fixed_thresholds_and_preserves_safety(self):
         report = run_ema_adx_filter_lab(hourly_candles())
