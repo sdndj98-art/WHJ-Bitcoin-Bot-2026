@@ -98,7 +98,11 @@ def run_ema_adx_filter_lab(hourly_candles, fee=FEE_RATE, slippage=SLIPPAGE_RATE)
     walk_forward = {"baseline": [], "matched_benchmark": []}
     walk_forward.update({name: [] for name in variants})
     walk_forward_costs = {
-        multiplier: {"baseline": [], **{name: [] for name in variants}}
+        multiplier: {
+            "baseline": [],
+            "matched_benchmark": [],
+            **{name: [] for name in variants},
+        }
         for multiplier in ("1x", "2x")
     }
     for fold in range(3):
@@ -120,7 +124,11 @@ def run_ema_adx_filter_lab(hourly_candles, fee=FEE_RATE, slippage=SLIPPAGE_RATE)
             factor = float(multiplier[:-1])
             scenario_fee = fee * factor
             scenario_slippage = slippage * factor
-            for name, signals in (("baseline", baseline), *variants.items()):
+            for name, signals in (
+                ("baseline", baseline),
+                ("matched_benchmark", benchmark),
+                *variants.items(),
+            ):
                 walk_forward_costs[multiplier][name].append({
                     **window,
                     "metrics": simulate(
@@ -137,6 +145,7 @@ def run_ema_adx_filter_lab(hourly_candles, fee=FEE_RATE, slippage=SLIPPAGE_RATE)
         benchmark_folds = walk_forward["matched_benchmark"]
         candidate_stress = walk_forward_costs["2x"][name]
         baseline_stress = walk_forward_costs["2x"]["baseline"]
+        benchmark_stress = walk_forward_costs["2x"]["matched_benchmark"]
         robustness[name] = {
             "fold_count": len(candidate_folds),
             "positive_return_folds": sum(
@@ -160,6 +169,10 @@ def run_ema_adx_filter_lab(hourly_candles, fee=FEE_RATE, slippage=SLIPPAGE_RATE)
             "outperformed_baseline_return_2x_cost_folds": sum(
                 item["metrics"]["return_pct"] > base["metrics"]["return_pct"]
                 for item, base in zip(candidate_stress, baseline_stress)
+            ),
+            "outperformed_benchmark_return_2x_cost_folds": sum(
+                item["metrics"]["return_pct"] > bench["metrics"]["return_pct"]
+                for item, bench in zip(candidate_stress, benchmark_stress)
             ),
         }
 
