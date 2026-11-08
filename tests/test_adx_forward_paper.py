@@ -251,6 +251,33 @@ class AdxForwardPaperTests(unittest.TestCase):
             self.assertFalse(result["open_position"])
             self.assertEqual(saved["cash"], 500.0)
 
+    def test_daily_date_must_match_processed_watermark(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "isolated.json"
+            bars = make_bars()
+            process_native_bars(bars, 20.0, 4, path)
+            state = json.loads(path.read_text())
+            state["daily_date"] = "2099-01-01"
+            path.write_text(json.dumps(state))
+            before = path.read_text()
+            with self.assertRaisesRegex(ValueError, "daily date does not match"):
+                process_native_bars(bars, 20.0, 4, path)
+            self.assertEqual(path.read_text(), before)
+
+    def test_daily_pause_cannot_exist_without_daily_baseline(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "isolated.json"
+            bars = make_bars()
+            process_native_bars(bars, 20.0, 4, path)
+            state = json.loads(path.read_text())
+            state["daily_paused"] = True
+            state["daily_date"] = None
+            path.write_text(json.dumps(state))
+            before = path.read_text()
+            with self.assertRaisesRegex(ValueError, "without a daily baseline"):
+                process_native_bars(bars, 20.0, 4, path)
+            self.assertEqual(path.read_text(), before)
+
     def test_trade_history_timestamp_and_result_must_match_ledger(self):
         for mutation in ("timestamp", "result"):
             with self.subTest(mutation=mutation), tempfile.TemporaryDirectory() as directory:
