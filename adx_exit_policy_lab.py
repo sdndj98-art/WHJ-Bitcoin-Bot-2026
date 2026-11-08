@@ -42,18 +42,20 @@ def _adx_atr_exit_signals(bars, threshold=20.0, atr_multiple=3.0):
     signals = []
     active = False
     high_water = None
+    # After an ATR stop, require the raw ADX/DI confirmation to reset before
+    # another entry. This prevents immediate same-signal re-entry and churn.
+    rearm_required = False
     for i, bar in enumerate(bars):
         close = float(bar["close"])
+        confirmed = bool(
+            adx[i] is not None and plus_di[i] is not None and minus_di[i] is not None
+            and adx[i] >= threshold and plus_di[i] > minus_di[i]
+        )
         if not baseline[i]:
             active = False
             high_water = None
-        elif not active:
-            active = bool(
-                adx[i] is not None and plus_di[i] is not None and minus_di[i] is not None
-                and adx[i] >= threshold and plus_di[i] > minus_di[i]
-            )
-            high_water = float(bar["high"]) if active else None
-        else:
+            rearm_required = False
+        elif active:
             # The current bar is completed. Its high updates the trailing
             # watermark; a close below the resulting stop schedules exit
             # at the next native bar close via the shared simulator.
@@ -61,6 +63,14 @@ def _adx_atr_exit_signals(bars, threshold=20.0, atr_multiple=3.0):
             if atr[i] is not None and close <= high_water - atr_multiple * atr[i]:
                 active = False
                 high_water = None
+                rearm_required = True
+        elif rearm_required:
+            # A reset bar only rearms the strategy; it cannot also enter.
+            if not confirmed:
+                rearm_required = False
+        elif confirmed:
+            active = True
+            high_water = float(bar["high"])
         signals.append(active)
     return signals
 
