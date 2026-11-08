@@ -203,7 +203,7 @@ body[data-whj-theme="light"] .agent-step{background:#edf4fa;border-color:#cbd8e5
   <div class="agent-step"><span>01</span><b>SCAN</b><small>رصد السوق</small></div><div class="agent-step"><span>02</span><b>CHECK</b><small>تحقق البيانات والإشارة</small></div><div class="agent-step"><span>03</span><b>SIZE</b><small>حساب حجم افتراضي</small></div><div class="agent-step"><span>04</span><b>EXECUTE</b><small>محاكاة فقط</small></div><div class="agent-step"><span>05</span><b>LOG</b><small>تسجيل السبب والنتيجة</small></div><div class="agent-step"><span>06</span><b>EQUITY</b><small>قياس الأداء والمخاطر</small></div>
  </div></div>
  <div class="agent-lower">
-  <article class="card"><div class="head"><h2>تدفق القرارات</h2><span>من أحدث تقرير متاح</span></div><div id="agentDecisionTimeline" class="agent-timeline"><div class="empty">بانتظار تحميل تقرير موثوق</div></div></article>
+  <article class="card"><div class="head"><h2>تدفق القرارات</h2><span id="agentFeedFreshness">بانتظار التقرير</span></div><div class="agent-foot"><span>آخر تقرير: <b id="agentFeedLastSeen">—</b></span><span>تحديث تلقائي كل 60 ثانية</span></div><div id="agentDecisionTimeline" class="agent-timeline"><div class="empty">بانتظار تحميل تقرير موثوق</div></div></article>
   <article class="card"><div class="head"><h2>مؤشرات الأداء والمخاطر</h2><span>قيم موثقة من التقرير</span></div><div class="agent-log">
    <div class="agent-log-row"><b>صافي العائد</b><strong id="agentNetReturn">—</strong></div>
    <div class="agent-log-row"><b>أقصى تراجع</b><strong id="agentMaxDD">—</strong></div>
@@ -415,8 +415,14 @@ set("agentMaxDD",pct(a.max_drawdown_pct??bt.max_drawdown_pct));
 set("agentProfitFactor",fmt(a.profit_factor??bt.profit_factor));
 set("agentFees",money(a.fees_paid_usd??bt.fees_paid_usd));
 set("agentRiskState",paperRiskPauseLabel(a));
+const reportDate=report.time?new Date(report.time):null;
+const reportAgeMinutes=reportDate&&!Number.isNaN(reportDate.getTime())?(Date.now()-reportDate.getTime())/60000:null;
+const feedFreshness=reportAgeMinutes===null?"وقت التقرير غير معروف":reportAgeMinutes< -5?"وقت التقرير مستقبلي":reportAgeMinutes<=3?"التقرير حديث":reportAgeMinutes<=15?"التقرير متأخر":"التقرير قديم";
+set("agentFeedFreshness",feedFreshness);
+set("agentFeedLastSeen",reportDate&&!Number.isNaN(reportDate.getTime())?reportDate.toLocaleString("ar-IQ"):"غير معروف");
 const timelineEvents=[];
 const addTimeline=(title,detail,kind,stamp,tag)=>timelineEvents.push({title,detail,kind,stamp,tag});
+if(reportAgeMinutes!==null&&reportAgeMinutes>15)addTimeline("تنبيه حداثة التقرير","آخر تقرير أقدم من 15 دقيقة؛ لا تعتبر حالة الماسح نشاطاً حياً","fail",report.time,"STALE");else if(reportAgeMinutes!==null&&reportAgeMinutes< -5)addTimeline("تنبيه توقيت التقرير","وقت التقرير في المستقبل بصورة غير متوقعة؛ تحقق من ساعة المصدر","fail",report.time,"CLOCK");else addTimeline("تحديث التقرير",feedFreshness,"pass",report.time,"REPORT");
 if(q.quality_status==="BLOCKED")addTimeline("بوابة البيانات: حظر", (q.quality_block_reasons||[]).join("، ")||"جودة البيانات لم تجتز الفحص","fail",report.time,"BLOCKED");
 else if(q.quality_status==="HEALTHY")addTimeline("بوابة البيانات: اجتياز","جودة بيانات السوق اجتازت الفحص في التقرير","pass",report.time,"PASS");
 else addTimeline("بوابة البيانات: غير محسومة","لا توجد حالة جودة مؤكدة في التقرير","unknown",report.time,"UNKNOWN");
