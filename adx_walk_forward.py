@@ -1,0 +1,223 @@
+"""Expanding-window walk-forward selection for EMA50/200 + ADX entry filters.
+
+Each fold selects an ADX threshold using only bars strictly before that fold's
+test interval. Test metrics are computed only after selection and never feed
+back into the same fold's choice. Research-only; no paper state or orders.
+"""
+from datetime import datetime, timezone
+import math
+
+from historical_research import (
+    FEE_RATE,
+    SLIPPAGE_RATE,
+    _simulate_equal_weight_multitimeframe,
+    aggregate_candles,
+)
+from ema_adx_lab import _build_sleeve_signals
+
+THRESHOLDS = (15.0, 20.0, 25.0)
+TIMEFRAMES = (4, 6)
+
+
+def _training_score(metrics, label="training"):
+    if not isinstance(metrics, dict):
+        raise ValueError("Malformed " + label + " metrics")
+    ret = metrics.get("return_pct")
+    dd = metrics.get("max_drawdown_pct")
+    trades = metrics.get("closed_trades")
+    pf = metrics.get("profit_factor")
+    for value, field in ((ret, "return"), (dd, "drawdown")):
+        if isinstance(value, bool) or not isinstance(value, (int, float)) or not math.isfinite(value):
+            raise ValueError("Invalid " + label + " " + field)
+    if isinstance(trades, bool) or not isinstance(trades, int) or trades < 0:
+        raise ValueError("Invalid " + label + " trade count")
+    if pf is not None and (
+        isinstance(pf, bool) or not isinstance(pf, (int, float)) or not math.isfinite(pf)
+    ):
+        raise ValueError("Invalid " + label + " profit factor")
+    return float(ret) - 0.5 * float(dd)
+
+
+def _select_threshold(training_metrics, min_closed_trades=5, baseline_metrics=None):
+    """Choose ADX only when it beats the EMA baseline on earlier training data."""
+    if not isinstance(training_metrics, dict) or set(training_metrics) != {
+        "15", "20", "25"
+    }:
+        raise ValueError("Training metrics must contain exactly ADX15, ADX20 and ADX25")
+    if (isinstance(min_closed_trades, bool) or not isinstance(min_closed_trades, int)
+            or min_closed_trades < 1):
+        raise ValueError("Minimum training trades must be a positive integer")
+    baseline_score = (
+        _training_score(baseline_metrics, "baseline")
+        if baseline_metrics is not None else None
+    )
+    eligible = []
+    for key, metrics in training_metrics.items():
+        score = _training_score(metrics)
+        trades = metrics["closed_trades"]
+        if trades >= min_closed_trades:
+            # Fixed selection rule, predeclared and independent of test results.
+            eligible.append((score, -float(metrics["max_drawdown_pct"]), float(key == "20"), key))
+    if not eligible:
+        if baseline_metrics is not None:
+            return None, "TRAINING_ONLY_BASELINE_INSUFFICIENT_ADX_TRADES"
+        return 20.0, "DEFAULT_PRIMARY_INSUFFICIENT_TRAINING_TRADES"
+    best = max(eligible)
+    if baseline_score is not None and best[0] <= baseline_score:
+        return None, "TRAINING_ONLY_BASELINE_OUTSCORES_ADX"
+    return float(best[3]), "TRAINING_ONLY_ADX_SCORE_BEATS_EMA_BASELINE"
+
+
+def _utc_iso(timestamp_ms):
+    return datetime.fromtimestamp(timestamp_ms / 1000, timezone.utc).isoformat()
+
+
+def run_expanding_walk_forward(hourly_candles, fee=FEE_RATE, slippage=SLIPPAGE_RATE,
+                               folds=3, min_train_trades=5):
+    """Run chronological expanding-window selection and untouched next-fold tests."""
+    if not isinstance(hourly_candles, list):
+        raise ValueError("Hourly candles must be a list")
+    if isinstance(folds, bool) or not isinstance(folds, int) or folds < 2:
+        raise ValueError("At least two walk-forward folds are required")
+    if not 0 <= fee < 1 or not 0 <= slippage < 1:
+        raise ValueError("Fee and slippage must be between 0 and 1")
+
+    bars4 = aggregate_candles(hourly_candles, 4)
+    bars6 = aggregate_candles(hourly_candles, 6)
+    if len(bars4) < 500 or len(bars6) < 300:
+        raise ValueError("Insufficient history for expanding walk-forward evaluation")
+
+    sets = [bars4, bars6]
+    hours = list(TIMEFRAMES)
+    close_times = [
+        [int(row["timestamp"]) + h * 3_600_000 for row in bars]
+        for bars, h in zip(sets, hours)
+    ]
+    common_start = max(times[199] for times in close_times)
+
+    # 4h and 6h bars share a close boundary every 12 UTC hours. Split only
+    # on those shared completed-bar boundaries so neither sleeve is cut mid-bar.
+    common_close_times = sorted(set(close_times[0]).intersection(close_times[1]))
+    oos_target = close_times[0][int(len(bars4) * 0.70)]
+    oos_index = next(
+        (index for index, value in enumerate(common_close_times) if value >= oos_target),
+        None,
+    )
+    if oos_index is None or len(common_close_times) - oos_index < folds + 1:
+        raise ValueError("Insufficient common aligned out-of-sample boundaries")
+    usable_boundaries = common_close_times[oos_index:]
+    boundary_indices = [
+        (len(usable_boundaries) - 1) * index // folds
+        for index in range(folds + 1)
+    ]
+    edges = [usable_boundaries[index] for index in boundary_indices[:-1]]
+    edges.append(usable_boundaries[-1] + 1)
+    oos_start, oos_end = edges[0], edges[-1]
+    if any(edges[index + 1] <= edges[index] for index in range(folds)):
+        raise ValueError("Walk-forward test folds are too small")
+
+    baseline_sets = []
+    candidate_sets = {str(int(t)): [] for t in THRESHOLDS}
+    for bars in sets:
+        # Reuse the canonical signal builder to keep indicator math identical.
+        base, _ = _build_sleeve_signals(bars, 20.0)
+        baseline_sets.append(base)
+    for threshold in THRESHOLDS:
+        candidate_sets[str(int(threshold))] = [
+            _build_sleeve_signals(bars, threshold)[1] for bars in sets
+        ]
+    benchmark_sets = [[True] * len(bars4), [True] * len(bars6)]
+
+    def simulate(signals, start, end, fee_rate=fee, slip_rate=slippage):
+        return _simulate_equal_weight_multitimeframe(
+            sets, signals, hours, start, end, fee_rate, slip_rate
+        )
+
+    reports = []
+    for fold in range(folds):
+        test_start, test_end = edges[fold], edges[fold + 1]
+        # The training interval ends strictly before the test interval starts.
+        training = {
+            key: simulate(signals, common_start, test_start)
+            for key, signals in candidate_sets.items()
+        }
+        baseline_training = simulate(baseline_sets, common_start, test_start)
+        selected, selection_rule = _select_threshold(
+            training, min_train_trades, baseline_training
+        )
+        selected_signals = (
+            baseline_sets if selected is None
+            else candidate_sets[str(int(selected))]
+        )
+        selected_name = "baseline_ema50_200" if selected is None else "adx_" + str(int(selected))
+        test_metrics = simulate(selected_signals, test_start, test_end)
+        baseline_metrics = simulate(baseline_sets, test_start, test_end)
+        benchmark_metrics = simulate(benchmark_sets, test_start, test_end)
+        stress = simulate(
+            selected_signals, test_start, test_end, fee * 2, slippage * 2
+        )
+        baseline_stress = simulate(
+            baseline_sets, test_start, test_end, fee * 2, slippage * 2
+        )
+        reports.append({
+            "fold": fold + 1,
+            "training_start_utc": _utc_iso(common_start),
+            "training_end_exclusive_utc": _utc_iso(test_start),
+            "test_start_utc": _utc_iso(test_start),
+            "test_end_exclusive_utc": _utc_iso(test_end),
+            "training_metrics_by_threshold": training,
+            "training_baseline_ema50_200": baseline_training,
+            "selected_threshold": selected,
+            "selected_strategy_name": selected_name,
+            "selection_rule": selection_rule,
+            "test": {
+                "selected_strategy": test_metrics,
+                "baseline_ema50_200": baseline_metrics,
+                "matched_buy_and_hold_50_50": benchmark_metrics,
+                "selected_strategy_2x_cost": stress,
+                "baseline_2x_cost": baseline_stress,
+            },
+        })
+
+    return {
+        "mode": "EXPANDING_WINDOW_ADX_THRESHOLD_WALK_FORWARD",
+        "research_only": True,
+        "paper_state_touched": False,
+        "live_orders_enabled": False,
+        "thresholds": list(THRESHOLDS),
+        "timeframes_hours": list(TIMEFRAMES),
+        "fold_count": folds,
+        "fold_boundary_alignment": "UTC 12-hour common completed-bar close boundaries for 4h and 6h sleeves",
+        "test_fold_capital_policy": (
+            "Each test fold is independently simulated from $1,000 portfolio capital; "
+            "fold returns are reported separately and are not compounded into one continuous equity curve."
+        ),
+        "training_policy": "Expanding window; each fold trains only on completed bars before its test start.",
+        "selection_rule": "Among ADX thresholds with at least min_train_trades, maximize training return_pct - 0.5 * max_drawdown_pct; tie-break by lower drawdown then prefer ADX20. Select ADX only if its best training score strictly beats the EMA baseline score; otherwise retain the baseline. No eligible ADX threshold also falls back to baseline.",
+        "min_train_trades": min_train_trades,
+        "costs": {
+            "fee_each_side": fee,
+            "slippage_each_side": slippage,
+            "stress_multiplier": 2,
+        },
+        "oos_start_utc": _utc_iso(oos_start),
+        "oos_end_exclusive_utc": _utc_iso(oos_end),
+        "folds": reports,
+        "no_same_fold_test_feedback": True,
+        "interpretation": (
+            "Each fold selects ADX only when its score beats the EMA baseline in the earlier expanding training window; otherwise it retains the baseline. "
+            "Earlier test folds may become training data for later folds, as in sequential walk-forward "
+            "evaluation; no fold's own test data is used to select its threshold. Results are historical "
+            "research, not forward-paper or live performance."
+        ),
+    }
+
+
+if __name__ == "__main__":
+    import json
+    from historical_research import load_two_year_candles
+    result = run_expanding_walk_forward(load_two_year_candles())
+    with open("adx_walk_forward_report.json", "w", encoding="utf-8") as handle:
+        json.dump(result, handle, indent=2, allow_nan=False)
+        handle.write("\n")
+    print(json.dumps(result, indent=2, allow_nan=False))

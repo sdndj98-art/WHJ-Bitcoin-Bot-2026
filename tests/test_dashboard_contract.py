@@ -26,6 +26,62 @@ class DashboardContractTests(unittest.TestCase):
         cls.parser = DashboardContractParser()
         cls.parser.feed(cls.source)
 
+    def test_multi_agent_command_center_is_present_and_paper_only(self):
+        required = {
+            "agents", "agentReportState", "agentReportTime",
+            "agentTradeCount", "agentDataQuality",
+        }
+        self.assertTrue(required.issubset(set(self.parser.ids)))
+        self.assertIn('data-view="agents"', self.source)
+        for label in ("SCANNER", "GUARD", "SIZER", "EXECUTOR", "LOGGER", "EQUITY"):
+            self.assertIn(label, self.source)
+        self.assertIn("لا تتحول إشارة الماسح وحدها إلى أمر تداول", self.source)
+        self.assertIn("ليست ستة وكلاء ذكاء اصطناعي مستقلين", self.source)
+        self.assertIn("التداول الحقيقي", self.source)
+        self.assertIn("محاكاة ورقية فقط", self.source)
+
+    def test_agent_module_states_are_bound_to_report_evidence(self):
+        for element_id in (
+            "agentScanState", "agentGuardState", "agentSizerState",
+            "agentExecState", "agentLogState", "agentEquityState",
+        ):
+            self.assertIn(element_id, self.parser.ids)
+        self.assertIn('q.quality_status==="HEALTHY"', self.source)
+        self.assertIn('q.quality_status==="BLOCKED"', self.source)
+        self.assertIn('Array.isArray(bt.trade_log)', self.source)
+        self.assertIn('hasEquity', self.source)
+        self.assertIn('الماسح محجوب أو التقرير قديم', self.source)
+        self.assertIn('scannerFresh', self.source)
+        self.assertIn('a.recent_trades', self.source)
+        self.assertIn('PAPER UPDATE', self.source)
+
+    def test_agent_decision_timeline_and_risk_metrics_are_present(self):
+        for element_id in (
+            "agentDecisionTimeline", "agentNetReturn", "agentMaxDD",
+            "agentProfitFactor", "agentFees", "agentRiskState",
+        ):
+            self.assertIn(element_id, self.parser.ids)
+        self.assertIn("timelineEvents", self.source)
+        self.assertIn("market_data_quality", self.source)
+        self.assertIn("paperRiskPauseLabel(a)", self.source)
+        self.assertIn("bt.trade_log", self.source)
+        self.assertIn("تدفق القرارات", self.source)
+
+    def test_decision_feed_exposes_report_freshness(self):
+        self.assertIn("agentFeedFreshness", self.parser.ids)
+        self.assertIn("agentFeedLastSeen", self.parser.ids)
+        self.assertIn("reportAgeMinutes", self.source)
+        self.assertIn("التقرير قديم", self.source)
+        self.assertIn("تحديث تلقائي كل 60 ثانية", self.source)
+
+    def test_scanner_dashboard_displays_all_eight_confirmation_gates(self):
+        self.assertIn("gateAdx", self.parser.ids)
+        self.assertIn("scannerAdx", self.parser.ids)
+        self.assertIn('passed+" / 8"', self.source)
+        self.assertIn("(passed/8*100)", self.source)
+        self.assertIn('adx_trend_strength_or_direction_missing', self.source)
+        self.assertIn('all_eight_scanner_checks_passed_paper_review_only', self.source)
+
     def test_generated_dashboard_displays_all_paper_risk_pause_reasons(self):
         report = {
             "persistent_paper_portfolio": {
@@ -216,6 +272,57 @@ class DashboardContractTests(unittest.TestCase):
         self.assertIn("شموع تاريخية اصطناعية", self.source)
         self.assertIn("WAITING_FOR_NEW_CLOSED_CANDLES", self.source)
         self.assertIn("تمت معالجة شموع مغلقة جديدة", self.source)
+
+    def test_scanner_dashboard_binds_every_engine_confirmation_key(self):
+        expected_checks = (
+            "market_data_quality_pass",
+            "volume_spike",
+            "close_above_prior_high",
+            "breakout_quality_confirmed",
+            "trend_alignment",
+            "rsi_momentum_healthy",
+            "adx_trend_strength",
+            "bullish_close_confirmation",
+        )
+        for check in expected_checks:
+            with self.subTest(check=check):
+                self.assertIn(f"!!checks.{check}", self.source)
+        self.assertEqual(self.source.count('const gateData=['), 1)
+        self.assertIn('passed+" / 8"', self.source)
+
+
+    def test_agent_scanner_payload_is_initialized_before_timeline_render(self):
+        render_start = self.source.index("function render(){")
+        render_end = self.source.index("function renderHarmonicResearch", render_start)
+        render_source = self.source[render_start:render_end]
+        declaration = 'const s=report.market_scanner||{};'
+        self.assertEqual(render_source.count(declaration), 1)
+        self.assertLess(render_source.index(declaration), render_source.index("if(s.status)"))
+        self.assertIn('setAgent("agentScanState"', render_source)
+        self.assertIn('setAgent("agentGuardState"', render_source)
+        self.assertIn('setAgent("agentSizerState"', render_source)
+        self.assertIn('setAgent("agentExecState"', render_source)
+        self.assertIn('setAgent("agentLogState"', render_source)
+        self.assertIn('setAgent("agentEquityState"', render_source)
+        self.assertNotIn("whj-agent-terminal", self.source)
+        self.assertIn('fetch("./report.json?t="+Date.now()', self.source)
+        self.assertIn("setInterval(load,60000)", self.source)
+        self.assertIn('body[data-whj-theme="light"] .agent-card', self.source)
+        self.assertIn('theme.addEventListener("click",()=>applyTheme(document.body.dataset.whjTheme==="light"?"dark":"light"))', self.source)
+        self.assertIn('let savedTheme="light"', self.source)
+        self.assertIn('let savedTheme="light";try{savedTheme=localStorage.getItem("whj-dashboard-theme")||"light"}catch(e){}', self.source)
+        self.assertIn('const scannerFresh=reportAgeMinutes!==null&&reportAgeMinutes>=-5&&reportAgeMinutes<=15;', self.source)
+        self.assertIn('const hasSizing=a.mode==="PERSISTENT_PAPER_ONLY"', self.source)
+        self.assertIn('a.risk_limits&&typeof a.risk_limits==="object"?a.risk_limits:{}', self.source)
+        self.assertIn('Number.isFinite(processedCandles)&&processedCandles>0', self.source)
+        self.assertIn('Array.isArray(a.recent_trades)?a.recent_trades:[]', self.source)
+        self.assertIn('سجل اختبار تاريخي · ليس دفتر الورقي', self.source)
+        self.assertIn('scannerReady&&s.status==="PAPER_CANDIDATE"', self.source)
+        self.assertIn('a.last_processed_timestamp||report.time', self.source)
+        self.assertIn('const riskPaused=!!(a.paused_for_drawdown||a.daily_loss_paused||a.paused_for_loss_streak||a.paused_for_strategy_health);', self.source)
+        self.assertIn('const executorBlocked=q.quality_status==="BLOCKED"||riskPaused;', self.source)
+        self.assertIn('setAgent("agentExecState",executorBlocked?', self.source)
+        self.assertIn('hasSizing?(riskPaused?"blocked":"pass")', self.source)
 
 
 if __name__ == "__main__":
