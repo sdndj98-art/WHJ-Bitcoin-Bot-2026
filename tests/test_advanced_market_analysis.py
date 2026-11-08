@@ -50,7 +50,7 @@ class AdvancedMarketAnalysisTests(unittest.TestCase):
         result = analyze_advanced_market(rows)
         self.assertEqual(result["relative_volume"], 0.0)
         self.assertEqual(result["cmf20"], 0.0)
-        self.assertEqual(result["rolling_vwap20"], rows[-1][4])
+        self.assertAlmostEqual(result["rolling_vwap20"], rows[-1][4], places=6)
 
     def test_bullish_liquidity_sweep_detected_on_reclaim(self):
         rows = sample_candles()
