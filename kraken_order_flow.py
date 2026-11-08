@@ -423,7 +423,7 @@ def _trade_event_timestamp_ns(value):
     if parsed.tzinfo is None or parsed.utcoffset() is None:
         raise ValueError("trade timestamp ISO text must include a timezone")
     base_seconds = int(parsed.replace(microsecond=0).timestamp())
-    match = re.search(r"\\.(\\d+)", value)
+    match = re.search(r"\.(\d+)", value)
     fraction_ns = int((match.group(1) + "000000000")[:9]) if match else 0
     timestamp_ns = base_seconds * 1_000_000_000 + fraction_ns
     if timestamp_ns < 0:
@@ -543,7 +543,7 @@ class PersistentCvdLedger:
                 raise ValueError("trade price/quantity must be positive and timestamp non-negative")
             if side not in ("buy", "sell"):
                 raise ValueError("trade side must be 'buy' or 'sell'")
-            item = (price, quantity, timestamp, side)
+            item = (price, quantity, timestamp_ns, side)
             if trade_id in normalized and normalized[trade_id] != item:
                 raise ValueError("conflicting payloads for duplicate trade_id")
             normalized[trade_id] = item
