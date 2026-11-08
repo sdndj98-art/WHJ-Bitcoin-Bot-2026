@@ -5,7 +5,7 @@ on:
   schedule:
     - cron: "37 6 * * *"
   push:
-    branches: [main, build/bitcoin-satoshi-bot, research/cost-sensitivity, research/regime-aware-consensus-ensemble, research/6h-ema-atr-trailing-20261108, research/adx-threshold-sensitivity-20261108]
+    branches: [main, build/bitcoin-satoshi-bot, research/cost-sensitivity, research/regime-aware-consensus-ensemble, research/6h-ema-atr-trailing-20261108, research/adx-threshold-sensitivity-20261108, research/volume-liquidity-momentum-confluence-20261108]
     paths:
       - "historical_research.py"
       - "strategy_lab.py"
@@ -13,6 +13,7 @@ on:
       - "tests/test_historical_research.py"
       - "tests/test_strategy_regimes.py"
       - "tests/test_strategy_expansion.py"
+      - "tests/test_volume_liquidity_strategy.py"
       - "tests/test_simulation_regressions.py"
       - ".github/workflows/historical-research.yml"
 
@@ -63,6 +64,9 @@ jobs:
 
       - name: Run strategy expansion tests
         run: python -m unittest discover -s tests -p 'test_strategy_expansion.py' -v
+
+      - name: Run volume and liquidity strategy tests
+        run: python -m unittest discover -s tests -p 'test_volume_liquidity_strategy.py' -v
 
       - name: Run extended historical research
         run: python historical_research.py

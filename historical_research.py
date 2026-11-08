@@ -1352,6 +1352,7 @@ def build_qualification_markdown(result):
         "Daily regime filters": result.get("extended_lab_strategy_qualification", {}).get("daily_regime_filter", {}),
         "4h / 6h consensus ensemble": result.get("extended_lab_strategy_qualification", {}).get("multi_timeframe_ensemble", {}),
         "6h EMA50/EMA200 exit comparison (ATR trailing vs close below EMA50)": result.get("extended_lab_strategy_qualification", {}).get("six_hour_atr_trailing", {}),
+        "OHLCV volume / liquidity / momentum confluence": result.get("extended_lab_strategy_qualification", {}).get("volume_liquidity_momentum", {}),
     }
     lines = [
         "# WHJ Bitcoin Bot — Strategy Qualification Report", "",
@@ -2059,6 +2060,9 @@ def main():
     )
     six_hour_atr_research = run_six_hour_atr_trailing_lab(candles)
     six_hour_atr_stress = run_six_hour_atr_trailing_lab(candles, fee=0.002, slippage=0.001)
+    from strategy_lab import run_volume_liquidity_lab
+    volume_liquidity_research = run_volume_liquidity_lab(candles, fee=FEE_RATE, slippage=SLIPPAGE_RATE)
+    volume_liquidity_stress = run_volume_liquidity_lab(candles, fee=0.002, slippage=0.001)
     forward_paper = run_forward_paper_accounts(candles)
     qualification = {}
     for label in ("1h", "4h", "6h", "1d"):
@@ -2090,6 +2094,9 @@ def main():
         ),
         "six_hour_atr_trailing": assess_research_lab_qualification(
             six_hour_atr_research, six_hour_atr_stress
+        ),
+        "volume_liquidity_momentum": assess_research_lab_qualification(
+            volume_liquidity_research, volume_liquidity_stress
         ),
     }
 
@@ -2135,6 +2142,8 @@ def main():
         "six_hour_atr_trailing_research": six_hour_atr_research,
         "six_hour_atr_trailing_stress": six_hour_atr_stress,
         "multi_timeframe_ensemble_stress": multi_timeframe_ensemble_stress,
+        "volume_liquidity_momentum_research": volume_liquidity_research,
+        "volume_liquidity_momentum_stress": volume_liquidity_stress,
         "warning": "Historical results are not forecasts. Strategy selection requires robust out-of-sample performance and forward paper trading. No live orders were placed.",
     }
     Path("historical_research.json").write_text(

@@ -11,6 +11,7 @@ from kraken_order_flow import (
     analyze_trade_flow,
     analyze_order_book,
     combine_microstructure,
+    evaluate_microstructure_confluence,
 )
 
 trade_batch = fetch_recent_trades("XBTUSD")
@@ -20,9 +21,15 @@ flow = analyze_trade_flow(trade_batch["trades"])
 depth = analyze_order_book(book_snapshot, levels=20)
 context = combine_microstructure(flow, depth)
 
+# Optional: fuse completed OHLCV analysis with the trade batch and depth.
+from advanced_market_analysis import analyze_advanced_market
+ohlcv = analyze_advanced_market(closed_candles)
+confluence = evaluate_microstructure_confluence(ohlcv, flow, depth)
+
 print(flow["net_delta"], flow["batch_bias"])
 print(depth["spread_bps"], depth["depth_imbalance"])
 print(context["context"])
+print(confluence["context"])
 ```
 
 ## Metrics
@@ -44,3 +51,15 @@ print(context["context"])
 This module uses only Kraken public `Trades` and `Depth` endpoints. It contains no private API credentials, order submission, cancellation, position management, or live execution. It is not imported into `main.py` or the existing scanner until data-quality, latency, cursor recovery, and forward paper behavior have been independently reviewed.
 
 The output is research context only, not an entry signal or profitability claim. Before any scanner integration, add replay tests, stale-data handling, rate-limit/backoff policy, cross-source timestamp alignment, and out-of-sample evaluation.
+
+
+## Three-layer confluence diagnostic
+
+`evaluate_microstructure_confluence(ohlcv_analysis, trade_flow, order_book)` combines:
+1. Completed-bar OHLCV direction from the existing advanced market analysis output.
+2. Aggressor-side buy/sell pressure from one public trade batch.
+3. Visible bid/ask depth, spread and top-level concentration from one order-book snapshot.
+
+The default liquidity-quality gates are a maximum 15 bps spread, at least 100,000 quote-currency units of visible notional depth, and no single level exceeding 65% of its side depth. These are configurable research defaults, not universal market thresholds.
+
+The output distinguishes three-layer alignment, partial confirmation, divergence, and liquidity-quality failure. It always returns `execution_enabled: false` and `timestamp_alignment_verified: false`. The caller must explicitly align candle close time, trade timestamps and local order-book capture time before interpreting the result. It is not connected to the scanner or order execution.

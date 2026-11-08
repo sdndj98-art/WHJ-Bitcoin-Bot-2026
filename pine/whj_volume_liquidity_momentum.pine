@@ -1,0 +1,84 @@
+//@version=6
+indicator("WHJ Volume-Liquidity Momentum Confluence (Research)", overlay=true, max_labels_count=200)
+
+// Research indicator only. It plots confirmed-bar candidates and alerts;
+// it does not submit broker/exchange orders.
+
+ema50 = ta.ema(close, 50)
+ema200 = ta.ema(close, 200)
+rsi14 = ta.rsi(close, 14)
+[macdLine, macdSignal, macdHist] = ta.macd(close, 12, 26, 9)
+
+priorAverageVolume = ta.sma(volume[1], 20)
+relativeVolume = priorAverageVolume > 0 ? volume / priorAverageVolume : 0.0
+
+moneyFlowMultiplier = high > low ? ((2.0 * close - high - low) / (high - low)) : 0.0
+cmfDenominator = ta.sma(volume, 20)
+cmf20 = cmfDenominator > 0 ? ta.sma(moneyFlowMultiplier * volume, 20) / cmfDenominator : 0.0
+
+obvImpulse = ta.sma(math.sign(ta.change(close)) * volume, 5)
+recentVolume = ta.sma(volume, 5)
+obvSlopeNormalized = recentVolume > 0 ? obvImpulse / recentVolume : 0.0
+
+vwapDenominator = ta.sma(volume, 20)
+rollingVwap20 = vwapDenominator > 0 ? ta.sma(hlc3 * volume, 20) / vwapDenominator : close
+
+priorHigh20 = ta.highest(high[1], 20)
+priorLow10 = ta.lowest(low[1], 10)
+barRange = high - low
+closeLocation = barRange > 0 ? (close - low) / barRange : 0.5
+
+trendRegime = close > ema50 and ema50 > ema200
+rsiMomentum = rsi14 >= 50 and rsi14 <= 72
+macdPositive = macdHist > 0
+macdAcceleration = macdHist > macdHist[1]
+relativeVolumeCheck = relativeVolume >= 1.30
+cmfCheck = cmf20 > 0.05
+obvCheck = obvSlopeNormalized > 0.05
+vwapCheck = close > rollingVwap20
+breakoutQuality = close > priorHigh20 and closeLocation >= 0.70
+
+score = (trendRegime ? 1 : 0) +
+     (rsiMomentum ? 1 : 0) +
+     (macdPositive ? 1 : 0) +
+     (macdAcceleration ? 1 : 0) +
+     (relativeVolumeCheck ? 1 : 0) +
+     (cmfCheck ? 1 : 0) +
+     (obvCheck ? 1 : 0) +
+     (vwapCheck ? 1 : 0) +
+     (breakoutQuality ? 1 : 0)
+
+var bool inCandidate = false
+entryCandidate = barstate.isconfirmed and trendRegime and relativeVolumeCheck and breakoutQuality and score >= 7
+exitCandidate = barstate.isconfirmed and (close < ema50 or close < priorLow10 or score <= 3)
+entryEvent = not inCandidate and entryCandidate
+exitEvent = inCandidate and exitCandidate
+
+if entryEvent
+    inCandidate := true
+else if exitEvent
+    inCandidate := false
+
+plot(ema50, "EMA 50")
+plot(ema200, "EMA 200")
+plot(rollingVwap20, "Rolling VWAP 20")
+plotshape(entryEvent, title="WHJ Candidate", style=shape.triangleup,
+     location=location.belowbar, text="WHJ", size=size.tiny)
+plotshape(exitEvent, title="WHJ Exit Condition",
+     style=shape.triangledown, location=location.abovebar, text="EXIT", size=size.tiny)
+
+alertcondition(entryEvent, title="WHJ Research Candidate",
+     message="WHJ volume/liquidity/momentum confluence confirmed. Research alert only.")
+alertcondition(exitEvent, title="WHJ Research Exit",
+     message="WHJ exit condition confirmed. Research alert only.")
+
+var table dashboard = table.new(position.top_right, 2, 4)
+if barstate.islast
+    table.cell(dashboard, 0, 0, "WHJ Score")
+    table.cell(dashboard, 1, 0, str.tostring(score) + " / 9")
+    table.cell(dashboard, 0, 1, "Relative Volume")
+    table.cell(dashboard, 1, 1, str.tostring(relativeVolume, "#.##"))
+    table.cell(dashboard, 0, 2, "CMF 20")
+    table.cell(dashboard, 1, 2, str.tostring(cmf20, "#.###"))
+    table.cell(dashboard, 0, 3, "RSI 14")
+    table.cell(dashboard, 1, 3, str.tostring(rsi14, "#.##"))
