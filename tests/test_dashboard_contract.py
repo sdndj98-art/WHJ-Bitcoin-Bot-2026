@@ -270,6 +270,23 @@ class DashboardContractTests(unittest.TestCase):
         self.assertIn("WAITING_FOR_NEW_CLOSED_CANDLES", self.source)
         self.assertIn("تمت معالجة شموع مغلقة جديدة", self.source)
 
+    def test_scanner_dashboard_binds_every_engine_confirmation_key(self):
+        expected_checks = (
+            "market_data_quality_pass",
+            "volume_spike",
+            "close_above_prior_high",
+            "breakout_quality_confirmed",
+            "trend_alignment",
+            "rsi_momentum_healthy",
+            "adx_trend_strength",
+            "bullish_close_confirmation",
+        )
+        for check in expected_checks:
+            with self.subTest(check=check):
+                self.assertIn(f"!!checks.{check}", self.source)
+        self.assertEqual(self.source.count('const gateData=['), 1)
+        self.assertIn('passed+" / 8"', self.source)
+
 
 if __name__ == "__main__":
     unittest.main()
