@@ -69,7 +69,7 @@ def aggregate_trade_events(events, timeframe_seconds, as_of=None):
     if isinstance(timeframe_seconds, bool) or not isinstance(timeframe_seconds, int) or timeframe_seconds < 1:
         raise ValueError("timeframe_seconds must be a positive integer")
     if as_of is None:
-        as_of_ns = time.time_ns()
+        as_of_ns = _trade_event_timestamp_ns(time.time())
     else:
         as_of_ns = _trade_event_timestamp_ns(as_of)
 
