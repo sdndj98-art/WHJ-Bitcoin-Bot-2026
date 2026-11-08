@@ -1,4 +1,5 @@
 import unittest
+from unittest.mock import patch
 
 from kraken_order_flow import (
     analyze_order_book,
@@ -64,6 +65,32 @@ class KrakenOrderFlowTests(unittest.TestCase):
             analyze_order_book(crossed)
         with self.assertRaisesRegex(ValueError, "levels"):
             analyze_order_book({"bids": [["99", "1"]], "asks": [["101", "1"]]}, levels=0)
+
+    def test_order_book_rejects_unsorted_levels(self):
+        unsorted_bids = {
+            "bids": [["98", "1"], ["99", "1"]],
+            "asks": [["101", "1"], ["102", "1"]],
+        }
+        with self.assertRaisesRegex(ValueError, "descending"):
+            analyze_order_book(unsorted_bids)
+        unsorted_asks = {
+            "bids": [["99", "1"], ["98", "1"]],
+            "asks": [["102", "1"], ["101", "1"]],
+        }
+        with self.assertRaisesRegex(ValueError, "ascending"):
+            analyze_order_book(unsorted_asks)
+
+    def test_public_fetch_rejects_non_object_json_response(self):
+        with patch("urllib.request.urlopen") as mocked:
+            mocked.return_value.__enter__.return_value.read.return_value = b"[]"
+            with self.assertRaisesRegex(ValueError, "JSON object"):
+                _kraken_get("Trades", {"pair": "XBTUSD"})
+
+    def test_public_fetch_rejects_missing_or_invalid_result_object(self):
+        with patch("urllib.request.urlopen") as mocked:
+            mocked.return_value.__enter__.return_value.read.return_value = b'{"error": [], "result": null}'
+            with self.assertRaisesRegex(ValueError, "result must be an object"):
+                _kraken_get("Trades", {"pair": "XBTUSD"})
 
     def test_combined_context_requires_agreement_for_alignment(self):
         trade = {"batch_bias": "BUY_PRESSURE"}
