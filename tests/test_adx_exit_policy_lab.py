@@ -46,6 +46,28 @@ class AdxExitPolicyTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "ATR multiple"):
             _adx_atr_exit_signals(bars, atr_multiple=True)
 
+    def test_atr_exit_rejects_non_finite_multiple(self):
+        for value in (float("nan"), float("inf"), float("-inf")):
+            with self.subTest(value=value):
+                with self.assertRaisesRegex(ValueError, "finite positive"):
+                    _adx_atr_exit_signals([], atr_multiple=value)
+
+    def test_atr_trailing_stop_exits_on_completed_bar_close(self):
+        bars = [
+            {"open": 99.0, "high": 100.0, "low": 98.0, "close": 99.0, "volume": 1.0},
+            {"open": 99.0, "high": 110.0, "low": 99.0, "close": 100.0, "volume": 1.0},
+            {"open": 100.0, "high": 101.0, "low": 99.0, "close": 100.0, "volume": 1.0},
+        ]
+        with (
+            patch("adx_exit_policy_lab._build_sleeve_signals",
+                  return_value=([True, True, True], [True, True, True])),
+            patch("adx_exit_policy_lab._adx_di_series",
+                  return_value=([25.0] * 3, [2.0] * 3, [1.0] * 3)),
+            patch("adx_exit_policy_lab._atr_series", return_value=[1.0] * 3),
+        ):
+            signals = _adx_atr_exit_signals(bars, 20.0, 2.5)
+        self.assertEqual(signals, [True, False, True])
+
     def test_atr_exit_signal_is_bar_causal(self):
         hourly = hourly_candles()
         from historical_research import aggregate_candles
