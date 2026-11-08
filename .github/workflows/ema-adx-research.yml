@@ -7,6 +7,13 @@ on:
       - "ema_adx_lab.py"
       - "tests/test_ema_adx_lab.py"
       - ".github/workflows/ema-adx-research.yml"
+  pull_request:
+    branches: [main]
+    paths:
+      - "ema_adx_lab.py"
+      - "tests/test_ema_adx_lab.py"
+      - ".github/workflows/ema-adx-research.yml"
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -18,7 +25,7 @@ concurrency:
 jobs:
   isolated-ema-adx-research:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 30
     steps:
       - name: Checkout research branch
         uses: actions/checkout@v4
