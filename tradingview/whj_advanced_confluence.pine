@@ -17,18 +17,18 @@ rvol = priorAvgVol > 0 ? volume / priorAvgVol : 0.0
 // Chaikin Money Flow (explicit formula for portability).
 mfMultiplier = high != low ? ((2.0 * close - high - low) / (high - low)) : 0.0
 mfVolume = mfMultiplier * volume
-cmfDenom = ta.sum(volume, 20)
-cmf20 = cmfDenom > 0 ? ta.sum(mfVolume, 20) / cmfDenom : 0.0
+cmfDenom = math.sum(volume, 20)
+cmf20 = cmfDenom > 0 ? math.sum(mfVolume, 20) / cmfDenom : 0.0
 
 // Normalized recent OBV slope.
 obvStep = close > close[1] ? volume : close < close[1] ? -volume : 0.0
 obv = ta.cum(obvStep)
-obvScale = ta.sum(volume, 5)
+obvScale = math.sum(volume, 5)
 obvSlope = obvScale > 0 ? (obv - obv[5]) / obvScale : 0.0
 
 typical = hlc3
-vwapDenom = ta.sum(volume, 20)
-rollingVwap = vwapDenom > 0 ? ta.sum(typical * volume, 20) / vwapDenom : close
+vwapDenom = math.sum(volume, 20)
+rollingVwap = vwapDenom > 0 ? math.sum(typical * volume, 20) / vwapDenom : close
 
 bullSweep = low < priorLow and close > priorLow
 bearSweep = high > priorHigh and close < priorHigh
