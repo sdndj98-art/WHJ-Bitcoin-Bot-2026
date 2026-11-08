@@ -239,6 +239,14 @@ class HistoricalResearchTests(unittest.TestCase):
         result = run_ohlc_breakout_lab(bars)
         self.assertIn("donchian_55_20_sma200", result["strategies"])
         self.assertIn("donchian_55_20_sma200_atr3_trailing", result["strategies"])
+        for candidate in (
+            "donchian_10_5", "donchian_40_20", "donchian_100_50",
+            "donchian_100_50_sma200", "donchian_55_20_atr2_5_trailing",
+            "donchian_55_20_atr4_trailing",
+        ):
+            self.assertIn(candidate, result["strategies"])
+            self.assertEqual(len(result["strategies"][candidate]["walk_forward_windows"]), 3)
+            self.assertIn(candidate, result["cost_sensitivity"]["3x"]["strategies"])
         self.assertIn("buy_and_hold_25pct", result["strategies"])
         self.assertTrue(all(
             window["start_index"] >= result["split_index"]
