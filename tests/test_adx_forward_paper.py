@@ -91,6 +91,20 @@ class AdxForwardPaperTests(unittest.TestCase):
                 process_native_bars(gapped, 20.0, 4, path)
             self.assertEqual(path.read_text(), before)
 
+
+    def test_future_or_missing_watermark_is_rejected(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "isolated.json"
+            bars = make_bars()
+            process_native_bars(bars, 20.0, 4, path)
+            state = json.loads(path.read_text())
+            state["last_timestamp"] += 4 * 3_600_000
+            path.write_text(json.dumps(state))
+            before = path.read_text()
+            with self.assertRaisesRegex(ValueError, "watermark is absent"):
+                process_native_bars(bars, 20.0, 4, path)
+            self.assertEqual(path.read_text(), before)
+
     def test_corrupt_state_is_not_silently_reseeded(self):
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory) / "isolated.json"
