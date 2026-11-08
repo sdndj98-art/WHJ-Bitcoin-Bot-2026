@@ -343,6 +343,20 @@ class HistoricalResearchTests(unittest.TestCase):
         portfolio = result["strategies"]["ema50_200_4h_6h_50_50_portfolio"]
         self.assertEqual(len(portfolio["walk_forward_windows"]), 3)
         self.assertEqual(portfolio["out_of_sample"]["sleeve_count"], 2)
+        self.assertIn("buy_and_hold_25pct_50_50_portfolio", result["strategies"])
+        self.assertEqual(list(result["cost_sensitivity"]), ["1x", "1.5x", "2x", "3x"])
+        one_x = result["cost_sensitivity"]["1x"]["portfolio_50_50"]
+        self.assertEqual(one_x["return_pct"], portfolio["out_of_sample"]["return_pct"])
+        self.assertEqual(
+            one_x["benchmark_edge_pp"],
+            round(
+                one_x["return_pct"] - one_x["benchmark_return_pct"], 2
+            ),
+        )
+        self.assertGreater(
+            result["cost_sensitivity"]["3x"]["fee_rate_each_side"],
+            result["cost_sensitivity"]["1x"]["fee_rate_each_side"],
+        )
 
     def test_native_timeframe_sleeves_match_same_total_initial_exposure(self):
         four_hour = [
@@ -696,6 +710,39 @@ class HistoricalResearchTests(unittest.TestCase):
         )
         self.assertTrue(passing["qualified_for_extended_paper_review"])
 
+
+    def test_50_50_portfolio_qualification_uses_matched_50_50_benchmark(self):
+        good = {
+            "out_of_sample": {
+                "return_pct": 4.0, "closed_trades": 40,
+                "profit_factor": 1.5, "max_drawdown_pct": 6.0,
+            },
+            "walk_forward_windows": [
+                {"metrics": {"return_pct": 1.0, "closed_trades": 12}},
+                {"metrics": {"return_pct": 0.5, "closed_trades": 13}},
+                {"metrics": {"return_pct": 2.0, "closed_trades": 15}},
+            ],
+        }
+        stress_candidate = {"out_of_sample": {"return_pct": 3.0}}
+        research = {"strategies": {
+            "ema50_200_4h_6h_consensus": good,
+            "ema50_200_4h_6h_50_50_portfolio": good,
+            "buy_and_hold_25pct": {"out_of_sample": {"return_pct": 1.0}},
+            "buy_and_hold_25pct_50_50_portfolio": {"out_of_sample": {"return_pct": 5.0}},
+        }}
+        stress = {"strategies": {
+            "ema50_200_4h_6h_consensus": stress_candidate,
+            "ema50_200_4h_6h_50_50_portfolio": stress_candidate,
+            "buy_and_hold_25pct": {"out_of_sample": {"return_pct": 0.5}},
+            "buy_and_hold_25pct_50_50_portfolio": {"out_of_sample": {"return_pct": 3.5}},
+        }}
+        result = assess_research_lab_qualification(research, stress)
+        self.assertTrue(result["ema50_200_4h_6h_consensus"]["qualified_for_extended_paper_review"])
+        self.assertFalse(result["ema50_200_4h_6h_50_50_portfolio"]["qualified_for_extended_paper_review"])
+        self.assertEqual(
+            result["ema50_200_4h_6h_50_50_portfolio"]["benchmark_comparison"]["benchmark_oos_return_pct"],
+            5.0,
+        )
 
     def test_qualification_report_discloses_synthetic_gap_repairs(self):
         result = {
