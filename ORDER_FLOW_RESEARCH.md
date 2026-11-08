@@ -41,6 +41,8 @@ print(confluence["context"])
 ## Important semantics
 
 - `net_delta` is the signed volume delta of the exact supplied batch. It is **not** persistent cumulative CVD.
+- `PersistentCvdLedger` accepts incremental uniquely identified trade events, accumulates buy/sell volume, ignores replayed/stale IDs, and exports JSON-serializable state through `to_state()` for caller-managed durable storage.
+- The CVD ledger does not open a websocket, write files, or guarantee gap-free ingestion. A feed adapter must restore state, resume from the last trade ID, recover missed events after reconnect, and atomically persist updated state.
 - Persistent CVD requires incremental cursor ingestion, durable last-trade cursor storage, trade-ID deduplication, reconnect recovery, and explicit handling of gaps and out-of-order events. Do not sum overlapping API batches.
 - Order-book depth is one venue-specific snapshot. It can change or be cancelled; it does not prove resting liquidity will remain available or identify spoofing.
 - Kraken trade-side labels represent the exchange's aggressor-side classification. They do not describe the entire crypto market.
@@ -63,3 +65,25 @@ The output is research context only, not an entry signal or profitability claim.
 The default liquidity-quality gates are a maximum 15 bps spread, at least 100,000 quote-currency units of visible notional depth, and no single level exceeding 65% of its side depth. These are configurable research defaults, not universal market thresholds.
 
 The output distinguishes three-layer alignment, partial confirmation, divergence, and liquidity-quality failure. It always returns `execution_enabled: false` and `timestamp_alignment_verified: false`. The caller must explicitly align candle close time, trade timestamps and local order-book capture time before interpreting the result. It is not connected to the scanner or order execution.
+
+
+## Persistent CVD ledger
+
+```python
+from kraken_order_flow import PersistentCvdLedger
+
+ledger = PersistentCvdLedger(symbol="BTC/USD")
+result = ledger.process([
+    {"symbol": "BTC/USD", "trade_id": 101, "price": "100", "qty": "0.2",
+     "side": "buy", "timestamp": "2026-11-08T09:00:00Z"},
+    {"symbol": "BTC/USD", "trade_id": 102, "price": "99", "qty": "0.1",
+     "side": "sell", "timestamp": "2026-11-08T09:00:01Z"},
+])
+state_to_save = ledger.to_state()  # Persist atomically in the caller.
+print(result["cumulative_delta"], result["cumulative_bias"])
+
+# On restart: restore the saved state, then resume the feed after last_trade_id.
+restored = PersistentCvdLedger(state=state_to_save)
+```
+
+The ledger validates IDs, sides, prices, quantities and timestamps; deduplicates replayed IDs; rejects conflicting IDs and out-of-order new timestamps atomically; and reports that continuity depends on adapter-managed reconnect recovery.
