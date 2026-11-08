@@ -92,14 +92,14 @@ def _load_state(path, threshold, timeframe, first_timestamp):
         state = json.loads(target.read_text(encoding="utf-8"))
     except (OSError, json.JSONDecodeError) as exc:
         raise ValueError("ADX paper ledger unreadable; refusing to reset it") from exc
+    if not isinstance(state, dict):
+        raise ValueError("ADX paper ledger is invalid; refusing to reset it")
     expected = (state.get("schema_version"), state.get("threshold"),
                 state.get("timeframe_hours"), state.get("strategy"))
     if expected != (1, float(threshold), int(timeframe), "EMA50_200_ADX14_ENTRY_ONLY"):
         raise ValueError("ADX paper ledger identity mismatch; manual review required")
     for key in ("cash", "btc", "entry_cost", "fees_paid", "peak_equity", "max_drawdown_pct"):
         _finite(state.get(key), "saved " + key, 0)
-    if not isinstance(state, dict):
-        raise ValueError("ADX paper ledger is invalid; refusing to reset it")
     if not isinstance(state.get("trades"), list) or not isinstance(state.get("last_timestamp"), int):
         raise ValueError("ADX paper ledger is incomplete; refusing to reset it")
     if state["btc"] == 0 and state["entry_cost"] != 0:
