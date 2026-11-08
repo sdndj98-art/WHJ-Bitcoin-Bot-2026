@@ -12,7 +12,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: whj-ema-adx-research-${{ github.ref }}
+  group: whj-ema-adx-research-v2-${{ github.ref }}
   cancel-in-progress: false
   queue: max
 
@@ -30,16 +30,20 @@ jobs:
       - name: Test isolated EMA ADX research
         run: python -m unittest discover -s tests -p 'test_ema_adx_lab.py' -v
       - name: Run historical EMA ADX comparison
+        timeout-minutes: 10
         run: python ema_adx_lab.py
       - name: Test expanding-window walk-forward selection
         run: python -m unittest discover -s tests -p 'test_adx_walk_forward.py' -v
       - name: Run primary expanding-window walk-forward research
+        timeout-minutes: 10
         run: python adx_walk_forward.py
       - name: Run independent Bitstamp expanding-window walk-forward
+        timeout-minutes: 20
         run: python adx_cross_exchange_walk_forward.py
       - name: Test ADX20 exit policy research
         run: python -m unittest discover -s tests -p 'test_adx_exit_policy_lab.py' -v
       - name: Run ADX20 exit policy comparison
+        timeout-minutes: 10
         run: python adx_exit_policy_lab.py
       - name: Upload ADX research reports
         uses: actions/upload-artifact@v4
