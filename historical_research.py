@@ -1615,6 +1615,7 @@ def run_six_hour_atr_trailing_lab(hourly_candles, fee=FEE_RATE, slippage=SLIPPAG
         "walk_forward_windows": windows,
         "worst_window_return_pct": min(returns) if returns else None,
         "entry_bar_indices": entry_indices,
+        "entry_rule": "trend_ok and ATR(14) > 0",
     }
     # Compare a simpler, predeclared trend exit: close below EMA50.
     # Both variants must use exactly the same entries.
@@ -1654,6 +1655,7 @@ def run_six_hour_atr_trailing_lab(hourly_candles, fee=FEE_RATE, slippage=SLIPPAG
         "walk_forward_windows": ema50_exit_windows,
         "worst_window_return_pct": min(ema50_exit_returns) if ema50_exit_returns else None,
         "entry_bar_indices": ema50_entry_indices,
+        "entry_rule": "trend_ok and ATR(14) > 0",
     }
 
     benchmark_metrics = _simulate_ohlc(
