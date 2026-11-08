@@ -11,6 +11,12 @@ import sys
 import threading
 
 from trade_event_journal import JsonlTradeJournal
+from trade_journal_checkpoint import (
+    build_continuity_checkpoint,
+    load_continuity_checkpoint,
+    save_continuity_checkpoint_atomic,
+    validate_continuity_checkpoint,
+)
 
 from kraken_order_flow import (
     KrakenSpotTradeFeedAdapter,
@@ -38,6 +44,7 @@ def build_parser():
     parser.add_argument("--pair", default="BTC/USD", help="Kraken spot pair (default: BTC/USD)")
     parser.add_argument("--state-file", default=None, help="Per-symbol JSON state path")
     parser.add_argument("--trade-log", default=None, help="Optional append-only JSONL raw trade journal path")
+    parser.add_argument("--checkpoint-file", default=None, help="Optional collector continuity checkpoint path")
     parser.add_argument("--max-trade-log-mb", type=int, default=250, help="Maximum raw trade journal size in MiB")
     parser.add_argument("--timeout", type=float, default=20.0, help="WebSocket receive timeout seconds")
     parser.add_argument("--initial-backoff", type=float, default=1.0, help="Initial reconnect delay seconds")
@@ -52,12 +59,12 @@ def build_parser():
 def run_collector(args, stop_event, websocket_factory=None):
     pair = args.pair.strip()
     state_path = args.state_file or default_state_path(pair)
-    ledger = PersistentCvdLedger(
-        symbol=pair,
-        state=load_cvd_state(state_path),
-    )
+    saved_state = load_cvd_state(state_path)
+    ledger = PersistentCvdLedger(symbol=pair, state=saved_state)
     trade_log_path = getattr(args, "trade_log", None)
     journal = None
+    checkpoint_path = None
+    continuity_start_trade_id = None
     if trade_log_path:
         max_mb = getattr(args, "max_trade_log_mb", 250)
         if isinstance(max_mb, bool) or not isinstance(max_mb, int) or max_mb < 1:
@@ -65,12 +72,42 @@ def run_collector(args, stop_event, websocket_factory=None):
         journal = JsonlTradeJournal(
             trade_log_path, max_bytes=max_mb * 1024 * 1024
         )
+        checkpoint_path = (
+            getattr(args, "checkpoint_file", None)
+            or f"{trade_log_path}.checkpoint.json"
+        )
+        if journal.last_trade_id is None:
+            if ledger.last_trade_id != 0:
+                raise ValueError(
+                    "trade journal is empty but saved CVD state is not; "
+                    "use a new state/journal pair rather than certifying partial history"
+                )
+            if os.path.exists(checkpoint_path):
+                raise ValueError("checkpoint exists without its trade journal")
+        else:
+            if ledger.last_trade_id != journal.last_trade_id:
+                raise ValueError(
+                    "saved CVD state and trade journal cursors differ; refusing unsafe resume"
+                )
+            if not os.path.exists(checkpoint_path):
+                raise ValueError(
+                    "existing trade journal has no collector checkpoint; "
+                    "continuity cannot be certified"
+                )
+            checkpoint = load_continuity_checkpoint(checkpoint_path)
+            metadata = validate_continuity_checkpoint(
+                checkpoint, trade_log_path, pair, ledger.last_trade_id
+            )
+            continuity_start_trade_id = metadata["first_trade_id"]
+
     adapter = KrakenSpotTradeFeedAdapter(
         ledger,
         pair=pair,
         timeout=args.timeout,
         on_accepted_trades=journal.append if journal else None,
+        require_initial_snapshot=bool(journal and ledger.last_trade_id == 0),
     )
+    adapter.continuity_start_trade_id = continuity_start_trade_id
     runner = KrakenSpotWebSocketRunner(
         adapter,
         timeout=args.timeout,
@@ -78,14 +115,24 @@ def run_collector(args, stop_event, websocket_factory=None):
         max_backoff=args.max_backoff,
         max_reconnect_attempts=args.max_reconnect_attempts,
     )
+    def persist_state(state):
+        save_cvd_state_atomic(state_path, state)
+        if journal and adapter.continuity_start_trade_id is not None:
+            checkpoint = build_continuity_checkpoint(
+                trade_log_path, pair, ledger.last_trade_id
+            )
+            save_continuity_checkpoint_atomic(checkpoint_path, checkpoint)
+
     result = runner.run(
         stop_event,
-        persist_state=lambda state: save_cvd_state_atomic(state_path, state),
+        persist_state=persist_state,
         websocket_factory=websocket_factory,
     )
     if journal:
         result["trade_journal"] = {
             "path": trade_log_path,
+            "checkpoint_path": checkpoint_path,
+            "continuity_start_trade_id": adapter.continuity_start_trade_id,
             "last_trade_id": journal.last_trade_id,
             "size_bytes": os.path.getsize(trade_log_path) if os.path.exists(trade_log_path) else 0,
         }
