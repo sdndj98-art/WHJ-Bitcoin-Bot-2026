@@ -84,6 +84,75 @@ def _new_state(threshold, timeframe, first_timestamp):
     }
 
 
+def _validate_state(state, threshold, timeframe):
+    if not isinstance(state, dict):
+        raise ValueError("ADX paper ledger is invalid; refusing to reset it")
+    identity = (
+        state.get("schema_version"),
+        state.get("mode"),
+        state.get("strategy"),
+        state.get("threshold"),
+        state.get("timeframe_hours"),
+        state.get("initial_cash"),
+    )
+    expected = (
+        1,
+        "FORWARD_ONLY_PAPER",
+        "EMA50_200_ADX14_ENTRY_ONLY",
+        float(threshold),
+        int(timeframe),
+        INITIAL_CASH_PER_SLEEVE,
+    )
+    if identity != expected:
+        raise ValueError("ADX paper ledger identity mismatch; manual review required")
+
+    for key in ("cash", "btc", "entry_cost", "fees_paid", "peak_equity",
+                "max_drawdown_pct", "daily_start_equity"):
+        _finite(state.get(key), "saved " + key, 0)
+    if state["peak_equity"] <= 0 or state["daily_start_equity"] <= 0:
+        raise ValueError("ADX paper equity reference is invalid")
+    if state["max_drawdown_pct"] > 100:
+        raise ValueError("ADX paper drawdown is invalid")
+    if state["btc"] == 0 and state["entry_cost"] != 0:
+        raise ValueError("ADX paper position is inconsistent")
+    if state["btc"] > 0 and state["entry_cost"] <= 0:
+        raise ValueError("ADX paper position is inconsistent")
+    if state["cash"] > INITIAL_CASH_PER_SLEEVE + 1e-8 and state["btc"] == 0:
+        raise ValueError("ADX paper cash exceeds its initial capital")
+    last = state.get("last_timestamp")
+    if isinstance(last, bool) or not isinstance(last, int) or last < 0:
+        raise ValueError("ADX paper watermark is invalid")
+    if last % (int(timeframe) * 3_600_000):
+        raise ValueError("ADX paper watermark is not timeframe-aligned")
+    flags = ("daily_paused", "drawdown_paused", "loss_streak_paused")
+    if any(not isinstance(state.get(key), bool) for key in flags):
+        raise ValueError("ADX paper risk flags are invalid")
+    daily_date = state.get("daily_date")
+    if daily_date is not None:
+        try:
+            if datetime.fromisoformat(daily_date).date().isoformat() != daily_date:
+                raise ValueError
+        except (TypeError, ValueError):
+            raise ValueError("ADX paper daily date is invalid")
+    trades = state.get("trades")
+    if not isinstance(trades, list):
+        raise ValueError("ADX paper trade history is invalid")
+    for trade in trades:
+        if not isinstance(trade, dict) or trade.get("side") != "SELL":
+            raise ValueError("ADX paper trade record is invalid")
+        ts = trade.get("timestamp")
+        if isinstance(ts, bool) or not isinstance(ts, int) or ts < 0:
+            raise ValueError("ADX paper trade timestamp is invalid")
+        _finite(trade.get("price"), "saved trade price", 1e-12)
+        _finite(trade.get("pnl_usd"), "saved trade PnL")
+        if trade.get("result") not in ("WIN", "LOSS"):
+            raise ValueError("ADX paper trade result is invalid")
+    if state["btc"] == 0 and state["entry_cost"] != 0:
+        raise ValueError("ADX paper position is inconsistent")
+    if state["btc"] > 0 and state["entry_cost"] <= 0:
+        raise ValueError("ADX paper position is inconsistent")
+
+
 def _load_state(path, threshold, timeframe, first_timestamp):
     target = Path(path)
     if not target.exists():
@@ -92,22 +161,7 @@ def _load_state(path, threshold, timeframe, first_timestamp):
         state = json.loads(target.read_text(encoding="utf-8"))
     except (OSError, json.JSONDecodeError) as exc:
         raise ValueError("ADX paper ledger unreadable; refusing to reset it") from exc
-    if not isinstance(state, dict):
-        raise ValueError("ADX paper ledger is invalid; refusing to reset it")
-    expected = (state.get("schema_version"), state.get("threshold"),
-                state.get("timeframe_hours"), state.get("strategy"))
-    if expected != (1, float(threshold), int(timeframe), "EMA50_200_ADX14_ENTRY_ONLY"):
-        raise ValueError("ADX paper ledger identity mismatch; manual review required")
-    for key in ("cash", "btc", "entry_cost", "fees_paid", "peak_equity", "max_drawdown_pct"):
-        _finite(state.get(key), "saved " + key, 0)
-    if not isinstance(state.get("trades"), list) or not isinstance(state.get("last_timestamp"), int):
-        raise ValueError("ADX paper ledger is incomplete; refusing to reset it")
-    if state["btc"] == 0 and state["entry_cost"] != 0:
-        raise ValueError("ADX paper position is inconsistent")
-    if state["btc"] > 0 and state["entry_cost"] <= 0:
-        raise ValueError("ADX paper position is inconsistent")
-    if any(not isinstance(state.get(k), bool) for k in ("daily_paused", "drawdown_paused", "loss_streak_paused")):
-        raise ValueError("ADX paper risk flags are invalid")
+    _validate_state(state, threshold, timeframe)
     return state, False
 
 
