@@ -423,12 +423,21 @@ def run_ohlc_breakout_lab(bars, fee=FEE_RATE, slippage=SLIPPAGE_RATE):
         raise ValueError("Fee and slippage must be between 0 and 1")
 
     split = int(len(bars) * 0.7)
+    # Predeclared Turtle/Donchian family: short, classic, and slower
+    # breakout horizons, with a small number of fixed regime/ATR variants.
+    # These are research candidates, not a parameter sweep for optimization.
     strategies = {
+        "donchian_10_5": (10, 5, None, None),
         "donchian_20_10": (20, 10, None, None),
+        "donchian_40_20": (40, 20, None, None),
         "donchian_55_20": (55, 20, None, None),
+        "donchian_100_50": (100, 50, None, None),
         "donchian_20_10_sma200": (20, 10, 200, None),
         "donchian_55_20_sma200": (55, 20, 200, None),
+        "donchian_100_50_sma200": (100, 50, 200, None),
+        "donchian_55_20_atr2_5_trailing": (55, 20, None, 2.5),
         "donchian_55_20_atr3_trailing": (55, 20, None, 3.0),
+        "donchian_55_20_atr4_trailing": (55, 20, None, 4.0),
         "donchian_55_20_sma200_atr3_trailing": (55, 20, 200, 3.0),
     }
     results = {}
