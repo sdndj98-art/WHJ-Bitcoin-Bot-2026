@@ -77,13 +77,24 @@ def build_continuity_checkpoint(path, symbol, expected_last_trade_id):
 def validate_continuity_checkpoint(checkpoint, path, symbol, expected_last_trade_id=None):
     if not isinstance(checkpoint, dict):
         raise ValueError("continuity checkpoint must be an object")
-    if checkpoint.get("version") != 1 or checkpoint.get("source") != SOURCE:
+    if (type(checkpoint.get("version")) is not int or checkpoint.get("version") != 1
+            or checkpoint.get("source") != SOURCE):
         raise ValueError("continuity checkpoint source or version is not trusted")
     if checkpoint.get("feed_continuity_verified") is not True:
         raise ValueError("continuity checkpoint is not verified")
     metadata = inspect_trade_journal(path)
-    for field in ("symbol", "first_trade_id", "last_trade_id",
-                  "trade_count", "journal_size_bytes", "journal_sha256"):
+    integer_fields = (
+        "first_trade_id", "last_trade_id", "trade_count", "journal_size_bytes"
+    )
+    for field in integer_fields:
+        value = checkpoint.get(field)
+        if isinstance(value, bool) or not isinstance(value, int):
+            raise ValueError(f"continuity checkpoint {field} is invalid")
+    if not isinstance(checkpoint.get("symbol"), str):
+        raise ValueError("continuity checkpoint symbol is invalid")
+    if not isinstance(checkpoint.get("journal_sha256"), str):
+        raise ValueError("continuity checkpoint journal_sha256 is invalid")
+    for field in ("symbol", *integer_fields, "journal_sha256"):
         if checkpoint.get(field) != metadata[field]:
             raise ValueError(f"continuity checkpoint {field} does not match journal")
     if metadata["symbol"] != symbol:
