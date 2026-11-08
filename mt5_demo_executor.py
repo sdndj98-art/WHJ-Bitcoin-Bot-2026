@@ -156,11 +156,11 @@ class MetaTrader5DemoExecutor:
             raise ValueError("Broker symbol digits are invalid")
         tick = self._adapter.get_quote(symbol)
         entry = self._decimal(tick["ask"] if side == "BUY" else tick["bid"], "entry price")
-        sl = self._round_to_tick(self._decimal(stop_loss, "stop loss"), tick_size, digits)
-        tp = self._round_to_tick(self._decimal(take_profit, "take profit"), tick_size, digits)
+        sl = self._round_to_tick(self._decimal(stop_loss, "stop loss", Decimal("0.00000001")), tick_size, digits)
+        tp = self._round_to_tick(self._decimal(take_profit, "take profit", Decimal("0.00000001")), tick_size, digits)
         sl_dec, tp_dec = Decimal(str(sl)), Decimal(str(tp))
         minimum_distance = point * self._decimal(
-            getattr(info, "trade_stops_level", 0), "broker stop level"
+            getattr(info, "trade_stops_level", 0), "broker stop level", Decimal("0")
         )
         if side == "BUY":
             if not sl_dec < entry < tp_dec:
