@@ -5,11 +5,73 @@ from unittest.mock import patch
 from datetime import datetime, timezone
 from pathlib import Path
 
-from forward_paper_monitor import assess_sleeve_health, process_forward_accounts, validate_hourly_feed, write_report_atomically
+from forward_paper_monitor import (assess_sleeve_health, build_qualified_ensemble, process_forward_accounts, validate_hourly_feed, write_report_atomically)
 from paper_account import seed_forward_paper_account, update_paper_account
 
 
 class ForwardPaperMonitorTests(unittest.TestCase):
+
+    def test_qualified_ensemble_combines_only_equal_weight_4h_and_6h_sleeves(self):
+        summary = {}
+        sleeves = {}
+        for timeframe, equity, trades, status in (
+            ("4h", 510.0, 3, "INSUFFICIENT_FORWARD_SAMPLE"),
+            ("6h", 520.0, 4, "INSUFFICIENT_FORWARD_SAMPLE"),
+        ):
+            summary[timeframe] = {
+                "equity_usd": equity,
+                "exposure_usd": 25.0,
+                "max_drawdown_pct": 2.0,
+                "health_assessment": {"status": status},
+            }
+            sleeves[timeframe] = {"account": {
+                "initial_cash_usd": 500.0,
+                "equity_after_estimated_exit_costs_usd": equity,
+                "completed_trades": trades,
+                "processed_new_candles": 2,
+                "fees_paid_usd": 0.5,
+                "cash_usd": equity - 25.0,
+                "btc_units": 0.001,
+            }}
+        # Unqualified hourly sleeves must not affect the selected ensemble.
+        summary["1h_sma_trend"] = {"equity_usd": 10_000.0}
+        sleeves["1h_sma_trend"] = {"account": {"initial_cash_usd": 10_000.0}}
+
+        result = build_qualified_ensemble(summary, sleeves)
+        self.assertEqual(result["initial_cash_usd"], 1000.0)
+        self.assertEqual(result["equity_after_estimated_exit_costs_usd"], 1030.0)
+        self.assertEqual(result["return_pct"], 3.0)
+        self.assertEqual(result["completed_trades"], 7)
+        self.assertEqual(result["processed_new_candles"], 4)
+        self.assertEqual(result["max_drawdown_by_sleeve_pct"], {"4h": 2.0, "6h": 2.0})
+        self.assertEqual(result["status"], "INSUFFICIENT_FORWARD_SAMPLE")
+        self.assertFalse(result["live_trading_eligible"])
+        self.assertEqual(result["allocation"]["4h_capital_pct"], 50)
+        self.assertEqual(result["allocation"]["6h_capital_pct"], 50)
+
+    def test_qualified_ensemble_pauses_if_either_selected_sleeve_is_paused(self):
+        summary = {}
+        sleeves = {}
+        for timeframe, status in (("4h", "CONTINUE_PAPER_REVIEW"), ("6h", "RISK_PAUSED")):
+            summary[timeframe] = {
+                "equity_usd": 500.0,
+                "exposure_usd": 0.0,
+                "max_drawdown_pct": 0.0,
+                "health_assessment": {"status": status},
+            }
+            sleeves[timeframe] = {"account": {
+                "initial_cash_usd": 500.0,
+                "equity_after_estimated_exit_costs_usd": 500.0,
+                "completed_trades": 30,
+                "processed_new_candles": 0,
+                "fees_paid_usd": 0.0,
+                "cash_usd": 500.0,
+                "btc_units": 0.0,
+            }}
+        result = build_qualified_ensemble(summary, sleeves)
+        self.assertEqual(result["status"], "RISK_PAUSED")
+        self.assertFalse(result["live_trading_eligible"])
+
     def test_forward_report_write_preserves_previous_file_if_replace_fails(self):
         with tempfile.TemporaryDirectory() as folder:
             target = Path(folder) / "forward_paper_report.json"
@@ -269,6 +331,11 @@ class ForwardPaperMonitorTests(unittest.TestCase):
             self.assertEqual(first["initial_cash_usd"], 1600.0)
             self.assertEqual(first["completed_trades"], 0)
             self.assertEqual(first["schema_version"], 1)
+            self.assertEqual(first["qualified_ensemble"]["initial_cash_usd"], 1000.0)
+            self.assertEqual(first["qualified_ensemble"]["return_pct"], 0.0)
+            self.assertEqual(first["qualified_ensemble"]["completed_trades"], 0)
+            self.assertEqual(first["qualified_ensemble"]["status"], "INSUFFICIENT_FORWARD_SAMPLE")
+            self.assertFalse(first["qualified_ensemble"]["live_trading_eligible"])
             self.assertEqual(first["status"], "PAPER_MONITORING")
             self.assertEqual(first["cycle_status"], "WAITING_FOR_NEW_CLOSED_CANDLES")
             self.assertEqual(first["total_processed_new_candles"], 0)

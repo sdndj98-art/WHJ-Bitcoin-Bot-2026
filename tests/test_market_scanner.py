@@ -1,15 +1,16 @@
 import unittest
 
-from market_scanner import scan_btc_market, scan_btc_multi_timeframe, _aggregate_hourly_candles
+from market_scanner import scan_btc_market, scan_btc_multi_timeframe, _aggregate_hourly_candles, _adx
 
 
 def candles(prior_high=97.8, current_close=98.2, current_volume=30.0):
     rows = []
     for index in range(50):
-        close = 95.0 + index * 0.05 + (0.15 if index % 2 == 0 else -0.15)
+        close = 95.0 + index * 0.05 + (0.12 if index % 2 == 0 else -0.12)
         open_price = close - 0.03
+        prior_bar_high = close + 0.25 if prior_high == 97.8 else prior_high
         rows.append([
-            index * 3600, open_price, prior_high, close - 0.35,
+            index * 3600, open_price, prior_bar_high, close - 0.35,
             close, 0.0, 10.0, 100
         ])
     current_open = min(100.0, current_close - 0.01)
@@ -26,11 +27,11 @@ HEALTHY = {"quality_status": "HEALTHY", "paper_execution_allowed": True}
 
 
 class MarketScannerTests(unittest.TestCase):
-    def test_candidate_requires_all_seven_confirmations_and_good_data(self):
+    def test_candidate_requires_all_eight_confirmations_and_good_data(self):
         result = scan_btc_market(candles(), HEALTHY)
         self.assertEqual(result["status"], "PAPER_CANDIDATE")
-        self.assertEqual(result["confluence_score"], 7)
-        self.assertEqual(result["confluence_total"], 7)
+        self.assertEqual(result["confluence_score"], 8)
+        self.assertEqual(result["confluence_total"], 8)
         self.assertTrue(result["paper_candidate_only"])
         self.assertFalse(result["live_orders_placed"])
 
@@ -40,6 +41,11 @@ class MarketScannerTests(unittest.TestCase):
         self.assertGreaterEqual(result["rsi14"], 0)
         self.assertLessEqual(result["rsi14"], 100)
         self.assertGreater(result["atr14"], 0)
+        self.assertGreaterEqual(result["adx14"], 0)
+        self.assertLessEqual(result["adx14"], 100)
+        self.assertGreaterEqual(result["plus_di14"], 0)
+        self.assertGreaterEqual(result["minus_di14"], 0)
+        self.assertEqual(result["adx_minimum_required"], 20.0)
         self.assertGreater(result["atr_pct"], 0)
         self.assertGreaterEqual(result["close_position_pct"], 0)
         self.assertLessEqual(result["close_position_pct"], 100)
@@ -64,6 +70,8 @@ class MarketScannerTests(unittest.TestCase):
     def test_breakout_quality_thresholds_are_reported(self):
         result = scan_btc_market(candles(), HEALTHY)
         self.assertEqual(result["breakout_buffer_atr_required"], 0.10)
+        self.assertIn("adx_trend_strength", result["checks"])
+        self.assertEqual(result["checks"]["adx_trend_strength"], result["adx_trend_strength_confirmed"])
         self.assertEqual(result["max_breakout_upper_wick_pct"], 35.0)
         self.assertGreaterEqual(result["breakout_clearance_atr"], 0.10)
         self.assertLessEqual(result["breakout_upper_wick_pct"], 35.0)
@@ -171,6 +179,8 @@ class MarketScannerTests(unittest.TestCase):
         self.assertEqual(result["consensus"]["required_timeframes"], 3)
         self.assertFalse(result["consensus"]["live_execution_enabled"])
         self.assertTrue(all(x["paper_candidate_only"] for x in result["timeframes"].values()))
+        self.assertEqual(result["timeframes"]["4h"]["confluence_total"], 8)
+        self.assertEqual(result["timeframes"]["6h"]["confluence_total"], 8)
         self.assertEqual(result["timeframes"]["4h"]["timeframe"], "4h")
         self.assertEqual(result["timeframes"]["6h"]["timeframe"], "6h")
         for item in result["timeframes"].values():
@@ -214,6 +224,41 @@ class MarketScannerTests(unittest.TestCase):
             int(result["timeframes"]["1h"]["checks"]["breakout_quality_confirmed"]),
         )
         self.assertFalse(consensus["live_execution_enabled"])
+
+    def test_adx_is_bounded_and_directional_on_strong_uptrend(self):
+        rows = []
+        for index in range(80):
+            close = 100.0 + index * 0.8
+            rows.append([
+                index * 3600, close - 0.2, close + 0.5, close - 0.5,
+                close, 0.0, 10.0, 100
+            ])
+        result = scan_btc_market(rows, HEALTHY)
+        self.assertGreaterEqual(result["adx14"], 0.0)
+        self.assertLessEqual(result["adx14"], 100.0)
+        self.assertGreater(result["plus_di14"], result["minus_di14"])
+        self.assertTrue(result["checks"]["adx_trend_strength"])
+
+    def test_adx_is_zero_for_flat_market_without_directional_movement(self):
+        rows = [
+            [index * 3600, 100.0, 101.0, 99.0, 100.0, 0.0, 10.0, 100]
+            for index in range(40)
+        ]
+        adx_value, plus_di, minus_di = _adx(rows, 14)
+        self.assertEqual(adx_value, 0.0)
+        self.assertEqual(plus_di, 0.0)
+        self.assertEqual(minus_di, 0.0)
+
+    def test_adx_filter_rejects_directionally_weak_breakout_candidate(self):
+        rows = candles()
+        # ADX confirmation is explicit and a missing/weak directional trend
+        # must prevent promotion to a paper candidate.
+        result = scan_btc_market(rows, HEALTHY)
+        self.assertEqual(
+            result["checks"]["adx_trend_strength"],
+            result["adx14"] >= 20.0 and result["plus_di14"] > result["minus_di14"],
+        )
+        self.assertEqual(result["confluence_total"], 8)
 
     def test_rejects_non_finite_volume(self):
         rows = candles()
