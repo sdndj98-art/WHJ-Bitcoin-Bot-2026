@@ -1,9 +1,13 @@
+import json
+import os
+import tempfile
 import unittest
 
 from cvd_timeframes import (
     TIMEFRAMES,
     aggregate_all_timeframes,
     aggregate_trade_events,
+    read_trade_journal,
 )
 
 
@@ -77,6 +81,21 @@ class CvdTimeframeReplayTests(unittest.TestCase):
     def test_rejects_boolean_or_invalid_quantities(self):
         with self.assertRaisesRegex(ValueError, "finite number"):
             aggregate_trade_events([trade(1, 100, 100, True)], 1)
+
+    def test_reads_complete_jsonl_journal_and_rejects_truncated_tail(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = os.path.join(directory, "trades.jsonl")
+            with open(path, "wb") as handle:
+                handle.write((json.dumps(trade(1, 100, 100, 1)) + "\\n").encode("utf-8"))
+            self.assertEqual(len(read_trade_journal(path)), 1)
+            with open(path, "wb") as handle:
+                handle.write(json.dumps(trade(1, 100, 100, 1)).encode("utf-8"))
+            with self.assertRaisesRegex(ValueError, "incomplete"):
+                read_trade_journal(path)
+
+    def test_rejects_explicitly_empty_timeframe_selection(self):
+        with self.assertRaisesRegex(ValueError, "non-empty"):
+            aggregate_all_timeframes([], timeframes={})
 
     def test_default_timeframes_cover_seconds_through_daily(self):
         self.assertEqual(TIMEFRAMES["1s"], 1)
