@@ -86,7 +86,7 @@ class CvdTimeframeReplayTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             path = os.path.join(directory, "trades.jsonl")
             with open(path, "wb") as handle:
-                handle.write((json.dumps(trade(1, 100, 100, 1)) + "\\n").encode("utf-8"))
+                handle.write((json.dumps(trade(1, 100, 100, 1)) + chr(10)).encode("utf-8"))
             self.assertEqual(len(read_trade_journal(path)), 1)
             with open(path, "wb") as handle:
                 handle.write(json.dumps(trade(1, 100, 100, 1)).encode("utf-8"))
