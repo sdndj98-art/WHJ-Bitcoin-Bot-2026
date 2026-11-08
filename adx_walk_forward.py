@@ -119,8 +119,6 @@ def run_expanding_walk_forward(hourly_candles, fee=FEE_RATE, slippage=SLIPPAGE_R
     baseline_sets = []
     candidate_sets = {str(int(t)): [] for t in THRESHOLDS}
     for bars in sets:
-        closes = [float(row["close"]) for row in bars]
-        ema50, ema200, adx, plus_di, minus_di = None, None, None, None, None
         # Reuse the canonical signal builder to keep indicator math identical.
         base, _ = _build_sleeve_signals(bars, 20.0)
         baseline_sets.append(base)
