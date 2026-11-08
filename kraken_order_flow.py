@@ -782,7 +782,9 @@ class KrakenSpotTradeFeedAdapter:
         """Process a WS v2 envelope, backfilling a sequence gap before retry."""
         message_type = message.get("type") if isinstance(message, dict) else None
         if (self.require_initial_snapshot and self.continuity_start_trade_id is None
-                and self.ledger.last_trade_id == 0 and message_type != "snapshot"):
+                and self.ledger.last_trade_id == 0
+                and isinstance(message, dict) and message.get("channel") == "trade"
+                and message_type != "snapshot"):
             raise TradeIdGapError(
                 "a fresh journal must begin with Kraken's initial trade snapshot"
             )
