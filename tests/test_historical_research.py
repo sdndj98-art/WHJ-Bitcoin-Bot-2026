@@ -240,6 +240,7 @@ class HistoricalResearchTests(unittest.TestCase):
         self.assertIn("donchian_55_20_sma200", result["strategies"])
         self.assertIn("donchian_55_20_sma200_atr3_trailing", result["strategies"])
         self.assertIn("buy_and_hold_25pct", result["strategies"])
+        self.assertEqual(len(result["strategies"]["ema50_200_close_below_ema50_exit"]["walk_forward_windows"]), 3)
         self.assertTrue(all(
             window["start_index"] >= result["split_index"]
             for window in result["strategies"]["donchian_55_20"]["walk_forward_windows"]
@@ -722,7 +723,7 @@ class HistoricalResearchTests(unittest.TestCase):
                 "volume": 10.0,
             })
         result = run_six_hour_atr_trailing_lab(hourly)
-        self.assertEqual(result["mode"], "SIX_HOUR_EMA50_200_WITH_FIXED_2_5_ATR_TRAILING_EXIT")
+        self.assertEqual(result["mode"], "SIX_HOUR_EMA50_200_ATR_AND_EMA50_EXIT_COMPARISON")
         self.assertEqual(result["atr_period"], 14)
         self.assertEqual(result["atr_trailing_multiple"], 2.5)
         self.assertEqual(len(result["strategies"]["ema50_200_atr2_5_trailing"]["walk_forward_windows"]), 3)
