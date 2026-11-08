@@ -779,10 +779,16 @@ class HistoricalResearchTests(unittest.TestCase):
         result = run_six_hour_atr_trailing_lab(hourly)
         self.assertEqual(result["adx_period"], 14)
         self.assertEqual(result["adx_entry_threshold"], 20.0)
+        self.assertEqual(result["adx_thresholds_tested"], [15.0, 20.0, 25.0])
         for key in ("ema50_200_adx_entry_filter", "ema50_200_adx_entry_and_di_exit"):
             candidate = result["strategies"][key]
             self.assertEqual(len(candidate["walk_forward_windows"]), 3)
             self.assertIn("ADX(14) >= 20", candidate["entry_rule"])
+            self.assertIn("out_of_sample", candidate)
+        for threshold in (15, 25):
+            candidate = result["strategies"][f"ema50_200_adx_{threshold}_entry_filter"]
+            self.assertEqual(len(candidate["walk_forward_windows"]), 3)
+            self.assertIn(f"ADX(14) >= {threshold}", candidate["entry_rule"])
             self.assertIn("out_of_sample", candidate)
 
 
