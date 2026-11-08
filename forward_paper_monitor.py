@@ -210,6 +210,110 @@ def _account_rows(bars):
     return [[int(row["timestamp"] // 1000), 0, 0, 0, str(row["close"])] for row in bars]
 
 
+
+def build_qualified_ensemble(sleeves_summary, sleeves):
+    """Summarize the historically qualified 4h/6h EMA50/EMA200 blend.
+
+    Each timeframe keeps an independent paper ledger and receives half the
+    portfolio capital. This is a portfolio of two qualified sleeves, not a
+    requirement that both timeframes signal on the same candle.
+    """
+    selected = ("4h", "6h")
+    if not isinstance(sleeves_summary, dict) or not isinstance(sleeves, dict):
+        raise ValueError("Ensemble sleeve inputs must be objects")
+    if any(key not in sleeves_summary or key not in sleeves for key in selected):
+        raise ValueError("Both qualified 4h and 6h sleeves are required")
+
+    accounts = {}
+    for timeframe in selected:
+        wrapper = sleeves[timeframe]
+        account = wrapper.get("account") if isinstance(wrapper, dict) else None
+        if not isinstance(account, dict):
+            raise ValueError("Qualified ensemble paper account is missing")
+        accounts[timeframe] = account
+
+    initial = sum(float(accounts[key]["initial_cash_usd"]) for key in selected)
+    equity = sum(
+        float(accounts[key]["equity_after_estimated_exit_costs_usd"])
+        for key in selected
+    )
+    if initial <= 0 or equity <= 0:
+        raise ValueError("Qualified ensemble equity is invalid")
+
+    selected_summary = {key: sleeves_summary[key] for key in selected}
+    statuses = [
+        selected_summary[key]["health_assessment"]["status"] for key in selected
+    ]
+    if "RISK_PAUSED" in statuses:
+        status = "RISK_PAUSED"
+    elif "REVIEW_REQUIRED" in statuses:
+        status = "REVIEW_REQUIRED"
+    elif all(value == "CONTINUE_PAPER_REVIEW" for value in statuses):
+        status = "CONTINUE_PAPER_REVIEW"
+    else:
+        status = "INSUFFICIENT_FORWARD_SAMPLE"
+
+    processed = sum(
+        int(accounts[key]["processed_new_candles"]) for key in selected
+    )
+    return {
+        "name": "WHJ Qualified 4h+6h EMA50/EMA200 Ensemble",
+        "mode": "QUALIFIED_4H_6H_EQUAL_WEIGHT_FORWARD_PAPER_ONLY",
+        "status": status,
+        "cycle_status": (
+            "PROCESSED_NEW_CANDLES" if processed
+            else "WAITING_FOR_NEW_CLOSED_CANDLES"
+        ),
+        "initial_cash_usd": round(initial, 2),
+        "equity_after_estimated_exit_costs_usd": round(equity, 2),
+        "return_pct": round((equity / initial - 1.0) * 100.0, 4),
+        "completed_trades": sum(
+            int(accounts[key]["completed_trades"]) for key in selected
+        ),
+        "processed_new_candles": processed,
+        "fees_paid_usd": round(sum(
+            float(accounts[key]["fees_paid_usd"]) for key in selected
+        ), 4),
+        "cash_usd": round(sum(
+            float(accounts[key]["cash_usd"]) for key in selected
+        ), 2),
+        "btc_units": round(sum(
+            float(accounts[key]["btc_units"]) for key in selected
+        ), 8),
+        "gross_exposure_usd": round(sum(
+            float(selected_summary[key]["exposure_usd"]) for key in selected
+        ), 2),
+        "max_drawdown_by_sleeve_pct": {
+            key: selected_summary[key]["max_drawdown_pct"] for key in selected
+        },
+        "sleeves_summary": selected_summary,
+        "allocation": {
+            "4h_capital_pct": 50,
+            "6h_capital_pct": 50,
+            "entry_allocation_pct_of_each_sleeve": 10,
+            "effective_entry_allocation_pct_of_total_initial_capital": 5,
+        },
+        "strategy_rules": {
+            "4h": "Long while EMA50 > EMA200 and completed 4h close > EMA200; otherwise flat.",
+            "6h": "Long while EMA50 > EMA200 and completed 6h close > EMA200; otherwise flat.",
+            "combination": "Independent native-timeframe sleeves with equal initial capital; no look-ahead and no same-candle consensus requirement.",
+            "execution": "Signals from completed candles are simulated at the next available candle close.",
+        },
+        "risk_limits": {
+            "max_drawdown_pause_pct_per_sleeve": 10,
+            "daily_loss_pause_pct_per_sleeve": 3,
+            "consecutive_loss_pause_count_per_sleeve": 5,
+            "rolling_review_drawdown_pct_per_sleeve": 8,
+        },
+        "live_trading_eligible": False,
+        "note": (
+            "Historical qualification is not proof of future profitability. "
+            "This combined strategy remains forward-only paper testing; "
+            "historical warm-up candles create no paper trades."
+        ),
+    }
+
+
 def process_forward_accounts(candles, state_dir=".", now_timestamp=None):
     quality = validate_hourly_feed(candles, now_timestamp)
     directory = Path(state_dir)
@@ -314,6 +418,7 @@ def process_forward_accounts(candles, state_dir=".", now_timestamp=None):
         "completed_trades": sum(v["completed_trades"] for v in summary.values()),
         "sleeves_summary": summary,
         "sleeves": results,
+        "qualified_ensemble": build_qualified_ensemble(summary, results),
         "risk_limits": {
             "allocation_pct_per_sleeve": 10,
             "max_drawdown_pause_pct": 10,
