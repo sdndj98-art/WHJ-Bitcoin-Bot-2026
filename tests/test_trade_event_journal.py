@@ -39,6 +39,45 @@ class TradeEventJournalTests(unittest.TestCase):
                 journal.append([event(12)])
             self.assertEqual(journal.last_trade_id, 10)
 
+    def test_rejects_mixed_symbols_in_one_append_batch(self):
+        with tempfile.TemporaryDirectory() as directory:
+            journal = JsonlTradeJournal(os.path.join(directory, "trades.jsonl"))
+            other = event(11)
+            other["symbol"] = "ETH/USD"
+            with self.assertRaisesRegex(TradeJournalError, "mixed symbols"):
+                journal.append([event(10), other])
+            self.assertIsNone(journal.last_trade_id)
+            self.assertFalse(os.path.exists(journal.path))
+
+    def test_rejects_symbol_change_after_journal_baseline(self):
+        with tempfile.TemporaryDirectory() as directory:
+            journal = JsonlTradeJournal(os.path.join(directory, "trades.jsonl"))
+            journal.append([event(10)])
+            other = event(11)
+            other["symbol"] = "ETH/USD"
+            with self.assertRaisesRegex(TradeJournalError, "does not match journal"):
+                journal.append([other])
+            self.assertEqual(journal.last_trade_id, 10)
+
+    def test_restore_rejects_mixed_symbol_journal(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = os.path.join(directory, "trades.jsonl")
+            with open(path, "w", encoding="utf-8") as handle:
+                handle.write(json.dumps(event(10)) + "\n")
+                other = event(11)
+                other["symbol"] = "ETH/USD"
+                handle.write(json.dumps(other) + "\n")
+            with self.assertRaisesRegex(TradeJournalError, "mixed symbols"):
+                JsonlTradeJournal(path)
+
+    def test_rejects_missing_symbol(self):
+        with tempfile.TemporaryDirectory() as directory:
+            journal = JsonlTradeJournal(os.path.join(directory, "trades.jsonl"))
+            invalid = event(10)
+            invalid.pop("symbol")
+            with self.assertRaisesRegex(ValueError, "symbol"):
+                journal.append([invalid])
+
     def test_rejects_timestamp_regression(self):
         with tempfile.TemporaryDirectory() as directory:
             journal = JsonlTradeJournal(os.path.join(directory, "trades.jsonl"))
