@@ -116,3 +116,49 @@ Operational constraints:
 - The adapter does not implement the socket itself, reconnect policy, rate-limit backoff, or process supervision.
 - On first start, the initial WS snapshot establishes a baseline only; historical completeness before that snapshot is not claimed.
 - This remains a read-only research feed and cannot send or manage orders.
+
+
+## Running and persisting the public WebSocket feed
+
+Install the optional transport package in the environment that runs the collector:
+
+```bash
+python -m pip install websocket-client
+```
+
+Example with caller-managed stop control and atomic local state:
+
+```python
+import threading
+from kraken_order_flow import (
+    PersistentCvdLedger,
+    KrakenSpotTradeFeedAdapter,
+    KrakenSpotWebSocketRunner,
+    load_cvd_state,
+    save_cvd_state_atomic,
+)
+
+state_path = "state/cvd_btc_usd.json"
+ledger = PersistentCvdLedger(
+    symbol="BTC/USD",
+    state=load_cvd_state(state_path),
+)
+adapter = KrakenSpotTradeFeedAdapter(ledger, pair="BTC/USD")
+runner = KrakenSpotWebSocketRunner(
+    adapter,
+    timeout=20,
+    initial_backoff=1,
+    max_backoff=30,
+)
+stop_event = threading.Event()
+
+# Call stop_event.set() from your service shutdown handler.
+runner.run(
+    stop_event,
+    persist_state=lambda state: save_cvd_state_atomic(state_path, state),
+)
+```
+
+The runner subscribes to the public Spot v2 trade channel, tolerates receive timeouts/heartbeats, reconnects with exponential backoff, and persists after accepted WebSocket or REST-backfill events. A failed persistence callback stops the runner. Corrupt state raises an error and is never silently reset.
+
+The optional websocket-client package is imported only when the default transport is used. A custom transport can be injected for testing or deployment. This runner is still a market-data collector only: it has no private authentication, no order methods, and no live-trading path. Use one state file per symbol and protect it with normal host filesystem permissions.
