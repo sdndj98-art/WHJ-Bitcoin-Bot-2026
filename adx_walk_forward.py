@@ -157,6 +157,10 @@ def run_expanding_walk_forward(hourly_candles, fee=FEE_RATE, slippage=SLIPPAGE_R
         "thresholds": list(THRESHOLDS),
         "timeframes_hours": list(TIMEFRAMES),
         "fold_count": folds,
+        "test_fold_capital_policy": (
+            "Each test fold is independently simulated from $1,000 portfolio capital; "
+            "fold returns are reported separately and are not compounded into one continuous equity curve."
+        ),
         "training_policy": "Expanding window; each fold trains only on completed bars before its test start.",
         "selection_rule": "Among thresholds with at least min_train_trades closed training trades, maximize training return_pct - 0.5 * max_drawdown_pct; tie-break by lower drawdown then prefer ADX20. If none qualify, use predeclared ADX20.",
         "min_train_trades": min_train_trades,
