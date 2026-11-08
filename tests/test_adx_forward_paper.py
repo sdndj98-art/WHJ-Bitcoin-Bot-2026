@@ -105,6 +105,34 @@ class AdxForwardPaperTests(unittest.TestCase):
                 process_native_bars(bars, 20.0, 4, path)
             self.assertEqual(path.read_text(), before)
 
+
+    def test_malformed_trade_history_is_rejected_without_reset(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "isolated.json"
+            bars = make_bars()
+            process_native_bars(bars, 20.0, 4, path)
+            state = json.loads(path.read_text())
+            state["trades"] = [{"side": "BUY", "pnl_usd": 12.0}]
+            path.write_text(json.dumps(state))
+            before = path.read_text()
+            with self.assertRaisesRegex(ValueError, "trade record is invalid"):
+                process_native_bars(bars, 20.0, 4, path)
+            self.assertEqual(path.read_text(), before)
+
+    def test_profitable_ledger_above_starting_cash_remains_valid(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "isolated.json"
+            bars = make_bars()
+            process_native_bars(bars, 20.0, 4, path)
+            state = json.loads(path.read_text())
+            state["cash"] = 550.0
+            state["peak_equity"] = 550.0
+            state["daily_start_equity"] = 550.0
+            path.write_text(json.dumps(state))
+            result = process_native_bars(bars, 20.0, 4, path)
+            self.assertEqual(result["equity_usd"], 550.0)
+            self.assertEqual(result["processed_new_bars"], 0)
+
     def test_corrupt_state_is_not_silently_reseeded(self):
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory) / "isolated.json"
