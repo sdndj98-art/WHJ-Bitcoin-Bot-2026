@@ -8,8 +8,9 @@ def candles(prior_high=97.8, current_close=98.2, current_volume=30.0):
     for index in range(50):
         close = 95.0 + index * 0.05 + (0.15 if index % 2 == 0 else -0.15)
         open_price = close - 0.03
+        prior_bar_high = close + 0.25 if prior_high == 97.8 else prior_high
         rows.append([
-            index * 3600, open_price, prior_high, close - 0.35,
+            index * 3600, open_price, prior_bar_high, close - 0.35,
             close, 0.0, 10.0, 100
         ])
     current_open = min(100.0, current_close - 0.01)
@@ -26,7 +27,7 @@ HEALTHY = {"quality_status": "HEALTHY", "paper_execution_allowed": True}
 
 
 class MarketScannerTests(unittest.TestCase):
-    def test_candidate_requires_all_seven_confirmations_and_good_data(self):
+    def test_candidate_requires_all_eight_confirmations_and_good_data(self):
         result = scan_btc_market(candles(), HEALTHY)
         self.assertEqual(result["status"], "PAPER_CANDIDATE")
         self.assertEqual(result["confluence_score"], 8)
