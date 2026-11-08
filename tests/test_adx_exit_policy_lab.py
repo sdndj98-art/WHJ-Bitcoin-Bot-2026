@@ -84,8 +84,17 @@ class AdxExitPolicyTests(unittest.TestCase):
         self.assertFalse(report["live_orders_enabled"])
         self.assertEqual(
             set(report["results"]),
-            {"ema_regime_exit", "atr_trailing_2.5x", "atr_trailing_3x", "atr_trailing_4x"},
+            {
+                "ema_regime_exit",
+                "atr_trailing_2.5x",
+                "atr_trailing_3x",
+                "atr_trailing_4x",
+                "matched_50_50_buy_and_hold",
+            },
         )
+        benchmark = report["results"]["matched_50_50_buy_and_hold"]["base_cost"]
+        self.assertIn("return_pct", benchmark)
+        self.assertGreaterEqual(benchmark["max_drawdown_pct"], 0)
         self.assertEqual(report["shared_12h_boundary_count"] > 0, True)
         self.assertEqual(len(report["temporal_subperiods"]), 3)
         self.assertIn("matched_50_50_buy_and_hold", report["results"])
