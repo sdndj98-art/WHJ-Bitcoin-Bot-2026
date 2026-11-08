@@ -53,6 +53,28 @@ class CvdTimeframeReplayTests(unittest.TestCase):
         at_boundary = aggregate_trade_events(events, 60, as_of=120)
         self.assertTrue(at_boundary["bars"][0]["is_closed"])
 
+    def test_as_of_excludes_future_events_from_historical_cvd(self):
+        events = [
+            trade(1, 100.2, 100, 2, "buy"),
+            trade(2, 101.2, 102, 1, "sell"),
+            trade(3, 105.2, 90, 10, "sell"),
+        ]
+        result = aggregate_trade_events(events, 1, as_of=103)
+        self.assertEqual(result["event_count"], 2)
+        self.assertEqual(result["bar_count"], 2)
+        self.assertEqual(result["last_bucket"], 101)
+        self.assertEqual(result["last_cvd"], 1)
+        self.assertTrue(all(bar["is_closed"] for bar in result["bars"]))
+
+    def test_future_only_events_produce_empty_historical_replay(self):
+        result = aggregate_trade_events(
+            [trade(1, 105.2, 100, 1)], 60, as_of=103
+        )
+        self.assertEqual(result["status"], "EMPTY")
+        self.assertEqual(result["event_count"], 0)
+        self.assertEqual(result["symbol"], None)
+        self.assertEqual(result["last_cvd"], 0.0)
+
     def test_empty_intervals_are_not_synthesized_and_gap_is_marked(self):
         events = [trade(1, 100.2, 100, 1), trade(2, 103.2, 101, 1)]
         result = aggregate_trade_events(events, 1, as_of=105)
