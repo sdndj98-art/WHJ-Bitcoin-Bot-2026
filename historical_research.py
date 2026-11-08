@@ -1342,7 +1342,7 @@ def build_qualification_markdown(result):
         "Long/short research (paper only)": result.get("extended_lab_strategy_qualification", {}).get("long_short", {}),
         "Daily regime filters": result.get("extended_lab_strategy_qualification", {}).get("daily_regime_filter", {}),
         "4h / 6h consensus ensemble": result.get("extended_lab_strategy_qualification", {}).get("multi_timeframe_ensemble", {}),
-        "6h EMA50/EMA200 with ATR trailing exit": result.get("extended_lab_strategy_qualification", {}).get("six_hour_atr_trailing", {}),
+        "6h EMA50/EMA200 exit comparison (ATR trailing vs close below EMA50)": result.get("extended_lab_strategy_qualification", {}).get("six_hour_atr_trailing", {}),
     }
     lines = [
         "# WHJ Bitcoin Bot — Strategy Qualification Report", "",
@@ -1613,6 +1613,42 @@ def run_six_hour_atr_trailing_lab(hourly_candles, fee=FEE_RATE, slippage=SLIPPAG
         "walk_forward_windows": windows,
         "worst_window_return_pct": min(returns) if returns else None,
     }
+    # Compare a simpler, predeclared trend exit: close below EMA50.
+    # Entry remains identical, and both variants use next-bar close execution.
+    ema50_exit_signals = []
+    ema50_exit_position = False
+    for index, close in enumerate(closes):
+        trend_ok = bool(index >= 199 and ema50[index] > ema200[index] and close > ema200[index])
+        if not ema50_exit_position and trend_ok:
+            ema50_exit_position = True
+        elif ema50_exit_position and (not trend_ok or close < ema50[index]):
+            ema50_exit_position = False
+        ema50_exit_signals.append(ema50_exit_position)
+
+    ema50_exit_windows = []
+    for fold in range(3):
+        start, end = edges[fold], edges[fold + 1]
+        if end > start:
+            ema50_exit_windows.append({
+                "window": fold + 1,
+                "start_index": start,
+                "end_index_exclusive": end,
+                "metrics": _simulate_ohlc(
+                    six_hour, ema50_exit_signals, start, end, fee, slippage
+                ),
+            })
+    ema50_exit_returns = [item["metrics"]["return_pct"] for item in ema50_exit_windows]
+    ema50_close_exit_candidate = {
+        "in_sample": _simulate_ohlc(
+            six_hour, ema50_exit_signals, 200, split, fee, slippage
+        ),
+        "out_of_sample": _simulate_ohlc(
+            six_hour, ema50_exit_signals, split, len(six_hour), fee, slippage
+        ),
+        "walk_forward_windows": ema50_exit_windows,
+        "worst_window_return_pct": min(ema50_exit_returns) if ema50_exit_returns else None,
+    }
+
     benchmark_metrics = _simulate_ohlc(
         six_hour, [True] * len(six_hour), split, len(six_hour), fee, slippage
     )
@@ -1621,19 +1657,21 @@ def run_six_hour_atr_trailing_lab(hourly_candles, fee=FEE_RATE, slippage=SLIPPAG
     benchmark_metrics["open_position"] = False
     benchmark_metrics["win_rate_pct"] = 100.0 if benchmark_metrics["return_pct"] > 0 else 0.0
     return {
-        "mode": "SIX_HOUR_EMA50_200_WITH_FIXED_2_5_ATR_TRAILING_EXIT",
+        "mode": "SIX_HOUR_EMA50_200_ATR_AND_EMA50_EXIT_COMPARISON",
         "bar_count": len(six_hour),
         "split_index": split,
         "atr_period": 14,
         "atr_trailing_multiple": atr_multiple,
         "execution": (
-            "Signals are evaluated only after a completed six-hour candle and filled "
-            "at the next six-hour close. The trailing exit is close-based; no intrabar "
-            "stop-fill assumption is made. Position allocation and costs match the "
-            "25%-allocation OHLC simulator."
+            "Both candidates use the same EMA50/EMA200 entry and completed six-hour "
+            "signals, filled at the next six-hour close. Candidate exits are either "
+            "a 2.5x ATR(14) close-based trailing exit or a close below EMA50. "
+            "No intrabar stop-fill assumption is made; costs and allocation match "
+            "the 25%-allocation OHLC simulator."
         ),
         "strategies": {
             "ema50_200_atr2_5_trailing": candidate,
+            "ema50_200_close_below_ema50_exit": ema50_close_exit_candidate,
             "buy_and_hold_25pct": {"out_of_sample": benchmark_metrics},
         },
     }
