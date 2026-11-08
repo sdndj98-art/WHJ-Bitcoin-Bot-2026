@@ -200,7 +200,7 @@ def aggregate_trade_events(events, timeframe_seconds, as_of=None):
 
 def aggregate_all_timeframes(events, as_of=None, timeframes=None):
     """Return independent native-timeframe bars from one event journal."""
-    selected = timeframes or TIMEFRAMES
+    selected = TIMEFRAMES if timeframes is None else timeframes
     if not isinstance(selected, dict) or not selected:
         raise ValueError("timeframes must be a non-empty name-to-seconds mapping")
     materialized = list(events)
