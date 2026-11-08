@@ -929,6 +929,56 @@ def run_multi_timeframe_ensemble_lab(hourly_candles, fee=FEE_RATE, slippage=SLIP
         "walk_forward_windows": portfolio_windows,
         "worst_window_return_pct": min(portfolio_returns) if portfolio_returns else None,
     }
+    # Match the 50/50 portfolio with a 50/50 native-timeframe benchmark.
+    # Comparing it with the 4h-only benchmark would misstate its qualification.
+    portfolio_benchmark = _simulate_equal_weight_multitimeframe(
+        [four_hour, six_hour],
+        [[True] * len(four_hour), [True] * len(six_hour)],
+        [4, 6],
+        portfolio_oos_start,
+        portfolio_oos_end,
+        fee,
+        slippage,
+    )
+    portfolio_benchmark["profit_factor"] = None
+    portfolio_benchmark["closed_trades"] = 1
+    portfolio_benchmark["open_position"] = False
+    portfolio_benchmark["win_rate_pct"] = (
+        100.0 if portfolio_benchmark["return_pct"] > 0 else 0.0
+    )
+
+    # Replay fixed signals under progressively higher fees/slippage.
+    cost_sensitivity = {}
+    for multiplier in (1.0, 1.5, 2.0, 3.0):
+        scenario_fee = fee * multiplier
+        scenario_slippage = slippage * multiplier
+        if scenario_fee >= 1 or scenario_slippage >= 1:
+            raise ValueError("Cost sensitivity multiplier produces invalid execution costs")
+        scenario_portfolio = _simulate_equal_weight_multitimeframe(
+            [four_hour, six_hour], [signal_4h, signal_6h], [4, 6],
+            portfolio_oos_start, portfolio_oos_end,
+            scenario_fee, scenario_slippage,
+        )
+        scenario_benchmark = _simulate_equal_weight_multitimeframe(
+            [four_hour, six_hour],
+            [[True] * len(four_hour), [True] * len(six_hour)],
+            [4, 6],
+            portfolio_oos_start, portfolio_oos_end,
+            scenario_fee, scenario_slippage,
+        )
+        cost_sensitivity[f"{multiplier:g}x"] = {
+            "cost_multiplier": multiplier,
+            "fee_rate_each_side": scenario_fee,
+            "slippage_rate_each_side": scenario_slippage,
+            "portfolio_50_50": {
+                **scenario_portfolio,
+                "benchmark_return_pct": scenario_benchmark["return_pct"],
+                "benchmark_edge_pp": round(
+                    scenario_portfolio["return_pct"] - scenario_benchmark["return_pct"], 2
+                ),
+            },
+        }
+
     return {
         "mode": "FOUR_HOUR_SIX_HOUR_CONSENSUS_AND_NATIVE_TIMEFRAME_PORTFOLIO",
         "bar_count_4h": len(four_hour),
@@ -944,7 +994,13 @@ def run_multi_timeframe_ensemble_lab(hourly_candles, fee=FEE_RATE, slippage=SLIP
             "ema50_200_4h_6h_consensus": candidate,
             "ema50_200_4h_6h_50_50_portfolio": portfolio_candidate,
             "buy_and_hold_25pct": {"out_of_sample": benchmark},
+            "buy_and_hold_25pct_50_50_portfolio": {"out_of_sample": portfolio_benchmark},
         },
+        "cost_sensitivity": cost_sensitivity,
+        "cost_sensitivity_note": (
+            "The 50/50 portfolio is replayed with fixed signals at 1x, 1.5x, 2x, and 3x "
+            "fees/slippage and compared with a matched 50/50 native-timeframe buy-and-hold benchmark."
+        ),
     }
 
 
@@ -1897,11 +1953,22 @@ def assess_research_lab_qualification(research, stress_research):
     for name, metrics in strategies.items():
         if name.startswith("buy_and_hold") or name not in stress_strategies:
             continue
+        # A native-timeframe 50/50 portfolio requires its own matched
+        # benchmark; the single-sleeve consensus keeps the 4h benchmark.
+        matched_portfolio = name == "ema50_200_4h_6h_50_50_portfolio"
+        candidate_benchmark = (
+            strategies.get("buy_and_hold_25pct_50_50_portfolio")
+            if matched_portfolio else benchmark
+        )
+        candidate_stress_benchmark = (
+            stress_strategies.get("buy_and_hold_25pct_50_50_portfolio")
+            if matched_portfolio else stress_benchmark
+        )
         results[name] = assess_strategy_qualification(
             metrics,
             stress_strategies[name],
-            benchmark_metrics=benchmark,
-            stress_benchmark_metrics=stress_benchmark,
+            benchmark_metrics=candidate_benchmark,
+            stress_benchmark_metrics=candidate_stress_benchmark,
         )
     return results
 
