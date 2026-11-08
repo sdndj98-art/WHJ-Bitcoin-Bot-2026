@@ -157,7 +157,7 @@ class MetaTrader5ReadOnly:
             "symbol": symbol.strip(),
             "bid": bid,
             "ask": ask,
-            "spread": ask - bid,
+            "spread": round(ask - bid, 12),
             "time": int(self._finite(tick.time, "quote timestamp")),
             "mode": "READ_ONLY",
         }
