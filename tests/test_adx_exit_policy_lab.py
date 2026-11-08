@@ -96,7 +96,7 @@ class AdxExitPolicyTests(unittest.TestCase):
             self.assertIn("return_pct", result["double_cost"])
             self.assertIn("return_pct", result["triple_cost"])
             self.assertGreaterEqual(result["base_cost"]["max_drawdown_pct"], 0)
-            self.assertEqual(len(report["temporal_subperiod_robustness"][name]["fold_count"] if False else [1]), 1)
+            self.assertEqual(report["temporal_subperiod_robustness"][name]["fold_count"], 3)
 
 
 if __name__ == "__main__":
