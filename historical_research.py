@@ -1782,14 +1782,14 @@ def run_six_hour_atr_trailing_lab(hourly_candles, fee=FEE_RATE, slippage=SLIPPAG
             elif threshold_position and not base_trend_ok:
                 threshold_position = False
             threshold_signals.append(threshold_position)
-        candidate = evaluate_adx_candidate(
+        threshold_candidate = evaluate_adx_candidate(
             threshold_signals, threshold_entry_indices,
             "EMA50/EMA200 trend invalidation"
         )
-        candidate["entry_rule"] = (
+        threshold_candidate["entry_rule"] = (
             f"EMA50 > EMA200, close > EMA200, ADX(14) >= {threshold:g}, +DI > -DI"
         )
-        adx_threshold_candidates[f"ema50_200_adx_{int(threshold)}_entry_filter"] = candidate
+        adx_threshold_candidates[f"ema50_200_adx_{int(threshold)}_entry_filter"] = threshold_candidate
 
     benchmark_metrics = _simulate_ohlc(
         six_hour, [True] * len(six_hour), split, len(six_hour), fee, slippage
