@@ -40,6 +40,18 @@ class DashboardContractTests(unittest.TestCase):
         self.assertIn("التداول الحقيقي", self.source)
         self.assertIn("محاكاة ورقية فقط", self.source)
 
+    def test_agent_module_states_are_bound_to_report_evidence(self):
+        for element_id in (
+            "agentScanState", "agentGuardState", "agentSizerState",
+            "agentExecState", "agentLogState", "agentEquityState",
+        ):
+            self.assertIn(element_id, self.parser.ids)
+        self.assertIn('q.quality_status==="HEALTHY"', self.source)
+        self.assertIn('q.quality_status==="BLOCKED"', self.source)
+        self.assertIn('Array.isArray(bt.trade_log)', self.source)
+        self.assertIn('hasEquity', self.source)
+        self.assertIn('بيانات الماسح غير متاحة', self.source)
+
     def test_generated_dashboard_displays_all_paper_risk_pause_reasons(self):
         report = {
             "persistent_paper_portfolio": {
