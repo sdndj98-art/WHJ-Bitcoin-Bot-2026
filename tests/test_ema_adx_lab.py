@@ -71,6 +71,16 @@ class EmaAdxLabTests(unittest.TestCase):
         self.assertFalse(report["paper_state_touched"])
         self.assertFalse(report["live_orders_enabled"])
         self.assertEqual(report["thresholds_tested"], [15.0, 20.0, 25.0])
+        self.assertFalse(report["walk_forward_retrained"])
+        self.assertEqual(
+            report["walk_forward_semantics"],
+            "FIXED_RULE_OOS_SUBPERIOD_DIAGNOSTICS_NO_RETRAINING",
+        )
+        self.assertEqual(
+            report["temporal_subperiod_windows"],
+            report["walk_forward_windows"],
+        )
+        self.assertIn("not a retrained walk-forward test", report["interpretation"])
         self.assertEqual(set(report["cost_sensitivity"]), {"1x", "2x"})
         self.assertEqual(len(report["walk_forward_windows"]["adx_20_entry_only"]), 3)
         self.assertEqual(len(report["walk_forward_windows"]["baseline"]), 3)
