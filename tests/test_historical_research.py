@@ -4,7 +4,7 @@ import unittest
 from datetime import datetime, timezone
 from unittest.mock import patch
 
-from historical_research import (INTERVAL_MS, aggregate_candles, load_two_year_candles, run_forward_paper_accounts, run_ohlc_breakout_lab, run_long_short_lab, run_daily_regime_filter_lab, run_multi_timeframe_ensemble_lab, _atr_series, _regime_switching_atr_signals, _rsi_series, _simulate_equal_weight_multitimeframe, _simulate_ohlc, assess_strategy_qualification, assess_research_lab_qualification, build_qualification_markdown, summarize_qualification, _turtle_signals)
+from historical_research import (INTERVAL_MS, aggregate_candles, load_two_year_candles, run_forward_paper_accounts, run_ohlc_breakout_lab, run_long_short_lab, run_daily_regime_filter_lab, run_multi_timeframe_ensemble_lab, run_six_hour_atr_trailing_lab, _adx_di_series, _atr_series, _regime_switching_atr_signals, _rsi_series, _simulate_equal_weight_multitimeframe, _simulate_ohlc, assess_strategy_qualification, assess_research_lab_qualification, build_qualification_markdown, summarize_qualification, _turtle_signals)
 
 
 class HistoricalResearchTests(unittest.TestCase):
@@ -706,6 +706,85 @@ class HistoricalResearchTests(unittest.TestCase):
         self.assertIn("Imputed missing hourly candles: 20 (2.0000% of the series)", report)
         self.assertIn("synthetic observations, not exchange trades", report)
         self.assertIn("forward-filled prior close with zero volume", report)
+
+
+    def test_six_hour_atr_trailing_lab_uses_fixed_rule_and_reports_benchmark(self):
+        hourly = []
+        start = (1_700_000_000_000 // INTERVAL_MS) * INTERVAL_MS
+        for index in range(6 * 520):
+            close = 20000.0 + index * 0.8 + 250.0 * math.sin(index / 110.0)
+            hourly.append({
+                "timestamp": start + index * INTERVAL_MS,
+                "open": close - 2.0,
+                "high": close + 8.0,
+                "low": close - 8.0,
+                "close": close,
+                "volume": 10.0,
+            })
+        result = run_six_hour_atr_trailing_lab(hourly)
+        self.assertEqual(result["mode"], "SIX_HOUR_EMA50_200_EXIT_AND_ADX_CONFIRMATION_RESEARCH")
+        self.assertEqual(result["atr_period"], 14)
+        self.assertEqual(result["atr_trailing_multiple"], 2.5)
+        self.assertEqual(len(result["strategies"]["ema50_200_atr2_5_trailing"]["walk_forward_windows"]), 3)
+        self.assertIn("buy_and_hold_25pct", result["strategies"])
+        self.assertEqual(len(result["strategies"]["ema50_200_close_below_ema50_exit"]["walk_forward_windows"]), 3)
+        self.assertEqual(
+            result["strategies"]["ema50_200_atr2_5_trailing"]["entry_rule"],
+            result["strategies"]["ema50_200_close_below_ema50_exit"]["entry_rule"],
+        )
+        self.assertEqual(
+            result["strategies"]["ema50_200_atr2_5_trailing"]["entry_bar_indices"][0],
+            result["strategies"]["ema50_200_close_below_ema50_exit"]["entry_bar_indices"][0],
+        )
+        self.assertIn("next six-hour close", result["execution"])
+
+    def test_six_hour_atr_trailing_lab_rejects_insufficient_data(self):
+        with self.assertRaises(ValueError):
+            run_six_hour_atr_trailing_lab([])
+
+
+    def test_wilder_adx_directional_series_and_validation(self):
+        bars = []
+        for index in range(100):
+            close = 100.0 + index * 2.0
+            bars.append({
+                "open": close - 0.5,
+                "high": close + 1.0,
+                "low": close - 1.0,
+                "close": close,
+                "volume": 10.0,
+            })
+        adx, plus_di, minus_di = _adx_di_series(bars, 14)
+        self.assertIsNotNone(adx[-1])
+        self.assertGreaterEqual(adx[-1], 20.0)
+        self.assertGreater(plus_di[-1], minus_di[-1])
+        with self.assertRaises(ValueError):
+            _adx_di_series(bars[:20], 14)
+        with self.assertRaises(ValueError):
+            _adx_di_series(bars, True)
+
+    def test_six_hour_ema_lab_reports_fixed_adx_variants(self):
+        hourly = []
+        start = (1_700_000_000_000 // INTERVAL_MS) * INTERVAL_MS
+        for index in range(6 * 520):
+            close = 20000.0 + index * 0.8 + 250.0 * math.sin(index / 110.0)
+            hourly.append({
+                "timestamp": start + index * INTERVAL_MS,
+                "open": close - 2.0,
+                "high": close + 8.0,
+                "low": close - 8.0,
+                "close": close,
+                "volume": 10.0,
+            })
+        result = run_six_hour_atr_trailing_lab(hourly)
+        self.assertEqual(result["adx_period"], 14)
+        self.assertEqual(result["adx_entry_threshold"], 20.0)
+        for key in ("ema50_200_adx_entry_filter", "ema50_200_adx_entry_and_di_exit"):
+            candidate = result["strategies"][key]
+            self.assertEqual(len(candidate["walk_forward_windows"]), 3)
+            self.assertIn("ADX(14) >= 20", candidate["entry_rule"])
+            self.assertIn("out_of_sample", candidate)
+
 
 
 if __name__ == "__main__":

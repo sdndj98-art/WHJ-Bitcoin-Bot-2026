@@ -1266,6 +1266,7 @@ def summarize_qualification(result, watchlist_limit=5):
         "long_short": result.get("extended_lab_strategy_qualification", {}).get("long_short", {}),
         "daily_regime_filter": result.get("extended_lab_strategy_qualification", {}).get("daily_regime_filter", {}),
         "multi_timeframe_ensemble": result.get("extended_lab_strategy_qualification", {}).get("multi_timeframe_ensemble", {}),
+        "six_hour_atr_trailing": result.get("extended_lab_strategy_qualification", {}).get("six_hour_atr_trailing", {}),
     }
     counts = {}
     candidates = []
@@ -1341,6 +1342,7 @@ def build_qualification_markdown(result):
         "Long/short research (paper only)": result.get("extended_lab_strategy_qualification", {}).get("long_short", {}),
         "Daily regime filters": result.get("extended_lab_strategy_qualification", {}).get("daily_regime_filter", {}),
         "4h / 6h consensus ensemble": result.get("extended_lab_strategy_qualification", {}).get("multi_timeframe_ensemble", {}),
+        "6h EMA50/EMA200 exit comparison (ATR trailing vs close below EMA50)": result.get("extended_lab_strategy_qualification", {}).get("six_hour_atr_trailing", {}),
     }
     lines = [
         "# WHJ Bitcoin Bot — Strategy Qualification Report", "",
@@ -1558,6 +1560,236 @@ def build_qualification_markdown(result):
         "- Historical performance is not a forecast or a guarantee. Paper results are simulated and may differ from execution.", "",
     ])
     return "\n".join(lines)
+
+
+def _adx_di_series(bars, period=14):
+    """Wilder ADX and directional indicators from completed OHLC bars."""
+    if isinstance(period, bool) or not isinstance(period, int) or period < 2 or len(bars) <= period * 2:
+        raise ValueError("ADX requires an integer period >= 2 and more than twice that many bars")
+    size = len(bars)
+    tr = [0.0] * size
+    plus_dm = [0.0] * size
+    minus_dm = [0.0] * size
+    for i in range(1, size):
+        up = float(bars[i]["high"]) - float(bars[i - 1]["high"])
+        down = float(bars[i - 1]["low"]) - float(bars[i]["low"])
+        plus_dm[i] = up if up > down and up > 0 else 0.0
+        minus_dm[i] = down if down > up and down > 0 else 0.0
+        previous_close = float(bars[i - 1]["close"])
+        tr[i] = max(float(bars[i]["high"]) - float(bars[i]["low"]),
+                    abs(float(bars[i]["high"]) - previous_close),
+                    abs(float(bars[i]["low"]) - previous_close))
+    adx = [None] * size
+    plus_di = [None] * size
+    minus_di = [None] * size
+    smooth_tr = sum(tr[1:period + 1])
+    smooth_plus = sum(plus_dm[1:period + 1])
+    smooth_minus = sum(minus_dm[1:period + 1])
+    dx_values = []
+    for i in range(period, size):
+        if i > period:
+            smooth_tr += tr[i] - smooth_tr / period
+            smooth_plus += plus_dm[i] - smooth_plus / period
+            smooth_minus += minus_dm[i] - smooth_minus / period
+        pdi = 100.0 * smooth_plus / smooth_tr if smooth_tr else 0.0
+        mdi = 100.0 * smooth_minus / smooth_tr if smooth_tr else 0.0
+        plus_di[i], minus_di[i] = pdi, mdi
+        denominator = pdi + mdi
+        dx = 100.0 * abs(pdi - mdi) / denominator if denominator else 0.0
+        dx_values.append(dx)
+        if len(dx_values) == period:
+            adx[i] = sum(dx_values) / period
+        elif len(dx_values) > period:
+            adx[i] = ((adx[i - 1] * (period - 1)) + dx) / period
+    return adx, plus_di, minus_di
+
+
+def run_six_hour_atr_trailing_lab(hourly_candles, fee=FEE_RATE, slippage=SLIPPAGE_RATE):
+    """Test a predeclared 6h EMA50/200 trend with a 2.5-ATR close-based trailing exit."""
+    six_hour = aggregate_candles(hourly_candles, 6)
+    if len(six_hour) < 500:
+        raise ValueError("At least 500 six-hour bars are required for ATR trailing research")
+    if not 0 <= fee < 1 or not 0 <= slippage < 1:
+        raise ValueError("Fee and slippage must be between 0 and 1")
+
+    closes = [float(row["close"]) for row in six_hour]
+    ema50 = _ema_series(closes, 50)
+    ema200 = _ema_series(closes, 200)
+    atr14 = _atr_series(six_hour, 14)
+    signals = []
+    entry_indices = []
+    in_position = False
+    highest_close = None
+    atr_multiple = 2.5
+
+    for index, close in enumerate(closes):
+        trend_ok = bool(index >= 199 and ema50[index] > ema200[index] and close > ema200[index])
+        current_atr = atr14[index]
+        if not in_position:
+            if trend_ok and current_atr is not None and current_atr > 0:
+                in_position = True
+                entry_indices.append(index)
+                highest_close = close
+        else:
+            highest_close = max(highest_close, close)
+            trailing_stop = highest_close - atr_multiple * current_atr if current_atr is not None else float("inf")
+            if not trend_ok or current_atr is None or close < trailing_stop:
+                in_position = False
+                highest_close = None
+        signals.append(in_position)
+
+    split = int(len(six_hour) * 0.7)
+    edges = [split + ((len(six_hour) - split) * fold) // 3 for fold in range(4)]
+    windows = []
+    for fold in range(3):
+        start, end = edges[fold], edges[fold + 1]
+        if end > start:
+            windows.append({
+                "window": fold + 1,
+                "start_index": start,
+                "end_index_exclusive": end,
+                "metrics": _simulate_ohlc(six_hour, signals, start, end, fee, slippage),
+            })
+    returns = [item["metrics"]["return_pct"] for item in windows]
+    candidate = {
+        "in_sample": _simulate_ohlc(six_hour, signals, 200, split, fee, slippage),
+        "out_of_sample": _simulate_ohlc(six_hour, signals, split, len(six_hour), fee, slippage),
+        "walk_forward_windows": windows,
+        "worst_window_return_pct": min(returns) if returns else None,
+        "entry_bar_indices": entry_indices,
+        "entry_rule": "trend_ok and ATR(14) > 0",
+    }
+    # Compare a simpler, predeclared trend exit: close below EMA50.
+    # Both variants must use exactly the same entries.
+    ema50_exit_signals = []
+    ema50_entry_indices = []
+    ema50_exit_position = False
+    for index, close in enumerate(closes):
+        trend_ok = bool(index >= 199 and ema50[index] > ema200[index] and close > ema200[index])
+        current_atr = atr14[index]
+        if not ema50_exit_position and trend_ok and current_atr is not None and current_atr > 0:
+            ema50_exit_position = True
+            ema50_entry_indices.append(index)
+        elif ema50_exit_position and (not trend_ok or close < ema50[index]):
+            ema50_exit_position = False
+        ema50_exit_signals.append(ema50_exit_position)
+
+    ema50_exit_windows = []
+    for fold in range(3):
+        start, end = edges[fold], edges[fold + 1]
+        if end > start:
+            ema50_exit_windows.append({
+                "window": fold + 1,
+                "start_index": start,
+                "end_index_exclusive": end,
+                "metrics": _simulate_ohlc(
+                    six_hour, ema50_exit_signals, start, end, fee, slippage
+                ),
+            })
+    ema50_exit_returns = [item["metrics"]["return_pct"] for item in ema50_exit_windows]
+    ema50_close_exit_candidate = {
+        "in_sample": _simulate_ohlc(
+            six_hour, ema50_exit_signals, 200, split, fee, slippage
+        ),
+        "out_of_sample": _simulate_ohlc(
+            six_hour, ema50_exit_signals, split, len(six_hour), fee, slippage
+        ),
+        "walk_forward_windows": ema50_exit_windows,
+        "worst_window_return_pct": min(ema50_exit_returns) if ema50_exit_returns else None,
+        "entry_bar_indices": ema50_entry_indices,
+        "entry_rule": "trend_ok and ATR(14) > 0",
+    }
+
+    # Predeclared ADX confirmation experiments. The base EMA trend exit is
+    # retained in one variant to isolate the entry filter's contribution.
+    adx14, plus_di, minus_di = _adx_di_series(six_hour, 14)
+    adx_entry_signals, adx_entry_indices = [], []
+    adx_exit_signals, adx_exit_indices = [], []
+    adx_entry_position = adx_exit_position = False
+    for index, close in enumerate(closes):
+        base_trend_ok = bool(index >= 199 and ema50[index] > ema200[index] and close > ema200[index])
+        directional_ok = (
+            adx14[index] is not None and adx14[index] >= 20.0
+            and plus_di[index] is not None and minus_di[index] is not None
+            and plus_di[index] > minus_di[index]
+        )
+        if not adx_entry_position and base_trend_ok and directional_ok:
+            adx_entry_position = True
+            adx_entry_indices.append(index)
+        elif adx_entry_position and not base_trend_ok:
+            adx_entry_position = False
+        adx_entry_signals.append(adx_entry_position)
+        if not adx_exit_position and base_trend_ok and directional_ok:
+            adx_exit_position = True
+            adx_exit_indices.append(index)
+        elif adx_exit_position and (
+            not base_trend_ok
+            or (plus_di[index] is not None and minus_di[index] is not None
+                and plus_di[index] <= minus_di[index])
+        ):
+            adx_exit_position = False
+        adx_exit_signals.append(adx_exit_position)
+
+    def evaluate_adx_candidate(signals, entry_indices, exit_rule):
+        walk_windows = []
+        for fold in range(3):
+            start, end = edges[fold], edges[fold + 1]
+            if end > start:
+                walk_windows.append({
+                    "window": fold + 1,
+                    "start_index": start,
+                    "end_index_exclusive": end,
+                    "metrics": _simulate_ohlc(six_hour, signals, start, end, fee, slippage),
+                })
+        fold_returns = [item["metrics"]["return_pct"] for item in walk_windows]
+        return {
+            "in_sample": _simulate_ohlc(six_hour, signals, 200, split, fee, slippage),
+            "out_of_sample": _simulate_ohlc(six_hour, signals, split, len(six_hour), fee, slippage),
+            "walk_forward_windows": walk_windows,
+            "worst_window_return_pct": min(fold_returns) if fold_returns else None,
+            "entry_bar_indices": entry_indices,
+            "entry_rule": "EMA50 > EMA200, close > EMA200, ADX(14) >= 20, +DI > -DI",
+            "exit_rule": exit_rule,
+        }
+
+    adx_entry_candidate = evaluate_adx_candidate(
+        adx_entry_signals, adx_entry_indices, "EMA50/EMA200 trend invalidation"
+    )
+    adx_entry_exit_candidate = evaluate_adx_candidate(
+        adx_exit_signals, adx_exit_indices,
+        "EMA50/EMA200 trend invalidation or completed-bar +DI <= -DI"
+    )
+
+    benchmark_metrics = _simulate_ohlc(
+        six_hour, [True] * len(six_hour), split, len(six_hour), fee, slippage
+    )
+    benchmark_metrics["profit_factor"] = None
+    benchmark_metrics["closed_trades"] = 1
+    benchmark_metrics["open_position"] = False
+    benchmark_metrics["win_rate_pct"] = 100.0 if benchmark_metrics["return_pct"] > 0 else 0.0
+    return {
+        "mode": "SIX_HOUR_EMA50_200_EXIT_AND_ADX_CONFIRMATION_RESEARCH",
+        "bar_count": len(six_hour),
+        "split_index": split,
+        "atr_period": 14,
+        "atr_trailing_multiple": atr_multiple,
+        "adx_period": 14,
+        "adx_entry_threshold": 20.0,
+        "execution": (
+            "Both candidates use the same EMA50/EMA200 entry and completed six-hour "
+            "signals, filled at the next six-hour close. Candidate exits are either "
+            "a 2.5x ATR(14) close-based trailing exit or a close below EMA50. "
+            "No intrabar stop-fill assumption is made; costs and allocation match "
+            "the 25%-allocation OHLC simulator."
+        ),
+        "strategies": {
+            "ema50_200_atr2_5_trailing": candidate,
+            "ema50_200_close_below_ema50_exit": ema50_close_exit_candidate,
+            "ema50_200_adx_entry_filter": adx_entry_candidate,
+            "ema50_200_adx_entry_and_di_exit": adx_entry_exit_candidate,
+            "buy_and_hold_25pct": {"out_of_sample": benchmark_metrics},
+        },
+    }
 
 
 def assess_research_lab_qualification(research, stress_research):
@@ -1783,6 +2015,8 @@ def main():
     multi_timeframe_ensemble_stress = run_multi_timeframe_ensemble_lab(
         candles, fee=0.002, slippage=0.001
     )
+    six_hour_atr_research = run_six_hour_atr_trailing_lab(candles)
+    six_hour_atr_stress = run_six_hour_atr_trailing_lab(candles, fee=0.002, slippage=0.001)
     forward_paper = run_forward_paper_accounts(candles)
     qualification = {}
     for label in ("1h", "4h", "6h", "1d"):
@@ -1811,6 +2045,9 @@ def main():
         ),
         "multi_timeframe_ensemble": assess_research_lab_qualification(
             multi_timeframe_ensemble_research, multi_timeframe_ensemble_stress
+        ),
+        "six_hour_atr_trailing": assess_research_lab_qualification(
+            six_hour_atr_research, six_hour_atr_stress
         ),
     }
 
@@ -1853,6 +2090,8 @@ def main():
         "daily_regime_research": daily_regime_research,
         "daily_regime_stress": daily_regime_stress,
         "multi_timeframe_ensemble_research": multi_timeframe_ensemble_research,
+        "six_hour_atr_trailing_research": six_hour_atr_research,
+        "six_hour_atr_trailing_stress": six_hour_atr_stress,
         "multi_timeframe_ensemble_stress": multi_timeframe_ensemble_stress,
         "warning": "Historical results are not forecasts. Strategy selection requires robust out-of-sample performance and forward paper trading. No live orders were placed.",
     }
