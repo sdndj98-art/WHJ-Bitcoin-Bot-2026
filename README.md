@@ -86,3 +86,8 @@ A strategy is only eligible for extended forward paper review when it passes all
 ## Harmonic patterns and supply/demand divergence
 
 The hourly report also includes a research-only diagnostic for approximate Gartley, Bat, Butterfly, Crab, and Cypher XABCD patterns; pivot-derived supply/demand zones; and bullish/bearish RSI14 divergence. Only confirmed swing pivots from closed candles are used. These are descriptive research signals, not verified institutional order flow, forecasts, or order instructions. The analysis is separate from the existing scanner score and does not enable live execution.
+
+
+## Guarded MT5 demo execution prototype
+
+A separate manual demo-only order gateway is documented in [MT5_DEMO_EXECUTION.md](MT5_DEMO_EXECUTION.md). It requires two explicit opt-ins, a positively identified MT5 demo account, mandatory stop-loss/take-profit, broker constraint validation, and a local idempotency guard. It is not connected to the scanner or dashboard and does not support live accounts.

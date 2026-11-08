@@ -30,3 +30,9 @@ paper_*_state*.json
 # Recovery scratch files and local temporary data
 .local_recovery/
 *.tmp
+
+# Local MT5 market snapshots, paper ledgers and demo execution guard
+mt5_snapshot.json
+mt5_paper_state/
+mt5_demo_order_guard.sqlite3
+mt5_demo_order_guard.sqlite3-*
