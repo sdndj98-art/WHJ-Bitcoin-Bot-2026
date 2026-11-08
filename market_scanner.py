@@ -1,6 +1,8 @@
 """Multi-factor BTC/USD hourly scanner; diagnostics only, never executes orders."""
 import math
 
+from advanced_market_analysis import analyze_advanced_market
+
 
 def _ema(values, period):
     if len(values) < period:
@@ -247,8 +249,11 @@ def scan_btc_market(candles, market_data_quality=None, volume_lookback=20,
     if candidate:
         reasons.append("all_seven_scanner_checks_passed_paper_review_only")
 
+    advanced_analysis = analyze_advanced_market(normalized)
+
     return {
         "market": market_label.strip(),
+        "advanced_analysis": advanced_analysis,
         "timeframe": timeframe,
         "status": status,
         "lookback_candles": volume_lookback,
