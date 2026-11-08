@@ -51,23 +51,25 @@ score = (trendRegime ? 1 : 0) +
 var bool inCandidate = false
 entryCandidate = barstate.isconfirmed and trendRegime and relativeVolumeCheck and breakoutQuality and score >= 7
 exitCandidate = barstate.isconfirmed and (close < ema50 or close < priorLow10 or score <= 3)
+entryEvent = not inCandidate and entryCandidate
+exitEvent = inCandidate and exitCandidate
 
-if not inCandidate and entryCandidate
+if entryEvent
     inCandidate := true
-else if inCandidate and exitCandidate
+else if exitEvent
     inCandidate := false
 
 plot(ema50, "EMA 50")
 plot(ema200, "EMA 200")
 plot(rollingVwap20, "Rolling VWAP 20")
-plotshape(entryCandidate, title="WHJ Candidate", style=shape.triangleup,
+plotshape(entryEvent, title="WHJ Candidate", style=shape.triangleup,
      location=location.belowbar, text="WHJ", size=size.tiny)
-plotshape(exitCandidate and inCandidate[1], title="WHJ Exit Condition",
+plotshape(exitEvent, title="WHJ Exit Condition",
      style=shape.triangledown, location=location.abovebar, text="EXIT", size=size.tiny)
 
-alertcondition(entryCandidate, title="WHJ Research Candidate",
+alertcondition(entryEvent, title="WHJ Research Candidate",
      message="WHJ volume/liquidity/momentum confluence confirmed. Research alert only.")
-alertcondition(exitCandidate and inCandidate[1], title="WHJ Research Exit",
+alertcondition(exitEvent, title="WHJ Research Exit",
      message="WHJ exit condition confirmed. Research alert only.")
 
 var table dashboard = table.new(position.top_right, 2, 4)
