@@ -4,7 +4,7 @@ import unittest
 from datetime import datetime, timezone
 from unittest.mock import patch
 
-from historical_research import (INTERVAL_MS, aggregate_candles, load_two_year_candles, run_forward_paper_accounts, run_ohlc_breakout_lab, run_long_short_lab, run_daily_regime_filter_lab, run_multi_timeframe_ensemble_lab, _atr_series, _regime_switching_atr_signals, _rsi_series, _simulate_equal_weight_multitimeframe, _simulate_ohlc, assess_strategy_qualification, assess_research_lab_qualification, build_qualification_markdown, summarize_qualification, _turtle_signals)
+from historical_research import (INTERVAL_MS, aggregate_candles, load_two_year_candles, run_forward_paper_accounts, run_ohlc_breakout_lab, run_long_short_lab, run_daily_regime_filter_lab, run_multi_timeframe_ensemble_lab, run_six_hour_atr_trailing_lab, _atr_series, _regime_switching_atr_signals, _rsi_series, _simulate_equal_weight_multitimeframe, _simulate_ohlc, assess_strategy_qualification, assess_research_lab_qualification, build_qualification_markdown, summarize_qualification, _turtle_signals)
 
 
 class HistoricalResearchTests(unittest.TestCase):
@@ -706,6 +706,33 @@ class HistoricalResearchTests(unittest.TestCase):
         self.assertIn("Imputed missing hourly candles: 20 (2.0000% of the series)", report)
         self.assertIn("synthetic observations, not exchange trades", report)
         self.assertIn("forward-filled prior close with zero volume", report)
+
+
+    def test_six_hour_atr_trailing_lab_uses_fixed_rule_and_reports_benchmark(self):
+        hourly = []
+        start = 1_700_000_000_000
+        for index in range(6 * 520):
+            close = 20000.0 + index * 0.8 + 250.0 * math.sin(index / 110.0)
+            hourly.append({
+                "timestamp": start + index * INTERVAL_MS,
+                "open": close - 2.0,
+                "high": close + 8.0,
+                "low": close - 8.0,
+                "close": close,
+                "volume": 10.0,
+            })
+        result = run_six_hour_atr_trailing_lab(hourly)
+        self.assertEqual(result["mode"], "SIX_HOUR_EMA50_200_WITH_FIXED_2_5_ATR_TRAILING_EXIT")
+        self.assertEqual(result["atr_period"], 14)
+        self.assertEqual(result["atr_trailing_multiple"], 2.5)
+        self.assertEqual(len(result["strategies"]["ema50_200_atr2_5_trailing"]["walk_forward_windows"]), 3)
+        self.assertIn("buy_and_hold_25pct", result["strategies"])
+        self.assertIn("next six-hour close", result["execution"])
+
+    def test_six_hour_atr_trailing_lab_rejects_insufficient_data(self):
+        with self.assertRaises(ValueError):
+            run_six_hour_atr_trailing_lab([])
+
 
 
 if __name__ == "__main__":
