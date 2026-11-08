@@ -2,6 +2,7 @@ import json
 import tempfile
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 from adx_forward_paper import process_native_bars
 
@@ -41,6 +42,53 @@ class AdxForwardPaperTests(unittest.TestCase):
             before = path.read_text()
             result = process_native_bars(bars, 20.0, 4, path)
             self.assertEqual(result["processed_new_bars"], 0)
+            self.assertEqual(path.read_text(), before)
+
+
+    def test_new_forward_bars_execute_once_and_exit_on_baseline_change(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "isolated.json"
+            process_native_bars(make_bars(), 20.0, 4, path)
+
+            extended = make_bars(301)
+            baseline = [True] * len(extended)
+            confirmed = [False] * len(extended)
+            confirmed[-2] = True
+            with patch("adx_forward_paper._build_sleeve_signals", return_value=(baseline, confirmed)):
+                opened = process_native_bars(extended, 20.0, 4, path)
+
+            self.assertEqual(opened["processed_new_bars"], 1)
+            self.assertTrue(opened["open_position"])
+            self.assertEqual(opened["closed_trades"], 0)
+            cash_after_entry = json.loads(path.read_text())["cash"]
+            self.assertLess(cash_after_entry, 500.0)
+
+            extended = make_bars(302)
+            baseline = [True] * len(extended)
+            baseline[-2] = False
+            confirmed = [False] * len(extended)
+            with patch("adx_forward_paper._build_sleeve_signals", return_value=(baseline, confirmed)):
+                closed = process_native_bars(extended, 20.0, 4, path)
+
+            self.assertEqual(closed["processed_new_bars"], 1)
+            self.assertFalse(closed["open_position"])
+            self.assertEqual(closed["closed_trades"], 1)
+            saved_after_close = path.read_text()
+            with patch("adx_forward_paper._build_sleeve_signals", return_value=(baseline, confirmed)):
+                repeated = process_native_bars(extended, 20.0, 4, path)
+            self.assertEqual(repeated["processed_new_bars"], 0)
+            self.assertEqual(repeated["closed_trades"], 1)
+            self.assertEqual(path.read_text(), saved_after_close)
+
+    def test_native_gap_is_rejected_without_changing_ledger(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "isolated.json"
+            bars = make_bars()
+            process_native_bars(bars, 20.0, 4, path)
+            before = path.read_text()
+            gapped = bars[:150] + bars[151:]
+            with self.assertRaisesRegex(ValueError, "contain a gap"):
+                process_native_bars(gapped, 20.0, 4, path)
             self.assertEqual(path.read_text(), before)
 
     def test_corrupt_state_is_not_silently_reseeded(self):
