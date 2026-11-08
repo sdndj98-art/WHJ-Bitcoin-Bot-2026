@@ -179,6 +179,103 @@ class AdxForwardPaperTests(unittest.TestCase):
                 self.assertTrue(result["risk_paused"])
                 self.assertEqual(saved["cash"], 500.0)
 
+    def test_daily_loss_threshold_trips_from_equity_not_only_saved_flag(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "isolated.json"
+            bars = make_bars()
+            process_native_bars(bars, 20.0, 4, path)
+            state = json.loads(path.read_text())
+            next_timestamp = bars[-1]["timestamp"] + 4 * 3_600_000
+            state["daily_date"] = __import__("datetime").datetime.fromtimestamp(
+                (next_timestamp + 4 * 3_600_000) / 1000,
+                __import__("datetime").timezone.utc,
+            ).date().isoformat()
+            state["daily_start_equity"] = 550.0
+            path.write_text(json.dumps(state))
+            extended = make_bars(301)
+            baseline = [True] * len(extended)
+            confirmed = [False] * len(extended)
+            confirmed[-2] = True
+            with patch("adx_forward_paper._build_sleeve_signals", return_value=(baseline, confirmed)):
+                result = process_native_bars(extended, 20.0, 4, path)
+            saved = json.loads(path.read_text())
+            self.assertTrue(saved["daily_paused"])
+            self.assertIn("DAILY_LOSS", result["risk_pause_reasons"])
+            self.assertFalse(result["open_position"])
+
+    def test_max_drawdown_threshold_trips_from_equity(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "isolated.json"
+            bars = make_bars()
+            process_native_bars(bars, 20.0, 4, path)
+            state = json.loads(path.read_text())
+            state["peak_equity"] = 600.0
+            path.write_text(json.dumps(state))
+            extended = make_bars(301)
+            baseline = [True] * len(extended)
+            confirmed = [False] * len(extended)
+            confirmed[-2] = True
+            with patch("adx_forward_paper._build_sleeve_signals", return_value=(baseline, confirmed)):
+                result = process_native_bars(extended, 20.0, 4, path)
+            saved = json.loads(path.read_text())
+            self.assertTrue(saved["drawdown_paused"])
+            self.assertIn("MAX_DRAWDOWN", result["risk_pause_reasons"])
+            self.assertFalse(result["open_position"])
+
+    def test_five_consecutive_losses_trip_pause_before_next_entry(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "isolated.json"
+            bars = make_bars()
+            process_native_bars(bars, 20.0, 4, path)
+            state = json.loads(path.read_text())
+            state["trades"] = [
+                {
+                    "timestamp": bars[-5 + index]["timestamp"],
+                    "side": "SELL",
+                    "price": 100.0,
+                    "pnl_usd": -1.0,
+                    "result": "LOSS",
+                }
+                for index in range(5)
+            ]
+            path.write_text(json.dumps(state))
+            extended = make_bars(301)
+            baseline = [True] * len(extended)
+            confirmed = [False] * len(extended)
+            confirmed[-2] = True
+            with patch("adx_forward_paper._build_sleeve_signals", return_value=(baseline, confirmed)):
+                result = process_native_bars(extended, 20.0, 4, path)
+            saved = json.loads(path.read_text())
+            self.assertTrue(saved["loss_streak_paused"])
+            self.assertIn("LOSS_STREAK", result["risk_pause_reasons"])
+            self.assertFalse(result["open_position"])
+            self.assertEqual(saved["cash"], 500.0)
+
+    def test_trade_history_timestamp_and_result_must_match_ledger(self):
+        for mutation in ("timestamp", "result"):
+            with self.subTest(mutation=mutation), tempfile.TemporaryDirectory() as directory:
+                path = Path(directory) / "isolated.json"
+                bars = make_bars()
+                process_native_bars(bars, 20.0, 4, path)
+                state = json.loads(path.read_text())
+                trade = {
+                    "timestamp": bars[-1]["timestamp"],
+                    "side": "SELL",
+                    "price": 100.0,
+                    "pnl_usd": -1.0,
+                    "result": "LOSS",
+                }
+                if mutation == "timestamp":
+                    trade["timestamp"] += 1
+                else:
+                    trade["result"] = "WIN"
+                state["trades"] = [trade]
+                path.write_text(json.dumps(state))
+                before = path.read_text()
+                with self.assertRaisesRegex(ValueError, "timestamps are inconsistent|does not match"):
+                    process_native_bars(bars, 20.0, 4, path)
+                self.assertEqual(path.read_text(), before)
+
     def test_corrupt_state_is_not_silently_reseeded(self):
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory) / "isolated.json"
