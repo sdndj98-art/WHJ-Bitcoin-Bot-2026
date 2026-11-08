@@ -304,6 +304,9 @@ class DashboardContractTests(unittest.TestCase):
         self.assertNotIn("whj-agent-terminal", self.source)
         self.assertIn('fetch("./report.json?t="+Date.now()', self.source)
         self.assertIn("setInterval(load,60000)", self.source)
+        self.assertIn('body[data-whj-theme="light"] .agent-card', self.source)
+        self.assertIn('theme.addEventListener("click",()=>applyTheme(document.body.dataset.whjTheme==="light"?"dark":"light"))', self.source)
+        self.assertIn('let savedTheme="light"', self.source)
 
 
 if __name__ == "__main__":
