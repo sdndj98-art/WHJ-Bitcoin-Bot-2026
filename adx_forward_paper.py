@@ -117,8 +117,6 @@ def _validate_state(state, threshold, timeframe):
         raise ValueError("ADX paper position is inconsistent")
     if state["btc"] > 0 and state["entry_cost"] <= 0:
         raise ValueError("ADX paper position is inconsistent")
-    if state["cash"] > INITIAL_CASH_PER_SLEEVE + 1e-8 and state["btc"] == 0:
-        raise ValueError("ADX paper cash exceeds its initial capital")
     last = state.get("last_timestamp")
     if isinstance(last, bool) or not isinstance(last, int) or last < 0:
         raise ValueError("ADX paper watermark is invalid")
@@ -147,10 +145,6 @@ def _validate_state(state, threshold, timeframe):
         _finite(trade.get("pnl_usd"), "saved trade PnL")
         if trade.get("result") not in ("WIN", "LOSS"):
             raise ValueError("ADX paper trade result is invalid")
-    if state["btc"] == 0 and state["entry_cost"] != 0:
-        raise ValueError("ADX paper position is inconsistent")
-    if state["btc"] > 0 and state["entry_cost"] <= 0:
-        raise ValueError("ADX paper position is inconsistent")
 
 
 def _load_state(path, threshold, timeframe, first_timestamp):
