@@ -53,7 +53,7 @@ def build_trade_candles(trades, interval_seconds, now_timestamp, start_timestamp
         raise ValueError("no completed candle exists at the supplied time")
 
     normalized = []
-    seen = set()
+    previous_trade_id = None
     previous_ts = -1.0
     for trade in trades:
         if not isinstance(trade, dict):
@@ -62,9 +62,9 @@ def build_trade_candles(trades, interval_seconds, now_timestamp, start_timestamp
         if isinstance(trade_id, bool) or not str(trade_id).isdigit() or int(trade_id) <= 0:
             raise ValueError("trade_id must be a positive integer")
         trade_id = int(trade_id)
-        if trade_id in seen:
-            raise ValueError("duplicate trade_id")
-        seen.add(trade_id)
+        if previous_trade_id is not None and trade_id <= previous_trade_id:
+            raise ValueError("trade IDs must be strictly increasing")
+        previous_trade_id = trade_id
         ts = _timestamp(trade.get("timestamp"), "trade timestamp")
         if ts < previous_ts:
             raise ValueError("trades must be sorted by non-decreasing timestamp")
