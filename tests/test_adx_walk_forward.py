@@ -30,13 +30,32 @@ class AdxWalkForwardTests(unittest.TestCase):
             "20": {"return_pct": 7.0, "max_drawdown_pct": 4.0, "closed_trades": 20, "profit_factor": 1.4},
             "25": {"return_pct": 3.0, "max_drawdown_pct": 2.0, "closed_trades": 20, "profit_factor": 1.2},
         }
-        selected, rule = _select_threshold(metrics)
+        baseline = {
+            "return_pct": 4.0, "max_drawdown_pct": 4.0,
+            "closed_trades": 20, "profit_factor": 1.2,
+        }
+        selected, rule = _select_threshold(metrics, baseline_metrics=baseline)
         self.assertEqual(selected, 20.0)
-        self.assertIn("TRAINING_ONLY", rule)
+        self.assertIn("BASELINE", rule)
         sparse = {key: {**value, "closed_trades": 0} for key, value in metrics.items()}
         self.assertEqual(
-            _select_threshold(sparse),
-            (20.0, "DEFAULT_PRIMARY_INSUFFICIENT_TRAINING_TRADES"),
+            _select_threshold(sparse, baseline_metrics=baseline),
+            (None, "TRAINING_ONLY_BASELINE_INSUFFICIENT_ADX_TRADES"),
+        )
+
+    def test_selector_keeps_baseline_when_adx_has_no_training_edge(self):
+        metrics = {
+            "15": {"return_pct": 8.0, "max_drawdown_pct": 6.0, "closed_trades": 20},
+            "20": {"return_pct": 7.0, "max_drawdown_pct": 4.0, "closed_trades": 20},
+            "25": {"return_pct": 3.0, "max_drawdown_pct": 2.0, "closed_trades": 20},
+        }
+        baseline = {
+            "return_pct": 9.0, "max_drawdown_pct": 2.0,
+            "closed_trades": 30, "profit_factor": 1.8,
+        }
+        self.assertEqual(
+            _select_threshold(metrics, baseline_metrics=baseline),
+            (None, "TRAINING_ONLY_BASELINE_OUTSCORES_ADX"),
         )
 
     def test_selection_rejects_malformed_training_metrics(self):
@@ -75,7 +94,12 @@ class AdxWalkForwardTests(unittest.TestCase):
                 self.assertGreaterEqual(
                     fold["training_end_exclusive_utc"], previous_test_end
                 )
-            self.assertIn(fold["selected_threshold"], (15.0, 20.0, 25.0))
+            self.assertIn(fold["selected_threshold"], (None, 15.0, 20.0, 25.0))
+            self.assertIn(
+                fold["selected_strategy_name"],
+                ("baseline_ema50_200", "adx_15", "adx_20", "adx_25"),
+            )
+            self.assertIn("training_baseline_ema50_200", fold)
             start_ms = int(__import__("datetime").datetime.fromisoformat(fold["test_start_utc"]).timestamp() * 1000)
             self.assertEqual(start_ms % (12 * 60 * 60 * 1000), 0)
             self.assertIn("selected_strategy", fold["test"])
