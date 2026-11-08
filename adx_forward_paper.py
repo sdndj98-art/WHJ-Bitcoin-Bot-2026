@@ -176,8 +176,11 @@ def process_native_bars(bars, threshold, timeframe, state_path):
     last = state["last_timestamp"]
     if last < timestamps[0]:
         raise ValueError("ADX ledger is older than the available feed; refusing to skip unseen bars")
-    if last <= timestamps[-1] and (last - timestamps[0]) % (timeframe * 3_600_000):
-        raise ValueError("ADX ledger timestamp is not aligned with the current feed")
+    if last not in set(timestamps):
+        raise ValueError(
+            "ADX ledger watermark is absent from the current feed; "
+            "refusing to skip unseen or future bars"
+        )
     new_indices = [i for i, ts in enumerate(timestamps) if ts > last]
     for i in new_indices:
         if i == 0:
