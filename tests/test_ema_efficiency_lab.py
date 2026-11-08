@@ -4,6 +4,7 @@ import unittest
 from ema_efficiency_lab import (
     _efficiency_ratio_series,
     _build_sleeve_signals,
+    _entry_only_filter,
     run_ema_efficiency_filter_lab,
 )
 
@@ -51,12 +52,21 @@ class EfficiencyRatioLabTests(unittest.TestCase):
             _efficiency_ratio_series([100.0] * 20, 20)
 
     def test_filter_only_removes_baseline_long_regime_bars(self):
-        baseline, filtered = _build_sleeve_signals(
+        baseline, filtered, entry_only = _build_sleeve_signals(
             [{"close": 100.0 + index} for index in range(250)], 0.35
         )
         self.assertTrue(all(not filtered[i] or baseline[i] for i in range(len(baseline))))
+        self.assertTrue(all(not entry_only[i] or baseline[i] for i in range(len(baseline))))
         self.assertFalse(any(filtered[:199]))
         self.assertTrue(any(filtered[199:]))
+        # Once entered, a temporary ER drop must not force an exit while EMA regime holds.
+        held = _entry_only_filter(
+            [False, True, True, True, False],
+            [None, 0.8, 0.1, 0.1, 0.9],
+            [None, 0.8, 0.1, 0.1, 0.9],
+            0.35,
+        )
+        self.assertEqual(held, [False, True, True, True, False])
 
     def test_lab_compares_same_50_50_portfolio_and_cost_scenarios(self):
         report = run_ema_efficiency_filter_lab(hourly_candles())
@@ -66,7 +76,9 @@ class EfficiencyRatioLabTests(unittest.TestCase):
         self.assertFalse(report["live_orders_enabled"])
         self.assertIn("baseline", report["out_of_sample"])
         self.assertIn("er20_filtered", report["out_of_sample"])
+        self.assertIn("er20_entry_only", report["out_of_sample"])
         self.assertIn("matched_50_50_benchmark", report["out_of_sample"])
+        self.assertIn("er20_entry_only", report["cost_sensitivity"]["1x"])
         self.assertEqual(set(report["cost_sensitivity"]), {"1x", "2x"})
         self.assertEqual(len(report["walk_forward_windows"]), 3)
         self.assertGreaterEqual(report["signal_activity"]["reduction_pct"], 0.0)
