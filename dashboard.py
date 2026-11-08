@@ -21,6 +21,11 @@ def summarize_cvd_state(state, now_ns=None, stale_after_seconds=180):
         buy = float(state.get("cumulative_buy_volume", 0.0))
         sell = float(state.get("cumulative_sell_volume", 0.0))
         timestamp_ns = state.get("last_trade_timestamp_ns")
+        if timestamp_ns is None and state.get("last_trade_timestamp") is not None:
+            legacy_timestamp = float(state["last_trade_timestamp"])
+            if not math.isfinite(legacy_timestamp) or legacy_timestamp < 0:
+                raise ValueError("invalid legacy trade timestamp")
+            timestamp_ns = int(legacy_timestamp * 1_000_000_000)
         if isinstance(count, bool) or not isinstance(count, int) or count < 0:
             raise ValueError("invalid processed trade count")
         if isinstance(last_id, bool) or not isinstance(last_id, int) or last_id < 0:
@@ -42,6 +47,8 @@ def summarize_cvd_state(state, now_ns=None, stale_after_seconds=180):
             "last_trade_id": last_id,
         }
 
+    if isinstance(stale_after_seconds, bool) or not isinstance(stale_after_seconds, (int, float)) or not math.isfinite(stale_after_seconds) or stale_after_seconds <= 0:
+        raise ValueError("stale_after_seconds must be positive")
     now_ns = time.time_ns() if now_ns is None else now_ns
     if isinstance(now_ns, bool) or not isinstance(now_ns, int) or now_ns < 0:
         raise ValueError("now_ns must be a non-negative integer")
