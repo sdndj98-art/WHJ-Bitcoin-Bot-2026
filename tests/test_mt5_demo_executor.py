@@ -1,4 +1,5 @@
 import os
+from contextlib import closing
 import sqlite3
 import tempfile
 import unittest
@@ -162,7 +163,7 @@ class DemoExecutorTests(unittest.TestCase):
                 self.submit(self.executor())
             with self.assertRaisesRegex(RuntimeError, "already been submitted"):
                 self.submit(self.executor(), signal_id="signal-001")
-        with sqlite3.connect(self.ledger) as db:
+        with closing(sqlite3.connect(self.ledger)) as db, db:
             status = db.execute(
                 "SELECT status FROM demo_order_guard WHERE signal_id='signal-001'"
             ).fetchone()[0]
