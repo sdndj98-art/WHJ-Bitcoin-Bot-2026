@@ -319,6 +319,10 @@ class DashboardContractTests(unittest.TestCase):
         self.assertIn('سجل اختبار تاريخي · ليس دفتر الورقي', self.source)
         self.assertIn('scannerReady&&s.status==="PAPER_CANDIDATE"', self.source)
         self.assertIn('a.last_processed_timestamp||report.time', self.source)
+        self.assertIn('const riskPaused=!!(a.paused_for_drawdown||a.daily_loss_paused||a.paused_for_loss_streak||a.paused_for_strategy_health);', self.source)
+        self.assertIn('const executorBlocked=q.quality_status==="BLOCKED"||riskPaused;', self.source)
+        self.assertIn('setAgent("agentExecState",executorBlocked?', self.source)
+        self.assertIn('hasSizing?(riskPaused?"blocked":"pass")', self.source)
 
 
 if __name__ == "__main__":
