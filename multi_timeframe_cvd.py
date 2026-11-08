@@ -46,13 +46,12 @@ def analyze_multi_timeframe_cvd(
     for timeframe, candles in candles_by_timeframe.items():
         interval = TIMEFRAME_SECONDS[timeframe]
         frame_trades = trades.get(timeframe, []) if isinstance(trades, dict) else trades
+        lag_limit = max_last_trade_lag_seconds_by_timeframe.get(timeframe, 2 * interval)
         report = align_trade_flow_to_candles(
             candles, frame_trades, interval_seconds=interval,
             continuity_verified=continuity_by_timeframe.get(timeframe, False),
             min_trades=min_trades_by_timeframe.get(timeframe, 1),
-            max_last_trade_lag_seconds=max_last_trade_lag_seconds_by_timeframe.get(
-                timeframe, max(2 * interval, 60)
-            ),
+            max_last_trade_lag_seconds=lag_limit,
             min_abs_delta_pct=min_abs_delta_pct,
         )
         latest = report["bars"][-1]
@@ -98,6 +97,7 @@ def analyze_multi_timeframe_cvd(
             "Each timeframe needs its own contiguous completed candles and independently verified trade continuity.",
             "Per-timeframe trade batches are recommended because closed-candle coverage ends at different UTC boundaries.",
             "Sub-minute candles must be built from timestamped trades with deterministic UTC bucketing.",
+            "The default freshness window is two candle intervals and should be calibrated per market and timeframe.",
             "Consensus is a research diagnostic, not a validated trading edge or order instruction.",
         ],
     }
