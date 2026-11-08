@@ -267,3 +267,130 @@ def combine_microstructure(trade_flow, order_book):
         "execution_enabled": False,
         "live_orders_placed": False,
     }
+
+
+def evaluate_microstructure_confluence(
+    ohlcv_analysis,
+    trade_flow,
+    order_book,
+    max_spread_bps=15.0,
+    min_total_depth_notional=100000.0,
+    max_level_concentration=0.65,
+):
+    """Fuse completed-bar OHLCV context with one trade batch and depth snapshot.
+
+    This is a research diagnostic only. Callers must independently enforce
+    timestamp freshness/alignment; a single snapshot cannot establish durable
+    liquidity or spoofing. The function never emits an order instruction.
+    """
+    if not all(isinstance(value, dict) for value in (ohlcv_analysis, trade_flow, order_book)):
+        raise ValueError("OHLCV, trade-flow and order-book inputs must be dictionaries")
+
+    limits = {
+        "max_spread_bps": max_spread_bps,
+        "min_total_depth_notional": min_total_depth_notional,
+        "max_level_concentration": max_level_concentration,
+    }
+    for name, value in limits.items():
+        if isinstance(value, bool):
+            raise ValueError(f"{name} must be numeric")
+        try:
+            number = float(value)
+        except (TypeError, ValueError, OverflowError) as exc:
+            raise ValueError(f"{name} must be numeric") from exc
+        if not math.isfinite(number):
+            raise ValueError(f"{name} must be finite")
+        if number < 0:
+            raise ValueError(f"{name} must be non-negative")
+        limits[name] = number
+    if limits["max_level_concentration"] > 1:
+        raise ValueError("max_level_concentration cannot exceed 1")
+
+    ohlcv_status = ohlcv_analysis.get("status")
+    if ohlcv_status not in (
+        "BULLISH_RESEARCH_CANDIDATE",
+        "BEARISH_RESEARCH_CANDIDATE",
+        "WATCH",
+    ):
+        raise ValueError("OHLCV analysis has an unknown status")
+    trade_bias = trade_flow.get("batch_bias")
+    book_bias = order_book.get("snapshot_bias")
+    if trade_bias not in ("BUY_PRESSURE", "SELL_PRESSURE", "BALANCED"):
+        raise ValueError("trade-flow analysis has an unknown batch bias")
+    if book_bias not in (
+        "BID_DEPTH_DOMINANT", "ASK_DEPTH_DOMINANT", "DEPTH_BALANCED"
+    ):
+        raise ValueError("order-book analysis has an unknown snapshot bias")
+
+    spread = _finite_number(order_book.get("spread_bps"), "spread_bps")
+    bid_depth = _finite_number(
+        order_book.get("bid_depth_notional"), "bid_depth_notional"
+    )
+    ask_depth = _finite_number(
+        order_book.get("ask_depth_notional"), "ask_depth_notional"
+    )
+    bid_concentration = _finite_number(
+        order_book.get("largest_bid_level_share"), "largest_bid_level_share"
+    )
+    ask_concentration = _finite_number(
+        order_book.get("largest_ask_level_share"), "largest_ask_level_share"
+    )
+    if min(spread, bid_depth, ask_depth, bid_concentration, ask_concentration) < 0:
+        raise ValueError("Order-book metrics must be non-negative")
+    if max(bid_concentration, ask_concentration) > 1:
+        raise ValueError("Order-book concentration shares cannot exceed 1")
+
+    total_depth = bid_depth + ask_depth
+    concentration = max(bid_concentration, ask_concentration)
+    quality_checks = {
+        "spread_within_limit": spread <= limits["max_spread_bps"],
+        "minimum_visible_depth": total_depth >= limits["min_total_depth_notional"],
+        "no_single_level_concentration": concentration <= limits["max_level_concentration"],
+    }
+    quality_ok = all(quality_checks.values())
+
+    direction = (
+        "BULLISH" if ohlcv_status == "BULLISH_RESEARCH_CANDIDATE"
+        else "BEARISH" if ohlcv_status == "BEARISH_RESEARCH_CANDIDATE"
+        else "NEUTRAL"
+    )
+    flow_agrees = (
+        (direction == "BULLISH" and trade_bias == "BUY_PRESSURE")
+        or (direction == "BEARISH" and trade_bias == "SELL_PRESSURE")
+    )
+    depth_agrees = (
+        (direction == "BULLISH" and book_bias == "BID_DEPTH_DOMINANT")
+        or (direction == "BEARISH" and book_bias == "ASK_DEPTH_DOMINANT")
+    )
+    if not quality_ok:
+        context = "LIQUIDITY_QUALITY_FAIL"
+    elif direction == "NEUTRAL":
+        context = "NO_DIRECTIONAL_OHLCV_SIGNAL"
+    elif flow_agrees and depth_agrees:
+        context = f"{direction}_THREE_LAYER_ALIGNMENT"
+    elif flow_agrees or depth_agrees:
+        context = "PARTIAL_MICROSTRUCTURE_CONFIRMATION"
+    else:
+        context = "MICROSTRUCTURE_DIVERGENCE"
+
+    return {
+        "context": context,
+        "ohlcv_direction": direction,
+        "trade_flow_agrees": flow_agrees,
+        "order_book_agrees": depth_agrees,
+        "liquidity_quality_checks": quality_checks,
+        "visible_depth_notional": round(total_depth, 8),
+        "spread_bps": round(spread, 4),
+        "max_level_concentration": round(concentration, 6),
+        "research_only": True,
+        "execution_enabled": False,
+        "live_orders_placed": False,
+        "timestamp_alignment_verified": False,
+        "limitations": [
+            "The caller must align OHLCV close time, trade-batch time bounds and order-book capture time.",
+            "Trade flow is limited to the supplied exchange batch; it is not persistent CVD.",
+            "Visible depth is a single exchange snapshot and can be cancelled or spoofed.",
+            "Quote-notional depth thresholds are venue and instrument specific.",
+            "This diagnostic is not a backtested order-book strategy or an execution instruction.",
+        ],
+    }
