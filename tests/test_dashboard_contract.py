@@ -52,6 +52,18 @@ class DashboardContractTests(unittest.TestCase):
         self.assertIn('hasEquity', self.source)
         self.assertIn('بيانات الماسح غير متاحة', self.source)
 
+    def test_agent_decision_timeline_and_risk_metrics_are_present(self):
+        for element_id in (
+            "agentDecisionTimeline", "agentNetReturn", "agentMaxDD",
+            "agentProfitFactor", "agentFees", "agentRiskState",
+        ):
+            self.assertIn(element_id, self.parser.ids)
+        self.assertIn("timelineEvents", self.source)
+        self.assertIn("market_data_quality", self.source)
+        self.assertIn("paperRiskPauseLabel(a)", self.source)
+        self.assertIn("bt.trade_log", self.source)
+        self.assertIn("تدفق القرارات", self.source)
+
     def test_generated_dashboard_displays_all_paper_risk_pause_reasons(self):
         report = {
             "persistent_paper_portfolio": {
