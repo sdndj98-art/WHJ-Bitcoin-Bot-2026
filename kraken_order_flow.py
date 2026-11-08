@@ -394,3 +394,185 @@ def evaluate_microstructure_confluence(
             "This diagnostic is not a backtested order-book strategy or an execution instruction.",
         ],
     }
+
+
+def _trade_event_timestamp(value):
+    """Normalize a numeric Unix timestamp or timezone-aware ISO timestamp."""
+    if isinstance(value, bool):
+        raise ValueError("trade timestamp must be numeric or timezone-aware ISO text")
+    if isinstance(value, (int, float)):
+        return _finite_number(value, "trade timestamp")
+    if not isinstance(value, str) or not value:
+        raise ValueError("trade timestamp must be numeric or timezone-aware ISO text")
+    from datetime import datetime
+    try:
+        parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
+    except ValueError as exc:
+        raise ValueError("trade timestamp must be valid ISO-8601 text") from exc
+    if parsed.tzinfo is None or parsed.utcoffset() is None:
+        raise ValueError("trade timestamp ISO text must include a timezone")
+    return parsed.timestamp()
+
+
+class PersistentCvdLedger:
+    """Incremental, serializable CVD ledger for uniquely identified trade events.
+
+    Feed adapters should pass one event per executed trade with a monotonically
+    increasing numeric trade_id, price, qty, side ('buy'/'sell'), and timestamp.
+    The ledger deduplicates replayed IDs and can be restored from to_state().
+    It does not connect to a websocket or persist state to disk by itself.
+    """
+
+    STATE_VERSION = 1
+
+    def __init__(self, symbol=None, state=None):
+        if symbol is not None and (not isinstance(symbol, str) or not symbol.strip()):
+            raise ValueError("symbol must be a non-empty string when provided")
+        self.symbol = symbol
+        self.last_trade_id = 0
+        self.cumulative_buy_volume = 0.0
+        self.cumulative_sell_volume = 0.0
+        self.processed_trade_count = 0
+        self.last_trade_timestamp = None
+        if state is not None:
+            self._restore_state(state)
+
+    @staticmethod
+    def _trade_id(value):
+        if isinstance(value, bool):
+            raise ValueError("trade_id must be a positive integer")
+        try:
+            parsed = int(value)
+        except (TypeError, ValueError, OverflowError) as exc:
+            raise ValueError("trade_id must be a positive integer") from exc
+        if parsed <= 0 or str(parsed) != str(value).strip():
+            raise ValueError("trade_id must be a positive integer")
+        return parsed
+
+    def _restore_state(self, state):
+        if not isinstance(state, dict):
+            raise ValueError("CVD state must be an object")
+        if state.get("version") != self.STATE_VERSION:
+            raise ValueError("Unsupported CVD state version")
+        stored_symbol = state.get("symbol")
+        if self.symbol is not None and stored_symbol not in (None, self.symbol):
+            raise ValueError("CVD state symbol does not match ledger symbol")
+        if self.symbol is None:
+            self.symbol = stored_symbol
+        last_id = self._trade_id(state.get("last_trade_id", 0)) if state.get("last_trade_id", 0) else 0
+        buy = _finite_number(state.get("cumulative_buy_volume", 0.0), "cumulative_buy_volume")
+        sell = _finite_number(state.get("cumulative_sell_volume", 0.0), "cumulative_sell_volume")
+        count = state.get("processed_trade_count", 0)
+        if isinstance(count, bool) or not isinstance(count, int) or count < 0:
+            raise ValueError("processed_trade_count must be a non-negative integer")
+        if buy < 0 or sell < 0:
+            raise ValueError("Cumulative volumes must be non-negative")
+        timestamp = state.get("last_trade_timestamp")
+        if timestamp is not None:
+            timestamp = _finite_number(timestamp, "last_trade_timestamp")
+            if timestamp < 0:
+                raise ValueError("last_trade_timestamp must be non-negative")
+        self.last_trade_id = last_id
+        self.cumulative_buy_volume = buy
+        self.cumulative_sell_volume = sell
+        self.processed_trade_count = count
+        self.last_trade_timestamp = timestamp
+
+    def to_state(self):
+        """Return JSON-serializable state for caller-managed durable storage."""
+        return {
+            "version": self.STATE_VERSION,
+            "symbol": self.symbol,
+            "last_trade_id": self.last_trade_id,
+            "cumulative_buy_volume": self.cumulative_buy_volume,
+            "cumulative_sell_volume": self.cumulative_sell_volume,
+            "processed_trade_count": self.processed_trade_count,
+            "last_trade_timestamp": self.last_trade_timestamp,
+        }
+
+    def process(self, events):
+        """Apply a batch atomically; duplicate/replayed IDs are ignored."""
+        if not isinstance(events, (list, tuple)):
+            raise ValueError("events must be a list or tuple")
+        normalized = {}
+        for event in events:
+            if not isinstance(event, dict):
+                raise ValueError("each trade event must be an object")
+            event_symbol = event.get("symbol")
+            if self.symbol is not None and event_symbol not in (None, self.symbol):
+                raise ValueError("trade event symbol does not match ledger symbol")
+            trade_id = self._trade_id(event.get("trade_id"))
+            price = _finite_number(event.get("price"), "trade price")
+            quantity = _finite_number(event.get("qty"), "trade quantity")
+            timestamp = _trade_event_timestamp(event.get("timestamp"))
+            side = event.get("side")
+            if price <= 0 or quantity <= 0 or timestamp < 0:
+                raise ValueError("trade price/quantity must be positive and timestamp non-negative")
+            if side not in ("buy", "sell"):
+                raise ValueError("trade side must be 'buy' or 'sell'")
+            item = (price, quantity, timestamp, side)
+            if trade_id in normalized and normalized[trade_id] != item:
+                raise ValueError("conflicting payloads for duplicate trade_id")
+            normalized[trade_id] = item
+
+        accepted = []
+        ignored = 0
+        last_timestamp = self.last_trade_timestamp
+        for trade_id in sorted(normalized):
+            if trade_id <= self.last_trade_id:
+                ignored += 1
+                continue
+            price, quantity, timestamp, side = normalized[trade_id]
+            if last_timestamp is not None and timestamp < last_timestamp:
+                raise ValueError("new trade timestamps must be non-decreasing by trade_id")
+            accepted.append((trade_id, quantity, timestamp, side))
+            last_timestamp = timestamp
+
+        # Commit only after every event has passed validation.
+        for trade_id, quantity, timestamp, side in accepted:
+            if side == "buy":
+                self.cumulative_buy_volume += quantity
+            else:
+                self.cumulative_sell_volume += quantity
+            self.last_trade_id = trade_id
+            self.last_trade_timestamp = timestamp
+            self.processed_trade_count += 1
+
+        result = self.snapshot()
+        result["accepted_in_batch"] = len(accepted)
+        result["ignored_replayed_or_stale_in_batch"] = ignored
+        return result
+
+    def snapshot(self):
+        total = self.cumulative_buy_volume + self.cumulative_sell_volume
+        delta = self.cumulative_buy_volume - self.cumulative_sell_volume
+        delta_pct = delta / total if total > 0 else 0.0
+        bias = (
+            "BUY_PRESSURE" if delta_pct >= 0.10 else
+            "SELL_PRESSURE" if delta_pct <= -0.10 else
+            "BALANCED"
+        )
+        return {
+            "status": "OK",
+            "symbol": self.symbol,
+            "last_trade_id": self.last_trade_id,
+            "processed_trade_count": self.processed_trade_count,
+            "cumulative_buy_volume": round(self.cumulative_buy_volume, 12),
+            "cumulative_sell_volume": round(self.cumulative_sell_volume, 12),
+            "cumulative_delta": round(delta, 12),
+            "cumulative_delta_pct": round(delta_pct * 100.0, 4),
+            "cumulative_buy_volume_ratio": round(
+                self.cumulative_buy_volume / total if total > 0 else 0.0, 6
+            ),
+            "last_trade_timestamp": self.last_trade_timestamp,
+            "cumulative_bias": bias,
+            "metric_scope": "persistable_incremental_trade_id_ledger",
+            "is_persistent_cvd": True,
+            "durable_storage_managed_by_caller": True,
+            "limitations": [
+                "The caller must persist to_state() atomically and restore it after restart.",
+                "The feed adapter must provide unique, monotonic trade IDs and recover missed events after reconnect.",
+                "This ledger does not prove gap-free ingestion; reconnect recovery must be verified by the adapter.",
+                "CVD is specific to the supplied venue, symbol and feed.",
+            ],
+        }
