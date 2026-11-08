@@ -1,6 +1,6 @@
 import unittest
 
-from market_scanner import scan_btc_market, scan_btc_multi_timeframe, _aggregate_hourly_candles
+from market_scanner import scan_btc_market, scan_btc_multi_timeframe, _aggregate_hourly_candles, _adx
 
 
 def candles(prior_high=97.8, current_close=98.2, current_volume=30.0):
@@ -238,6 +238,16 @@ class MarketScannerTests(unittest.TestCase):
         self.assertLessEqual(result["adx14"], 100.0)
         self.assertGreater(result["plus_di14"], result["minus_di14"])
         self.assertTrue(result["checks"]["adx_trend_strength"])
+
+    def test_adx_is_zero_for_flat_market_without_directional_movement(self):
+        rows = [
+            [index * 3600, 100.0, 101.0, 99.0, 100.0, 0.0, 10.0, 100]
+            for index in range(40)
+        ]
+        adx_value, plus_di, minus_di = _adx(rows, 14)
+        self.assertEqual(adx_value, 0.0)
+        self.assertEqual(plus_di, 0.0)
+        self.assertEqual(minus_di, 0.0)
 
     def test_adx_filter_rejects_directionally_weak_breakout_candidate(self):
         rows = candles()
