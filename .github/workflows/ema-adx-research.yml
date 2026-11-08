@@ -5,15 +5,21 @@ on:
     branches: [feature/efficiency-ratio-indicator]
     paths:
       - "ema_adx_lab.py"
+      - "ema_adx_cross_exchange_lab.py"
       - "tests/test_ema_adx_lab.py"
       - "adx_walk_forward.py"
+      - "adx_cross_exchange_walk_forward.py"
       - "tests/test_adx_walk_forward.py"
       - ".github/workflows/ema-adx-research.yml"
   pull_request:
     branches: [main]
     paths:
       - "ema_adx_lab.py"
+      - "ema_adx_cross_exchange_lab.py"
       - "tests/test_ema_adx_lab.py"
+      - "adx_walk_forward.py"
+      - "adx_cross_exchange_walk_forward.py"
+      - "tests/test_adx_walk_forward.py"
       - ".github/workflows/ema-adx-research.yml"
   workflow_dispatch:
 
@@ -21,8 +27,6 @@ permissions:
   contents: read
 
 concurrency:
-  # Isolate this research workflow by ref so a stale run on another ref
-  # cannot hold the single shared queue slot indefinitely.
   group: whj-ema-adx-research-${{ github.ref }}
   cancel-in-progress: false
   queue: max
@@ -30,7 +34,7 @@ concurrency:
 jobs:
   isolated-ema-adx-research:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 45
     steps:
       - name: Checkout research branch
         uses: actions/checkout@v4
@@ -49,15 +53,19 @@ jobs:
       - name: Test expanding-window walk-forward selection
         run: python -m unittest discover -s tests -p 'test_adx_walk_forward.py' -v
 
-      - name: Run expanding-window walk-forward research
+      - name: Run primary expanding-window walk-forward research
         run: python adx_walk_forward.py
 
-      - name: Upload ADX research report
+      - name: Run independent Bitstamp expanding-window walk-forward
+        run: python adx_cross_exchange_walk_forward.py
+
+      - name: Upload ADX research reports
         uses: actions/upload-artifact@v4
         with:
           name: whj-ema-adx-research-${{ github.run_number }}
           path: |
             ema_adx_research.json
             adx_walk_forward_report.json
+            adx_bitstamp_walk_forward_report.json
           if-no-files-found: error
           retention-days: 30
