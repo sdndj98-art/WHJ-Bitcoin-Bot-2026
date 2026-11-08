@@ -10,6 +10,8 @@ import signal
 import sys
 import threading
 
+from trade_event_journal import JsonlTradeJournal
+
 from kraken_order_flow import (
     KrakenSpotTradeFeedAdapter,
     KrakenSpotWebSocketRunner,
@@ -35,6 +37,8 @@ def build_parser():
     )
     parser.add_argument("--pair", default="BTC/USD", help="Kraken spot pair (default: BTC/USD)")
     parser.add_argument("--state-file", default=None, help="Per-symbol JSON state path")
+    parser.add_argument("--trade-log", default=None, help="Optional append-only JSONL raw trade journal path")
+    parser.add_argument("--max-trade-log-mb", type=int, default=250, help="Maximum raw trade journal size in MiB")
     parser.add_argument("--timeout", type=float, default=20.0, help="WebSocket receive timeout seconds")
     parser.add_argument("--initial-backoff", type=float, default=1.0, help="Initial reconnect delay seconds")
     parser.add_argument("--max-backoff", type=float, default=30.0, help="Maximum reconnect delay seconds")
@@ -52,10 +56,20 @@ def run_collector(args, stop_event, websocket_factory=None):
         symbol=pair,
         state=load_cvd_state(state_path),
     )
+    trade_log_path = getattr(args, "trade_log", None)
+    journal = None
+    if trade_log_path:
+        max_mb = getattr(args, "max_trade_log_mb", 250)
+        if isinstance(max_mb, bool) or not isinstance(max_mb, int) or max_mb < 1:
+            raise ValueError("max_trade_log_mb must be a positive integer")
+        journal = JsonlTradeJournal(
+            trade_log_path, max_bytes=max_mb * 1024 * 1024
+        )
     adapter = KrakenSpotTradeFeedAdapter(
         ledger,
         pair=pair,
         timeout=args.timeout,
+        on_accepted_trades=journal.append if journal else None,
     )
     runner = KrakenSpotWebSocketRunner(
         adapter,
@@ -64,11 +78,18 @@ def run_collector(args, stop_event, websocket_factory=None):
         max_backoff=args.max_backoff,
         max_reconnect_attempts=args.max_reconnect_attempts,
     )
-    return runner.run(
+    result = runner.run(
         stop_event,
         persist_state=lambda state: save_cvd_state_atomic(state_path, state),
         websocket_factory=websocket_factory,
     )
+    if journal:
+        result["trade_journal"] = {
+            "path": trade_log_path,
+            "last_trade_id": journal.last_trade_id,
+            "size_bytes": os.path.getsize(trade_log_path) if os.path.exists(trade_log_path) else 0,
+        }
+    return result
 
 
 def main(argv=None):
