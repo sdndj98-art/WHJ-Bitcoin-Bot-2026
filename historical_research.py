@@ -1266,6 +1266,7 @@ def summarize_qualification(result, watchlist_limit=5):
         "long_short": result.get("extended_lab_strategy_qualification", {}).get("long_short", {}),
         "daily_regime_filter": result.get("extended_lab_strategy_qualification", {}).get("daily_regime_filter", {}),
         "multi_timeframe_ensemble": result.get("extended_lab_strategy_qualification", {}).get("multi_timeframe_ensemble", {}),
+        "six_hour_atr_trailing": result.get("extended_lab_strategy_qualification", {}).get("six_hour_atr_trailing", {}),
     }
     counts = {}
     candidates = []
@@ -1341,6 +1342,7 @@ def build_qualification_markdown(result):
         "Long/short research (paper only)": result.get("extended_lab_strategy_qualification", {}).get("long_short", {}),
         "Daily regime filters": result.get("extended_lab_strategy_qualification", {}).get("daily_regime_filter", {}),
         "4h / 6h consensus ensemble": result.get("extended_lab_strategy_qualification", {}).get("multi_timeframe_ensemble", {}),
+        "6h EMA50/EMA200 with ATR trailing exit": result.get("extended_lab_strategy_qualification", {}).get("six_hour_atr_trailing", {}),
     }
     lines = [
         "# WHJ Bitcoin Bot — Strategy Qualification Report", "",
@@ -1558,6 +1560,83 @@ def build_qualification_markdown(result):
         "- Historical performance is not a forecast or a guarantee. Paper results are simulated and may differ from execution.", "",
     ])
     return "\n".join(lines)
+
+
+def run_six_hour_atr_trailing_lab(hourly_candles, fee=FEE_RATE, slippage=SLIPPAGE_RATE):
+    """Test a predeclared 6h EMA50/200 trend with a 2.5-ATR close-based trailing exit."""
+    six_hour = aggregate_candles(hourly_candles, 6)
+    if len(six_hour) < 500:
+        raise ValueError("At least 500 six-hour bars are required for ATR trailing research")
+    if not 0 <= fee < 1 or not 0 <= slippage < 1:
+        raise ValueError("Fee and slippage must be between 0 and 1")
+
+    closes = [float(row["close"]) for row in six_hour]
+    ema50 = _ema_series(closes, 50)
+    ema200 = _ema_series(closes, 200)
+    atr14 = _atr_series(six_hour, 14)
+    signals = []
+    in_position = False
+    highest_close = None
+    atr_multiple = 2.5
+
+    for index, close in enumerate(closes):
+        trend_ok = bool(index >= 199 and ema50[index] > ema200[index] and close > ema200[index])
+        current_atr = atr14[index]
+        if not in_position:
+            if trend_ok and current_atr is not None and current_atr > 0:
+                in_position = True
+                highest_close = close
+        else:
+            highest_close = max(highest_close, close)
+            trailing_stop = highest_close - atr_multiple * current_atr if current_atr is not None else float("inf")
+            if not trend_ok or current_atr is None or close < trailing_stop:
+                in_position = False
+                highest_close = None
+        signals.append(in_position)
+
+    split = int(len(six_hour) * 0.7)
+    edges = [split + ((len(six_hour) - split) * fold) // 3 for fold in range(4)]
+    windows = []
+    for fold in range(3):
+        start, end = edges[fold], edges[fold + 1]
+        if end > start:
+            windows.append({
+                "window": fold + 1,
+                "start_index": start,
+                "end_index_exclusive": end,
+                "metrics": _simulate_ohlc(six_hour, signals, start, end, fee, slippage),
+            })
+    returns = [item["metrics"]["return_pct"] for item in windows]
+    candidate = {
+        "in_sample": _simulate_ohlc(six_hour, signals, 200, split, fee, slippage),
+        "out_of_sample": _simulate_ohlc(six_hour, signals, split, len(six_hour), fee, slippage),
+        "walk_forward_windows": windows,
+        "worst_window_return_pct": min(returns) if returns else None,
+    }
+    benchmark_metrics = _simulate_ohlc(
+        six_hour, [True] * len(six_hour), split, len(six_hour), fee, slippage
+    )
+    benchmark_metrics["profit_factor"] = None
+    benchmark_metrics["closed_trades"] = 1
+    benchmark_metrics["open_position"] = False
+    benchmark_metrics["win_rate_pct"] = 100.0 if benchmark_metrics["return_pct"] > 0 else 0.0
+    return {
+        "mode": "SIX_HOUR_EMA50_200_WITH_FIXED_2_5_ATR_TRAILING_EXIT",
+        "bar_count": len(six_hour),
+        "split_index": split,
+        "atr_period": 14,
+        "atr_trailing_multiple": atr_multiple,
+        "execution": (
+            "Signals are evaluated only after a completed six-hour candle and filled "
+            "at the next six-hour close. The trailing exit is close-based; no intrabar "
+            "stop-fill assumption is made. Position allocation and costs match the "
+            "25%-allocation OHLC simulator."
+        ),
+        "strategies": {
+            "ema50_200_atr2_5_trailing": candidate,
+            "buy_and_hold_25pct": {"out_of_sample": benchmark_metrics},
+        },
+    }
 
 
 def assess_research_lab_qualification(research, stress_research):
@@ -1783,6 +1862,8 @@ def main():
     multi_timeframe_ensemble_stress = run_multi_timeframe_ensemble_lab(
         candles, fee=0.002, slippage=0.001
     )
+    six_hour_atr_research = run_six_hour_atr_trailing_lab(candles)
+    six_hour_atr_stress = run_six_hour_atr_trailing_lab(candles, fee=0.002, slippage=0.001)
     forward_paper = run_forward_paper_accounts(candles)
     qualification = {}
     for label in ("1h", "4h", "6h", "1d"):
@@ -1811,6 +1892,9 @@ def main():
         ),
         "multi_timeframe_ensemble": assess_research_lab_qualification(
             multi_timeframe_ensemble_research, multi_timeframe_ensemble_stress
+        ),
+        "six_hour_atr_trailing": assess_research_lab_qualification(
+            six_hour_atr_research, six_hour_atr_stress
         ),
     }
 
@@ -1853,6 +1937,8 @@ def main():
         "daily_regime_research": daily_regime_research,
         "daily_regime_stress": daily_regime_stress,
         "multi_timeframe_ensemble_research": multi_timeframe_ensemble_research,
+        "six_hour_atr_trailing_research": six_hour_atr_research,
+        "six_hour_atr_trailing_stress": six_hour_atr_stress,
         "multi_timeframe_ensemble_stress": multi_timeframe_ensemble_stress,
         "warning": "Historical results are not forecasts. Strategy selection requires robust out-of-sample performance and forward paper trading. No live orders were placed.",
     }
