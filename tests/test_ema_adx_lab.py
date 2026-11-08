@@ -59,6 +59,12 @@ class EmaAdxLabTests(unittest.TestCase):
         )
         self.assertIn("baseline", report["out_of_sample"])
         self.assertIn("matched_50_50_benchmark", report["out_of_sample"])
+        robustness = report["walk_forward_robustness"]["adx_15_entry_only"]
+        self.assertEqual(robustness["fold_count"], 3)
+        self.assertLessEqual(robustness["positive_return_folds"], 3)
+        self.assertLessEqual(robustness["outperformed_baseline_return_folds"], 3)
+        self.assertLessEqual(robustness["outperformed_benchmark_return_folds"], 3)
+        self.assertLessEqual(robustness["positive_return_2x_cost_folds"], 3)
 
 
 if __name__ == "__main__":
