@@ -113,6 +113,22 @@ class DashboardContractTests(unittest.TestCase):
         self.assertIn("التعرّض السوقي الإجمالي", self.source)
         self.assertIn("تفاصيل الحسابات لا تطابق إجمالي التعرّض والسيولة", self.source)
 
+    def test_mt5_dashboard_import_is_local_validated_and_paper_only(self):
+        required = {
+            "mt5", "mt5SnapshotFile", "clearMt5", "mt5Message", "mt5Status",
+            "mt5Symbol", "mt5Bid", "mt5Ask", "mt5Spread", "mt5Quality",
+            "mt5Scanner", "mt5Score", "mt5PaperMode", "mt5TimeframeRows",
+            "mt5PaperInitial", "mt5PaperEquity", "mt5PaperReturn",
+            "mt5PaperTrades", "mt5PaperRows",
+        }
+        self.assertTrue(required.issubset(set(self.parser.ids)))
+        self.assertIn('data-view="mt5"', self.source)
+        self.assertIn("function validateMt5Snapshot(x)", self.source)
+        self.assertIn("function renderMt5()", self.source)
+        self.assertIn("MT5_MARKET_DATA_PAPER_ONLY", self.source)
+        self.assertIn("لا يتم إرسالها إلى الخادم", self.source)
+        self.assertIn("لا توجد أوامر لدى الوسيط", self.source)
+
     def test_forward_report_freshness_is_visible_and_old_reports_are_flagged(self):
         self.assertIn('id="forwardFreshness"', self.source)
         self.assertIn("reportAgeMinutes", self.source)

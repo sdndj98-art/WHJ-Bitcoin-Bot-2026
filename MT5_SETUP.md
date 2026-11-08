@@ -16,6 +16,32 @@ separate from the Kraken/Coinbase crypto data paths and the existing paper ledge
 - MT5 candle position 0 is the forming candle. WHJ requests from position 1 so only
   completed candles are returned.
 
+## Generate an analysis snapshot and MT5 paper ledger
+
+From the Windows project folder, with the terminal open and signed in to a demo account:
+
+```powershell
+python mt5_snapshot.py --symbol BTCUSD --bars 300 --output mt5_snapshot.json --update-paper-ledger
+```
+
+Use the exact broker symbol (for example, `BTCUSD.a`, `BTCUSDm`, or `XAUUSD`).
+The snapshot reads 1h, 4h, and 6h completed candles, computes the WHJ scanner
+diagnostics, and stores only the market quote/candles and paper-account summaries.
+It deliberately excludes account login, broker server, balance, and equity.
+
+Then open the WHJ dashboard and import `mt5_snapshot.json` in the **منصة MT5**
+section. Importing is local to that browser tab; the snapshot is not uploaded to
+GitHub Pages or any server.
+
+The optional `--update-paper-ledger` flag updates five independent **virtual**
+paper accounts using BTC/XBT 1h candles. State is stored locally in
+`mt5_paper_state/`, separate from the existing Termux/GitHub crypto paper ledgers.
+The first run warms the ledgers from history; subsequent runs process each new
+closed candle once. Do not delete or edit the state files to reset a ledger.
+
+For a non-BTC symbol, omit `--update-paper-ledger`; the scanner still reports
+research diagnostics, but the BTC-specific paper portfolio is intentionally blocked.
+
 ## Safe usage
 
 ```python
@@ -31,8 +57,9 @@ finally:
     mt5.close()
 ```
 
-This first integration is **read-only**. It deliberately has no `order_send`,
-position-closing, or money-transfer method. It does not activate live trading,
+The broker connector is **read-only**. It deliberately has no `order_send`,
+position-closing, or money-transfer method. The optional paper ledger is virtual and
+uses broker candles only; it does not place orders in an MT5 demo account or a live account. It does not activate live trading,
 change the terminal's permissions, or store credentials. A terminal may report that
 trading is allowed by its broker; WHJ still does not submit orders.
 

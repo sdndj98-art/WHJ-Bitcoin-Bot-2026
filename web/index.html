@@ -148,7 +148,7 @@ body[data-whj-theme="light"] .whj-command-btn,body[data-whj-theme="light"] .whj-
 body[data-whj-theme="light"] .whj-command-box,body[data-whj-theme="light"] .whj-alert-panel{background:#fff}
 @media(max-width:700px){.whj-command-btn,.whj-alert-btn{padding:8px 9px;font-size:9px}.whj-alert-panel{top:auto;bottom:88px;left:10px}.whj-command-overlay{padding-top:8vh}}
 
-</style></head><body><div class="shell"><aside class="side"><div class="brand"><div class="logo">₿</div><div><b>WHJ BITCOIN</b><small>مركز قيادة التداول الذكي</small></div></div><div class="navlabel">القائمة الرئيسية</div><nav class="nav"><button class="active" data-view="overview"><span class="ico">⌂</span>الرئيسية</button><button data-view="scanner"><span class="ico">⌁</span>ماسح السوق</button><button data-view="strategies"><span class="ico">◈</span>الاستراتيجيات</button><button data-view="trades"><span class="ico">⇄</span>الصفقات</button><button data-view="risk"><span class="ico">⌁</span>المخاطر</button><button data-view="system"><span class="ico">⚙</span>النظام</button><button data-view="forward"><span class="ico">◷</span>المراقبة المستقبلية</button></nav><div class="sidefoot">WHJ Bitcoin Bot 2026<br>مراقبة وتحليل · Paper Trading فقط</div></aside><main>
+</style></head><body><div class="shell"><aside class="side"><div class="brand"><div class="logo">₿</div><div><b>WHJ BITCOIN</b><small>مركز قيادة التداول الذكي</small></div></div><div class="navlabel">القائمة الرئيسية</div><nav class="nav"><button class="active" data-view="overview"><span class="ico">⌂</span>الرئيسية</button><button data-view="scanner"><span class="ico">⌁</span>ماسح السوق</button><button data-view="strategies"><span class="ico">◈</span>الاستراتيجيات</button><button data-view="trades"><span class="ico">⇄</span>الصفقات</button><button data-view="risk"><span class="ico">⌁</span>المخاطر</button><button data-view="system"><span class="ico">⚙</span>النظام</button><button data-view="forward"><span class="ico">◷</span>المراقبة المستقبلية</button><button data-view="mt5"><span class="ico">⌁</span>منصة MT5</button></nav><div class="sidefoot">WHJ Bitcoin Bot 2026<br>مراقبة وتحليل · Paper Trading فقط</div></aside><main>
 <div class="mobilehead">WHJ BITCOIN · مركز القيادة</div><header class="top"><div><div class="eyebrow">WHJ / COMMAND CENTER</div><h1 id="pageTitle">نظرة عامة</h1><div class="sub">مراقبة أداء البوت وتحليل BTC/USD</div></div><div class="topright"><button class="toolbtn" id="exportJson" type="button">تنزيل التقرير JSON</button><button class="toolbtn" id="exportCsv" type="button">تصدير الصفقات CSV</button><span class="pill"><i class="dot"></i><span id="systemState">جارٍ تحميل البيانات</span></span><button class="refresh" id="refresh">↻ تحديث البيانات</button></div></header>
 <div class="banner"><div><b>وضع الحماية مفعّل — التداول الحقيقي متوقف</b><p>تعرض اللوحة بيانات التحليل والمحاكاة فقط، ولا ترسل أوامر إلى منصات التداول.</p></div><span class="status">● PAPER MODE</span></div>
 <section class="view active" id="overview"><div class="grid">
@@ -239,6 +239,30 @@ body[data-whj-theme="light"] .whj-command-box,body[data-whj-theme="light"] .whj-
 <section class="view" id="trades"><div class="card"><div class="head"><h2>سجل الصفقات المغلقة</h2><div class="headtools"><input class="filter" id="tradeFilter" type="search" placeholder="ابحث بالتاريخ أو النوع أو النتيجة..." aria-label="البحث في الصفقات"><span>آخر 50 صفقة</span></div></div><div class="tablewrap"><table><thead><tr><th>التاريخ</th><th>النوع</th><th>النتيجة</th><th>الربح / الخسارة</th></tr></thead><tbody id="tradeRows"><tr><td colspan="4" class="empty">لا توجد صفقات مسجلة</td></tr></tbody></table></div></div></section>
 <section class="view" id="risk"><div class="grid"><article class="card metric"><div class="label">حالة Monte Carlo</div><div class="value" style="font-size:17px" id="mcStatus">—</div></article><article class="card metric"><div class="label">احتمال الخسارة</div><div class="value" id="mcLoss">—</div></article><article class="card metric"><div class="label">P05 رأس المال</div><div class="value" id="mcP05">—</div></article><article class="card metric"><div class="label">P95 أقصى تراجع</div><div class="value" id="mcDD">—</div></article><article class="card metric"><div class="label">Bootstrap احتمال الخسارة</div><div class="value" id="blockLoss">—</div></article><article class="card metric"><div class="label">Bootstrap P05 رأس المال</div><div class="value" id="blockP05">—</div></article></div><div class="card" style="margin-top:13px"><div class="head"><h2>ضوابط المخاطر</h2><span>حالة الحساب الافتراضي</span></div><div class="mini"><span>إيقاف بسبب التراجع</span><b id="paused">—</b></div><div class="mini"><span>إيقاف الخسارة اليومية</span><b id="dailyPause">—</b></div><div class="mini"><span>سلسلة الخسائر</span><b id="lossStreak">—</b></div><div class="mini"><span>مركز مفتوح</span><b id="position">—</b></div><p class="sub">نتائج Monte Carlo وBootstrap تشخيصية وليست توقعاً للمستقبل.</p></div></section>
 <section class="view" id="system"><div class="grid"><article class="card metric"><div class="label">جودة بيانات السوق</div><div class="value" style="font-size:18px" id="dataQuality">—</div></article><article class="card metric"><div class="label">عمر آخر شمعة بالدقائق</div><div class="value" id="candleAge">—</div></article><article class="card metric"><div class="label">فجوات الشموع الحديثة</div><div class="value" id="gaps">—</div></article><article class="card metric"><div class="label">السوق</div><div class="value" style="font-size:18px">BTC / USD</div></article></div><div class="card" style="margin-top:13px"><div class="head"><h2>تفاصيل النظام</h2></div><div class="mini"><span>وضع التشغيل</span><b>تحليل ومحاكاة فقط</b></div><div class="mini"><span>تنفيذ أوامر حقيقية</span><b class="negative">معطّل</b></div><div class="mini"><span>آخر تحديث</span><b id="lastTime">—</b></div><div class="mini"><span>أسباب حظر البيانات</span><b id="blockReasons">—</b></div></div></section>
+<section class="view" id="mt5">
+<div class="scanner-head"><div><div class="eyebrow">BROKER FEED / MT5 PAPER</div><h2>تكامل MetaTrader 5</h2><p>اعرض بيانات الوسيط والتحليل على أطر 1h و4h و6h. استيراد الملف يتم داخل المتصفح فقط ولا يرفع بيانات الحساب إلى الموقع.</p></div><div class="scanner-head-tags"><span class="scan-chip muted">READ-ONLY FEED</span><span class="scan-chip"><i></i> NO LIVE ORDERS</span></div></div>
+<div class="card" style="margin-bottom:13px"><div class="head"><h2>استيراد لقطة MT5</h2><span>mt5_snapshot.json · schema v1</span></div><div class="headtools"><input class="filter" style="max-width:360px" id="mt5SnapshotFile" type="file" accept=".json,application/json" aria-label="استيراد ملف بيانات MT5"><button class="toolbtn" id="clearMt5" type="button">مسح بيانات MT5</button></div><p class="sub" id="mt5Message" role="status" style="margin-top:12px">شغّل mt5_snapshot.py على جهاز Windows المتصل ببرنامج MT5، ثم اختر ملف mt5_snapshot.json هنا.</p></div>
+<div class="banner"><div><b id="mt5Status">بانتظار بيانات MT5</b><p id="mt5Updated">لم يتم استيراد لقطة بعد.</p></div><span class="status">MT5 PAPER DATA</span></div>
+<div class="grid">
+<article class="card metric"><div class="label">رمز الوسيط</div><div class="value neutral" style="font-size:20px" id="mt5Symbol">—</div><div class="hint">الاسم كما يظهر في MT5</div></article>
+<article class="card metric"><div class="label">سعر Bid</div><div class="value" id="mt5Bid">—</div><div class="hint">آخر عرض شراء</div></article>
+<article class="card metric"><div class="label">سعر Ask</div><div class="value" id="mt5Ask">—</div><div class="hint">آخر عرض بيع</div></article>
+<article class="card metric"><div class="label">فرق السعر</div><div class="value" id="mt5Spread">—</div><div class="hint">Ask − Bid</div></article>
+</div>
+<div class="grid" style="margin-top:12px">
+<article class="card metric"><div class="label">جودة شموع الساعة</div><div class="value" style="font-size:18px" id="mt5Quality">—</div><div class="hint">فجوات وحداثة الشموع</div></article>
+<article class="card metric"><div class="label">حالة ماسح 1h</div><div class="value" style="font-size:18px" id="mt5Scanner">—</div><div class="hint">تحليل بحثي فقط</div></article>
+<article class="card metric"><div class="label">درجة التوافق 1h</div><div class="value" id="mt5Score">—</div><div class="hint">من إجمالي بوابات الماسح</div></article>
+<article class="card metric"><div class="label">حالة التداول الورقي</div><div class="value" style="font-size:16px" id="mt5PaperMode">—</div><div class="hint">لا توجد أوامر لدى الوسيط</div></article>
+</div>
+<div class="card tablecard"><div class="head"><h2>تحليل الأطر الزمنية</h2><span>بيانات مكتملة من وسيط MT5</span></div><div class="tablewrap"><table><thead><tr><th>الإطار</th><th>الشموع</th><th>آخر إغلاق</th><th>عمر الشمعة (دقيقة)</th><th>الجودة</th><th>التوافق</th><th>حالة الماسح</th></tr></thead><tbody id="mt5TimeframeRows"><tr><td colspan="7" class="empty">استورد ملف MT5 صالحاً لعرض التحليل</td></tr></tbody></table></div></div>
+<div class="card tablecard"><div class="head"><h2>حسابات المحاكاة على بيانات MT5</h2><span>رأس مال افتراضي مستقل</span></div><div class="grid">
+<article class="card metric"><div class="label">إجمالي رأس المال الورقي</div><div class="value" id="mt5PaperInitial">—</div></article>
+<article class="card metric"><div class="label">القيمة الحالية</div><div class="value" id="mt5PaperEquity">—</div></article>
+<article class="card metric"><div class="label">العائد الافتراضي</div><div class="value" id="mt5PaperReturn">—</div></article>
+<article class="card metric"><div class="label">الصفقات المغلقة</div><div class="value" id="mt5PaperTrades">—</div></article>
+</div><div class="tablewrap" style="margin-top:14px"><table><thead><tr><th>الاستراتيجية</th><th>القيمة</th><th>العائد</th><th>الصفقات</th><th>أقصى تراجع</th><th>حالة الحماية</th></tr></thead><tbody id="mt5PaperRows"><tr><td colspan="6" class="empty">لم يتم تشغيل دفتر المحاكاة الورقي</td></tr></tbody></table></div><p class="sub" style="margin-top:12px">هذه حسابات افتراضية محلية تعتمد على شموع الوسيط وتكاليف تقديرية. لا تُرسل أوامر إلى حساب MT5 التجريبي أو الحقيقي ولا تمثل نتائج تنفيذ وسيط فعلية.</p></div>
+</section>
 <section class="view" id="forward">
 <div class="scanner-head"><div><div class="eyebrow">FORWARD-ONLY / PAPER PERFORMANCE</div><h2>مراقبة الأداء المستقبلي</h2><p>استيراد تقرير المراقبة الناتج من GitHub Actions. لا يتم تحميل أو تعديل سجلات الحسابات من هذه الصفحة.</p></div><div class="scanner-head-tags"><span class="scan-chip muted">5 STRATEGY SLEEVES · PAPER ONLY</span><span class="scan-chip"><i></i> PAPER ONLY</span></div></div>
 <div class="card" style="margin-bottom:13px"><div class="head"><h2>تحميل تقرير المراقبة</h2><span>JSON · schema v1</span></div><div class="headtools"><input class="filter" style="max-width:360px" id="forwardFile" type="file" accept=".json,application/json" aria-label="تحميل تقرير المراقبة JSON"><button class="toolbtn" id="clearForward" type="button">مسح التقرير</button></div><p class="sub" id="forwardMessage" role="status" style="margin-top:12px">اختر ملف forward_paper_report.json من مخرجات تشغيل المراقبة في GitHub Actions.</p></div>
@@ -259,7 +283,56 @@ body[data-whj-theme="light"] .whj-command-box,body[data-whj-theme="light"] .whj-
 </section>
 <footer class="footer">WHJ BITCOIN BOT · بيانات المحاكاة لا تمثل أرباحاً حقيقية ولا تعد توصية استثمارية.</footer></main></div>
 <script>
-let report=null;const $=id=>document.getElementById(id);const fmt=(v,d=2)=>v===undefined||v===null||v===""?"—":Number.isFinite(Number(v))?Number(v).toLocaleString("en-US",{minimumFractionDigits:d,maximumFractionDigits:d}):String(v);const money=v=>v===undefined||v===null?"—":"$"+fmt(v);const pct=v=>v===undefined||v===null?"—":fmt(v)+"%";const set=(id,v)=>$(id).textContent=v;const esc=v=>String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));const accounts=()=>report&&report.persistent_paper_portfolio&&report.persistent_paper_portfolio.accounts||{};
+let report=null;let mt5Snapshot=null;const $=id=>document.getElementById(id);const fmt=(v,d=2)=>v===undefined||v===null||v===""?"—":Number.isFinite(Number(v))?Number(v).toLocaleString("en-US",{minimumFractionDigits:d,maximumFractionDigits:d}):String(v);const money=v=>v===undefined||v===null?"—":"$"+fmt(v);const pct=v=>v===undefined||v===null?"—":fmt(v)+"%";const set=(id,v)=>$(id).textContent=v;const esc=v=>String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));const accounts=()=>report&&report.persistent_paper_portfolio&&report.persistent_paper_portfolio.accounts||{};
+
+function validateMt5Snapshot(x){
+ if(!x||typeof x!=="object"||Array.isArray(x)||x.schema_version!==1||x.source!=="MetaTrader 5"||x.mode!=="MT5_MARKET_DATA_PAPER_ONLY")throw Error("ملف MT5 غير معروف أو إصدار المخطط غير مدعوم");
+ if(typeof x.symbol!=="string"||!x.symbol.trim()||x.symbol.length>64)throw Error("رمز MT5 غير صالح");
+ if(!x.quote||x.quote.symbol!==x.symbol)throw Error("بيانات السعر لا تطابق رمز الوسيط");
+ const bid=Number(x.quote.bid),ask=Number(x.quote.ask),spread=Number(x.quote.spread);
+ if(!Number.isFinite(bid)||!Number.isFinite(ask)||!Number.isFinite(spread)||bid<=0||ask<bid||spread<0||Math.abs((ask-bid)-spread)>1e-7)throw Error("عرض Bid/Ask غير صالح");
+ if(!x.timeframes||typeof x.timeframes!=="object")throw Error("بيانات الأطر الزمنية مفقودة");
+ for(const tf of ["1h","4h","6h"]){
+  const frame=x.timeframes[tf];if(!frame||!Array.isArray(frame.candles)||frame.candles.length>120||!frame.quality||!frame.scanner)throw Error("بيانات الإطار "+tf+" غير مكتملة");
+  let previous=-1;
+  for(const row of frame.candles){
+   const ts=Number(row.timestamp),o=Number(row.open),h=Number(row.high),l=Number(row.low),cl=Number(row.close),v=Number(row.tick_volume);
+   if(![ts,o,h,l,cl,v].every(Number.isFinite)||!Number.isInteger(ts)||ts<=previous||Math.min(o,h,l,cl)<=0||h<Math.max(o,cl,l)||l>Math.min(o,cl,h)||v<0)throw Error("شموع MT5 غير صالحة في "+tf);
+   previous=ts;
+  }
+ }
+ if(x.safety?.orders_sent!==false||x.safety?.live_trading_enabled!==false)throw Error("رفض الملف: وضع التنفيذ ليس للقراءة والمحاكاة فقط");
+ return x;
+}
+function renderMt5(){
+ if(!mt5Snapshot)return;
+ const x=mt5Snapshot,q=x.quote,h=x.timeframes["1h"],s=h.scanner,p=x.paper_trading||{};
+ set("mt5Status","تم تحميل بيانات "+x.symbol+" من MT5");
+ set("mt5Updated","وقت إنشاء اللقطة: "+(x.generated_utc?new Date(x.generated_utc).toLocaleString("ar-IQ"):"غير معروف"));
+ set("mt5Symbol",x.symbol);set("mt5Bid",fmt(q.bid,5));set("mt5Ask",fmt(q.ask,5));set("mt5Spread",fmt(q.spread,5));
+ set("mt5Quality",h.quality.quality_status||"—");set("mt5Scanner",s.status||"—");
+ set("mt5Score",s.confluence_score===undefined?"—":fmt(s.confluence_score,0)+"/"+fmt(s.confluence_total,0));
+ set("mt5PaperMode",p.enabled?(p.mode||"PAPER"):"غير مفعّل");
+ const frames=["1h","4h","6h"];
+ $("mt5TimeframeRows").innerHTML=frames.map(tf=>{const f=x.timeframes[tf],last=f.candles[f.candles.length-1]||{},sc=f.scanner||{},quality=f.quality||{};return "<tr><td>"+esc(tf)+"</td><td>"+esc(fmt(quality.bar_count,0))+"</td><td>"+esc(fmt(last.close,5))+"</td><td>"+esc(fmt(quality.latest_bar_age_minutes,1))+"</td><td><span class='tag'>"+esc(quality.quality_status||"—")+"</span></td><td>"+esc(sc.confluence_score===undefined?"—":fmt(sc.confluence_score,0)+"/"+fmt(sc.confluence_total,0))+"</td><td>"+esc(sc.status||"—")+"</td></tr>"}).join("");
+ const accounts=p.enabled&&p.accounts&&typeof p.accounts==="object"?Object.entries(p.accounts):[];
+ const totalInitial=accounts.reduce((n,[,a])=>n+Number(a.initial_cash_usd||0),0),totalEquity=accounts.reduce((n,[,a])=>n+Number(a.equity_after_estimated_exit_costs_usd||0),0),totalTrades=accounts.reduce((n,[,a])=>n+Number(a.completed_trades||0),0);
+ set("mt5PaperInitial",accounts.length?money(totalInitial):"—");set("mt5PaperEquity",accounts.length?money(totalEquity):"—");
+ set("mt5PaperReturn",accounts.length&&totalInitial>0?pct((totalEquity/totalInitial-1)*100):"—");set("mt5PaperTrades",accounts.length?fmt(totalTrades,0):"—");
+ $("mt5PaperRows").innerHTML=accounts.map(([name,a])=>{const paused=!!(a.paused_for_drawdown||a.daily_loss_paused||a.paused_for_loss_streak||a.paused_for_strategy_health);return "<tr><td>"+esc(name)+"</td><td>"+esc(money(a.equity_after_estimated_exit_costs_usd))+"</td><td>"+esc(pct(a.return_pct))+"</td><td>"+esc(fmt(a.completed_trades,0))+"</td><td>"+esc(pct(a.max_drawdown_pct))+"</td><td><span class='tag'>"+(paused?"متوقف للحماية":"مراقبة ورقية")+"</span></td></tr>"}).join("")||"<tr><td colspan='6' class='empty'>"+esc(p.note||"لم يتم تشغيل دفتر المحاكاة الورقي")+"</td></tr>";
+}
+$("mt5SnapshotFile").addEventListener("change",async e=>{
+ const file=e.target.files&&e.target.files[0];if(!file)return;
+ try{if(file.size>5*1024*1024)throw Error("حجم الملف أكبر من 5 MB");const candidate=validateMt5Snapshot(JSON.parse(await file.text()));mt5Snapshot=candidate;renderMt5();$("mt5Message").textContent="تم التحقق من اللقطة وتحميلها محلياً في المتصفح. لا يتم إرسالها إلى الخادم.";}
+ catch(err){mt5Snapshot=null;$("mt5Message").textContent="تعذر تحميل الملف: "+err.message;resetMt5View();}
+});
+function resetMt5View(){
+ ["mt5Symbol","mt5Bid","mt5Ask","mt5Spread","mt5Quality","mt5Scanner","mt5Score","mt5PaperMode","mt5PaperInitial","mt5PaperEquity","mt5PaperReturn","mt5PaperTrades","mt5Updated"].forEach(id=>set(id,"—"));
+ $("mt5TimeframeRows").innerHTML="<tr><td colspan='7' class='empty'>لا توجد بيانات MT5 صالحة</td></tr>";
+ $("mt5PaperRows").innerHTML="<tr><td colspan='6' class='empty'>لا توجد بيانات محاكاة</td></tr>";
+}
+$("clearMt5").addEventListener("click",()=>{mt5Snapshot=null;$("mt5SnapshotFile").value="";$("mt5Message").textContent="تم مسح لقطة MT5 من عرض الصفحة.";resetMt5View();});
+
 function paperRiskPauseLabel(a){
  const reasons=[];
  if(a.paused_for_drawdown) reasons.push("تراجع الحساب");
