@@ -2059,6 +2059,9 @@ def main():
     )
     six_hour_atr_research = run_six_hour_atr_trailing_lab(candles)
     six_hour_atr_stress = run_six_hour_atr_trailing_lab(candles, fee=0.002, slippage=0.001)
+    from strategy_lab import run_volume_liquidity_lab
+    volume_liquidity_research = run_volume_liquidity_lab(candles, fee=FEE_RATE, slippage=SLIPPAGE_RATE)
+    volume_liquidity_stress = run_volume_liquidity_lab(candles, fee=0.002, slippage=0.001)
     forward_paper = run_forward_paper_accounts(candles)
     qualification = {}
     for label in ("1h", "4h", "6h", "1d"):
@@ -2135,6 +2138,8 @@ def main():
         "six_hour_atr_trailing_research": six_hour_atr_research,
         "six_hour_atr_trailing_stress": six_hour_atr_stress,
         "multi_timeframe_ensemble_stress": multi_timeframe_ensemble_stress,
+        "volume_liquidity_momentum_research": volume_liquidity_research,
+        "volume_liquidity_momentum_stress": volume_liquidity_stress,
         "warning": "Historical results are not forecasts. Strategy selection requires robust out-of-sample performance and forward paper trading. No live orders were placed.",
     }
     Path("historical_research.json").write_text(
