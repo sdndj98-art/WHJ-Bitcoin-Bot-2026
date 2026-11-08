@@ -128,6 +128,41 @@ def run_ema_adx_filter_lab(hourly_candles, fee=FEE_RATE, slippage=SLIPPAGE_RATE)
                     ),
                 })
 
+    # Compact, explicit fold robustness diagnostics. Fold returns are not
+    # compounded here; each count is a same-window comparison against baseline.
+    robustness = {}
+    for name in variants:
+        candidate_folds = walk_forward[name]
+        baseline_folds = walk_forward["baseline"]
+        benchmark_folds = walk_forward["matched_benchmark"]
+        candidate_stress = walk_forward_costs["2x"][name]
+        baseline_stress = walk_forward_costs["2x"]["baseline"]
+        robustness[name] = {
+            "fold_count": len(candidate_folds),
+            "positive_return_folds": sum(
+                item["metrics"]["return_pct"] > 0 for item in candidate_folds
+            ),
+            "outperformed_baseline_return_folds": sum(
+                item["metrics"]["return_pct"] > base["metrics"]["return_pct"]
+                for item, base in zip(candidate_folds, baseline_folds)
+            ),
+            "outperformed_benchmark_return_folds": sum(
+                item["metrics"]["return_pct"] > bench["metrics"]["return_pct"]
+                for item, bench in zip(candidate_folds, benchmark_folds)
+            ),
+            "lower_drawdown_than_baseline_folds": sum(
+                item["metrics"]["max_drawdown_pct"] < base["metrics"]["max_drawdown_pct"]
+                for item, base in zip(candidate_folds, baseline_folds)
+            ),
+            "positive_return_2x_cost_folds": sum(
+                item["metrics"]["return_pct"] > 0 for item in candidate_stress
+            ),
+            "outperformed_baseline_return_2x_cost_folds": sum(
+                item["metrics"]["return_pct"] > base["metrics"]["return_pct"]
+                for item, base in zip(candidate_stress, baseline_stress)
+            ),
+        }
+
     stress = {}
     for multiplier in (1.0, 2.0):
         scenario_fee = fee * multiplier
@@ -164,6 +199,7 @@ def run_ema_adx_filter_lab(hourly_candles, fee=FEE_RATE, slippage=SLIPPAGE_RATE)
         "training": {name: value["training"] for name, value in results.items()},
         "walk_forward_windows": walk_forward,
         "walk_forward_cost_sensitivity": walk_forward_costs,
+        "walk_forward_robustness": robustness,
         "cost_sensitivity": stress,
         "execution": (
             "ADX(14) and +DI/-DI are computed from each completed native 4h/6h OHLC bar. "
