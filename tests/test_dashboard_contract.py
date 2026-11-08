@@ -231,6 +231,23 @@ class DashboardContractTests(unittest.TestCase):
         self.assertIn("التعرّض السوقي الإجمالي", self.source)
         self.assertIn("تفاصيل الحسابات لا تطابق إجمالي التعرّض والسيولة", self.source)
 
+
+    def test_isolated_adx_forward_dashboard_import_is_separate_and_paper_only(self):
+        required = {
+            "adxForwardFile", "clearAdxForward", "adxForwardMessage",
+            "adxForwardStatus", "adxForwardFreshness", "adxForwardGenerated",
+            "adxForwardQuality", "adxForwardSeed", "adxForwardRows",
+        }
+        self.assertTrue(required.issubset(set(self.parser.ids)))
+        self.assertIn("function validateAdxForwardReport(x)", self.source)
+        self.assertIn("function renderAdxForward(x)", self.source)
+        self.assertIn("ISOLATED_ADX_FORWARD_PAPER_ONLY", self.source)
+        self.assertIn("existing_paper_ledgers_touched!==false", self.source)
+        self.assertIn("يجب أن يحتوي التقرير على المحافظ الأربع فقط", self.source)
+        self.assertIn("ADX15 / ADX20", self.source)
+        self.assertIn("لا تُخلط هذه الدفاتر مع الحسابات الورقية القديمة", self.source)
+        self.assertIn("30 صفقة مستقبلية مغلقة لكل محفظة", self.source)
+
     def test_mt5_dashboard_import_is_local_validated_and_paper_only(self):
         required = {
             "mt5", "mt5SnapshotFile", "clearMt5", "mt5Message", "mt5Status",
