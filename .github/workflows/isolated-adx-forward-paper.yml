@@ -36,22 +36,30 @@ jobs:
           restore-keys: |
             whj-adx-forward-v1-
       - name: Refuse accidental ledger reseeding
+        id: guard
         if: steps.restore.outputs.cache-matched-key == '' && inputs.bootstrap_ledgers != true
         run: |
+          if [ "${{ github.event_name }}" = "schedule" ]; then
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+            echo "::notice::No ADX ledger cache yet; waiting for the one-time manual bootstrap."
+            exit 0
+          fi
           echo "::error::No prior ADX paper ledger cache. Run workflow_dispatch once with bootstrap_ledgers=true; refusing to reset or reseed."
           exit 1
       - name: Run isolated ADX safety tests
+        if: steps.guard.outputs.skip != 'true'
         run: python -m unittest discover -s tests -p 'test_adx_forward_paper.py' -v
       - name: Run isolated ADX forward paper
+        if: steps.guard.outputs.skip != 'true'
         run: python adx_forward_paper.py
       - name: Save isolated ADX ledgers
-        if: success()
+        if: success() && steps.guard.outputs.skip != 'true'
         uses: actions/cache/save@v4
         with:
           path: paper_adx_forward/
           key: whj-adx-forward-v1-${{ github.run_id }}-${{ github.run_attempt }}
       - name: Publish summary
-        if: success()
+        if: success() && steps.guard.outputs.skip != 'true'
         run: |
           python - <<'PY'
           import json
@@ -76,6 +84,7 @@ jobs:
           Path(__import__("os").environ["GITHUB_STEP_SUMMARY"]).write_text("\\n".join(lines) + "\\n", encoding="utf-8")
           PY
       - name: Upload isolated report
+        if: success() && steps.guard.outputs.skip != 'true'
         uses: actions/upload-artifact@v4
         with:
           name: whj-isolated-adx-forward-${{ github.run_number }}
