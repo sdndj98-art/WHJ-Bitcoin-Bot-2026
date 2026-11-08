@@ -55,6 +55,9 @@ class EmaAdxLabTests(unittest.TestCase):
         self.assertEqual(len(report["walk_forward_windows"]["matched_benchmark"]), 3)
         self.assertEqual(len(report["walk_forward_cost_sensitivity"]["2x"]["baseline"]), 3)
         self.assertEqual(
+            len(report["walk_forward_cost_sensitivity"]["2x"]["matched_benchmark"]), 3
+        )
+        self.assertEqual(
             len(report["walk_forward_cost_sensitivity"]["2x"]["adx_15_entry_only"]), 3
         )
         self.assertIn("baseline", report["out_of_sample"])
@@ -65,6 +68,9 @@ class EmaAdxLabTests(unittest.TestCase):
         self.assertLessEqual(robustness["outperformed_baseline_return_folds"], 3)
         self.assertLessEqual(robustness["outperformed_benchmark_return_folds"], 3)
         self.assertLessEqual(robustness["positive_return_2x_cost_folds"], 3)
+        self.assertLessEqual(
+            robustness["outperformed_benchmark_return_2x_cost_folds"], 3
+        )
 
 
 if __name__ == "__main__":
