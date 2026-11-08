@@ -288,5 +288,23 @@ class DashboardContractTests(unittest.TestCase):
         self.assertIn('passed+" / 8"', self.source)
 
 
+    def test_agent_scanner_payload_is_initialized_before_timeline_render(self):
+        render_start = self.source.index("function render(){")
+        render_end = self.source.index("function renderHarmonicResearch", render_start)
+        render_source = self.source[render_start:render_end]
+        declaration = 'const s=report.market_scanner||{};'
+        self.assertEqual(render_source.count(declaration), 1)
+        self.assertLess(render_source.index(declaration), render_source.index("if(s.status)"))
+        self.assertIn('setAgent("agentScanState"', render_source)
+        self.assertIn('setAgent("agentGuardState"', render_source)
+        self.assertIn('setAgent("agentSizerState"', render_source)
+        self.assertIn('setAgent("agentExecState"', render_source)
+        self.assertIn('setAgent("agentLogState"', render_source)
+        self.assertIn('setAgent("agentEquityState"', render_source)
+        self.assertNotIn("whj-agent-terminal", self.source)
+        self.assertIn('fetch("./report.json?t="+Date.now()', self.source)
+        self.assertIn("setInterval(load,60000)", self.source)
+
+
 if __name__ == "__main__":
     unittest.main()
