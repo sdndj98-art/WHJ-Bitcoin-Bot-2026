@@ -7,8 +7,8 @@ from mt5_snapshot import build_mt5_snapshot, write_snapshot
 
 def candles(interval, count=70):
     rows = []
-    start = (1700000000 // interval) * interval
-    start -= start % interval
+    anchor = 1700000000 - (1700000000 % 43200)
+    start = anchor - count * interval
     price = 100.0
     for index in range(count):
         ts = start + index * interval
@@ -48,7 +48,7 @@ class FakeAdapter:
 class MT5SnapshotTests(unittest.TestCase):
     def test_snapshot_includes_three_timeframes_and_excludes_private_account_fields(self):
         adapter = FakeAdapter()
-        snapshot = build_mt5_snapshot(adapter, "BTCUSD", 70, now_timestamp=1700000000 + 70 * 21600)
+        snapshot = build_mt5_snapshot(adapter, "BTCUSD", 70, now_timestamp=1700000000 - (1700000000 % 43200) + 60)
         self.assertTrue(adapter.connected)
         self.assertEqual(set(snapshot["timeframes"]), {"1h", "4h", "6h"})
         self.assertEqual(snapshot["quote"]["spread"], 0.2)
