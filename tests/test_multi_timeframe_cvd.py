@@ -44,7 +44,7 @@ class MultiTimeframeCvdTests(unittest.TestCase):
     def test_rejects_unknown_timeframe(self):
         with self.assertRaises(ValueError):
             analyze_multi_timeframe_cvd(
-                {"2h": [candle()]}, self.trades, {"2h": True}
+                {"7h": [candle()]}, self.trades, {"7h": True}
             )
 
     def test_rejects_empty_candle_map(self):
