@@ -49,6 +49,14 @@ The strategy lab also evaluates a long-only consensus candidate that gives equal
 
 The hourly report includes a seeded bootstrap resampling of the completed historical paper-backtest trade PnL. It reports median and tail final-equity scenarios, loss frequency, and maximum-drawdown percentiles across 2,000 resampled sequences. This is a diagnostic only: it assumes IID trade outcomes, keeps the trade count fixed, uses additive historical PnL, and does not model serial dependence, regime changes, or future execution. It is not a forecast, does not establish an edge, and must never override the fixed strategy qualification gates. A second circular moving-block bootstrap diagnostic samples short contiguous sequences of trade outcomes to test sensitivity to local ordering. Its default block length is three trades. This can preserve limited short-run ordering, but cannot reliably estimate dependence from a small sample and is not a forecast.
 
+## MetaTrader 5 (MT5) connector
+
+An optional read-only MT5 adapter is available for broker-provided instruments such as BTCUSD, XAUUSD, and FX pairs (exact symbols depend on the broker). It attaches to an already configured MetaTrader 5 desktop terminal, reads sanitized account/broker status, validated bid/ask quotes, and completed OHLCV candles. The adapter starts candle retrieval at MT5 bar position 1 to exclude the still-forming candle. Setup and usage are documented in [MT5_SETUP.md](MT5_SETUP.md).
+
+**Platform note:** the official MetaTrader5 Python package requires a supported Windows environment with the MT5 terminal. It cannot run directly inside Android Termux or the Linux-hosted GitHub Actions workflow. Keep Termux's existing crypto analysis workflow unchanged; use a Windows workstation/VPS for the MT5 connector.
+
+**Safety boundary:** this integration is read-only and paper-data-only. It contains no order submission or position-closing method, does not store account passwords, and does not enable real trading. A future execution adapter must be a separate reviewed change with demo-account validation, broker-specific volume/stop checks, duplicate-order protection, reconciliation, and explicit live-trading safeguards. Broker permission to trade does not mean WHJ is permitted to send orders.
+
 ## Indicator
 - BUY when latest closed price > SMA20 > SMA50.
 - SELL when latest closed price < SMA20 < SMA50.
