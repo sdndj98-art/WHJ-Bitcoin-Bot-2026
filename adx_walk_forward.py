@@ -81,14 +81,25 @@ def run_expanding_walk_forward(hourly_candles, fee=FEE_RATE, slippage=SLIPPAGE_R
         for bars, h in zip(sets, hours)
     ]
     common_start = max(times[199] for times in close_times)
-    oos_start = close_times[0][int(len(bars4) * 0.70)]
-    oos_end = min(times[-1] + 1 for times in close_times)
-    if oos_end <= oos_start:
-        raise ValueError("Insufficient common out-of-sample interval")
-    edges = [
-        oos_start + ((oos_end - oos_start) * index) // folds
+
+    # 4h and 6h bars share a close boundary every 12 UTC hours. Split only
+    # on those shared completed-bar boundaries so neither sleeve is cut mid-bar.
+    common_close_times = sorted(set(close_times[0]).intersection(close_times[1]))
+    oos_target = close_times[0][int(len(bars4) * 0.70)]
+    oos_index = next(
+        (index for index, value in enumerate(common_close_times) if value >= oos_target),
+        None,
+    )
+    if oos_index is None or len(common_close_times) - oos_index < folds + 1:
+        raise ValueError("Insufficient common aligned out-of-sample boundaries")
+    usable_boundaries = common_close_times[oos_index:]
+    boundary_indices = [
+        (len(usable_boundaries) - 1) * index // folds
         for index in range(folds + 1)
     ]
+    edges = [usable_boundaries[index] for index in boundary_indices[:-1]]
+    edges.append(usable_boundaries[-1] + 1)
+    oos_start, oos_end = edges[0], edges[-1]
     if any(edges[index + 1] <= edges[index] for index in range(folds)):
         raise ValueError("Walk-forward test folds are too small")
 
@@ -157,6 +168,7 @@ def run_expanding_walk_forward(hourly_candles, fee=FEE_RATE, slippage=SLIPPAGE_R
         "thresholds": list(THRESHOLDS),
         "timeframes_hours": list(TIMEFRAMES),
         "fold_count": folds,
+        "fold_boundary_alignment": "UTC 12-hour common completed-bar close boundaries for 4h and 6h sleeves",
         "test_fold_capital_policy": (
             "Each test fold is independently simulated from $1,000 portfolio capital; "
             "fold returns are reported separately and are not compounded into one continuous equity curve."
