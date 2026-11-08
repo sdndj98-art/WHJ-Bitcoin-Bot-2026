@@ -5,6 +5,7 @@ Signals use completed native bars; the shared simulator fills at the next close.
 No paper state or live orders are accessed.
 """
 import json
+import math
 from pathlib import Path
 
 from historical_research import (
@@ -32,8 +33,9 @@ def _adx_entry_ema_exit_signals(bars, threshold=20.0):
 
 
 def _adx_atr_exit_signals(bars, threshold=20.0, atr_multiple=3.0):
-    if isinstance(atr_multiple, bool) or not isinstance(atr_multiple, (int, float)) or atr_multiple <= 0:
-        raise ValueError("ATR multiple must be positive")
+    if (isinstance(atr_multiple, bool) or not isinstance(atr_multiple, (int, float))
+            or not math.isfinite(atr_multiple) or atr_multiple <= 0):
+        raise ValueError("ATR multiple must be a finite positive number")
     baseline, _ = _build_sleeve_signals(bars, threshold)
     adx, plus_di, minus_di = _adx_di_series(bars, 14)
     atr = _atr_series(bars, 14)
