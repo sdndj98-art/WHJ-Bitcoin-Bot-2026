@@ -980,7 +980,26 @@ class KrakenSpotWebSocketRunner:
                         message.get("success") is False or message.get("error")
                     ):
                         raise RuntimeError(f"Kraken WebSocket error: {message}")
-                    result = self.adapter.handle_message(message)
+                    previous_trade_id = self.adapter.ledger.last_trade_id
+                    previous_trade_count = self.adapter.ledger.processed_trade_count
+                    try:
+                        result = self.adapter.handle_message(message)
+                    except TradeIdGapError:
+                        # REST may have recovered a contiguous prefix without
+                        # reaching the WebSocket target. Persist that prefix
+                        # before reconnecting so journal and ledger stay aligned.
+                        if self.adapter.ledger.last_trade_id != previous_trade_id:
+                            try:
+                                persist_state(self.adapter.ledger.to_state())
+                            except Exception as exc:
+                                raise StatePersistenceError(
+                                    "partial backfill state persistence failed; runner stopped"
+                                ) from exc
+                            backfilled_trades += (
+                                self.adapter.ledger.processed_trade_count
+                                - previous_trade_count
+                            )
+                        raise
                     if result.get("status") != "OK":
                         continue
                     ledger_result = result.get("ledger", {})
