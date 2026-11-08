@@ -1760,6 +1760,37 @@ def run_six_hour_atr_trailing_lab(hourly_candles, fee=FEE_RATE, slippage=SLIPPAG
         "EMA50/EMA200 trend invalidation or completed-bar +DI <= -DI"
     )
 
+    # Predeclared threshold sensitivity check: compare ADX 15/20/25 while
+    # keeping all other rules and execution assumptions unchanged.
+    adx_threshold_candidates = {}
+    for threshold in (15.0, 25.0):
+        threshold_signals = []
+        threshold_entry_indices = []
+        threshold_position = False
+        for index, close in enumerate(closes):
+            base_trend_ok = bool(
+                index >= 199 and ema50[index] > ema200[index] and close > ema200[index]
+            )
+            directional_ok = (
+                adx14[index] is not None and adx14[index] >= threshold
+                and plus_di[index] is not None and minus_di[index] is not None
+                and plus_di[index] > minus_di[index]
+            )
+            if not threshold_position and base_trend_ok and directional_ok:
+                threshold_position = True
+                threshold_entry_indices.append(index)
+            elif threshold_position and not base_trend_ok:
+                threshold_position = False
+            threshold_signals.append(threshold_position)
+        candidate = evaluate_adx_candidate(
+            threshold_signals, threshold_entry_indices,
+            "EMA50/EMA200 trend invalidation"
+        )
+        candidate["entry_rule"] = (
+            f"EMA50 > EMA200, close > EMA200, ADX(14) >= {threshold:g}, +DI > -DI"
+        )
+        adx_threshold_candidates[f"ema50_200_adx_{int(threshold)}_entry_filter"] = candidate
+
     benchmark_metrics = _simulate_ohlc(
         six_hour, [True] * len(six_hour), split, len(six_hour), fee, slippage
     )
@@ -1775,6 +1806,7 @@ def run_six_hour_atr_trailing_lab(hourly_candles, fee=FEE_RATE, slippage=SLIPPAG
         "atr_trailing_multiple": atr_multiple,
         "adx_period": 14,
         "adx_entry_threshold": 20.0,
+        "adx_thresholds_tested": [15.0, 20.0, 25.0],
         "execution": (
             "Both candidates use the same EMA50/EMA200 entry and completed six-hour "
             "signals, filled at the next six-hour close. Candidate exits are either "
@@ -1787,6 +1819,7 @@ def run_six_hour_atr_trailing_lab(hourly_candles, fee=FEE_RATE, slippage=SLIPPAG
             "ema50_200_close_below_ema50_exit": ema50_close_exit_candidate,
             "ema50_200_adx_entry_filter": adx_entry_candidate,
             "ema50_200_adx_entry_and_di_exit": adx_entry_exit_candidate,
+            **adx_threshold_candidates,
             "buy_and_hold_25pct": {"out_of_sample": benchmark_metrics},
         },
     }
