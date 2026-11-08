@@ -51,7 +51,7 @@ The hourly report includes a seeded bootstrap resampling of the completed histor
 
 ## MetaTrader 5 (MT5) connector
 
-An optional read-only MT5 adapter is available for broker-provided instruments such as BTCUSD, XAUUSD, and FX pairs (exact symbols depend on the broker). It attaches to an already configured MetaTrader 5 desktop terminal, reads sanitized account/broker status, validated bid/ask quotes, and completed OHLCV candles. The adapter starts candle retrieval at MT5 bar position 1 to exclude the still-forming candle. Setup and usage are documented in [MT5_SETUP.md](MT5_SETUP.md).
+An optional read-only MT5 adapter is available for broker-provided instruments such as BTCUSD, XAUUSD, and FX pairs (exact symbols depend on the broker). It attaches to an already configured MetaTrader 5 desktop terminal, reads sanitized account/broker status, validated bid/ask quotes, and completed OHLCV candles. The adapter starts candle retrieval at MT5 bar position 1 to exclude the still-forming candle. Setup and usage are documented in [MT5_SETUP.md](MT5_SETUP.md). Run `python mt5_snapshot.py --symbol BTCUSD --update-paper-ledger` on the Windows terminal host, then import `mt5_snapshot.json` into the dashboard MT5 tab. The snapshot runs the WHJ scanner on 1h/4h/6h broker candles and can update five local virtual BTC paper accounts; private broker/account balances are excluded from the snapshot.
 
 **Platform note:** the official MetaTrader5 Python package requires a supported Windows environment with the MT5 terminal. It cannot run directly inside Android Termux or the Linux-hosted GitHub Actions workflow. Keep Termux's existing crypto analysis workflow unchanged; use a Windows workstation/VPS for the MT5 connector.
 
