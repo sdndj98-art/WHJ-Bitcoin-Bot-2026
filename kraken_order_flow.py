@@ -1,7 +1,8 @@
-"""Read-only Kraken trade-flow and order-book microstructure diagnostics.
+"""Read-only Kraken trade-flow, order-book and incremental CVD diagnostics.
 
-This module consumes Kraken public Trades and Depth payloads. It does not
-place orders, maintain a persistent CVD ledger, or infer hidden liquidity.
+This module consumes public Kraken market data. It does not place orders or
+infer hidden liquidity. WebSocket transport and durable state storage remain
+caller-managed.
 """
 import json
 import math
@@ -60,11 +61,16 @@ def _kraken_get(endpoint, params, timeout=10):
     return result
 
 
-def fetch_recent_trades(pair="XBTUSD", timeout=10):
-    """Fetch a recent public trade batch; returned delta is batch-scoped."""
+def fetch_recent_trades(pair="XBTUSD", timeout=10, since=None):
+    """Fetch a public trade batch, optionally resuming from Kraken's cursor."""
     if not isinstance(pair, str) or not pair or len(pair) > 32:
         raise ValueError("pair must be a non-empty Kraken pair identifier")
-    result = _kraken_get("Trades", {"pair": pair}, timeout=timeout)
+    params = {"pair": pair}
+    if since is not None:
+        if isinstance(since, bool) or not str(since).isdigit() or int(since) <= 0:
+            raise ValueError("since must be a positive Kraken cursor or nanosecond timestamp")
+        params["since"] = str(since)
+    result = _kraken_get("Trades", params, timeout=timeout)
     pair_rows = _extract_pair_result(result)
     if not isinstance(pair_rows, list):
         raise ValueError("Kraken Trades payload must contain a trade list")
@@ -525,6 +531,15 @@ class PersistentCvdLedger:
             price, quantity, timestamp, side = normalized[trade_id]
             if last_timestamp is not None and timestamp < last_timestamp:
                 raise ValueError("new trade timestamps must be non-decreasing by trade_id")
+            expected_id = (
+                accepted[-1][0] + 1 if accepted
+                else self.last_trade_id + 1 if self.processed_trade_count else None
+            )
+            if expected_id is not None and trade_id != expected_id:
+                raise TradeIdGapError(
+                    f"trade ID gap detected: expected {expected_id}, received {trade_id}; "
+                    "recover missing trades before applying this batch"
+                )
             accepted.append((trade_id, quantity, timestamp, side))
             last_timestamp = timestamp
 
@@ -574,5 +589,165 @@ class PersistentCvdLedger:
                 "The feed adapter must provide unique, monotonic trade IDs and recover missed events after reconnect.",
                 "This ledger does not prove gap-free ingestion; reconnect recovery must be verified by the adapter.",
                 "CVD is specific to the supplied venue, symbol and feed.",
+            ],
+        }
+
+
+class TradeIdGapError(ValueError):
+    """Raised when a per-symbol trade sequence has a missing ID."""
+
+
+def normalize_kraken_ws_v2_trade_message(message, expected_symbol=None):
+    """Convert a Kraken Spot WebSocket v2 trade envelope to ledger events."""
+    if isinstance(message, str):
+        try:
+            message = json.loads(message)
+        except json.JSONDecodeError as exc:
+            raise ValueError("WebSocket message must be valid JSON") from exc
+    if not isinstance(message, dict):
+        raise ValueError("WebSocket message must be an object")
+    if message.get("channel") != "trade":
+        return []
+    if message.get("type") not in ("snapshot", "update"):
+        raise ValueError("Unknown Kraken WebSocket trade message type")
+    rows = message.get("data")
+    if not isinstance(rows, list):
+        raise ValueError("Kraken WebSocket trade data must be a list")
+    events = []
+    for row in rows:
+        if not isinstance(row, dict):
+            raise ValueError("Kraken WebSocket trade item must be an object")
+        symbol = row.get("symbol")
+        if not isinstance(symbol, str) or not symbol:
+            raise ValueError("Kraken WebSocket trade is missing symbol")
+        if expected_symbol is not None and symbol != expected_symbol:
+            raise ValueError("Kraken WebSocket trade symbol does not match subscription")
+        events.append({
+            "symbol": symbol,
+            "trade_id": row.get("trade_id"),
+            "price": row.get("price"),
+            "qty": row.get("qty"),
+            "side": row.get("side"),
+            "timestamp": row.get("timestamp"),
+        })
+    return events
+
+
+def normalize_kraken_rest_trade_rows(rows, symbol):
+    """Normalize REST Trades rows; require the exchange-provided seventh ID field."""
+    if not isinstance(rows, (list, tuple)):
+        raise ValueError("Kraken REST trade rows must be a list")
+    events = []
+    for row in rows:
+        if not isinstance(row, (list, tuple)) or len(row) < 7:
+            raise ValueError(
+                "Kraken REST trade row lacks trade_id; refusing unsafe CVD backfill"
+            )
+        side = row[3]
+        if side not in ("b", "s"):
+            raise ValueError("Kraken REST trade row has an unknown aggressor side")
+        events.append({
+            "symbol": symbol,
+            "trade_id": row[6],
+            "price": row[0],
+            "qty": row[1],
+            "side": "buy" if side == "b" else "sell",
+            "timestamp": row[2],
+        })
+    return events
+
+
+class KrakenSpotTradeFeedAdapter:
+    """Bridge decoded Kraken WS v2 trade envelopes into a persistent CVD ledger.
+
+    The caller owns the WebSocket connection, subscription, heartbeat,
+    reconnect loop, and atomic persistence of ledger.to_state(). On a detected
+    trade-ID gap, this adapter backfills through Kraken REST Trades before
+    applying the incoming WebSocket update.
+    """
+
+    def __init__(self, ledger, pair, timeout=10, max_backfill_pages=10):
+        if not isinstance(ledger, PersistentCvdLedger):
+            raise ValueError("ledger must be a PersistentCvdLedger")
+        if not isinstance(pair, str) or not pair.strip():
+            raise ValueError("pair must be a non-empty string")
+        if isinstance(timeout, bool) or not isinstance(timeout, (int, float)) or not math.isfinite(timeout) or timeout <= 0:
+            raise ValueError("timeout must be positive")
+        if isinstance(max_backfill_pages, bool) or not isinstance(max_backfill_pages, int) or max_backfill_pages < 1:
+            raise ValueError("max_backfill_pages must be a positive integer")
+        if ledger.symbol not in (None, pair):
+            raise ValueError("ledger symbol does not match adapter pair")
+        ledger.symbol = pair
+        self.ledger = ledger
+        self.pair = pair
+        self.timeout = timeout
+        self.max_backfill_pages = max_backfill_pages
+
+    def _backfill_until(self, target_trade_id):
+        if self.ledger.last_trade_timestamp is None:
+            raise TradeIdGapError(
+                "cannot recover a gap without a prior trade timestamp; bootstrap a fresh snapshot"
+            )
+        cursor = str(int(self.ledger.last_trade_timestamp * 1_000_000_000))
+        pages = 0
+        accepted = 0
+        while self.ledger.last_trade_id < target_trade_id and pages < self.max_backfill_pages:
+            batch = fetch_recent_trades(self.pair, timeout=self.timeout, since=cursor)
+            rows = batch.get("trades")
+            if not isinstance(rows, list):
+                raise ValueError("Kraken REST response is missing trade rows")
+            events = normalize_kraken_rest_trade_rows(rows, self.pair)
+            before_id = self.ledger.last_trade_id
+            if events:
+                result = self.ledger.process(events)
+                accepted += result["accepted_in_batch"]
+            next_cursor = batch.get("last")
+            pages += 1
+            if self.ledger.last_trade_id >= target_trade_id:
+                break
+            if not next_cursor or str(next_cursor) == cursor or self.ledger.last_trade_id == before_id:
+                break
+            cursor = str(next_cursor)
+        return {
+            "pages": pages,
+            "accepted_trades": accepted,
+            "recovered": self.ledger.last_trade_id >= target_trade_id,
+            "last_trade_id": self.ledger.last_trade_id,
+        }
+
+    def handle_message(self, message):
+        """Process a WS v2 envelope, backfilling a sequence gap before retry."""
+        events = normalize_kraken_ws_v2_trade_message(message, self.pair)
+        if not events:
+            return {
+                "status": "IGNORED_NON_TRADE_MESSAGE",
+                "execution_enabled": False,
+                "live_orders_placed": False,
+            }
+        target_id = max(self.ledger._trade_id(event.get("trade_id")) for event in events)
+        try:
+            result = self.ledger.process(events)
+            recovery = {"attempted": False, "recovered": True, "pages": 0}
+        except TradeIdGapError:
+            recovery = self._backfill_until(target_id)
+            if not recovery["recovered"]:
+                raise TradeIdGapError(
+                    "REST backfill did not reach the WebSocket trade ID; "
+                    "state is partial and must be persisted before retry"
+                )
+            result = self.ledger.process(events)
+        return {
+            "status": "OK",
+            "ledger": result,
+            "backfill": recovery,
+            "continuity_verified_to_trade_id": self.ledger.last_trade_id,
+            "research_only": True,
+            "execution_enabled": False,
+            "live_orders_placed": False,
+            "limitations": [
+                "The caller must persist ledger.to_state() atomically after each successful update.",
+                "The caller owns WebSocket connection, heartbeat, reconnect and subscription lifecycle.",
+                "Recovery is limited to Kraken REST history availability and the configured page cap.",
+                "A fresh ledger snapshot establishes a baseline; it does not recover trades before that baseline.",
             ],
         }
