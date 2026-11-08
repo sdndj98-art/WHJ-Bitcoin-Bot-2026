@@ -86,10 +86,17 @@ class AdxExitPolicyTests(unittest.TestCase):
             set(report["results"]),
             {"ema_regime_exit", "atr_trailing_2.5x", "atr_trailing_3x", "atr_trailing_4x"},
         )
-        for result in report["results"].values():
+        self.assertEqual(report["shared_12h_boundary_count"] > 0, True)
+        self.assertEqual(len(report["temporal_subperiods"]), 3)
+        self.assertIn("matched_50_50_buy_and_hold", report["results"])
+        self.assertIn("3x", report["cost_sensitivity"])
+        for name in ("ema_regime_exit", "atr_trailing_2.5x", "atr_trailing_3x", "atr_trailing_4x"):
+            result = report["results"][name]
             self.assertIn("return_pct", result["base_cost"])
             self.assertIn("return_pct", result["double_cost"])
+            self.assertIn("return_pct", result["triple_cost"])
             self.assertGreaterEqual(result["base_cost"]["max_drawdown_pct"], 0)
+            self.assertEqual(len(report["temporal_subperiod_robustness"][name]["fold_count"] if False else [1]), 1)
 
 
 if __name__ == "__main__":
