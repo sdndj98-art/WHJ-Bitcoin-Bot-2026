@@ -92,13 +92,15 @@ def _adx(rows, period=14):
 
 
 def scan_btc_market(candles, market_data_quality=None, volume_lookback=20,
-                    volume_spike_multiple=1.5, interval_hours=1):
+                    volume_spike_multiple=1.5, interval_hours=1, market_label="BTC/USD"):
     """Score a completed hourly candle against eight independent confirmation checks.
 
     Uses 50 prior candles for EMA trend context, 20 prior candles for breakout
     and volume context, and 14 periods for RSI/ATR/ADX. A candidate is a research
     label for paper review only, not a trade instruction.
     """
+    if not isinstance(market_label, str) or not market_label.strip() or len(market_label) > 64:
+        raise ValueError("market_label must be a non-empty string of at most 64 characters")
     if isinstance(interval_hours, bool) or not isinstance(interval_hours, int) or interval_hours not in (1, 4, 6):
         raise ValueError("interval_hours must be one of 1, 4, or 6")
     interval_seconds = interval_hours * 3600
@@ -246,7 +248,7 @@ def scan_btc_market(candles, market_data_quality=None, volume_lookback=20,
         reasons.append("all_seven_scanner_checks_passed_paper_review_only")
 
     return {
-        "market": "BTC/USD",
+        "market": market_label.strip(),
         "timeframe": timeframe,
         "status": status,
         "lookback_candles": volume_lookback,
