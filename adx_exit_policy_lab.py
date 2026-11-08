@@ -17,6 +17,20 @@ from ema_adx_lab import _build_sleeve_signals
 ATR_MULTIPLIERS = (2.5, 3.0, 4.0)
 
 
+def _adx_entry_ema_exit_signals(bars, threshold=20.0):
+    """Enter only on ADX confirmation; hold until the EMA regime turns off."""
+    baseline, confirmed = _build_sleeve_signals(bars, threshold)
+    signals = []
+    active = False
+    for regime_on, entry_confirmed in zip(baseline, confirmed):
+        if not regime_on:
+            active = False
+        elif not active and entry_confirmed:
+            active = True
+        signals.append(active)
+    return signals
+
+
 def _adx_atr_exit_signals(bars, threshold=20.0, atr_multiple=3.0):
     if isinstance(atr_multiple, bool) or not isinstance(atr_multiple, (int, float)) or atr_multiple <= 0:
         raise ValueError("ATR multiple must be positive")
@@ -56,12 +70,10 @@ def run_exit_policy_lab(hourly_candles, fee=FEE_RATE, slippage=SLIPPAGE_RATE):
     if len(bars4) < 500 or len(bars6) < 300:
         raise ValueError("Insufficient history for exit-policy research")
     bar_sets, hours = [bars4, bars6], [4, 6]
-    baseline_sets, adx20_sets = [], []
-    for bars in bar_sets:
-        baseline, adx20 = _build_sleeve_signals(bars, 20.0)
-        baseline_sets.append(baseline)
-        adx20_sets.append(adx20)
-    exit_signals = {"ema_regime_exit": adx20_sets}
+    ema_exit_sets = [
+        _adx_entry_ema_exit_signals(bars, 20.0) for bars in bar_sets
+    ]
+    exit_signals = {"ema_regime_exit": ema_exit_sets}
     for multiple in ATR_MULTIPLIERS:
         exit_signals[f"atr_trailing_{multiple:g}x"] = [
             _adx_atr_exit_signals(bars, 20.0, multiple) for bars in bar_sets
