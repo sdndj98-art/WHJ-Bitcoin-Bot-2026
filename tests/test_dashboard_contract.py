@@ -64,6 +64,13 @@ class DashboardContractTests(unittest.TestCase):
         self.assertIn("bt.trade_log", self.source)
         self.assertIn("تدفق القرارات", self.source)
 
+    def test_decision_feed_exposes_report_freshness(self):
+        self.assertIn("agentFeedFreshness", self.parser.ids)
+        self.assertIn("agentFeedLastSeen", self.parser.ids)
+        self.assertIn("reportAgeMinutes", self.source)
+        self.assertIn("التقرير قديم", self.source)
+        self.assertIn("تحديث تلقائي كل 60 ثانية", self.source)
+
     def test_generated_dashboard_displays_all_paper_risk_pause_reasons(self):
         report = {
             "persistent_paper_portfolio": {
