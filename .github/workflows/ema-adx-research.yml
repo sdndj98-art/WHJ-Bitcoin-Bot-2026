@@ -6,6 +6,8 @@ on:
     paths:
       - "ema_adx_lab.py"
       - "tests/test_ema_adx_lab.py"
+      - "adx_walk_forward.py"
+      - "tests/test_adx_walk_forward.py"
       - ".github/workflows/ema-adx-research.yml"
   pull_request:
     branches: [main]
@@ -44,10 +46,18 @@ jobs:
       - name: Run historical EMA ADX comparison
         run: python ema_adx_lab.py
 
+      - name: Test expanding-window walk-forward selection
+        run: python -m unittest discover -s tests -p 'test_adx_walk_forward.py' -v
+
+      - name: Run expanding-window walk-forward research
+        run: python adx_walk_forward.py
+
       - name: Upload ADX research report
         uses: actions/upload-artifact@v4
         with:
           name: whj-ema-adx-research-${{ github.run_number }}
-          path: ema_adx_research.json
+          path: |
+            ema_adx_research.json
+            adx_walk_forward_report.json
           if-no-files-found: error
           retention-days: 30
