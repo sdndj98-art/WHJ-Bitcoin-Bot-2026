@@ -120,12 +120,15 @@ def run_collector(args, stop_event, websocket_factory=None):
         max_reconnect_attempts=args.max_reconnect_attempts,
     )
     def persist_state(state):
-        save_cvd_state_atomic(state_path, state)
+        # Commit the journal-bound continuity assertion before advancing the
+        # CVD state cursor. A crash between these writes then leaves a visible
+        # cursor mismatch (fail closed), never a new state without its proof.
         if journal and adapter.continuity_start_trade_id is not None:
             checkpoint = build_continuity_checkpoint(
                 trade_log_path, pair, ledger.last_trade_id
             )
             save_continuity_checkpoint_atomic(checkpoint_path, checkpoint)
+        save_cvd_state_atomic(state_path, state)
 
     result = runner.run(
         stop_event,
