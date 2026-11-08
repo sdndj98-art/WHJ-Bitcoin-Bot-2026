@@ -4,7 +4,12 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 
-from adx_forward_paper import process_native_bars
+from adx_forward_paper import (
+    _close_position,
+    _new_state,
+    _validate_state,
+    process_native_bars,
+)
 
 
 def make_bars(count=300):
@@ -24,6 +29,19 @@ def make_bars(count=300):
 
 
 class AdxForwardPaperTests(unittest.TestCase):
+    def test_sub_micro_dollar_profit_rounding_keeps_trade_label_valid(self):
+        state = _new_state(20.0, 4, 0)
+        state["btc"] = 1.0
+        state["entry_cost"] = 100.0
+        timestamp = 4 * 3_600_000
+        state["last_timestamp"] = timestamp
+        # A tiny positive raw PnL rounds to 0.000000 USD at ledger precision.
+        price = 100.0000004 / ((1 - 0.0005) * (1 - 0.001))
+        _close_position(state, timestamp, price)
+        self.assertEqual(state["trades"][-1]["pnl_usd"], 0.0)
+        self.assertEqual(state["trades"][-1]["result"], "LOSS")
+        _validate_state(state, 20.0, 4)
+
     def test_first_run_seeds_watermark_without_historical_trades(self):
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory) / "isolated.json"
