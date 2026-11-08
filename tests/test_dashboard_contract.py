@@ -235,7 +235,7 @@ class DashboardContractTests(unittest.TestCase):
     def test_isolated_adx_schedule_waits_for_explicit_first_bootstrap(self):
         workflow = Path(".github/workflows/isolated-adx-forward-paper.yml").read_text(encoding="utf-8")
         self.assertIn("id: guard", workflow)
-        self.assertIn('if: [ "${{ github.event_name }}" = "schedule" ]; then', workflow)
+        self.assertIn('if [ "${{ github.event_name }}" = "schedule" ]; then', workflow)
         self.assertIn('echo "skip=true" >> "$GITHUB_OUTPUT"', workflow)
         self.assertIn("waiting for the one-time manual bootstrap", workflow)
         self.assertIn("inputs.bootstrap_ledgers != true", workflow)
