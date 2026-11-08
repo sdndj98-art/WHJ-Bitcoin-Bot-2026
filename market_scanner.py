@@ -45,12 +45,58 @@ def _atr(rows, period=14):
     return value
 
 
+def _adx(rows, period=14):
+    """Return Wilder ADX, +DI and -DI from normalized OHLC rows."""
+    if len(rows) < (2 * period + 1):
+        raise ValueError("Not enough values for ADX")
+    true_ranges = []
+    plus_moves = []
+    minus_moves = []
+    for index, row in enumerate(rows):
+        high, low = row[2], row[3]
+        previous_close = rows[index - 1][4] if index else row[4]
+        previous_high = rows[index - 1][2] if index else high
+        previous_low = rows[index - 1][3] if index else low
+        true_ranges.append(max(
+            high - low, abs(high - previous_close), abs(low - previous_close)
+        ))
+        up_move = high - previous_high
+        down_move = previous_low - low
+        plus_moves.append(up_move if up_move > down_move and up_move > 0 else 0.0)
+        minus_moves.append(down_move if down_move > up_move and down_move > 0 else 0.0)
+
+    smooth_tr = sum(true_ranges[1:period + 1])
+    smooth_plus = sum(plus_moves[1:period + 1])
+    smooth_minus = sum(minus_moves[1:period + 1])
+    dx_values = []
+    for index in range(period, len(rows)):
+        if index > period:
+            smooth_tr = smooth_tr - (smooth_tr / period) + true_ranges[index]
+            smooth_plus = smooth_plus - (smooth_plus / period) + plus_moves[index]
+            smooth_minus = smooth_minus - (smooth_minus / period) + minus_moves[index]
+        if smooth_tr <= 0:
+            plus_di = minus_di = dx = 0.0
+        else:
+            plus_di = 100.0 * smooth_plus / smooth_tr
+            minus_di = 100.0 * smooth_minus / smooth_tr
+            denominator = plus_di + minus_di
+            dx = 100.0 * abs(plus_di - minus_di) / denominator if denominator else 0.0
+        dx_values.append((dx, plus_di, minus_di))
+
+    if len(dx_values) < period:
+        raise ValueError("Not enough values for ADX")
+    adx_value = sum(item[0] for item in dx_values[:period]) / period
+    for dx, _, _ in dx_values[period:]:
+        adx_value = ((adx_value * (period - 1)) + dx) / period
+    return adx_value, dx_values[-1][1], dx_values[-1][2]
+
+
 def scan_btc_market(candles, market_data_quality=None, volume_lookback=20,
                     volume_spike_multiple=1.5, interval_hours=1):
-    """Score a completed hourly candle against seven independent confirmation checks.
+    """Score a completed hourly candle against eight independent confirmation checks.
 
     Uses 50 prior candles for EMA trend context, 20 prior candles for breakout
-    and volume context, and 14 periods for RSI/ATR. A candidate is a research
+    and volume context, and 14 periods for RSI/ATR/ADX. A candidate is a research
     label for paper review only, not a trade instruction.
     """
     if isinstance(interval_hours, bool) or not isinstance(interval_hours, int) or interval_hours not in (1, 4, 6):
@@ -120,6 +166,8 @@ def scan_btc_market(candles, market_data_quality=None, volume_lookback=20,
     rsi14 = _rsi(closes, 14)
     rsi_healthy = 50.0 <= rsi14 <= 72.0
     atr14 = _atr(normalized, 14)
+    adx14, plus_di14, minus_di14 = _adx(normalized, 14)
+    adx_trend_strength = adx14 >= 20.0 and plus_di14 > minus_di14
     atr_pct = (atr14 / current_close) * 100.0
     # Hypothetical long-side risk map for research display only. These levels
     # are not orders, personalized advice, or evidence that a setup is profitable.
@@ -164,13 +212,14 @@ def scan_btc_market(candles, market_data_quality=None, volume_lookback=20,
         "breakout_quality_confirmed": breakout_quality,
         "trend_alignment": trend_aligned,
         "rsi_momentum_healthy": rsi_healthy,
+        "adx_trend_strength": adx_trend_strength,
         "bullish_close_confirmation": bullish_candle,
         "paper_only": True,
         "live_execution_enabled": False,
     }
     scored_checks = (
         quality_ok, volume_spike, breakout, breakout_quality,
-        trend_aligned, rsi_healthy, bullish_candle,
+        trend_aligned, rsi_healthy, adx_trend_strength, bullish_candle,
     )
     score = sum(scored_checks)
     candidate = score == len(scored_checks)
@@ -189,6 +238,7 @@ def scan_btc_market(candles, market_data_quality=None, volume_lookback=20,
          "breakout_upper_wick_rejection_risk"),
         (not trend_aligned, "ema20_ema50_trend_not_aligned"),
         (not rsi_healthy, "rsi_outside_momentum_band"),
+        (not adx_trend_strength, "adx_trend_strength_or_direction_missing"),
         (not bullish_candle, "bullish_candle_confirmation_missing"),
     )
     reasons.extend(code for failed, code in reason_checks if failed)
@@ -214,6 +264,11 @@ def scan_btc_market(candles, market_data_quality=None, volume_lookback=20,
         "ema20": round(ema20, 2),
         "ema50": round(ema50, 2),
         "rsi14": round(rsi14, 2),
+        "adx14": round(adx14, 2),
+        "plus_di14": round(plus_di14, 2),
+        "minus_di14": round(minus_di14, 2),
+        "adx_minimum_required": 20.0,
+        "adx_trend_strength_confirmed": adx_trend_strength,
         "atr14": round(atr14, 2),
         "atr_pct": round(atr_pct, 4),
         "hypothetical_risk_map": {
@@ -241,7 +296,8 @@ def scan_btc_market(candles, market_data_quality=None, volume_lookback=20,
             "A scanner candidate is not a validated profitable strategy or an order instruction.",
             "ATR risk-map levels are hypothetical research references, not orders or validated trade parameters.",
             "No stop-loss, take-profit, or live execution is performed by this scanner.",
-            "RSI, EMA and ATR are descriptive indicators, not predictive guarantees.",
+            "RSI, EMA, ATR and ADX are descriptive indicators, not predictive guarantees.",
+            "ADX >= 20 and +DI > -DI is an experimental breakout-quality filter, not yet independently qualified.",
         ],
     }
 
@@ -320,7 +376,7 @@ def scan_btc_multi_timeframe(candles, market_data_quality=None):
                 "timeframe": f"{hours}h",
                 "status": "INSUFFICIENT_HISTORY",
                 "confluence_score": 0,
-                "confluence_total": 7,
+                "confluence_total": 8,
                 "paper_candidate_only": True,
                 "live_orders_placed": False,
                 "reason": str(exc),
