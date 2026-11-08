@@ -135,16 +135,21 @@ def _validate_state(state, threshold, timeframe):
     trades = state.get("trades")
     if not isinstance(trades, list):
         raise ValueError("ADX paper trade history is invalid")
+    previous_trade_timestamp = -1
     for trade in trades:
         if not isinstance(trade, dict) or trade.get("side") != "SELL":
             raise ValueError("ADX paper trade record is invalid")
         ts = trade.get("timestamp")
         if isinstance(ts, bool) or not isinstance(ts, int) or ts < 0:
             raise ValueError("ADX paper trade timestamp is invalid")
+        if ts % (int(timeframe) * 3_600_000) or ts <= previous_trade_timestamp or ts > last:
+            raise ValueError("ADX paper trade timestamps are inconsistent with the ledger watermark")
+        previous_trade_timestamp = ts
         _finite(trade.get("price"), "saved trade price", 1e-12)
-        _finite(trade.get("pnl_usd"), "saved trade PnL")
-        if trade.get("result") not in ("WIN", "LOSS"):
-            raise ValueError("ADX paper trade result is invalid")
+        pnl = _finite(trade.get("pnl_usd"), "saved trade PnL")
+        expected_result = "WIN" if pnl > 0 else "LOSS"
+        if trade.get("result") != expected_result:
+            raise ValueError("ADX paper trade result does not match its PnL")
 
 
 def _load_state(path, threshold, timeframe, first_timestamp):
@@ -271,7 +276,7 @@ def process_native_bars(bars, threshold, timeframe, state_path):
             state["daily_paused"] = True
         streak = 0
         for trade in reversed(state["trades"]):
-            if trade["pnl_usd"] < 0:
+            if trade["result"] == "LOSS":
                 streak += 1
             else:
                 break
