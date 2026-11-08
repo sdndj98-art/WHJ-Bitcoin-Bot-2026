@@ -63,10 +63,10 @@ class TradeEventJournalTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             path = os.path.join(directory, "trades.jsonl")
             with open(path, "w", encoding="utf-8") as handle:
-                handle.write(json.dumps(event(10)) + "\\n")
+                handle.write(json.dumps(event(10)) + "\n")
                 other = event(11)
                 other["symbol"] = "ETH/USD"
-                handle.write(json.dumps(other) + "\\n")
+                handle.write(json.dumps(other) + "\n")
             with self.assertRaisesRegex(TradeJournalError, "mixed symbols"):
                 JsonlTradeJournal(path)
 
