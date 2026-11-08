@@ -21,6 +21,7 @@ class JsonlTradeJournal:
         self.max_bytes = max_bytes
         self.last_trade_id = None
         self.last_timestamp_ns = None
+        self.symbol = None
         directory = os.path.dirname(os.path.abspath(self.path))
         os.makedirs(directory, exist_ok=True)
         self._restore()
@@ -48,6 +49,13 @@ class JsonlTradeJournal:
                 if isinstance(trade_id, bool) or not str(trade_id).isdigit() or int(trade_id) <= 0:
                     raise TradeJournalError("journal contains an invalid trade ID")
                 trade_id = int(trade_id)
+                symbol = event.get("symbol")
+                if not isinstance(symbol, str) or not symbol.strip():
+                    raise TradeJournalError("journal contains an invalid symbol")
+                symbol = symbol.strip()
+                if self.symbol is not None and symbol != self.symbol:
+                    raise TradeJournalError("journal contains mixed symbols")
+                self.symbol = symbol
                 timestamp_ns = _trade_event_timestamp_ns(event.get("timestamp"))
                 if self.last_trade_id is not None and trade_id != self.last_trade_id + 1:
                     raise TradeJournalError("journal trade IDs are not strictly contiguous")
@@ -74,6 +82,11 @@ class JsonlTradeJournal:
             qty = float(event.get("qty"))
             side = event.get("side")
             symbol = event.get("symbol")
+            if not isinstance(symbol, str) or not symbol.strip():
+                raise ValueError("symbol must be a non-empty string")
+            symbol = symbol.strip()
+            if self.symbol is not None and symbol != self.symbol:
+                raise TradeJournalError("trade event symbol does not match journal")
             if price <= 0 or qty <= 0 or side not in ("buy", "sell"):
                 raise ValueError("invalid normalized trade event")
             item = {
@@ -85,10 +98,15 @@ class JsonlTradeJournal:
             normalized[trade_id] = item
 
         pending = []
+        batch_symbol = self.symbol
         next_id = self.last_trade_id
         next_timestamp_ns = self.last_timestamp_ns
         for trade_id in sorted(normalized):
             event = normalized[trade_id]
+            if batch_symbol is None:
+                batch_symbol = event["symbol"]
+            elif event["symbol"] != batch_symbol:
+                raise TradeJournalError("trade batch contains mixed symbols")
             timestamp_ns = _trade_event_timestamp_ns(event["timestamp"])
             if next_id is not None and trade_id <= next_id:
                 continue
@@ -120,6 +138,7 @@ class JsonlTradeJournal:
             raise TradeJournalError("failed to durably append raw trade events") from exc
         self.last_trade_id = next_id
         self.last_timestamp_ns = next_timestamp_ns
+        self.symbol = batch_symbol
         return {
             "status": "OK", "appended": len(pending),
             "last_trade_id": self.last_trade_id,
