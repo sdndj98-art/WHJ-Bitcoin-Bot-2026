@@ -19,8 +19,27 @@ THRESHOLDS = (15.0, 20.0, 25.0)
 TIMEFRAMES = (4, 6)
 
 
-def _select_threshold(training_metrics, min_closed_trades=5):
-    """Select only from training metrics; default to predeclared ADX20 if sparse."""
+def _training_score(metrics, label="training"):
+    if not isinstance(metrics, dict):
+        raise ValueError("Malformed " + label + " metrics")
+    ret = metrics.get("return_pct")
+    dd = metrics.get("max_drawdown_pct")
+    trades = metrics.get("closed_trades")
+    pf = metrics.get("profit_factor")
+    for value, field in ((ret, "return"), (dd, "drawdown")):
+        if isinstance(value, bool) or not isinstance(value, (int, float)) or not math.isfinite(value):
+            raise ValueError("Invalid " + label + " " + field)
+    if isinstance(trades, bool) or not isinstance(trades, int) or trades < 0:
+        raise ValueError("Invalid " + label + " trade count")
+    if pf is not None and (
+        isinstance(pf, bool) or not isinstance(pf, (int, float)) or not math.isfinite(pf)
+    ):
+        raise ValueError("Invalid " + label + " profit factor")
+    return float(ret) - 0.5 * float(dd)
+
+
+def _select_threshold(training_metrics, min_closed_trades=5, baseline_metrics=None):
+    """Choose ADX only when it beats the EMA baseline on earlier training data."""
     if not isinstance(training_metrics, dict) or set(training_metrics) != {
         "15", "20", "25"
     }:
@@ -28,31 +47,25 @@ def _select_threshold(training_metrics, min_closed_trades=5):
     if (isinstance(min_closed_trades, bool) or not isinstance(min_closed_trades, int)
             or min_closed_trades < 1):
         raise ValueError("Minimum training trades must be a positive integer")
+    baseline_score = (
+        _training_score(baseline_metrics, "baseline")
+        if baseline_metrics is not None else None
+    )
     eligible = []
     for key, metrics in training_metrics.items():
-        if not isinstance(metrics, dict):
-            raise ValueError("Malformed training metrics")
-        ret = metrics.get("return_pct")
-        dd = metrics.get("max_drawdown_pct")
-        trades = metrics.get("closed_trades")
-        pf = metrics.get("profit_factor")
-        for value, label in ((ret, "return"), (dd, "drawdown")):
-            if isinstance(value, bool) or not isinstance(value, (int, float)) or not math.isfinite(value):
-                raise ValueError("Invalid training " + label)
-        if isinstance(trades, bool) or not isinstance(trades, int) or trades < 0:
-            raise ValueError("Invalid training trade count")
-        if pf is not None and (
-            isinstance(pf, bool) or not isinstance(pf, (int, float)) or not math.isfinite(pf)
-        ):
-            raise ValueError("Invalid training profit factor")
+        score = _training_score(metrics)
+        trades = metrics["closed_trades"]
         if trades >= min_closed_trades:
             # Fixed selection rule, predeclared and independent of test results.
-            score = float(ret) - 0.5 * float(dd)
-            eligible.append((score, -float(dd), float(key == "20"), key))
+            eligible.append((score, -float(metrics["max_drawdown_pct"]), float(key == "20"), key))
     if not eligible:
+        if baseline_metrics is not None:
+            return None, "TRAINING_ONLY_BASELINE_INSUFFICIENT_ADX_TRADES"
         return 20.0, "DEFAULT_PRIMARY_INSUFFICIENT_TRAINING_TRADES"
-    selected = max(eligible)[3]
-    return float(selected), "TRAINING_ONLY_RETURN_MINUS_HALF_DRAWDOWN"
+    best = max(eligible)
+    if baseline_score is not None and best[0] <= baseline_score:
+        return None, "TRAINING_ONLY_BASELINE_OUTSCORES_ADX"
+    return float(best[3]), "TRAINING_ONLY_ADX_SCORE_BEATS_EMA_BASELINE"
 
 
 def _utc_iso(timestamp_ms):
@@ -130,14 +143,20 @@ def run_expanding_walk_forward(hourly_candles, fee=FEE_RATE, slippage=SLIPPAGE_R
             key: simulate(signals, common_start, test_start)
             for key, signals in candidate_sets.items()
         }
-        selected, selection_rule = _select_threshold(training, min_train_trades)
-        selected_key = str(int(selected))
-        test_metrics = simulate(candidate_sets[selected_key], test_start, test_end)
+        baseline_training = simulate(baseline_sets, common_start, test_start)
+        selected, selection_rule = _select_threshold(
+            training, min_train_trades, baseline_training
+        )
+        selected_signals = (
+            baseline_sets if selected is None
+            else candidate_sets[str(int(selected))]
+        )
+        selected_name = "baseline_ema50_200" if selected is None else "adx_" + str(int(selected))
+        test_metrics = simulate(selected_signals, test_start, test_end)
         baseline_metrics = simulate(baseline_sets, test_start, test_end)
         benchmark_metrics = simulate(benchmark_sets, test_start, test_end)
         stress = simulate(
-            candidate_sets[selected_key], test_start, test_end,
-            fee * 2, slippage * 2,
+            selected_signals, test_start, test_end, fee * 2, slippage * 2
         )
         baseline_stress = simulate(
             baseline_sets, test_start, test_end, fee * 2, slippage * 2
@@ -149,7 +168,9 @@ def run_expanding_walk_forward(hourly_candles, fee=FEE_RATE, slippage=SLIPPAGE_R
             "test_start_utc": _utc_iso(test_start),
             "test_end_exclusive_utc": _utc_iso(test_end),
             "training_metrics_by_threshold": training,
+            "training_baseline_ema50_200": baseline_training,
             "selected_threshold": selected,
+            "selected_strategy_name": selected_name,
             "selection_rule": selection_rule,
             "test": {
                 "selected_strategy": test_metrics,
@@ -174,7 +195,7 @@ def run_expanding_walk_forward(hourly_candles, fee=FEE_RATE, slippage=SLIPPAGE_R
             "fold returns are reported separately and are not compounded into one continuous equity curve."
         ),
         "training_policy": "Expanding window; each fold trains only on completed bars before its test start.",
-        "selection_rule": "Among thresholds with at least min_train_trades closed training trades, maximize training return_pct - 0.5 * max_drawdown_pct; tie-break by lower drawdown then prefer ADX20. If none qualify, use predeclared ADX20.",
+        "selection_rule": "Among ADX thresholds with at least min_train_trades, maximize training return_pct - 0.5 * max_drawdown_pct; tie-break by lower drawdown then prefer ADX20. Select ADX only if its best training score strictly beats the EMA baseline score; otherwise retain the baseline. No eligible ADX threshold also falls back to baseline.",
         "min_train_trades": min_train_trades,
         "costs": {
             "fee_each_side": fee,
@@ -186,7 +207,7 @@ def run_expanding_walk_forward(hourly_candles, fee=FEE_RATE, slippage=SLIPPAGE_R
         "folds": reports,
         "no_same_fold_test_feedback": True,
         "interpretation": (
-            "Each fold's threshold is selected only from its earlier expanding training window. "
+            "Each fold selects ADX only when its score beats the EMA baseline in the earlier expanding training window; otherwise it retains the baseline. "
             "Earlier test folds may become training data for later folds, as in sequential walk-forward "
             "evaluation; no fold's own test data is used to select its threshold. Results are historical "
             "research, not forward-paper or live performance."
