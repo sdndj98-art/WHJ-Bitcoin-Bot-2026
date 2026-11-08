@@ -701,7 +701,7 @@ class KrakenSpotTradeFeedAdapter:
     applying the incoming WebSocket update.
     """
 
-    def __init__(self, ledger, pair, timeout=10, max_backfill_pages=10, on_accepted_trades=None):
+    def __init__(self, ledger, pair, timeout=10, max_backfill_pages=10, on_accepted_trades=None, require_initial_snapshot=False):
         if not isinstance(ledger, PersistentCvdLedger):
             raise ValueError("ledger must be a PersistentCvdLedger")
         if not isinstance(pair, str) or not pair.strip():
@@ -718,8 +718,12 @@ class KrakenSpotTradeFeedAdapter:
         self.timeout = timeout
         if on_accepted_trades is not None and not callable(on_accepted_trades):
             raise ValueError("on_accepted_trades must be callable")
+        if not isinstance(require_initial_snapshot, bool):
+            raise ValueError("require_initial_snapshot must be boolean")
         self.max_backfill_pages = max_backfill_pages
         self.on_accepted_trades = on_accepted_trades
+        self.require_initial_snapshot = require_initial_snapshot
+        self.continuity_start_trade_id = None
 
     def _emit_accepted_trades(self, events, previous_trade_id):
         if self.on_accepted_trades is None:
@@ -776,6 +780,12 @@ class KrakenSpotTradeFeedAdapter:
 
     def handle_message(self, message):
         """Process a WS v2 envelope, backfilling a sequence gap before retry."""
+        message_type = message.get("type") if isinstance(message, dict) else None
+        if (self.require_initial_snapshot and self.continuity_start_trade_id is None
+                and self.ledger.last_trade_id == 0 and message_type != "snapshot"):
+            raise TradeIdGapError(
+                "a fresh journal must begin with Kraken's initial trade snapshot"
+            )
         events = normalize_kraken_ws_v2_trade_message(message, self.pair)
         if not events:
             return {
@@ -799,6 +809,11 @@ class KrakenSpotTradeFeedAdapter:
             previous_id = self.ledger.last_trade_id
             result = self.ledger.process(events)
             self._emit_accepted_trades(events, previous_id)
+        if (self.require_initial_snapshot and self.continuity_start_trade_id is None
+                and message_type == "snapshot" and self.ledger.last_trade_id > 0):
+            self.continuity_start_trade_id = min(
+                self.ledger._trade_id(event.get("trade_id")) for event in events
+            )
         return {
             "status": "OK",
             "ledger": result,
