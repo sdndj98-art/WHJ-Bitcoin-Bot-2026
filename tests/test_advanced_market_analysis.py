@@ -57,7 +57,7 @@ class AdvancedMarketAnalysisTests(unittest.TestCase):
         prior_low = min(r[3] for r in rows[-21:-1])
         rows[-1][3] = prior_low - 0.2
         rows[-1][4] = prior_low + 0.1
-        rows[-1][1] = prior_low - 0.4
+        rows[-1][1] = prior_low + 0.05
         rows[-1][2] = prior_low + 0.15
         result = analyze_advanced_market(rows)
         self.assertTrue(result["bullish_liquidity_sweep"])
