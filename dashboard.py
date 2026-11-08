@@ -115,7 +115,8 @@ def build_dashboard(report):
         )
         for label, value in cvd_fields
     )
-\n    bt = report.get("paper_backtest", {})
+
+    bt = report.get("paper_backtest", {})
     trades = bt.get("trade_log", [])
     rows = "".join(
         "<tr><td>{}</td><td>{}</td></tr>".format(
