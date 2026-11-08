@@ -5,6 +5,7 @@ from kraken_order_flow import (
     analyze_order_book,
     analyze_trade_flow,
     combine_microstructure,
+    evaluate_microstructure_confluence,
     _kraken_get,
 )
 
@@ -99,6 +100,67 @@ class KrakenOrderFlowTests(unittest.TestCase):
         self.assertEqual(result["context"], "BULLISH_MICROSTRUCTURE_ALIGNMENT")
         self.assertFalse(result["execution_enabled"])
         self.assertFalse(result["live_orders_placed"])
+
+
+
+    def test_three_layer_fusion_requires_ohlcv_flow_and_depth_alignment(self):
+        result = evaluate_microstructure_confluence(
+            {"status": "BULLISH_RESEARCH_CANDIDATE"},
+            {"batch_bias": "BUY_PRESSURE"},
+            {
+                "snapshot_bias": "BID_DEPTH_DOMINANT",
+                "spread_bps": 4.0,
+                "bid_depth_notional": 80000.0,
+                "ask_depth_notional": 60000.0,
+                "largest_bid_level_share": 0.25,
+                "largest_ask_level_share": 0.20,
+            },
+        )
+        self.assertEqual(result["context"], "BULLISH_THREE_LAYER_ALIGNMENT")
+        self.assertFalse(result["timestamp_alignment_verified"])
+        self.assertFalse(result["execution_enabled"])
+        self.assertFalse(result["live_orders_placed"])
+
+    def test_three_layer_fusion_rejects_bad_spread_even_when_direction_agrees(self):
+        result = evaluate_microstructure_confluence(
+            {"status": "BEARISH_RESEARCH_CANDIDATE"},
+            {"batch_bias": "SELL_PRESSURE"},
+            {
+                "snapshot_bias": "ASK_DEPTH_DOMINANT",
+                "spread_bps": 30.0,
+                "bid_depth_notional": 80000.0,
+                "ask_depth_notional": 60000.0,
+                "largest_bid_level_share": 0.25,
+                "largest_ask_level_share": 0.20,
+            },
+        )
+        self.assertEqual(result["context"], "LIQUIDITY_QUALITY_FAIL")
+        self.assertFalse(result["execution_enabled"])
+
+    def test_three_layer_fusion_detects_microstructure_divergence(self):
+        result = evaluate_microstructure_confluence(
+            {"status": "BULLISH_RESEARCH_CANDIDATE"},
+            {"batch_bias": "SELL_PRESSURE"},
+            {
+                "snapshot_bias": "ASK_DEPTH_DOMINANT",
+                "spread_bps": 4.0,
+                "bid_depth_notional": 80000.0,
+                "ask_depth_notional": 60000.0,
+                "largest_bid_level_share": 0.25,
+                "largest_ask_level_share": 0.20,
+            },
+        )
+        self.assertEqual(result["context"], "MICROSTRUCTURE_DIVERGENCE")
+
+    def test_three_layer_fusion_rejects_invalid_thresholds(self):
+        with self.assertRaisesRegex(ValueError, "max_level_concentration"):
+            evaluate_microstructure_confluence(
+                {"status": "WATCH"}, {"batch_bias": "BALANCED"},
+                {"snapshot_bias": "DEPTH_BALANCED", "spread_bps": 1,
+                 "bid_depth_notional": 1, "ask_depth_notional": 1,
+                 "largest_bid_level_share": 0.2, "largest_ask_level_share": 0.2},
+                max_level_concentration=1.5,
+            )
 
     def test_public_fetch_rejects_non_finite_timeout_before_network(self):
         with self.assertRaisesRegex(ValueError, "timeout"):
