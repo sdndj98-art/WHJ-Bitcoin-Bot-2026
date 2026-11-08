@@ -48,7 +48,7 @@ def read_trade_journal(path):
     events = []
     with open(path, "rb") as handle:
         for line_number, raw in enumerate(handle, 1):
-            if not raw.endswith(b"\\n"):
+            if not raw.endswith(bytes([10])):
                 raise ValueError(f"incomplete JSONL record at line {line_number}")
             try:
                 event = json.loads(raw.decode("utf-8"))
@@ -240,7 +240,7 @@ def main(argv=None):
         temporary = args.output + ".tmp"
         with open(temporary, "w", encoding="utf-8") as handle:
             json.dump(report, handle, indent=2, sort_keys=True, allow_nan=False)
-            handle.write("\\n")
+            handle.write(chr(10))
             handle.flush()
             os.fsync(handle.fileno())
         os.replace(temporary, args.output)
