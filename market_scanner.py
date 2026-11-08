@@ -309,8 +309,8 @@ def scan_btc_market(candles, market_data_quality=None, volume_lookback=20,
     }
 
 def _aggregate_hourly_candles(candles, hours):
-    """Build only complete UTC-aligned bars from closed hourly OHLCV candles."""
-    if hours not in (4, 6):
+    """Build only complete UTC-aligned bars from validated closed hourly candles."""
+    if isinstance(hours, bool) or hours not in (4, 6):
         raise ValueError("Aggregation hours must be 4 or 6")
     if not isinstance(candles, list):
         raise ValueError("Hourly candles must be a list")
@@ -321,50 +321,57 @@ def _aggregate_hourly_candles(candles, hours):
     for row in candles:
         if not isinstance(row, (list, tuple)) or len(row) < 8:
             raise ValueError("Each hourly candle must contain OHLCV and trade count")
-        if isinstance(row[0], bool):
-            raise ValueError("Hourly timestamps cannot be booleans")
+        if any(isinstance(row[index], bool) for index in (0, 1, 2, 3, 4, 6, 7)):
+            raise ValueError("Hourly candle fields cannot be booleans")
         try:
             timestamp = int(row[0])
-            if float(row[0]) != timestamp:
-                raise ValueError
+            raw_timestamp = float(row[0])
+            open_price, high, low, close, volume, raw_trades = (
+                float(row[index]) for index in (1, 2, 3, 4, 6, 7)
+            )
         except (TypeError, ValueError, OverflowError) as exc:
-            raise ValueError("Invalid hourly candle timestamp") from exc
+            raise ValueError("Hourly candle fields must be numeric") from exc
+        values = (raw_timestamp, open_price, high, low, close, volume, raw_trades)
+        if any(not math.isfinite(value) for value in values):
+            raise ValueError("Hourly candle fields must be finite")
+        if not raw_timestamp.is_integer() or timestamp < 0:
+            raise ValueError("Invalid hourly candle timestamp")
+        if not raw_trades.is_integer():
+            raise ValueError("Hourly trade counts must be whole numbers")
+        if min(open_price, high, low, close) <= 0 or volume < 0 or raw_trades < 0:
+            raise ValueError("Hourly candle contains invalid price or activity values")
+        if high < max(open_price, close, low) or low > min(open_price, close, high):
+            raise ValueError("Hourly candle has inconsistent OHLC bounds")
         if previous_timestamp is not None and timestamp <= previous_timestamp:
             raise ValueError("Hourly timestamps must be strictly increasing")
         if timestamp % interval_seconds:
             raise ValueError("Hourly timestamps must align to UTC hour boundaries")
         previous_timestamp = timestamp
+        normalized_row = [
+            timestamp, open_price, high, low, close, row[5], volume, int(raw_trades)
+        ]
         bucket = timestamp // span_seconds
-        groups.setdefault(bucket, []).append(row)
+        groups.setdefault(bucket, []).append(normalized_row)
 
     aggregated = []
     for bucket in sorted(groups):
-        group = sorted(groups[bucket], key=lambda item: int(item[0]))
+        group = groups[bucket]
         start = bucket * span_seconds
         if len(group) != hours:
             continue
-        if any(int(group[i][0]) != start + i * interval_seconds for i in range(hours)):
+        if any(group[i][0] != start + i * interval_seconds for i in range(hours)):
             continue
-        try:
-            opens = [float(item[1]) for item in group]
-            highs = [float(item[2]) for item in group]
-            lows = [float(item[3]) for item in group]
-            closes = [float(item[4]) for item in group]
-            volumes = [float(item[6]) for item in group]
-            trades = [int(item[7]) for item in group]
-        except (TypeError, ValueError, OverflowError) as exc:
-            raise ValueError("Hourly OHLCV values must be numeric") from exc
-        values = opens + highs + lows + closes + volumes
-        if any(not math.isfinite(value) for value in values):
-            raise ValueError("Hourly OHLCV values must be finite")
-        if any(isinstance(item[7], bool) or float(item[7]) != int(item[7]) for item in group):
-            raise ValueError("Hourly trade counts must be whole numbers")
+        opens = [item[1] for item in group]
+        highs = [item[2] for item in group]
+        lows = [item[3] for item in group]
+        closes = [item[4] for item in group]
+        volumes = [item[6] for item in group]
+        trades = [item[7] for item in group]
         aggregated.append([
             start, opens[0], max(highs), min(lows), closes[-1],
             0.0, sum(volumes), sum(trades),
         ])
     return aggregated
-
 
 def scan_btc_multi_timeframe(candles, market_data_quality=None):
     """Compare 1h, 4h and 6h scanner states using completed UTC bars only."""
