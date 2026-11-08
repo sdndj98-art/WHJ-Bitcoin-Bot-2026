@@ -111,6 +111,45 @@ def run_ema_efficiency_filter_lab(hourly_candles, fee=FEE_RATE,
     entry_only_oos = simulate(entry_only_signals, oos_start, oos_end)
     benchmark_oos = simulate(benchmark_signals, oos_start, oos_end)
 
+    # Threshold selection uses training data only; the chosen value is then
+    # evaluated once on the untouched OOS interval below.
+    train_start = close_times_4h[0]
+    threshold_grid = (0.15, 0.20, 0.25, 0.30, 0.35, 0.40, 0.45, 0.50)
+    training_candidates = []
+    for candidate_threshold in threshold_grid:
+        _, _, candidate_4h = _build_sleeve_signals(four_hour, candidate_threshold)
+        _, _, candidate_6h = _build_sleeve_signals(six_hour, candidate_threshold)
+        candidate_result = simulate(
+            [candidate_4h, candidate_6h], train_start, oos_start
+        )
+        # A small, explicit risk penalty avoids choosing solely by raw return.
+        score = (
+            candidate_result["return_pct"]
+            - 0.50 * candidate_result["max_drawdown_pct"]
+        )
+        training_candidates.append({
+            "threshold": candidate_threshold,
+            "metrics": candidate_result,
+            "selection_score_return_minus_half_drawdown": round(score, 4),
+        })
+
+    eligible = [
+        item for item in training_candidates
+        if item["metrics"]["closed_trades"] >= 15
+        and item["metrics"]["profit_factor"] >= 1.0
+    ]
+    selected_training = max(
+        eligible or training_candidates,
+        key=lambda item: item["selection_score_return_minus_half_drawdown"],
+    )
+    selected_threshold = selected_training["threshold"]
+    _, _, selected_4h = _build_sleeve_signals(four_hour, selected_threshold)
+    _, _, selected_6h = _build_sleeve_signals(six_hour, selected_threshold)
+    selected_entry_oos = simulate([selected_4h, selected_6h], oos_start, oos_end)
+    selected_entry_oos_2x = simulate(
+        [selected_4h, selected_6h], oos_start, oos_end, fee * 2, slippage * 2
+    )
+
     walk_forward = []
     for fold in range(3):
         start, end = windows_edges[fold], windows_edges[fold + 1]
@@ -153,6 +192,14 @@ def run_ema_efficiency_filter_lab(hourly_candles, fee=FEE_RATE,
         "paper_state_touched": False,
         "live_orders_enabled": False,
         "threshold": threshold,
+        "training_only_threshold_selection": {
+            "grid": list(threshold_grid),
+            "selection_rule": "maximize training return_pct - 0.50 * max_drawdown_pct; prefer >=15 closed trades and PF >=1.0",
+            "candidates": training_candidates,
+            "selected_threshold": selected_threshold,
+            "selected_entry_only_oos": selected_entry_oos,
+            "selected_entry_only_oos_2x_costs": selected_entry_oos_2x,
+        },
         "lookback_bars": 20,
         "bar_count_4h": len(four_hour),
         "bar_count_6h": len(six_hour),
@@ -183,7 +230,7 @@ def run_ema_efficiency_filter_lab(hourly_candles, fee=FEE_RATE,
             "ER20 is calculated only from closes available at each completed native-timeframe bar. "
             "Signals are acted on at the next native bar close. The 4h/6h capital split, "
             "allocation, benchmark, fee and slippage assumptions are identical between variants. "
-            "ER20 is tested both as a continuous gate and as an entry-only authorization; the latter does not exit an open EMA position merely because ER20 falls. This is a research comparison, not a profitability guarantee."
+            "ER20 is tested as a continuous gate and entry-only authorization. A threshold grid is selected using training data only with a predeclared return-minus-drawdown score, then evaluated on the untouched OOS interval. The selected value is not retuned on OOS data. This is research, not a profitability guarantee."
         ),
     }
 
