@@ -128,9 +128,8 @@ def run_exit_policy_lab(hourly_candles, fee=FEE_RATE, slippage=SLIPPAGE_RATE):
     # Descriptive fixed-rule OOS slices: no parameter tuning or re-selection.
     fold_edges = [
         oos_closes[(len(oos_closes) * k) // 3]
-        for k in range(4)
-    ]
-    fold_edges[-1] = oos_closes[-1] + 1
+        for k in range(3)
+    ] + [oos_closes[-1] + 1]
     subperiods = []
     for fold in range(3):
         fold_start, fold_end = fold_edges[fold], fold_edges[fold + 1]
@@ -157,10 +156,24 @@ def run_exit_policy_lab(hourly_candles, fee=FEE_RATE, slippage=SLIPPAGE_RATE):
             },
         })
 
+    subperiods_double_cost = []
+    for fold in range(3):
+        fold_start, fold_end = fold_edges[fold], fold_edges[fold + 1]
+        if fold_end <= fold_start:
+            continue
+        subperiods_double_cost.append({
+            name: _simulate_equal_weight_multitimeframe(
+                bar_sets, signals, hours, fold_start, fold_end,
+                fee * 2, slippage * 2
+            )
+            for name, signals in exit_signals.items()
+        })
+
     robustness = {}
     for name in exit_signals:
         baseline_folds = [item["policies"]["ema_regime_exit"] for item in subperiods]
         candidate_folds = [item["policies"][name] for item in subperiods]
+        double_cost_folds = [item[name] for item in subperiods_double_cost]
         robustness[name] = {
             "fold_count": len(candidate_folds),
             "positive_return_folds": sum(x["return_pct"] > 0 for x in candidate_folds),
@@ -177,20 +190,7 @@ def run_exit_policy_lab(hourly_candles, fee=FEE_RATE, slippage=SLIPPAGE_RATE):
                 for x, item in zip(candidate_folds, subperiods)
             ),
             "positive_return_2x_cost_folds": sum(
-                item["policies"][name]["return_pct"] > 0
-                for item in [
-                    {
-                        "policies": {
-                            policy: _simulate_equal_weight_multitimeframe(
-                                bar_sets, signals, hours,
-                                fold_edges[i], fold_edges[i + 1],
-                                fee * 2, slippage * 2
-                            )
-                            for policy, signals in exit_signals.items()
-                        }
-                    }
-                    for i in range(3) if fold_edges[i + 1] > fold_edges[i]
-                ]
+                x["return_pct"] > 0 for x in double_cost_folds
             ),
         }
 
