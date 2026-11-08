@@ -729,8 +729,12 @@ class HistoricalResearchTests(unittest.TestCase):
         self.assertIn("buy_and_hold_25pct", result["strategies"])
         self.assertEqual(len(result["strategies"]["ema50_200_close_below_ema50_exit"]["walk_forward_windows"]), 3)
         self.assertEqual(
-            result["strategies"]["ema50_200_atr2_5_trailing"]["entry_bar_indices"],
-            result["strategies"]["ema50_200_close_below_ema50_exit"]["entry_bar_indices"],
+            result["strategies"]["ema50_200_atr2_5_trailing"]["entry_rule"],
+            result["strategies"]["ema50_200_close_below_ema50_exit"]["entry_rule"],
+        )
+        self.assertEqual(
+            result["strategies"]["ema50_200_atr2_5_trailing"]["entry_bar_indices"][0],
+            result["strategies"]["ema50_200_close_below_ema50_exit"]["entry_bar_indices"][0],
         )
         self.assertIn("next six-hour close", result["execution"])
 
