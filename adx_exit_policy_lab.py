@@ -81,26 +81,126 @@ def run_exit_policy_lab(hourly_candles, fee=FEE_RATE, slippage=SLIPPAGE_RATE):
             _adx_atr_exit_signals(bars, 20.0, multiple) for bars in bar_sets
         ]
     close4 = [int(row["timestamp"]) + 4 * 3600000 for row in bars4]
-    start = close4[int(len(close4) * 0.70)]
-    end = close4[-1] + 1
+    close6 = [int(row["timestamp"]) + 6 * 3600000 for row in bars6]
+    # Use only shared UTC 12-hour close boundaries so 4h and 6h sleeves
+    # begin/end every comparison window on the same completed-bar boundary.
+    shared_closes = sorted(set(close4).intersection(close6))
+    if len(shared_closes) < 12:
+        raise ValueError("Insufficient shared 12-hour boundaries for exit-policy validation")
+    oos_offset = int(len(shared_closes) * 0.70)
+    oos_closes = shared_closes[oos_offset:]
+    start, end = oos_closes[0], oos_closes[-1] + 1
+    benchmark = [[True] * len(bars4), [True] * len(bars6)]
 
     def simulate(signals, cost=1.0):
         return _simulate_equal_weight_multitimeframe(
             bar_sets, signals, hours, start, end, fee * cost, slippage * cost
         )
 
-    results = {}
-    for name, signals in exit_signals.items():
-        results[name] = {
-            "base_cost": simulate(signals),
-            "double_cost": simulate(signals, 2.0),
+    base_results = {
+        name: simulate(signals) for name, signals in exit_signals.items()
+    }
+    benchmark_base = simulate(benchmark)
+    cost_sensitivity = {}
+    for multiplier in (1.0, 2.0, 3.0):
+        scenario = {
+            name: _simulate_equal_weight_multitimeframe(
+                bar_sets, signals, hours, start, end,
+                fee * multiplier, slippage * multiplier
+            )
+            for name, signals in exit_signals.items()
         }
+        scenario_benchmark = _simulate_equal_weight_multitimeframe(
+            bar_sets, benchmark, hours, start, end,
+            fee * multiplier, slippage * multiplier
+        )
+        cost_sensitivity[f"{multiplier:g}x"] = {
+            "fee_rate_each_side": fee * multiplier,
+            "slippage_rate_each_side": slippage * multiplier,
+            "matched_50_50_buy_and_hold": scenario_benchmark,
+            "policies": scenario,
+            "edge_vs_benchmark_pp": {
+                name: round(metrics["return_pct"] - scenario_benchmark["return_pct"], 2)
+                for name, metrics in scenario.items()
+            },
+        }
+
+    # Descriptive fixed-rule OOS slices: no parameter tuning or re-selection.
+    fold_edges = [
+        oos_closes[(len(oos_closes) * k) // 3]
+        for k in range(4)
+    ]
+    fold_edges[-1] = oos_closes[-1] + 1
+    subperiods = []
+    for fold in range(3):
+        fold_start, fold_end = fold_edges[fold], fold_edges[fold + 1]
+        if fold_end <= fold_start:
+            continue
+        fold_metrics = {
+            name: _simulate_equal_weight_multitimeframe(
+                bar_sets, signals, hours, fold_start, fold_end, fee, slippage
+            )
+            for name, signals in exit_signals.items()
+        }
+        fold_benchmark = _simulate_equal_weight_multitimeframe(
+            bar_sets, benchmark, hours, fold_start, fold_end, fee, slippage
+        )
+        subperiods.append({
+            "window": fold + 1,
+            "start_time_ms": fold_start,
+            "end_time_ms_exclusive": fold_end,
+            "matched_50_50_buy_and_hold": fold_benchmark,
+            "policies": fold_metrics,
+            "edge_vs_benchmark_pp": {
+                name: round(metrics["return_pct"] - fold_benchmark["return_pct"], 2)
+                for name, metrics in fold_metrics.items()
+            },
+        })
+
+    robustness = {}
+    for name in exit_signals:
+        baseline_folds = [item["policies"]["ema_regime_exit"] for item in subperiods]
+        candidate_folds = [item["policies"][name] for item in subperiods]
+        robustness[name] = {
+            "fold_count": len(candidate_folds),
+            "positive_return_folds": sum(x["return_pct"] > 0 for x in candidate_folds),
+            "outperformed_ema_exit_folds": sum(
+                x["return_pct"] > b["return_pct"]
+                for x, b in zip(candidate_folds, baseline_folds)
+            ),
+            "lower_drawdown_than_ema_exit_folds": sum(
+                x["max_drawdown_pct"] < b["max_drawdown_pct"]
+                for x, b in zip(candidate_folds, baseline_folds)
+            ),
+            "outperformed_benchmark_folds": sum(
+                x["return_pct"] > item["matched_50_50_buy_and_hold"]["return_pct"]
+                for x, item in zip(candidate_folds, subperiods)
+            ),
+            "positive_return_2x_cost_folds": sum(
+                item["policies"][name]["return_pct"] > 0
+                for item in [
+                    {
+                        "policies": {
+                            policy: _simulate_equal_weight_multitimeframe(
+                                bar_sets, signals, hours,
+                                fold_edges[i], fold_edges[i + 1],
+                                fee * 2, slippage * 2
+                            )
+                            for policy, signals in exit_signals.items()
+                        }
+                    }
+                    for i in range(3) if fold_edges[i + 1] > fold_edges[i]
+                ]
+            ),
+        }
+
     return {
         "mode": "EMA50_200_ADX20_EXIT_POLICY_RESEARCH_4H_6H_50_50",
         "research_only": True,
         "paper_state_touched": False,
         "live_orders_enabled": False,
         "data_bar_counts": {"4h": len(bars4), "6h": len(bars6)},
+        "shared_12h_boundary_count": len(shared_closes),
         "oos_start_ms": start,
         "oos_end_exclusive_ms": end,
         "entry_policy": "ADX14 >= 20 and +DI > -DI on completed native bar; baseline EMA regime must be active.",
@@ -109,8 +209,25 @@ def run_exit_policy_lab(hourly_candles, fee=FEE_RATE, slippage=SLIPPAGE_RATE):
             "atr_trailing": "Close-confirmed trailing stop from highest completed-bar high minus ATR14 multiple; exit fill at next native-bar close.",
         },
         "costs": {"fee_each_side": fee, "slippage_each_side": slippage},
-        "results": results,
-        "interpretation": "Historical OOS comparison only. Each policy uses identical ADX20 entry conditions and capital allocation. ATR stop is evaluated on completed bars and simulated at the next close; no intrabar stop-fill assumption. Results do not establish forward or live profitability.",
+        "results": {
+            **{
+                name: {
+                    "base_cost": metrics,
+                    "double_cost": cost_sensitivity["2x"]["policies"][name],
+                    "triple_cost": cost_sensitivity["3x"]["policies"][name],
+                    "edge_vs_benchmark_pp": round(
+                        metrics["return_pct"] - benchmark_base["return_pct"], 2
+                    ),
+                }
+                for name, metrics in base_results.items()
+            },
+            "matched_50_50_buy_and_hold": {"base_cost": benchmark_base},
+        },
+        "cost_sensitivity": cost_sensitivity,
+        "temporal_subperiods": subperiods,
+        "temporal_subperiod_robustness": robustness,
+        "subperiod_semantics": "Three descriptive fixed-rule OOS slices aligned to shared UTC 12-hour closes; no retraining or parameter selection.",
+        "interpretation": "Historical OOS comparison only. Each policy uses identical ADX20 entry criteria and 50/50 timeframe sleeves. The benchmark uses the same 50/50 sleeve structure. ATR stops are evaluated on completed bars and simulated at the next native close; no intrabar fill assumption. Temporal slices are descriptive, not retrained walk-forward evidence. Historical results do not establish forward or live profitability.",
     }
 
 
