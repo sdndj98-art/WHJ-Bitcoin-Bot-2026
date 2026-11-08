@@ -76,6 +76,10 @@ def run_collector(args, stop_event, websocket_factory=None):
             getattr(args, "checkpoint_file", None)
             or f"{trade_log_path}.checkpoint.json"
         )
+        if os.path.abspath(checkpoint_path) in {
+            os.path.abspath(trade_log_path), os.path.abspath(state_path)
+        }:
+            raise ValueError("checkpoint, trade journal and CVD state must use separate files")
         if journal.last_trade_id is None:
             if ledger.last_trade_id != 0:
                 raise ValueError(
