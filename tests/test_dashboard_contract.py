@@ -307,6 +307,15 @@ class DashboardContractTests(unittest.TestCase):
         self.assertIn('body[data-whj-theme="light"] .agent-card', self.source)
         self.assertIn('theme.addEventListener("click",()=>applyTheme(document.body.dataset.whjTheme==="light"?"dark":"light"))', self.source)
         self.assertIn('let savedTheme="light"', self.source)
+        self.assertIn('let savedTheme="light";try{savedTheme=localStorage.getItem("whj-dashboard-theme")||"light"}catch(e){}', self.source)
+        self.assertIn('const scannerFresh=reportAgeMinutes!==null&&reportAgeMinutes>=-5&&reportAgeMinutes<=15;', self.source)
+        self.assertIn('const hasSizing=a.mode==="PERSISTENT_PAPER_ONLY"', self.source)
+        self.assertIn('a.risk_limits&&typeof a.risk_limits==="object"?a.risk_limits:{}', self.source)
+        self.assertIn('Number.isFinite(processedCandles)&&processedCandles>0', self.source)
+        self.assertIn('Array.isArray(a.recent_trades)?a.recent_trades:[]', self.source)
+        self.assertIn('سجل اختبار تاريخي · ليس دفتر الورقي', self.source)
+        self.assertIn('scannerReady&&s.status==="PAPER_CANDIDATE"', self.source)
+        self.assertIn('a.last_processed_timestamp||report.time', self.source)
 
 
 if __name__ == "__main__":
