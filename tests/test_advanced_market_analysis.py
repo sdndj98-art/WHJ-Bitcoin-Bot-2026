@@ -1,6 +1,6 @@
 import unittest
 
-from advanced_market_analysis import analyze_advanced_market
+from advanced_market_analysis import analyze_advanced_market, _rsi
 
 
 def sample_candles(count=80, final_volume=300.0, final_close=None):
@@ -88,6 +88,18 @@ class AdvancedMarketAnalysisTests(unittest.TestCase):
         rows[-1][0] = rows[-2][0]
         with self.assertRaisesRegex(ValueError, "strictly increasing"):
             analyze_advanced_market(rows)
+
+    def test_rsi_uses_wilder_recursive_smoothing(self):
+        values = [100.0]
+        for _ in range(14):
+            values.append(values[-1] + 1.0)
+        for _ in range(14):
+            values.append(values[-1] - 1.0)
+        expected = 100.0 * (13.0 / 14.0) ** 14
+        self.assertAlmostEqual(_rsi(values, 14), expected, places=6)
+
+    def test_flat_rsi_returns_neutral_value(self):
+        self.assertEqual(_rsi([100.0] * 20, 14), 50.0)
 
     def test_requires_enough_history_and_valid_lookbacks(self):
         with self.assertRaisesRegex(ValueError, "At least"):
