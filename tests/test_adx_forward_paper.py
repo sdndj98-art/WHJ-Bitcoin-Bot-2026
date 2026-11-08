@@ -9,6 +9,7 @@ from adx_forward_paper import (
     _new_state,
     _validate_state,
     process_native_bars,
+    validate_hourly_candles,
 )
 
 
@@ -29,6 +30,27 @@ def make_bars(count=300):
 
 
 class AdxForwardPaperTests(unittest.TestCase):
+
+    def test_imputed_candle_anywhere_in_feed_is_rejected(self):
+        now_ms = int(__import__("time").time() * 1000)
+        latest = (now_ms // 3_600_000 - 1) * 3_600_000
+        candles = []
+        for index in range(1400):
+            price = 100.0 + index * 0.01
+            candles.append({
+                "timestamp": latest - (1399 - index) * 3_600_000,
+                "open": price,
+                "high": price + 1,
+                "low": price - 1,
+                "close": price,
+                "volume": 10.0,
+                "imputed": False,
+            })
+        # This is outside the most recent 1,300-hour indicator warm-up tail.
+        candles[0]["imputed"] = True
+        with self.assertRaisesRegex(ValueError, "Imputed candles are not accepted"):
+            validate_hourly_candles(candles)
+
     def test_sub_micro_dollar_profit_rounding_keeps_trade_label_valid(self):
         state = _new_state(20.0, 4, 0)
         state["btc"] = 1.0
