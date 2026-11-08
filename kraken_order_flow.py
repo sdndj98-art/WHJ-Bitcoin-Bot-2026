@@ -6,7 +6,10 @@ caller-managed.
 """
 import json
 import math
+import os
 import re
+import socket
+import tempfile
 import urllib.parse
 import urllib.request
 
@@ -782,4 +785,198 @@ class KrakenSpotTradeFeedAdapter:
                 "Recovery is limited to Kraken REST history availability and the configured page cap.",
                 "A fresh ledger snapshot establishes a baseline; it does not recover trades before that baseline.",
             ],
+        }
+
+
+def load_cvd_state(path):
+    """Load saved CVD JSON state; missing files return None, corrupt files raise."""
+    if not isinstance(path, (str, os.PathLike)) or not os.fspath(path):
+        raise ValueError("state path must be a non-empty path")
+    try:
+        with open(path, "r", encoding="utf-8") as handle:
+            state = json.load(handle)
+    except FileNotFoundError:
+        return None
+    if not isinstance(state, dict):
+        raise ValueError("saved CVD state must be a JSON object")
+    return state
+
+
+def save_cvd_state_atomic(path, state):
+    """Durably replace CVD JSON state using same-directory atomic rename."""
+    if not isinstance(path, (str, os.PathLike)) or not os.fspath(path):
+        raise ValueError("state path must be a non-empty path")
+    if not isinstance(state, dict):
+        raise ValueError("CVD state must be an object")
+    target = os.path.abspath(os.fspath(path))
+    directory = os.path.dirname(target) or "."
+    os.makedirs(directory, exist_ok=True)
+    fd, temporary = tempfile.mkstemp(
+        prefix=".whj-cvd-", suffix=".tmp", dir=directory
+    )
+    try:
+        with os.fdopen(fd, "w", encoding="utf-8") as handle:
+            json.dump(state, handle, sort_keys=True, separators=(",", ":"), allow_nan=False)
+            handle.write("\n")
+            handle.flush()
+            os.fsync(handle.fileno())
+        os.replace(temporary, target)
+        try:
+            directory_fd = os.open(directory, os.O_RDONLY)
+            try:
+                os.fsync(directory_fd)
+            finally:
+                os.close(directory_fd)
+        except OSError:
+            pass
+    except Exception:
+        try:
+            os.unlink(temporary)
+        except FileNotFoundError:
+            pass
+        raise
+
+
+class StatePersistenceError(RuntimeError):
+    """Raised when the caller's durable CVD state callback fails."""
+
+
+class KrakenSpotWebSocketRunner:
+    """Reconnect-capable public WS v2 runner around KrakenSpotTradeFeedAdapter.
+
+    The default transport uses the optional websocket-client package. Tests
+    and alternate transports can inject a websocket_factory(url, timeout).
+    The caller supplies an atomic persist_state callback; private endpoints and
+    order execution are never used.
+    """
+
+    URL = "wss://ws.kraken.com/v2"
+
+    def __init__(
+        self,
+        adapter,
+        timeout=20,
+        initial_backoff=1.0,
+        max_backoff=30.0,
+        max_reconnect_attempts=0,
+    ):
+        if not isinstance(adapter, KrakenSpotTradeFeedAdapter):
+            raise ValueError("adapter must be a KrakenSpotTradeFeedAdapter")
+        for name, value in (
+            ("timeout", timeout),
+            ("initial_backoff", initial_backoff),
+            ("max_backoff", max_backoff),
+        ):
+            if isinstance(value, bool) or not isinstance(value, (int, float)) or not math.isfinite(value) or value <= 0:
+                raise ValueError(f"{name} must be positive")
+        if max_backoff < initial_backoff:
+            raise ValueError("max_backoff must be at least initial_backoff")
+        if isinstance(max_reconnect_attempts, bool) or not isinstance(max_reconnect_attempts, int) or max_reconnect_attempts < 0:
+            raise ValueError("max_reconnect_attempts must be a non-negative integer")
+        self.adapter = adapter
+        self.timeout = float(timeout)
+        self.initial_backoff = float(initial_backoff)
+        self.max_backoff = float(max_backoff)
+        self.max_reconnect_attempts = max_reconnect_attempts
+
+    @staticmethod
+    def _default_websocket_factory(url, timeout):
+        try:
+            import websocket
+        except ImportError as exc:
+            raise RuntimeError(
+                "Install the optional websocket-client package to open Kraken WS"
+            ) from exc
+        return websocket.create_connection(url, timeout=timeout)
+
+    def run(self, stop_event, persist_state, websocket_factory=None):
+        """Run until stopped; reconnect with exponential backoff.
+
+        persist_state receives a JSON-serializable ledger state after each
+        successful batch/backfill. Persistence errors stop the runner rather
+        than allowing it to continue with unsaved CVD state.
+        """
+        if not all(hasattr(stop_event, name) for name in ("is_set", "wait")):
+            raise ValueError("stop_event must provide is_set() and wait()")
+        if not callable(persist_state):
+            raise ValueError("persist_state must be callable")
+        factory = websocket_factory or self._default_websocket_factory
+        reconnects = 0
+        received_trades = 0
+        backfilled_trades = 0
+        last_error = None
+        backoff = self.initial_backoff
+
+        while not stop_event.is_set():
+            ws = None
+            try:
+                ws = factory(self.URL, self.timeout)
+                ws.settimeout(self.timeout)
+                ws.send(json.dumps({
+                    "method": "subscribe",
+                    "params": {
+                        "channel": "trade",
+                        "symbol": [self.adapter.pair],
+                        "snapshot": True,
+                    },
+                    "req_id": 1,
+                }))
+                while not stop_event.is_set():
+                    try:
+                        raw_message = ws.recv()
+                    except Exception as exc:
+                        if isinstance(exc, (TimeoutError, socket.timeout)) or exc.__class__.__name__ == "WebSocketTimeoutException":
+                            continue
+                        raise
+                    if raw_message in (None, ""):
+                        raise ConnectionError("Kraken WebSocket closed the connection")
+                    message = json.loads(raw_message) if isinstance(raw_message, str) else raw_message
+                    if isinstance(message, dict) and (
+                        message.get("success") is False or message.get("error")
+                    ):
+                        raise RuntimeError(f"Kraken WebSocket error: {message}")
+                    result = self.adapter.handle_message(message)
+                    if result.get("status") != "OK":
+                        continue
+                    ledger_result = result.get("ledger", {})
+                    accepted = ledger_result.get("accepted_in_batch", 0)
+                    backfilled = result.get("backfill", {}).get("accepted_trades", 0)
+                    if accepted or backfilled:
+                        try:
+                            persist_state(self.adapter.ledger.to_state())
+                        except Exception as exc:
+                            raise StatePersistenceError(
+                                "CVD state persistence failed; runner stopped"
+                            ) from exc
+                        received_trades += accepted
+                        backfilled_trades += backfilled
+            except StatePersistenceError:
+                raise
+            except Exception as exc:
+                last_error = f"{type(exc).__name__}: {exc}"
+                if stop_event.is_set():
+                    break
+                reconnects += 1
+                if self.max_reconnect_attempts and reconnects > self.max_reconnect_attempts:
+                    raise RuntimeError(
+                        f"Kraken WebSocket reconnect limit reached: {last_error}"
+                    ) from exc
+                stop_event.wait(backoff)
+                backoff = min(backoff * 2.0, self.max_backoff)
+            finally:
+                if ws is not None:
+                    try:
+                        ws.close()
+                    except Exception:
+                        pass
+
+        return {
+            "status": "STOPPED",
+            "reconnects": reconnects,
+            "accepted_websocket_trades": received_trades,
+            "accepted_backfill_trades": backfilled_trades,
+            "last_trade_id": self.adapter.ledger.last_trade_id,
+            "last_error": last_error,
+            "execution_enabled": False,
+            "live_orders_placed": False,
         }
