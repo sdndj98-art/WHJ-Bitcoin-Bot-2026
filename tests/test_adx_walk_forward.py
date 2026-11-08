@@ -57,6 +57,7 @@ class AdxWalkForwardTests(unittest.TestCase):
         self.assertFalse(report["live_orders_enabled"])
         self.assertTrue(report["no_same_fold_test_feedback"])
         self.assertEqual(len(report["folds"]), 3)
+        self.assertIn("not compounded", report["test_fold_capital_policy"])
         previous_test_end = None
         for fold in report["folds"]:
             self.assertLessEqual(
