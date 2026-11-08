@@ -185,66 +185,50 @@ body[data-whj-theme="light"] .agent-step{background:#edf4fa;border-color:#cbd8e5
 @media(max-width:950px){.agent-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.agent-flow{grid-template-columns:repeat(3,minmax(0,1fr))}}
 @media(max-width:700px){.agent-grid,.agent-lower{grid-template-columns:1fr}.agent-hero{align-items:flex-start;flex-direction:column}.agent-flow{grid-template-columns:repeat(2,minmax(0,1fr))}}
 </style>
-<style id="whj-terminal-redesign">
+
+
+<style id="whj-terminal-functional-theme">
 :root{--bg:#eef0f3;--p:#fff;--p2:#f6f7f9;--line:#d6d9df;--t:#242a32;--m:#737b86;--c:#2868b2;--g:#25845d;--r:#b84d62;--a:#a66b26}
 html,body{background:#eef0f3!important;color:#252a31!important;font-family:Tahoma,Arial,sans-serif}
 body{background:linear-gradient(180deg,#f8f9fb 0,#e9ebef 100%)!important}
-.shell{grid-template-columns:215px minmax(0,1fr);background:#f3f4f6}
-.side{background:#f8f9fb!important;border-left:1px solid #d9dce1!important;color:#333;box-shadow:3px 0 18px #1e293b08}
-.logo{background:linear-gradient(145deg,#2872c6,#164b88)!important;color:white!important;box-shadow:none!important;border-radius:50%}
-.brand b{color:#1e5b9e;font-size:18px}
+.shell{grid-template-columns:215px minmax(0,1fr)}
+.side{background:#f8f9fb!important;border-left:1px solid #d9dce1!important;color:#333}
+.brand b{color:#1e5b9e}
+.logo{border-radius:12px;background:linear-gradient(145deg,#2872c6,#164b88)!important;color:#fff!important}
 .nav button{color:#59616c}
 .nav button.active,.nav button:hover{background:#e7edf5!important;color:#1e5b9e!important;box-shadow:inset -3px 0 #2c6db3!important}
-main{max-width:1600px;padding-top:22px}
-.top h1{color:#222a33;font-size:27px}
+.top h1{color:#222a33}
 .eyebrow{color:#2868b2}
 .sub,.metric .hint,.head span{color:#7b828c}
 .pill,.refresh,.toolbtn,.whj-extra-btn,.whj-command-btn,.whj-alert-btn,.whj-clock{background:#f4f6f8!important;color:#4a5664!important;border:1px solid #d5d9df!important}
 .refresh{background:#e7eff8!important;color:#205b9a!important}
-.banner{background:#fff!important;border:1px solid #d9dde3!important;border-radius:8px!important;box-shadow:0 2px 8px #1c273408}
+.banner{background:#fff!important;border:1px solid #d9dde3!important;border-radius:9px!important;box-shadow:0 2px 8px #1c273408}
 .banner b{color:#28313b}
 .status{background:#e9f5ee!important;color:#25845d!important}
 .card{background:#fff!important;border:1px solid #d9dde3!important;border-radius:9px!important;box-shadow:0 2px 8px #1c273408!important;color:#252a31}
 .metric .label{color:#747d88}
 .metric .value{color:#242a32}
-.signalbox{background:#f3f5f7!important;border:1px solid #e1e4e8}
-.content,.lower{gap:11px}
-.head h2{color:#303943}
+.signalbox,.agent-hero{background:#f3f5f7!important;border:1px solid #e1e4e8!important;color:#303943}
+.head h2,.scanner-head h2{color:#303943}
 th{color:#697582;border-bottom-color:#dfe2e6}
 td{color:#343d47;border-bottom-color:#eceef1}
-table{font-size:11px}
-canvas{filter:saturate(.8)}
-.scanner-head h2{color:#27313b}
-.radar-card,.scanner-signal-card{background:#fff!important}
-.radar-grid{border-color:#9eb8c8!important;background:repeating-radial-gradient(circle,transparent 0 27px,#d1dfe6 28px 29px,transparent 30px 55px),linear-gradient(90deg,transparent 49.7%,#c5d5de 50%,transparent 50.3%),linear-gradient(0deg,transparent 49.7%,#c5d5de 50%,transparent 50.3%)!important}
-.radar-grid:before{background:conic-gradient(from 0deg,transparent 0 72%,rgba(45,146,143,.03) 78%,rgba(45,146,143,.2) 100%)}
-.radar-center{background:#e8f4f3;color:#258d80;border-color:#8ac9bd}
-.radar-bottom,.scanner-reasons{background:#f4f6f8!important;border-color:#dce1e5!important}
-.gate-row{border-bottom-color:#e7eaee}
-.gate-copy b,.gate-row>strong{color:#3a4652}
+.agent-card{border-top:3px solid var(--agent-accent)!important}
+.agent-state{background:#f0f2f5!important;color:#56616d!important;border:1px solid #dce1e6}
+.agent-state.pass{background:#eaf5ef!important;color:#247b58!important;border-color:#cde5d6}
+.agent-state.fail{background:#faedf0!important;color:#a33f55!important;border-color:#eccbd3}
+.agent-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
+.agent-flow{background:#f7f8fa!important;border:1px solid #dce1e6!important;border-radius:8px}
+.agent-step{background:#fff!important;border:1px solid #dce1e6!important;border-radius:7px}
+.agent-step span{color:#2868b2}
+.agent-timeline .agent-event{border-bottom-color:#e7eaee}
+.agent-note{background:#f5f6f8!important;border:1px solid #dce1e6!important;color:#66717d!important}
 .scanner-safety{background:#eef7f2!important;border-color:#c9e1d4!important}
 .scanner-safety b{color:#287b58}
-.scanner-safety p{color:#687a70}
 .whj-command-box,.whj-shortcuts-card,.whj-alert-panel{background:#fff!important;color:#27313b!important}
-.whj-command-search{color:#27313b!important}
-.whj-command-item{color:#27313b!important}
+.whj-command-search,.whj-command-item{color:#27313b!important}
 .whj-command-item:hover{background:#edf2f7!important}
-@media(max-width:700px){.shell{display:block}.side{background:#f8f9fb!important}.top h1{font-size:21px}}
-/* Terminal-inspired agent strip */
-.whj-agent-terminal{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:9px;margin:12px 0 15px}
-.whj-agent-card{background:#fff;border:1px solid #d8dce2;border-radius:8px;padding:12px;min-width:0;box-shadow:0 2px 7px #1c273407}
-.whj-agent-card .agent-top{display:flex;align-items:center;justify-content:space-between;gap:6px;margin-bottom:8px}
-.whj-agent-card b{font-size:11px;color:#2e3945}
-.whj-agent-card small{font-size:9px;color:#7a8490;display:block;line-height:1.7}
-.whj-agent-dot{width:7px;height:7px;border-radius:50%;background:#29976c;box-shadow:0 0 0 3px #29976c18}
-.whj-agent-state{font-size:8px;color:#277c5b;background:#eaf5ef;border-radius:4px;padding:4px 6px}
-.whj-liveflow{display:flex;align-items:center;gap:8px;flex-wrap:wrap;background:#fff;border:1px solid #d8dce2;border-radius:8px;padding:12px 14px;margin-bottom:13px}
-.whj-liveflow strong{font-size:10px;color:#4d5966;margin-left:auto}
-.whj-flow-step{border:1px solid #d8dde3;background:#f7f8fa;border-radius:6px;padding:8px 10px;font-size:9px;color:#3d4854}
-.whj-flow-arrow{color:#8a929c;font-size:12px}
-.whj-terminal-note{font-size:9px;color:#78818c;margin-top:8px}
-@media(max-width:1050px){.whj-agent-terminal{grid-template-columns:repeat(3,minmax(0,1fr))}}
-@media(max-width:700px){.whj-agent-terminal{grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}.whj-agent-card{padding:10px}.whj-liveflow{gap:6px}.whj-liveflow strong{width:100%;margin:0}}
+@media(max-width:900px){.agent-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:700px){.shell{display:block}.side{height:auto;position:relative}.agent-grid{grid-template-columns:1fr}.top h1{font-size:21px}.topright{flex-wrap:wrap}}
 </style>
 </head><body><div class="shell"><aside class="side"><div class="brand"><div class="logo">₿</div><div><b>WHJ BITCOIN</b><small>مركز قيادة التداول الذكي</small></div></div><div class="navlabel">القائمة الرئيسية</div><nav class="nav"><button class="active" data-view="overview"><span class="ico">⌂</span>الرئيسية</button><button data-view="scanner"><span class="ico">⌁</span>ماسح السوق</button><button data-view="strategies"><span class="ico">◈</span>الاستراتيجيات</button><button data-view="trades"><span class="ico">⇄</span>الصفقات</button><button data-view="risk"><span class="ico">⌁</span>المخاطر</button><button data-view="system"><span class="ico">⚙</span>النظام</button><button data-view="agents"><span class="ico">✣</span>مركز الوكلاء</button><button data-view="forward"><span class="ico">◷</span>المراقبة المستقبلية</button><button data-view="mt5"><span class="ico">⌁</span>منصة MT5</button></nav><div class="sidefoot">WHJ Bitcoin Bot 2026<br>مراقبة وتحليل · Paper Trading فقط</div></aside><main>
 <div class="mobilehead">WHJ BITCOIN · مركز القيادة</div><header class="top"><div><div class="eyebrow">WHJ / COMMAND CENTER</div><h1 id="pageTitle">نظرة عامة</h1><div class="sub">مراقبة أداء البوت وتحليل BTC/USD</div></div><div class="topright"><button class="toolbtn" id="exportJson" type="button">تنزيل التقرير JSON</button><button class="toolbtn" id="exportCsv" type="button">تصدير الصفقات CSV</button><span class="pill"><i class="dot"></i><span id="systemState">جارٍ تحميل البيانات</span></span><button class="refresh" id="refresh">↻ تحديث البيانات</button></div></header>
@@ -472,7 +456,7 @@ function paperRiskPauseLabel(a){
  return reasons.length?"متوقف: "+reasons.join("، "):"محاكاة";
 }
 function drawChart(a){const c=$("equityChart"),ctx=c.getContext("2d"),w=c.clientWidth,h=210,dpr=window.devicePixelRatio||1;c.width=w*dpr;c.height=h*dpr;ctx.scale(dpr,dpr);ctx.clearRect(0,0,w,h);const raw=a&&(a.equity_curve||a.equity_history)||[];const vals=raw.map(x=>Number(typeof x==="object"?(x.equity||x.value):x)).filter(Number.isFinite);if(vals.length<2){ctx.fillStyle="#91a8c0";ctx.font="12px Tahoma";ctx.textAlign="center";ctx.fillText("لا تتوفر سلسلة تاريخية لرسم المنحنى",w/2,h/2);return}const lo=Math.min(...vals),hi=Math.max(...vals),p=18;ctx.strokeStyle="#294159";for(let i=0;i<4;i++){let y=p+(h-2*p)*i/3;ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(w,y);ctx.stroke()}ctx.beginPath();vals.forEach((v,i)=>{let x=p+(w-2*p)*i/(vals.length-1),y=h-p-(v-lo)/(hi-lo||1)*(h-2*p);i?ctx.lineTo(x,y):ctx.moveTo(x,y)});ctx.strokeStyle="#54d6e8";ctx.lineWidth=2.5;ctx.stroke()}
-function render(){if(!report)return;const a=report.persistent_paper_account||{},q=report.market_data_quality||{},bt=report.paper_backtest||{},mc=report.monte_carlo_risk||{},bb=report.block_bootstrap_risk||{};set("price",money(report.BTC_price));set("equity",money(a.equity_after_estimated_exit_costs_usd??bt.final_equity_usd));set("return",pct(a.return_pct??bt.return_pct));set("drawdown",pct(a.max_drawdown_pct??bt.max_drawdown_pct));set("tradeCountMetric",fmt(a.completed_trades??bt.completed_trades,0));set("winrate",pct(a.win_rate_pct??bt.win_rate_pct));set("pf",fmt(a.profit_factor??bt.profit_factor));set("fees",money(a.fees_paid_usd??bt.fees_paid_usd));set("updated",report.time?new Date(report.time).toLocaleString("ar-IQ"):"—");set("lastTime",report.time?new Date(report.time).toLocaleString("ar-IQ"):"—");set("signal",report.signal||"—");set("signalText",report.signal==="BUY"?"اتجاه صاعد حسب قواعد المؤشر":report.signal==="SELL"?"اتجاه هابط حسب قواعد المؤشر":"لا توجد إشارة اتجاه مؤكدة");set("signalBadge",report.signal||"—");set("sma20",money(report.SMA20));set("sma50",money(report.SMA50));set("candles",fmt(report.closed_candles_used,0));set("systemState",q.quality_status==="HEALTHY"?"البيانات سليمة":q.quality_status==="BLOCKED"?"تحذير جودة البيانات":"محاكاة فقط");set("agentReportState","تم تحميل تقرير صالح");set("agentReportTime",report.time?new Date(report.time).toLocaleString("ar-IQ"):"وقت غير معروف");set("agentTradeCount",fmt(a.completed_trades??bt.completed_trades,0));set("agentDataQuality",q.quality_status||"غير معروف");
+function render(){if(!report)return;const a=report.persistent_paper_account||{},q=report.market_data_quality||{},bt=report.paper_backtest||{},mc=report.monte_carlo_risk||{},bb=report.block_bootstrap_risk||{};const s=report.market_scanner||{};set("price",money(report.BTC_price));set("equity",money(a.equity_after_estimated_exit_costs_usd??bt.final_equity_usd));set("return",pct(a.return_pct??bt.return_pct));set("drawdown",pct(a.max_drawdown_pct??bt.max_drawdown_pct));set("tradeCountMetric",fmt(a.completed_trades??bt.completed_trades,0));set("winrate",pct(a.win_rate_pct??bt.win_rate_pct));set("pf",fmt(a.profit_factor??bt.profit_factor));set("fees",money(a.fees_paid_usd??bt.fees_paid_usd));set("updated",report.time?new Date(report.time).toLocaleString("ar-IQ"):"—");set("lastTime",report.time?new Date(report.time).toLocaleString("ar-IQ"):"—");set("signal",report.signal||"—");set("signalText",report.signal==="BUY"?"اتجاه صاعد حسب قواعد المؤشر":report.signal==="SELL"?"اتجاه هابط حسب قواعد المؤشر":"لا توجد إشارة اتجاه مؤكدة");set("signalBadge",report.signal||"—");set("sma20",money(report.SMA20));set("sma50",money(report.SMA50));set("candles",fmt(report.closed_candles_used,0));set("systemState",q.quality_status==="HEALTHY"?"البيانات سليمة":q.quality_status==="BLOCKED"?"تحذير جودة البيانات":"محاكاة فقط");set("agentReportState","تم تحميل تقرير صالح");set("agentReportTime",report.time?new Date(report.time).toLocaleString("ar-IQ"):"وقت غير معروف");set("agentTradeCount",fmt(a.completed_trades??bt.completed_trades,0));set("agentDataQuality",q.quality_status||"غير معروف");
 set("agentNetReturn",pct(a.return_pct??bt.return_pct));
 set("agentMaxDD",pct(a.max_drawdown_pct??bt.max_drawdown_pct));
 set("agentProfitFactor",fmt(a.profit_factor??bt.profit_factor));
@@ -494,8 +478,7 @@ else addTimeline("ماسح السوق","لا توجد بيانات ماسح في
 if(a.paused_for_drawdown||a.daily_loss_paused||a.paused_for_loss_streak||a.paused_for_strategy_health)addTimeline("حماية المحفظة مفعّلة",paperRiskPauseLabel(a),"fail",report.time,"PAUSED");
 (bt.trade_log||[]).slice(-8).forEach(t=>addTimeline("صفقة "+String(t.side||t.action||"غير محددة"),"النتيجة: "+String(t.result||"مغلقة")+" · صافي PnL: "+money(t.pnl),Number(t.pnl)<0?"fail":"pass",t.timestamp||t.date||"",String(t.result||"TRADE")));
 const tl=$("agentDecisionTimeline");if(tl){const entries=timelineEvents.slice(-12).reverse();tl.innerHTML=entries.map(e=>"<div class='agent-event "+esc(e.kind)+"'><span class='agent-event-mark'></span><div><b>"+esc(e.title)+"</b><p>"+esc(e.detail)+"</p></div><time>"+esc(e.stamp?new Date(e.stamp).toLocaleString("ar-IQ"):"وقت غير متوفر")+"</time></div>").join("")||"<div class='empty'>لا توجد أحداث موثقة</div>";}
-set("dataQuality",q.quality_status||"غير معروف");set("candleAge",fmt(q.latest_closed_candle_age_minutes));set("gaps",fmt(q.recent_missing_hour_gaps,0));set("blockReasons",(q.quality_block_reasons||[]).join("، ")||"لا يوجد");set("mcStatus",mc.status||"—");set("mcLoss",pct(mc.probability_of_loss_pct));set("mcP05",money(mc.p05_final_equity_usd));set("mcDD",pct(mc.p95_max_drawdown_pct));set("blockLoss",pct(bb.probability_of_loss_pct));set("blockP05",money(bb.p05_final_equity_usd));set("paused",a.paused_for_drawdown===undefined?"—":a.paused_for_drawdown?"نعم":"لا");set("dailyPause",a.daily_loss_paused===undefined?"—":a.daily_loss_paused?"نعم":"لا");set("lossStreak",fmt(a.max_consecutive_losses,0));set("position",a.open_position?"مركز مفتوح":"لا يوجد");$("signal").className=report.signal==="BUY"?"positive":report.signal==="SELL"?"negative":"neutral";$("portfolioRows").innerHTML=Object.entries(accounts()).map(([n,x])=>"<tr><td>"+esc(n)+"</td><td>"+esc(money(x.equity_after_estimated_exit_costs_usd))+"</td><td>"+esc(pct(x.return_pct))+"</td><td>"+esc(pct(x.max_drawdown_pct))+"</td><td>"+esc(fmt(x.completed_trades,0))+"</td><td><span class='tag'>"+esc(paperRiskPauseLabel(x))+"</span></td></tr>").join("")||"<tr><td colspan='6' class='empty'>بيانات الحسابات غير متوفرة</td></tr>";const strategies=report.strategy_lab&&report.strategy_lab.strategies||{};$("strategyRows").innerHTML=Object.entries(strategies).map(([n,x])=>{let o=x.out_of_sample||{};return "<tr><td>"+esc(n)+"</td><td>"+esc(pct(o.return_pct))+"</td><td>"+esc(pct(o.max_drawdown_pct))+"</td><td>"+esc(fmt(o.closed_trades,0))+"</td><td>"+esc(pct(x.worst_window_return_pct))+"</td></tr>"}).join("")||"<tr><td colspan='5' class='empty'>لا توجد نتائج مختبر في التقرير</td></tr>";const regimes=report.strategy_lab&&report.strategy_lab.market_regime_diagnostics&&report.strategy_lab.market_regime_diagnostics.regimes||{};const regimeRows=[];Object.entries(regimes).forEach(([regime,data])=>{Object.entries(data.strategy_signal_diagnostics||{}).forEach(([name,metric])=>{regimeRows.push("<tr><td>"+esc(regime)+"</td><td>"+esc(fmt(data.bars,0))+"</td><td>"+esc(data.evidence_status||"UNKNOWN")+"</td><td>"+esc(name)+"</td><td>"+esc(fmt(metric.active_signal_bars,0))+"</td><td>"+esc(pct(metric.active_forward_return_pct))+"</td><td>"+esc(pct(metric.positive_active_forward_bar_pct))+"</td><td>"+(metric.positive_active_forward_bar_ci95_pct?esc(pct(metric.positive_active_forward_bar_ci95_pct.lower_pct))+" – "+esc(pct(metric.positive_active_forward_bar_ci95_pct.upper_pct)):"—")+"</td></tr>")})});$("regimeRows").innerHTML=regimeRows.join("")||"<tr><td colspan='8' class='empty'>لا توجد بيانات تشخيص النظام السوقي</td></tr>";const ts=bt.trade_log||[];$("tradeRows").innerHTML=ts.slice(-50).reverse().map(t=>"<tr><td>"+esc(t.timestamp||t.date||"—")+"</td><td>"+esc(t.side||t.action||"—")+"</td><td><span class='tag'>"+esc(t.result||"مغلقة")+"</span></td><td>"+esc(money(t.pnl))+"</td></tr>").join("")||"<tr><td colspan='4' class='empty'>لا توجد صفقات مغلقة</td></tr>";const s=report.market_scanner||{};
-const closedTrades=Number(a.completed_trades??bt.completed_trades);
+set("dataQuality",q.quality_status||"غير معروف");set("candleAge",fmt(q.latest_closed_candle_age_minutes));set("gaps",fmt(q.recent_missing_hour_gaps,0));set("blockReasons",(q.quality_block_reasons||[]).join("، ")||"لا يوجد");set("mcStatus",mc.status||"—");set("mcLoss",pct(mc.probability_of_loss_pct));set("mcP05",money(mc.p05_final_equity_usd));set("mcDD",pct(mc.p95_max_drawdown_pct));set("blockLoss",pct(bb.probability_of_loss_pct));set("blockP05",money(bb.p05_final_equity_usd));set("paused",a.paused_for_drawdown===undefined?"—":a.paused_for_drawdown?"نعم":"لا");set("dailyPause",a.daily_loss_paused===undefined?"—":a.daily_loss_paused?"نعم":"لا");set("lossStreak",fmt(a.max_consecutive_losses,0));set("position",a.open_position?"مركز مفتوح":"لا يوجد");$("signal").className=report.signal==="BUY"?"positive":report.signal==="SELL"?"negative":"neutral";$("portfolioRows").innerHTML=Object.entries(accounts()).map(([n,x])=>"<tr><td>"+esc(n)+"</td><td>"+esc(money(x.equity_after_estimated_exit_costs_usd))+"</td><td>"+esc(pct(x.return_pct))+"</td><td>"+esc(pct(x.max_drawdown_pct))+"</td><td>"+esc(fmt(x.completed_trades,0))+"</td><td><span class='tag'>"+esc(paperRiskPauseLabel(x))+"</span></td></tr>").join("")||"<tr><td colspan='6' class='empty'>بيانات الحسابات غير متوفرة</td></tr>";const strategies=report.strategy_lab&&report.strategy_lab.strategies||{};$("strategyRows").innerHTML=Object.entries(strategies).map(([n,x])=>{let o=x.out_of_sample||{};return "<tr><td>"+esc(n)+"</td><td>"+esc(pct(o.return_pct))+"</td><td>"+esc(pct(o.max_drawdown_pct))+"</td><td>"+esc(fmt(o.closed_trades,0))+"</td><td>"+esc(pct(x.worst_window_return_pct))+"</td></tr>"}).join("")||"<tr><td colspan='5' class='empty'>لا توجد نتائج مختبر في التقرير</td></tr>";const regimes=report.strategy_lab&&report.strategy_lab.market_regime_diagnostics&&report.strategy_lab.market_regime_diagnostics.regimes||{};const regimeRows=[];Object.entries(regimes).forEach(([regime,data])=>{Object.entries(data.strategy_signal_diagnostics||{}).forEach(([name,metric])=>{regimeRows.push("<tr><td>"+esc(regime)+"</td><td>"+esc(fmt(data.bars,0))+"</td><td>"+esc(data.evidence_status||"UNKNOWN")+"</td><td>"+esc(name)+"</td><td>"+esc(fmt(metric.active_signal_bars,0))+"</td><td>"+esc(pct(metric.active_forward_return_pct))+"</td><td>"+esc(pct(metric.positive_active_forward_bar_pct))+"</td><td>"+(metric.positive_active_forward_bar_ci95_pct?esc(pct(metric.positive_active_forward_bar_ci95_pct.lower_pct))+" – "+esc(pct(metric.positive_active_forward_bar_ci95_pct.upper_pct)):"—")+"</td></tr>")})});$("regimeRows").innerHTML=regimeRows.join("")||"<tr><td colspan='8' class='empty'>لا توجد بيانات تشخيص النظام السوقي</td></tr>";const ts=bt.trade_log||[];$("tradeRows").innerHTML=ts.slice(-50).reverse().map(t=>"<tr><td>"+esc(t.timestamp||t.date||"—")+"</td><td>"+esc(t.side||t.action||"—")+"</td><td><span class='tag'>"+esc(t.result||"مغلقة")+"</span></td><td>"+esc(money(t.pnl))+"</td></tr>").join("")||"<tr><td colspan='4' class='empty'>لا توجد صفقات مغلقة</td></tr>";const closedTrades=Number(a.completed_trades??bt.completed_trades);
 const hasEquity=Number.isFinite(Number(a.equity_after_estimated_exit_costs_usd??bt.final_equity_usd));
 const hasSizing=Number.isFinite(Number(a.cash_usd??a.cash??a.equity_after_estimated_exit_costs_usd));
 const scannerReady=!!s.status&&s.status!=="UNAVAILABLE";
@@ -720,29 +703,5 @@ document.querySelectorAll(".nav button").forEach(b=>b.addEventListener("click",(
 })();
 
 </script>
-<script id="whj-terminal-agents">
-(function(){
- if(document.getElementById("whjAgentTerminal"))return;
- const banner=document.querySelector("main .banner");
- if(!banner)return;
- const agents=document.createElement("section");
- agents.id="whjAgentTerminal";
- agents.className="whj-agent-terminal";
- agents.setAttribute("aria-label","وكلاء WHJ");
- const items=[
-  ["▣","SCANNER","يراقب السوق والحجم","رصد فقط"],
-  ["◆","RISK CHECK","يفحص حدود المخاطر","حماية"],
-  ["◈","SIZER","يحسب حجم الصفقة","تحديد الحجم"],
-  ["●","EXECUTOR","ينفذ أوامر المحاكاة","ورقي"],
-  ["▤","LOGGER","يسجل أسباب القرار","توثيق"],
-  ["◉","EQUITY","يتابع الرصيد والمنحنى","محفظة"]
- ];
- items.forEach((x)=>{const c=document.createElement("article");c.className="whj-agent-card";c.innerHTML='<div class="agent-top"><b></b><span class="whj-agent-dot"></span></div><small></small><div class="whj-terminal-note"></div>';c.querySelector("b").textContent=x[0]+"  "+x[1];c.querySelector("small").textContent=x[2];c.querySelector(".whj-terminal-note").textContent=x[3];agents.appendChild(c)});
- banner.insertAdjacentElement("afterend",agents);
- const flow=document.createElement("section");flow.className="whj-liveflow";flow.setAttribute("aria-label","تدفق العمليات");
- const title=document.createElement("strong");title.textContent="LIVE FLOW · فحص ← تحقق ← تحجيم ← تنفيذ ورقي ← سجل";flow.appendChild(title);
- ["SCAN","RISK CHECK","SIZER","PAPER EXEC","LOG"].forEach((v,i)=>{if(i){const a=document.createElement("span");a.className="whj-flow-arrow";a.textContent="›";flow.appendChild(a)}const s=document.createElement("span");s.className="whj-flow-step";s.textContent=v;flow.appendChild(s)});
- agents.insertAdjacentElement("afterend",flow);
-})();
-</script>
+
 </body></html>
