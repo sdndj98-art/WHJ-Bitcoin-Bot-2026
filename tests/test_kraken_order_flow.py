@@ -11,6 +11,7 @@ from kraken_order_flow import (
     TradeIdGapError,
     normalize_kraken_ws_v2_trade_message,
     normalize_kraken_rest_trade_rows,
+    fetch_recent_trades,
     _kraken_get,
 )
 
@@ -339,6 +340,37 @@ class KrakenOrderFlowTests(unittest.TestCase):
         result = adapter.handle_message({"channel": "heartbeat"})
         self.assertEqual(result["status"], "IGNORED_NON_TRADE_MESSAGE")
         self.assertFalse(result["execution_enabled"])
+
+
+
+    def test_cvd_preserves_exact_nanosecond_timestamp_for_recovery(self):
+        ledger = PersistentCvdLedger(symbol="BTC/USD")
+        ledger.process([{
+            "trade_id": 1, "price": 100, "qty": 1, "side": "buy",
+            "timestamp": "2026-11-08T10:00:00.123456789Z",
+        }])
+        self.assertEqual(
+            ledger.to_state()["last_trade_timestamp_ns"],
+            1794132000123456789,
+        )
+        restored = PersistentCvdLedger(state=ledger.to_state())
+        self.assertEqual(
+            restored.to_state()["last_trade_timestamp_ns"],
+            1794132000123456789,
+        )
+
+    @patch("kraken_order_flow._kraken_get")
+    def test_fetch_recent_trades_passes_since_cursor(self, get):
+        get.return_value = {"XXBTZUSD": [], "last": "123456789"}
+        result = fetch_recent_trades("XBTUSD", since="123456789")
+        self.assertEqual(result["last"], "123456789")
+        get.assert_called_once_with(
+            "Trades", {"pair": "XBTUSD", "since": "123456789"}, timeout=10
+        )
+
+    def test_fetch_recent_trades_rejects_invalid_since_cursor(self):
+        with self.assertRaisesRegex(ValueError, "since"):
+            fetch_recent_trades("XBTUSD", since="not-a-cursor")
 
     def test_public_fetch_rejects_non_finite_timeout_before_network(self):
         with self.assertRaisesRegex(ValueError, "timeout"):
