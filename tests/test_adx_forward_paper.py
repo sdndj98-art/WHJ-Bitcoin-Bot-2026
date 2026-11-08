@@ -133,6 +133,25 @@ class AdxForwardPaperTests(unittest.TestCase):
             self.assertEqual(result["equity_usd"], 550.0)
             self.assertEqual(result["processed_new_bars"], 0)
 
+
+    def test_invalid_native_ohlc_is_rejected_before_ledger_creation(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "isolated.json"
+            bars = make_bars()
+            bars[-1]["high"] = bars[-1]["close"] * 0.5
+            with self.assertRaisesRegex(ValueError, "Inconsistent native candle high"):
+                process_native_bars(bars, 20.0, 4, path)
+            self.assertFalse(path.exists())
+
+    def test_signal_length_mismatch_is_rejected(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "isolated.json"
+            bars = make_bars()
+            with patch("adx_forward_paper._build_sleeve_signals", return_value=([True], [True])):
+                with self.assertRaisesRegex(ValueError, "signal arrays"):
+                    process_native_bars(bars, 20.0, 4, path)
+            self.assertFalse(path.exists())
+
     def test_corrupt_state_is_not_silently_reseeded(self):
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory) / "isolated.json"
