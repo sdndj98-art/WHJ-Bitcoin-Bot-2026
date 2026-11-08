@@ -132,6 +132,14 @@ def _validate_state(state, threshold, timeframe):
                 raise ValueError
         except (TypeError, ValueError):
             raise ValueError("ADX paper daily date is invalid")
+        watermark_close = last + int(timeframe) * 3_600_000
+        watermark_date = datetime.fromtimestamp(
+            watermark_close / 1000, timezone.utc
+        ).date().isoformat()
+        if daily_date != watermark_date:
+            raise ValueError("ADX paper daily date does not match the ledger watermark")
+    elif state["daily_paused"]:
+        raise ValueError("ADX paper daily pause cannot exist without a daily baseline")
     trades = state.get("trades")
     if not isinstance(trades, list):
         raise ValueError("ADX paper trade history is invalid")
