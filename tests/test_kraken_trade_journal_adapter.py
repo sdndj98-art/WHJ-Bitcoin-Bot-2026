@@ -57,6 +57,32 @@ class AdapterTradeJournalTests(unittest.TestCase):
         })
         self.assertEqual([item["trade_id"] for item in captured], ["11", "12"])
 
+    def test_fresh_checkpointed_adapter_requires_initial_snapshot(self):
+        adapter = KrakenSpotTradeFeedAdapter(
+            PersistentCvdLedger(symbol="BTC/USD"),
+            "BTC/USD",
+            on_accepted_trades=lambda events: None,
+            require_initial_snapshot=True,
+        )
+        adapter.handle_message({
+            "method": "subscribe",
+            "result": {"channel": "trade", "symbol": "BTC/USD"},
+            "success": True,
+        })
+        update = {
+            "channel": "trade", "type": "update",
+            "data": [{
+                "symbol": "BTC/USD", "trade_id": 100, "price": 100,
+                "qty": 1, "side": "buy", "timestamp": "1970-01-01T00:01:40Z",
+            }],
+        }
+        with self.assertRaisesRegex(Exception, "initial trade snapshot"):
+            adapter.handle_message(update)
+        self.assertEqual(adapter.ledger.last_trade_id, 0)
+        snapshot = dict(update, type="snapshot")
+        adapter.handle_message(snapshot)
+        self.assertEqual(adapter.continuity_start_trade_id, 100)
+
     def test_journal_failure_is_fatal_and_not_silently_reconnected(self):
         adapter = KrakenSpotTradeFeedAdapter(
             PersistentCvdLedger(symbol="BTC/USD"),

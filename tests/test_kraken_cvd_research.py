@@ -7,6 +7,7 @@ from kraken_cvd_research import (
     load_normalized_trade_journal,
     analyze_trade_journal,
 )
+from trade_journal_checkpoint import build_continuity_checkpoint
 
 
 class KrakenCvdResearchTests(unittest.TestCase):
@@ -34,12 +35,12 @@ class KrakenCvdResearchTests(unittest.TestCase):
         self.path.write_text(content, encoding="utf-8")
 
     def checkpoint(self, last_trade_id=103, symbol="BTC/USD"):
-        return {
-            "source": "kraken_spot_trade_feed_adapter",
-            "feed_continuity_verified": True,
-            "last_trade_id": last_trade_id,
-            "symbol": symbol,
-        }
+        checkpoint = build_continuity_checkpoint(
+            self.path, "BTC/USD", 103
+        )
+        checkpoint["last_trade_id"] = last_trade_id
+        checkpoint["symbol"] = symbol
+        return checkpoint
 
     def valid_events(self):
         return [
@@ -207,6 +208,31 @@ class KrakenCvdResearchTests(unittest.TestCase):
                         timeframes=["1m"],
                         continuity_checkpoint=checkpoint,
                     )
+
+    def test_rejects_checkpoint_when_journal_bytes_change(self):
+        self.write_events(self.valid_events())
+        checkpoint = self.checkpoint()
+        original = self.path.read_text(encoding="utf-8")
+        self.path.write_text(original.replace('{"trade_id"', '{ "trade_id"', 1), encoding="utf-8")
+        with self.assertRaisesRegex(ValueError, "journal_size_bytes|journal_sha256"):
+            analyze_trade_journal(
+                self.path,
+                now_timestamp=240,
+                timeframes=["1m"],
+                continuity_checkpoint=checkpoint,
+            )
+
+    def test_rejects_checkpoint_with_wrong_first_trade_id(self):
+        self.write_events(self.valid_events())
+        checkpoint = self.checkpoint()
+        checkpoint["first_trade_id"] = 99
+        with self.assertRaisesRegex(ValueError, "first_trade_id"):
+            analyze_trade_journal(
+                self.path,
+                now_timestamp=240,
+                timeframes=["1m"],
+                continuity_checkpoint=checkpoint,
+            )
 
     def test_analysis_does_not_modify_journal(self):
         self.write_events(self.valid_events())
