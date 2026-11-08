@@ -73,3 +73,13 @@ WHJ's shared analysis/paper layer. A later, separately reviewed execution adapte
 would require demo-account testing, idempotent order handling, broker volume/stop
 constraints, reconciliation, and explicit live-trading controls before any real order
 could be enabled.
+
+
+## Optional demo-only order gateway prototype
+
+WHJ also contains a separate manual demo-order gateway described in
+[MT5_DEMO_EXECUTION.md](MT5_DEMO_EXECUTION.md). It is not connected to the scanner,
+local paper ledger, dashboard or scheduled jobs. It requires both an in-code opt-in
+and the local environment variable `WHJ_ENABLE_MT5_DEMO_ORDERS=YES`, and it rejects
+any account not positively identified by the MT5 API as a demo account. It is a
+controlled integration prototype, not an autonomous strategy or live-trading feature.
