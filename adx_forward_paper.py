@@ -47,8 +47,15 @@ def validate_hourly_candles(candles):
             raise ValueError("Inconsistent hourly high")
         if values["low"] > min(values["open"], values["close"], values["high"]):
             raise ValueError("Inconsistent hourly low")
-        if row.get("imputed", False):
-            raise ValueError("Imputed hourly candles are not accepted by ADX forward paper")
+    # EMA200 on 6h needs 1,200 hourly observations; reject synthetic data in
+    # the indicator warm-up horizon.
+    if any(row.get("imputed", False) for row in candles[-1300:]):
+        raise ValueError("Imputed candles inside the ADX indicator warm-up horizon are not accepted")
+    now_ms = int(datetime.now(timezone.utc).timestamp() * 1000)
+    latest_close_ms = int(candles[-1]["timestamp"]) + 3_600_000
+    age_minutes = (now_ms - latest_close_ms) / 60_000
+    if not -5 <= age_minutes <= 120:
+        raise ValueError("Latest closed hourly candle is stale or in the future")
     return True
 
 
@@ -91,6 +98,8 @@ def _load_state(path, threshold, timeframe, first_timestamp):
         raise ValueError("ADX paper ledger identity mismatch; manual review required")
     for key in ("cash", "btc", "entry_cost", "fees_paid", "peak_equity", "max_drawdown_pct"):
         _finite(state.get(key), "saved " + key, 0)
+    if not isinstance(state, dict):
+        raise ValueError("ADX paper ledger is invalid; refusing to reset it")
     if not isinstance(state.get("trades"), list) or not isinstance(state.get("last_timestamp"), int):
         raise ValueError("ADX paper ledger is incomplete; refusing to reset it")
     if state["btc"] == 0 and state["entry_cost"] != 0:
@@ -112,7 +121,7 @@ def _save_atomic(path, state):
                                          delete=False) as handle:
             temp_name = handle.name
             json.dump(state, handle, indent=2, allow_nan=False)
-            handle.write("\\n")
+            handle.write("\n")
             handle.flush()
             os.fsync(handle.fileno())
         os.replace(temp_name, target)
@@ -165,6 +174,10 @@ def process_native_bars(bars, threshold, timeframe, state_path):
         return summarize(state, bars[-1]["close"], seeded=True, processed=0)
 
     last = state["last_timestamp"]
+    if last < timestamps[0]:
+        raise ValueError("ADX ledger is older than the available feed; refusing to skip unseen bars")
+    if last <= timestamps[-1] and (last - timestamps[0]) % (timeframe * 3_600_000):
+        raise ValueError("ADX ledger timestamp is not aligned with the current feed")
     new_indices = [i for i, ts in enumerate(timestamps) if ts > last]
     for i in new_indices:
         if i == 0:
@@ -198,7 +211,7 @@ def process_native_bars(bars, threshold, timeframe, state_path):
             state["loss_streak_paused"] = True
         paused = state["daily_paused"] or state["drawdown_paused"] or state["loss_streak_paused"]
         # Exit when the baseline regime turns off; entry confirmation is ADX/+DI only.
-        if state["btc"] > 0 and not current_baseline:
+        if state["btc"] > 0 and (not current_baseline or paused):
             _close_position(state, ts, price)
         elif state["btc"] == 0 and previous_signal and not paused:
             allocation = min(state["cash"], state["cash"] * ALLOCATION_FRACTION)
@@ -273,6 +286,6 @@ if __name__ == "__main__":
     from historical_research import load_two_year_candles
     report = run_forward_adx_paper(load_two_year_candles(days=90))
     Path("paper_adx_forward_report.json").write_text(
-        json.dumps(report, indent=2, allow_nan=False) + "\\n", encoding="utf-8"
+        json.dumps(report, indent=2, allow_nan=False) + "\n", encoding="utf-8"
     )
     print(json.dumps(report, indent=2, allow_nan=False))
