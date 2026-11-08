@@ -32,6 +32,7 @@ jobs:
         with:
           python-version: "3.12"
       - name: Restore forward-only paper ledgers
+        id: restore-paper-ledgers
         uses: actions/cache/restore@v4
         with:
           path: |
@@ -43,6 +44,11 @@ jobs:
           key: whj-forward-paper-v1-${{ github.run_id }}-${{ github.run_attempt }}
           restore-keys: |
             whj-forward-paper-v1-
+      - name: Guard against missing paper ledger cache
+        if: steps.restore-paper-ledgers.outputs.cache-matched-key == '' && github.run_number != '1'
+        run: |
+          echo "::error::Forward paper ledger cache is missing after initialization. Refusing to reseed accounts or erase forward history."
+          exit 1
       - name: Run focused safety tests
         run: python -m unittest discover -s tests -p 'test_forward_paper_monitor.py' -v
       - name: Run forward-only paper monitor
