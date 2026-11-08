@@ -20,6 +20,9 @@ jobs:
   bitcoin-analysis:
     runs-on: ubuntu-latest
     timeout-minutes: 5
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - name: Checkout project
         uses: actions/checkout@v4
@@ -57,10 +60,7 @@ jobs:
       - name: Configure GitHub Pages
         if: github.ref == 'refs/heads/main'
         id: pages
-        continue-on-error: true
         uses: actions/configure-pages@v5
-        with:
-          enablement: true
 
       - name: Upload dashboard website
         if: github.ref == 'refs/heads/main' && steps.pages.outcome == 'success'
