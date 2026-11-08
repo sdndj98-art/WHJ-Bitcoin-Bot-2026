@@ -50,6 +50,14 @@ class TradeCandleBuilderTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             build_trade_candles([trade, dict(trade)], 60, 120)
 
+    def test_rejects_regressing_trade_ids_with_sorted_timestamps(self):
+        trades = [
+            {"trade_id": 2, "timestamp": 1, "price": 100, "qty": 1, "side": "buy"},
+            {"trade_id": 1, "timestamp": 2, "price": 101, "qty": 1, "side": "sell"},
+        ]
+        with self.assertRaisesRegex(ValueError, "strictly increasing"):
+            build_trade_candles(trades, 60, 120)
+
     def test_rejects_out_of_order_events(self):
         trades = [
             {"trade_id": 1, "timestamp": 2, "price": 100, "qty": 1, "side": "buy"},
