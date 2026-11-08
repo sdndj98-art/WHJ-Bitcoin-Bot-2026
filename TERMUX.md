@@ -90,3 +90,7 @@ These commands can fetch public market data and generate local reports. They rem
 - GitHub login issue: run `gh auth login`; never paste the displayed token or device code into chat.
 - Network or DNS errors: check Android connectivity, then retry. Do not repeatedly reset Git or delete local state.
 - Test failure: keep the full failing test name and traceback; do not run the application to work around a failing test.
+
+## MetaTrader 5 compatibility
+
+The optional MT5 connector does not run directly in Termux/Android. It requires a Windows workstation or Windows VPS with the MetaTrader 5 desktop terminal and official Python package. Follow [MT5_SETUP.md](MT5_SETUP.md) on that Windows machine. The Termux workflow remains the existing read-only crypto analysis and paper-trading environment; it does not need MT5 credentials or packages.
