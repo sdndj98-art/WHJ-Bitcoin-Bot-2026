@@ -12,7 +12,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: whj-ema-adx-research-${{ github.ref }}
+  group: whj-ema-adx-research-v2-${{ github.ref }}
   cancel-in-progress: false
   queue: max
 
@@ -40,6 +40,7 @@ jobs:
       - name: Test ADX20 exit policy research
         run: python -m unittest discover -s tests -p 'test_adx_exit_policy_lab.py' -v
       - name: Run ADX20 exit policy comparison
+        timeout-minutes: 20
         run: python adx_exit_policy_lab.py
       - name: Upload ADX research reports
         uses: actions/upload-artifact@v4
