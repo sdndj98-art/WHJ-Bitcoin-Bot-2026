@@ -130,7 +130,10 @@ def build_trade_candles(trades, interval_seconds, now_timestamp, start_timestamp
         "candles": candles,
         "trades": included,
         "closed_until_timestamp": end_exclusive,
-        "excluded_forming_candle_trades": len(normalized) - len(included),
+        "excluded_forming_candle_trades": sum(
+            1 for item in normalized
+            if end_exclusive <= item["timestamp"] < end_exclusive + interval_seconds
+        ),
         "trade_count": len(included),
         "candle_count": len(candles),
         "empty_candle_count": sum(1 for row in candles if row[7] == 0),
