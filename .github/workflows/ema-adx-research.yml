@@ -6,6 +6,16 @@ on:
     branches:
       - feature/efficiency-ratio-indicator
     paths:
+      - 'ema_adx_lab.py'
+      - 'adx_walk_forward.py'
+      - 'adx_cross_exchange_walk_forward.py'
+      - 'ema_adx_cross_exchange_lab.py'
+      - 'adx_exit_policy_lab.py'
+      - 'historical_research.py'
+      - 'tests/test_ema_adx_lab.py'
+      - 'tests/test_adx_walk_forward.py'
+      - 'tests/test_adx_exit_policy_lab.py'
+      - 'tests/test_ema_adx_cross_exchange_lab.py'
       - '.github/workflows/ema-adx-research.yml'
 
 permissions:
