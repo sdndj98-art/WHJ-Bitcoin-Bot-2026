@@ -68,9 +68,13 @@ class KrakenCvdCollectorCliTests(unittest.TestCase):
                      "qty": 1, "side": "sell", "timestamp": "2026-11-08T10:00:02Z"},
                 ],
             })
+            checkpoint_path = Path(journal_path + ".checkpoint.json")
+            save_state.side_effect = lambda *_: self.assertTrue(
+                checkpoint_path.exists(),
+                "continuity checkpoint must be durable before CVD state advances",
+            )
             persist = runner.run.call_args.kwargs["persist_state"]
             persist(adapter.ledger.to_state())
-            checkpoint_path = Path(journal_path + ".checkpoint.json")
             checkpoint = json.loads(checkpoint_path.read_text(encoding="utf-8"))
             metadata = validate_continuity_checkpoint(
                 checkpoint, journal_path, "BTC/USD", 101
