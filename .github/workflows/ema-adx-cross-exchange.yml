@@ -28,7 +28,7 @@ concurrency:
   queue: max
 
 jobs:
-  independent-binance-validation:
+  independent-bitstamp-validation:
     runs-on: ubuntu-latest
     timeout-minutes: 45
     steps:
@@ -43,7 +43,7 @@ jobs:
       - name: Test independent exchange data validation
         run: python -m unittest discover -s tests -p 'test_ema_adx_cross_exchange_lab.py' -v
 
-      - name: Run independent Binance historical comparison
+      - name: Run independent Bitstamp historical comparison
         run: python ema_adx_cross_exchange_lab.py
 
       - name: Upload independent exchange report
