@@ -1,3 +1,7 @@
+import json
+import os
+import tempfile
+import threading
 import unittest
 from unittest.mock import patch
 
@@ -8,6 +12,10 @@ from kraken_order_flow import (
     evaluate_microstructure_confluence,
     PersistentCvdLedger,
     KrakenSpotTradeFeedAdapter,
+    KrakenSpotWebSocketRunner,
+    StatePersistenceError,
+    load_cvd_state,
+    save_cvd_state_atomic,
     TradeIdGapError,
     normalize_kraken_ws_v2_trade_message,
     normalize_kraken_rest_trade_rows,
@@ -371,6 +379,126 @@ class KrakenOrderFlowTests(unittest.TestCase):
     def test_fetch_recent_trades_rejects_invalid_since_cursor(self):
         with self.assertRaisesRegex(ValueError, "since"):
             fetch_recent_trades("XBTUSD", since="not-a-cursor")
+
+
+
+    def test_cvd_state_atomic_save_load_and_corruption_is_not_reset(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = os.path.join(directory, "btc-usd-cvd.json")
+            state = {"version": 1, "symbol": "BTC/USD", "last_trade_id": 77}
+            self.assertIsNone(load_cvd_state(path))
+            save_cvd_state_atomic(path, state)
+            self.assertEqual(load_cvd_state(path), state)
+            with self.assertRaises(ValueError):
+                save_cvd_state_atomic(path, {"bad_number": float("nan")})
+            self.assertEqual(load_cvd_state(path), state)
+            with open(path, "w", encoding="utf-8") as handle:
+                handle.write("{corrupt")
+            with self.assertRaises(json.JSONDecodeError):
+                load_cvd_state(path)
+
+    def test_ws_runner_subscribes_persists_and_stops_cleanly(self):
+        class FakeSocket:
+            def __init__(self):
+                self.sent = []
+                self.closed = False
+                self.messages = [
+                    json.dumps({"method": "subscribe", "success": True}),
+                    json.dumps({
+                        "channel": "trade", "type": "update",
+                        "data": [{
+                            "symbol": "BTC/USD", "side": "buy", "qty": 0.5,
+                            "price": 65000, "trade_id": 1,
+                            "timestamp": "2026-11-08T10:00:00.123456789Z",
+                        }],
+                    }),
+                ]
+
+            def settimeout(self, timeout):
+                self.timeout = timeout
+
+            def send(self, payload):
+                self.sent.append(json.loads(payload))
+
+            def recv(self):
+                return self.messages.pop(0)
+
+            def close(self):
+                self.closed = True
+
+        class FakeStopEvent:
+            def __init__(self):
+                self.stopped = False
+
+            def is_set(self):
+                return self.stopped
+
+            def wait(self, delay):
+                return self.stopped
+
+        ledger = PersistentCvdLedger(symbol="BTC/USD")
+        adapter = KrakenSpotTradeFeedAdapter(ledger, "BTC/USD")
+        runner = KrakenSpotWebSocketRunner(adapter)
+        ws = FakeSocket()
+        stop = FakeStopEvent()
+        saved = []
+
+        def persist(state):
+            saved.append(state)
+            stop.stopped = True
+
+        result = runner.run(
+            stop, persist,
+            websocket_factory=lambda url, timeout: ws,
+        )
+        self.assertEqual(result["status"], "STOPPED")
+        self.assertEqual(result["accepted_websocket_trades"], 1)
+        self.assertEqual(result["last_trade_id"], 1)
+        self.assertTrue(ws.closed)
+        self.assertEqual(ws.sent[0]["params"]["channel"], "trade")
+        self.assertEqual(ws.sent[0]["params"]["symbol"], ["BTC/USD"])
+        self.assertEqual(len(saved), 1)
+        self.assertEqual(
+            saved[0]["last_trade_timestamp_ns"], 1794132000123456789
+        )
+
+    def test_ws_runner_stops_if_durable_state_callback_fails(self):
+        class FakeSocket:
+            def __init__(self):
+                self.closed = False
+                self.messages = [json.dumps({
+                    "channel": "trade", "type": "update",
+                    "data": [{
+                        "symbol": "BTC/USD", "side": "buy", "qty": 1,
+                        "price": 1, "trade_id": 1,
+                        "timestamp": "2026-11-08T10:00:00Z",
+                    }],
+                })]
+
+            def settimeout(self, timeout):
+                pass
+
+            def send(self, payload):
+                pass
+
+            def recv(self):
+                return self.messages.pop(0)
+
+            def close(self):
+                self.closed = True
+
+        ws = FakeSocket()
+        adapter = KrakenSpotTradeFeedAdapter(
+            PersistentCvdLedger(symbol="BTC/USD"), "BTC/USD"
+        )
+        runner = KrakenSpotWebSocketRunner(adapter)
+        with self.assertRaises(StatePersistenceError):
+            runner.run(
+                threading.Event(),
+                lambda state: (_ for _ in ()).throw(OSError("disk full")),
+                websocket_factory=lambda url, timeout: ws,
+            )
+        self.assertTrue(ws.closed)
 
     def test_public_fetch_rejects_non_finite_timeout_before_network(self):
         with self.assertRaisesRegex(ValueError, "timeout"):
