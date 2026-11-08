@@ -8,7 +8,7 @@ import json
 from pathlib import Path
 
 from historical_research import (
-    FEE_RATE, SLIPPAGE_RATE, _atr_series, _simulate_equal_weight_multitimeframe,
+    FEE_RATE, SLIPPAGE_RATE, _adx_di_series, _atr_series, _simulate_equal_weight_multitimeframe,
     aggregate_candles, load_two_year_candles,
 )
 from ema_adx_lab import _build_sleeve_signals
@@ -20,7 +20,8 @@ ATR_MULTIPLIERS = (2.5, 3.0, 4.0)
 def _adx_atr_exit_signals(bars, threshold=20.0, atr_multiple=3.0):
     if isinstance(atr_multiple, bool) or not isinstance(atr_multiple, (int, float)) or atr_multiple <= 0:
         raise ValueError("ATR multiple must be positive")
-    baseline, confirmed = _build_sleeve_signals(bars, threshold)
+    baseline, _ = _build_sleeve_signals(bars, threshold)
+    adx, plus_di, minus_di = _adx_di_series(bars, 14)
     atr = _atr_series(bars, 14)
     signals = []
     active = False
@@ -31,7 +32,10 @@ def _adx_atr_exit_signals(bars, threshold=20.0, atr_multiple=3.0):
             active = False
             high_water = None
         elif not active:
-            active = bool(confirmed[i])
+            active = bool(
+                adx[i] is not None and plus_di[i] is not None and minus_di[i] is not None
+                and adx[i] >= threshold and plus_di[i] > minus_di[i]
+            )
             high_water = float(bar["high"]) if active else None
         else:
             # The current bar is completed. Its high updates the trailing
