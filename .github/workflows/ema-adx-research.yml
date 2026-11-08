@@ -1,0 +1,49 @@
+name: WHJ EMA ADX Confirmation Research
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: whj-ema-adx-research-${{ github.ref }}
+  cancel-in-progress: false
+  queue: max
+
+jobs:
+  isolated-ema-adx-research:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Checkout selected research ref
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Test isolated EMA ADX research
+        run: python -m unittest discover -s tests -p 'test_ema_adx_lab.py' -v
+      - name: Run historical EMA ADX comparison
+        run: python ema_adx_lab.py
+      - name: Test expanding-window walk-forward selection
+        run: python -m unittest discover -s tests -p 'test_adx_walk_forward.py' -v
+      - name: Run primary expanding-window walk-forward research
+        run: python adx_walk_forward.py
+      - name: Run independent Bitstamp expanding-window walk-forward
+        run: python adx_cross_exchange_walk_forward.py
+      - name: Test ADX20 exit policy research
+        run: python -m unittest discover -s tests -p 'test_adx_exit_policy_lab.py' -v
+      - name: Run ADX20 exit policy comparison
+        run: python adx_exit_policy_lab.py
+      - name: Upload ADX research reports
+        uses: actions/upload-artifact@v4
+        with:
+          name: whj-ema-adx-research-${{ github.run_number }}
+          path: |
+            ema_adx_research.json
+            adx_walk_forward_report.json
+            adx_bitstamp_walk_forward_report.json
+            adx_exit_policy_research.json
+          if-no-files-found: error
+          retention-days: 30
