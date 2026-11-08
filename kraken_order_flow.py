@@ -6,6 +6,7 @@ caller-managed.
 """
 import json
 import math
+import re
 import urllib.parse
 import urllib.request
 
@@ -402,12 +403,16 @@ def evaluate_microstructure_confluence(
     }
 
 
-def _trade_event_timestamp(value):
-    """Normalize a numeric Unix timestamp or timezone-aware ISO timestamp."""
+def _trade_event_timestamp_ns(value):
+    """Convert Unix seconds or timezone-aware ISO-8601 to exact nanoseconds."""
     if isinstance(value, bool):
         raise ValueError("trade timestamp must be numeric or timezone-aware ISO text")
     if isinstance(value, (int, float)):
-        return _finite_number(value, "trade timestamp")
+        number = _finite_number(value, "trade timestamp")
+        if number < 0:
+            raise ValueError("trade timestamp must be non-negative")
+        from decimal import Decimal
+        return int(Decimal(str(value)) * Decimal(1_000_000_000))
     if not isinstance(value, str) or not value:
         raise ValueError("trade timestamp must be numeric or timezone-aware ISO text")
     from datetime import datetime
@@ -417,7 +422,18 @@ def _trade_event_timestamp(value):
         raise ValueError("trade timestamp must be valid ISO-8601 text") from exc
     if parsed.tzinfo is None or parsed.utcoffset() is None:
         raise ValueError("trade timestamp ISO text must include a timezone")
-    return parsed.timestamp()
+    base_seconds = int(parsed.replace(microsecond=0).timestamp())
+    match = re.search(r"\\.(\\d+)", value)
+    fraction_ns = int((match.group(1) + "000000000")[:9]) if match else 0
+    timestamp_ns = base_seconds * 1_000_000_000 + fraction_ns
+    if timestamp_ns < 0:
+        raise ValueError("trade timestamp must be non-negative")
+    return timestamp_ns
+
+
+def _trade_event_timestamp(value):
+    """Compatibility float timestamp derived from the exact nanosecond value."""
+    return _trade_event_timestamp_ns(value) / 1_000_000_000.0
 
 
 class PersistentCvdLedger:
@@ -440,6 +456,7 @@ class PersistentCvdLedger:
         self.cumulative_sell_volume = 0.0
         self.processed_trade_count = 0
         self.last_trade_timestamp = None
+        self.last_trade_timestamp_ns = None
         if state is not None:
             self._restore_state(state)
 
@@ -478,11 +495,19 @@ class PersistentCvdLedger:
             timestamp = _finite_number(timestamp, "last_trade_timestamp")
             if timestamp < 0:
                 raise ValueError("last_trade_timestamp must be non-negative")
+        timestamp_ns = state.get("last_trade_timestamp_ns")
+        if timestamp_ns is not None:
+            if isinstance(timestamp_ns, bool) or not isinstance(timestamp_ns, int) or timestamp_ns < 0:
+                raise ValueError("last_trade_timestamp_ns must be a non-negative integer")
+        elif timestamp is not None:
+            from decimal import Decimal
+            timestamp_ns = int(Decimal(str(timestamp)) * Decimal(1_000_000_000))
         self.last_trade_id = last_id
         self.cumulative_buy_volume = buy
         self.cumulative_sell_volume = sell
         self.processed_trade_count = count
         self.last_trade_timestamp = timestamp
+        self.last_trade_timestamp_ns = timestamp_ns
 
     def to_state(self):
         """Return JSON-serializable state for caller-managed durable storage."""
@@ -494,6 +519,7 @@ class PersistentCvdLedger:
             "cumulative_sell_volume": self.cumulative_sell_volume,
             "processed_trade_count": self.processed_trade_count,
             "last_trade_timestamp": self.last_trade_timestamp,
+            "last_trade_timestamp_ns": self.last_trade_timestamp_ns,
         }
 
     def process(self, events):
@@ -510,7 +536,8 @@ class PersistentCvdLedger:
             trade_id = self._trade_id(event.get("trade_id"))
             price = _finite_number(event.get("price"), "trade price")
             quantity = _finite_number(event.get("qty"), "trade quantity")
-            timestamp = _trade_event_timestamp(event.get("timestamp"))
+            timestamp_ns = _trade_event_timestamp_ns(event.get("timestamp"))
+            timestamp = timestamp_ns / 1_000_000_000.0
             side = event.get("side")
             if price <= 0 or quantity <= 0 or timestamp < 0:
                 raise ValueError("trade price/quantity must be positive and timestamp non-negative")
@@ -523,13 +550,13 @@ class PersistentCvdLedger:
 
         accepted = []
         ignored = 0
-        last_timestamp = self.last_trade_timestamp
+        last_timestamp_ns = self.last_trade_timestamp_ns
         for trade_id in sorted(normalized):
             if trade_id <= self.last_trade_id:
                 ignored += 1
                 continue
-            price, quantity, timestamp, side = normalized[trade_id]
-            if last_timestamp is not None and timestamp < last_timestamp:
+            price, quantity, timestamp_ns, side = normalized[trade_id]
+            if last_timestamp_ns is not None and timestamp_ns < last_timestamp_ns:
                 raise ValueError("new trade timestamps must be non-decreasing by trade_id")
             expected_id = (
                 accepted[-1][0] + 1 if accepted
@@ -540,17 +567,18 @@ class PersistentCvdLedger:
                     f"trade ID gap detected: expected {expected_id}, received {trade_id}; "
                     "recover missing trades before applying this batch"
                 )
-            accepted.append((trade_id, quantity, timestamp, side))
-            last_timestamp = timestamp
+            accepted.append((trade_id, quantity, timestamp_ns, side))
+            last_timestamp_ns = timestamp_ns
 
         # Commit only after every event has passed validation.
-        for trade_id, quantity, timestamp, side in accepted:
+        for trade_id, quantity, timestamp_ns, side in accepted:
             if side == "buy":
                 self.cumulative_buy_volume += quantity
             else:
                 self.cumulative_sell_volume += quantity
             self.last_trade_id = trade_id
-            self.last_trade_timestamp = timestamp
+            self.last_trade_timestamp_ns = timestamp_ns
+            self.last_trade_timestamp = timestamp_ns / 1_000_000_000.0
             self.processed_trade_count += 1
 
         result = self.snapshot()
@@ -688,7 +716,11 @@ class KrakenSpotTradeFeedAdapter:
             raise TradeIdGapError(
                 "cannot recover a gap without a prior trade timestamp; bootstrap a fresh snapshot"
             )
-        cursor = str(int(self.ledger.last_trade_timestamp * 1_000_000_000))
+        cursor = str(
+            self.ledger.last_trade_timestamp_ns
+            if self.ledger.last_trade_timestamp_ns is not None
+            else int(self.ledger.last_trade_timestamp * 1_000_000_000)
+        )
         pages = 0
         accepted = 0
         while self.ledger.last_trade_id < target_trade_id and pages < self.max_backfill_pages:
