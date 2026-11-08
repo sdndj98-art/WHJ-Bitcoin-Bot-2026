@@ -91,3 +91,30 @@ The hourly report also includes a research-only diagnostic for approximate Gartl
 ## Guarded MT5 demo execution prototype
 
 A separate manual demo-only order gateway is documented in [MT5_DEMO_EXECUTION.md](MT5_DEMO_EXECUTION.md). It requires two explicit opt-ins, a positively identified MT5 demo account, mandatory stop-loss/take-profit, broker constraint validation, and a local idempotency guard. It is not connected to the scanner or dashboard and does not support live accounts.
+
+
+## Optional Kraken CVD market-data collector
+
+The optional collector connects to Kraken's **public** Spot WebSocket v2 trade channel, maintains a per-symbol cumulative volume delta (CVD), and saves its cursor/volume state locally. It is separate from the scanner and paper/live execution paths.
+
+Install its optional transport dependency:
+
+```bash
+python -m pip install websocket-client
+```
+
+Start the BTC/USD collector:
+
+```bash
+python kraken_cvd_collector.py --pair BTC/USD
+```
+
+Choose a custom state file or another pair:
+
+```bash
+python kraken_cvd_collector.py --pair ETH/USD --state-file state/eth_usd_cvd.json
+```
+
+Stop with Ctrl+C. The collector uses atomic JSON state replacement and resumes from the saved trade ID/timestamp. If it cannot recover a trade-ID gap, it stops/retries rather than silently claiming a continuous CVD series. The first WebSocket snapshot establishes a baseline; it does not claim historical completeness before startup.
+
+The collector is read-only: no API key is required, and it cannot place, amend, or cancel orders. It does not alter the main bot's scanner, MT5 integration, or any paper portfolio. To run multiple symbols, start one process and one state file per symbol.
