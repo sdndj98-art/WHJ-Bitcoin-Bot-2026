@@ -54,12 +54,28 @@ class MT5SnapshotTests(unittest.TestCase):
         self.assertEqual(snapshot["quote"]["spread"], 0.2)
         self.assertEqual(snapshot["timeframes"]["1h"]["scanner"]["market"], "BTCUSD")
         serialized = str(snapshot)
-        self.assertNotIn("account_balance", serialized)
-        self.assertNotIn("account_equity", serialized)
-        self.assertNotIn("account_login", serialized)
+        self.assertNotIn("account_balance", snapshot)
+        self.assertNotIn("account_equity", snapshot)
+        self.assertNotIn("login", snapshot)
+        self.assertFalse(snapshot["privacy"]["account_balance_included"])
+        self.assertFalse(snapshot["privacy"]["account_equity_included"])
+        self.assertFalse(snapshot["privacy"]["account_login_included"])
         self.assertFalse(snapshot["safety"]["orders_sent"])
         self.assertFalse(snapshot["safety"]["live_trading_enabled"])
         self.assertEqual(len(adapter.requested), 3)
+
+    def test_btc_paper_ledger_is_virtual_and_separate_from_broker_orders(self):
+        with tempfile.TemporaryDirectory() as directory:
+            snapshot = build_mt5_snapshot(
+                FakeAdapter(), "BTCUSD", 70,
+                now_timestamp=1700000000 - (1700000000 % 43200) + 60,
+                update_paper_ledger=True, state_dir=directory
+            )
+            self.assertTrue(snapshot["paper_trading"]["enabled"])
+            self.assertEqual(snapshot["paper_trading"]["execution"], "LOCAL_VIRTUAL_LEDGER_ONLY")
+            self.assertEqual(len(snapshot["paper_trading"]["accounts"]), 5)
+            self.assertFalse(snapshot["safety"]["orders_sent"])
+            self.assertEqual(len(list(Path(directory).glob("*.json"))), 5)
 
     def test_rejects_non_btc_paper_ledger_without_writing_state(self):
         with tempfile.TemporaryDirectory() as directory:
