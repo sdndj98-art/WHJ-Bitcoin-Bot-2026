@@ -69,5 +69,19 @@ class TradeCandleBuilderTests(unittest.TestCase):
             build_trade_candles([trade], 60, 125)
 
 
+    def test_forming_trade_count_excludes_pre_coverage_trades(self):
+        trades = [
+            {"trade_id": 1, "timestamp": 1, "price": 99, "qty": 1, "side": "buy"},
+            {"trade_id": 2, "timestamp": 61, "price": 100, "qty": 1, "side": "buy"},
+            {"trade_id": 3, "timestamp": 121, "price": 101, "qty": 1, "side": "sell"},
+            {"trade_id": 4, "timestamp": 181, "price": 102, "qty": 1, "side": "buy"},
+        ]
+        result = build_trade_candles(
+            trades, 60, 125, start_timestamp=60
+        )
+        self.assertEqual(result["trade_count"], 2)
+        self.assertEqual(result["excluded_forming_candle_trades"], 1)
+
+
 if __name__ == "__main__":
     unittest.main()
