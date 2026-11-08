@@ -10,11 +10,11 @@ The walk-forward folds use shared UTC 12-hour completed-bar close boundaries, so
 
 | Strategy | Return | Closed trades | Win rate | Profit factor | Max drawdown |
 |---|---:|---:|---:|---:|---:|
-| EMA baseline | +7.22% | 98 | 29.59% | 1.42 | 7.45% |
-| ADX15 entry-only | +9.53% | 58 | 32.76% | 1.77 | 6.51% |
-| ADX20 entry-only | +7.77% | 54 | 25.93% | 1.56 | 7.70% |
-| ADX25 entry-only | +4.16% | 44 | 22.73% | 1.28 | 10.35% |
-| Matched 50/50 buy-and-hold | +2.28% | — | — | — | 20.09% |
+| EMA baseline | +7.32% | 98 | 29.59% | 1.42 | 7.45% |
+| ADX15 entry-only | +9.62% | 58 | 32.76% | 1.78 | 6.51% |
+| ADX20 entry-only | +7.86% | 54 | 25.93% | 1.57 | 7.70% |
+| ADX25 entry-only | +4.25% | 44 | 22.73% | 1.29 | 10.35% |
+| Matched 50/50 buy-and-hold | +2.31% | — | — | — | 20.13% |
 
 Execution assumptions: 0.10% fee and 0.05% slippage per side; completed native bars; entry confirmation only; an open position remains until the baseline EMA regime turns off; next native-bar close execution.
 
@@ -24,16 +24,16 @@ At twice the base costs (0.20% fee and 0.10% slippage per side):
 
 | Strategy | Return | Profit factor | Max drawdown |
 |---|---:|---:|---:|
-| EMA baseline | +3.35% | 1.17 | 9.62% |
-| ADX15 entry-only | +7.16% | 1.52 | 7.16% |
-| ADX20 entry-only | +5.60% | 1.37 | 8.40% |
-| ADX25 entry-only | +2.44% | 1.15 | 11.17% |
+| EMA baseline | +3.43% | 1.17 | 9.62% |
+| ADX15 entry-only | +7.25% | 1.53 | 7.16% |
+| ADX20 entry-only | +5.69% | 1.38 | 8.40% |
+| ADX25 entry-only | +2.52% | 1.16 | 11.17% |
 
 ## Independent Bitstamp replication
 
-The independent BTCUSD Bitstamp dataset contained 72,000 hourly candles from 2018-08-22 19:00 UTC through 2026-11-08 18:00 UTC. The fixed-threshold results above replicated on this separate exchange feed. This is a useful robustness check, but it is still historical testing and not forward-paper evidence.
+The independent BTCUSD Bitstamp dataset contained 72,000 hourly candles from 2018-08-22 22:00 UTC through 2026-11-08 21:00 UTC. The fixed-threshold results above replicated on this separate exchange feed. This is a useful robustness check, but it is still historical testing and not forward-paper evidence.
 
-Three descriptive fixed-rule subperiods show that ADX15 returned +7.06%, +0.43%, and +1.80%; ADX20 returned +7.18%, -0.42%, and +0.97%. These are descriptive OOS slices, not rolling retraining.
+Three descriptive fixed-rule subperiods show that ADX15 returned +7.15%, +0.46%, and +1.89%; ADX20 returned +7.27%, -0.42%, and +0.97%. These are descriptive OOS slices, not rolling retraining.
 
 ## Boundary-aligned expanding-window walk-forward
 
@@ -81,6 +81,7 @@ The same weakness reproduced on the independent exchange: fold 1 selected ADX25 
 - Primary boundary-aligned research and independent Bitstamp walk-forward both completed successfully in workflow run `42516038074` (artifact `whj-ema-adx-research-71`).
 - The same workflow completed successfully on the pull request in run `42516043530` (artifact `whj-ema-adx-research-72`).
 - The independent fixed-threshold Bitstamp validation completed successfully in run `42516043586`.
+- A newer independent Bitstamp fixed-threshold validation completed successfully in run `42532597219` (artifact `whj-ema-adx-cross-exchange-95`, artifact ID `13638276371`), using 72,000 hourly candles from 2018-08-22 22:00 UTC through 2026-11-08 21:00 UTC. Its updated OOS results and 2x-cost stress figures are reflected in the tables above. The report confirms `live_orders_enabled=false` and `paper_state_touched=false`.
 - Latest source commit at the time of this update: `979917a4c59a227478b444af8b4dfcd41256a4f6`.
 
 ## Reproducibility
