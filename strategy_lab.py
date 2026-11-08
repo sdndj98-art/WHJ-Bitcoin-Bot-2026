@@ -557,3 +557,182 @@ def run_strategy_lab(prices, fee=0.001, slippage=0.0005):
         "selection_warning": "No strategy is declared a winner from these tests alone. Require positive out-of-sample evidence across multiple market regimes and longer periods before considering deployment.",
         "strategies": results,
     }
+
+
+def _volume_liquidity_signals(bars):
+    """Build a close-confirmed OHLCV strategy using volume, flow, trend and momentum.
+
+    Every rolling benchmark excludes the current bar where appropriate.
+    Position changes are simulated on the following bar by the caller.
+    """
+    if not isinstance(bars, list) or len(bars) < 220:
+        raise ValueError("At least 220 OHLCV bars are required")
+    normalized = []
+    for row in bars:
+        if not isinstance(row, dict):
+            raise ValueError("Each OHLCV bar must be a dictionary")
+        try:
+            timestamp = int(row["timestamp"])
+            op = float(row["open"])
+            high = float(row["high"])
+            low = float(row["low"])
+            close = float(row["close"])
+            volume = float(row["volume"])
+        except (KeyError, TypeError, ValueError, OverflowError) as exc:
+            raise ValueError("OHLCV bars contain missing or non-numeric fields") from exc
+        values = (op, high, low, close, volume)
+        if any(not math.isfinite(value) for value in values):
+            raise ValueError("OHLCV values must be finite")
+        if timestamp < 0 or min(op, high, low, close) <= 0 or volume < 0:
+            raise ValueError("OHLCV bar contains invalid timestamp, price or volume")
+        if high < max(op, close, low) or low > min(op, close, high):
+            raise ValueError("OHLCV bar has inconsistent OHLC bounds")
+        normalized.append({
+            "timestamp": timestamp, "open": op, "high": high,
+            "low": low, "close": close, "volume": volume,
+        })
+    if any(b["timestamp"] <= a["timestamp"] for a, b in zip(normalized, normalized[1:])):
+        raise ValueError("OHLCV timestamps must be strictly increasing")
+
+    closes = [row["close"] for row in normalized]
+    highs = [row["high"] for row in normalized]
+    lows = [row["low"] for row in normalized]
+    volumes = [row["volume"] for row in normalized]
+    opens = [row["open"] for row in normalized]
+    ema12 = _ema(closes, 12)
+    ema26 = _ema(closes, 26)
+    ema50 = _ema(closes, 50)
+    ema200 = _ema(closes, 200)
+    macd_line = [fast - slow for fast, slow in zip(ema12, ema26)]
+    macd_signal = _ema(macd_line, 9)
+    macd_hist = [line - signal for line, signal in zip(macd_line, macd_signal)]
+    rsi14 = _rsi(closes, 14)
+
+    signals = [False] * len(normalized)
+    scores = [0] * len(normalized)
+    diagnostics = []
+    in_position = False
+    for i, row in enumerate(normalized):
+        if i < 200:
+            diagnostics.append({})
+            continue
+        prior_volumes = volumes[i - 20:i]
+        average_volume = sum(prior_volumes) / 20
+        relative_volume = volumes[i] / average_volume if average_volume > 0 else 0.0
+
+        # Chaikin Money Flow(20), using only the current and prior completed bars.
+        money_flow_volume = 0.0
+        total_volume = 0.0
+        for j in range(i - 19, i + 1):
+            spread = highs[j] - lows[j]
+            multiplier = ((2.0 * closes[j] - highs[j] - lows[j]) / spread) if spread > 0 else 0.0
+            money_flow_volume += multiplier * volumes[j]
+            total_volume += volumes[j]
+        cmf20 = money_flow_volume / total_volume if total_volume > 0 else 0.0
+
+        # OBV slope normalized by recent traded volume to make it scale-independent.
+        obv_delta = []
+        for j in range(i - 4, i + 1):
+            direction = 1.0 if closes[j] > closes[j - 1] else (-1.0 if closes[j] < closes[j - 1] else 0.0)
+            obv_delta.append(direction * volumes[j])
+        recent_volume = sum(volumes[i - 4:i + 1])
+        obv_slope = sum(obv_delta) / recent_volume if recent_volume > 0 else 0.0
+
+        # Rolling VWAP20; zero-volume bars do not distort the denominator.
+        vwap_numerator = sum(
+            ((highs[j] + lows[j] + closes[j]) / 3.0) * volumes[j]
+            for j in range(i - 19, i + 1)
+        )
+        vwap_denominator = sum(volumes[i - 19:i + 1])
+        vwap20 = vwap_numerator / vwap_denominator if vwap_denominator > 0 else closes[i]
+
+        prior_high = max(highs[i - 20:i])
+        prior_low_10 = min(lows[i - 10:i])
+        candle_range = highs[i] - lows[i]
+        close_location = ((closes[i] - lows[i]) / candle_range) if candle_range > 0 else 0.5
+
+        checks = {
+            "trend_regime": closes[i] > ema50[i] > ema200[i],
+            "rsi_momentum": rsi14[i] is not None and 50.0 <= rsi14[i] <= 72.0,
+            "macd_positive": macd_hist[i] > 0,
+            "macd_acceleration": macd_hist[i] > macd_hist[i - 1],
+            "relative_volume": relative_volume >= 1.30,
+            "cmf_buying_pressure": cmf20 > 0.05,
+            "obv_accumulation": obv_slope > 0.05,
+            "above_rolling_vwap": closes[i] > vwap20,
+            "breakout_close_quality": closes[i] > prior_high and close_location >= 0.70,
+        }
+        score = sum(checks.values())
+        scores[i] = score
+        if in_position:
+            if closes[i] < ema50[i] or closes[i] < prior_low_10 or score <= 3:
+                in_position = False
+        elif (checks["trend_regime"] and checks["relative_volume"]
+              and checks["breakout_close_quality"] and score >= 7):
+            in_position = True
+        signals[i] = in_position
+        diagnostics.append({
+            "relative_volume": relative_volume,
+            "cmf20": cmf20,
+            "obv_slope_normalized": obv_slope,
+            "vwap20": vwap20,
+            "rsi14": rsi14[i],
+            "macd_histogram": macd_hist[i],
+            "confluence_score": score,
+            "confluence_total": len(checks),
+            "checks": checks,
+        })
+    return signals, scores, diagnostics
+
+
+def run_volume_liquidity_lab(bars, fee=0.001, slippage=0.0005):
+    """Evaluate the fixed OHLCV confluence strategy on chronological holdout windows."""
+    if len(bars) < 300:
+        raise ValueError("At least 300 OHLCV bars are required for holdout testing")
+    if not 0 <= fee < 1 or not 0 <= slippage < 1:
+        raise ValueError("Fee and slippage must be between 0 and 1")
+    prices = [float(row["close"]) for row in bars]
+    signals, scores, diagnostics = _volume_liquidity_signals(bars)
+    split = int(len(bars) * 0.7)
+    edges = [split + ((len(bars) - split) * k) // 3 for k in range(4)]
+    windows = []
+    for fold in range(3):
+        start, end = edges[fold], edges[fold + 1]
+        if end > start:
+            windows.append({
+                "window": fold + 1,
+                "start_index": start,
+                "end_index_exclusive": end,
+                "metrics": _simulate(prices, signals, start, end, fee, slippage),
+            })
+    full_metrics = _simulate(prices, signals, 1, len(prices), fee, slippage)
+    oos_metrics = _simulate(prices, signals, split, len(prices), fee, slippage)
+    active_scores = [value for value in scores[split:] if value > 0]
+    return {
+        "mode": "OHLCV_VOLUME_LIQUIDITY_RESEARCH_ONLY",
+        "strategy": "volume_liquidity_momentum_confluence",
+        "signal_timing": "completed-bar signal; next-bar close fill",
+        "entry_rule": "EMA50>EMA200 regime, relative volume>=1.30, 20-bar close breakout with close-location>=0.70, and at least 7 of 9 confluence checks",
+        "exit_rule": "close below EMA50, close below prior 10-bar low, or confluence score<=3",
+        "feature_set": [
+            "EMA50/EMA200 trend regime", "RSI14 momentum band",
+            "MACD histogram and acceleration", "relative volume excluding current bar",
+            "Chaikin Money Flow20", "normalized OBV slope",
+            "rolling VWAP20", "20-bar breakout and candle close location",
+        ],
+        "confluence_score_max": 9,
+        "average_active_confluence_score_oos": (
+            round(sum(active_scores) / len(active_scores), 3) if active_scores else None
+        ),
+        "full_sample": full_metrics,
+        "out_of_sample": oos_metrics,
+        "walk_forward_windows": windows,
+        "research_only": True,
+        "execution_enabled": False,
+        "limitations": [
+            "Spot OHLCV volume is not order-book depth, aggressor-side volume, or consolidated exchange volume.",
+            "VWAP is a rolling 20-bar proxy, not session VWAP or true volume-at-price.",
+            "No funding, borrow, market impact, queue position, or broker-specific execution is modeled.",
+            "Thresholds are fixed hypotheses and are not evidence of profitability.",
+        ],
+    }
