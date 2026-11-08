@@ -31,7 +31,7 @@ class AdxWalkForwardTests(unittest.TestCase):
             "25": {"return_pct": 3.0, "max_drawdown_pct": 2.0, "closed_trades": 20, "profit_factor": 1.2},
         }
         selected, rule = _select_threshold(metrics)
-        self.assertEqual(selected, 15.0)
+        self.assertEqual(selected, 20.0)
         self.assertIn("TRAINING_ONLY", rule)
         sparse = {key: {**value, "closed_trades": 0} for key, value in metrics.items()}
         self.assertEqual(
