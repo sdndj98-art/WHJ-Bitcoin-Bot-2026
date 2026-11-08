@@ -81,6 +81,11 @@ class EfficiencyRatioLabTests(unittest.TestCase):
         self.assertIn("er20_entry_only", report["cost_sensitivity"]["1x"])
         self.assertEqual(set(report["cost_sensitivity"]), {"1x", "2x"})
         self.assertEqual(len(report["walk_forward_windows"]), 3)
+        selection = report["training_only_threshold_selection"]
+        self.assertEqual(selection["grid"], [0.15, 0.20, 0.25, 0.30, 0.35, 0.40, 0.45, 0.50])
+        self.assertIn(selection["selected_threshold"], selection["grid"])
+        self.assertIn("return_pct", selection["selected_entry_only_oos"])
+        self.assertIn("return_pct", selection["selected_entry_only_oos_2x_costs"])
         self.assertGreaterEqual(report["signal_activity"]["reduction_pct"], 0.0)
 
     def test_lab_rejects_invalid_threshold(self):
