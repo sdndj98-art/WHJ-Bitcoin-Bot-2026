@@ -47,10 +47,17 @@ def _kraken_get(endpoint, params, timeout=10):
     )
     with urllib.request.urlopen(request, timeout=timeout) as response:
         payload = json.loads(response.read().decode("utf-8"))
+    if not isinstance(payload, dict):
+        raise ValueError("Kraken response must be a JSON object")
     errors = payload.get("error") or []
+    if not isinstance(errors, list):
+        raise ValueError("Kraken response error field must be a list")
     if errors:
         raise RuntimeError("Kraken API error: " + ", ".join(map(str, errors)))
-    return payload.get("result")
+    result = payload.get("result")
+    if not isinstance(result, dict):
+        raise ValueError("Kraken response result must be an object")
+    return result
 
 
 def fetch_recent_trades(pair="XBTUSD", timeout=10):
@@ -181,6 +188,11 @@ def analyze_order_book(book, levels=20):
             output.append((price, volume))
         if not output:
             raise ValueError(f"No usable {side} levels")
+        prices = [price for price, _ in output]
+        if side == "bid" and any(a <= b for a, b in zip(prices, prices[1:])):
+            raise ValueError("Bid levels must be strictly descending")
+        if side == "ask" and any(a >= b for a, b in zip(prices, prices[1:])):
+            raise ValueError("Ask levels must be strictly ascending")
         return output
 
     bid_levels = normalize(bids, "bid")
