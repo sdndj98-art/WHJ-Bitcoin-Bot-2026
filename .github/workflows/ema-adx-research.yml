@@ -19,8 +19,11 @@ permissions:
   contents: read
 
 concurrency:
-  group: whj-ema-adx-research
+  # Isolate this research workflow by ref so a stale run on another ref
+  # cannot hold the single shared queue slot indefinitely.
+  group: whj-ema-adx-research-${{ github.ref }}
   cancel-in-progress: false
+  queue: max
 
 jobs:
   isolated-ema-adx-research:
