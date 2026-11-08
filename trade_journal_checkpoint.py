@@ -96,7 +96,8 @@ def validate_continuity_checkpoint(checkpoint, path, symbol, expected_last_trade
         raise ValueError("continuity checkpoint journal_sha256 is invalid")
     for field in ("symbol", *integer_fields, "journal_sha256"):
         if checkpoint.get(field) != metadata[field]:
-            raise ValueError(f"continuity checkpoint {field} does not match journal")
+            label = "last trade ID" if field == "last_trade_id" else field
+            raise ValueError(f"continuity checkpoint {label} does not match journal")
     if metadata["symbol"] != symbol:
         raise ValueError("continuity checkpoint symbol does not match collector")
     if expected_last_trade_id is not None and metadata["last_trade_id"] != expected_last_trade_id:
