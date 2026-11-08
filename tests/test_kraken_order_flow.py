@@ -462,6 +462,77 @@ class KrakenOrderFlowTests(unittest.TestCase):
             saved[0]["last_trade_timestamp_ns"], 1794132000123456789
         )
 
+    @patch("kraken_order_flow.fetch_recent_trades")
+    def test_ws_runner_persists_partial_rest_backfill_before_reconnect(self, fetch):
+        class FakeSocket:
+            def __init__(self):
+                self.closed = False
+                self.messages = [json.dumps({
+                    "channel": "trade", "type": "update",
+                    "data": [{
+                        "symbol": "BTC/USD", "side": "buy", "qty": 1,
+                        "price": 104, "trade_id": 13,
+                        "timestamp": "1970-01-01T00:01:44Z",
+                    }],
+                })]
+
+            def settimeout(self, timeout):
+                pass
+
+            def send(self, payload):
+                pass
+
+            def recv(self):
+                return self.messages.pop(0)
+
+            def close(self):
+                self.closed = True
+
+        class FakeStopEvent:
+            def __init__(self):
+                self.stopped = False
+
+            def is_set(self):
+                return self.stopped
+
+            def wait(self, delay):
+                return self.stopped
+
+        fetch.side_effect = [
+            {
+                "trades": [["101", "1", 101.0, "b", "m", "", "11"]],
+                "last": "101000000000",
+            },
+            {"trades": [], "last": "101000000000"},
+        ]
+        ledger = PersistentCvdLedger(symbol="BTC/USD")
+        ledger.process([{
+            "trade_id": 10, "price": 100, "qty": 1,
+            "side": "buy", "timestamp": 100,
+        }])
+        adapter = KrakenSpotTradeFeedAdapter(ledger, "BTC/USD")
+        runner = KrakenSpotWebSocketRunner(adapter)
+        ws = FakeSocket()
+        stop = FakeStopEvent()
+        saved = []
+
+        def persist(state):
+            saved.append(state)
+            stop.stopped = True
+
+        result = runner.run(
+            stop, persist,
+            websocket_factory=lambda url, timeout: ws,
+        )
+        self.assertEqual(result["status"], "STOPPED")
+        self.assertEqual(result["last_trade_id"], 11)
+        self.assertEqual(result["accepted_backfill_trades"], 1)
+        self.assertEqual(len(saved), 1)
+        self.assertEqual(saved[0]["last_trade_id"], 11)
+        self.assertEqual(saved[0]["processed_trade_count"], 2)
+        self.assertTrue(ws.closed)
+        self.assertEqual(fetch.call_count, 2)
+
     def test_ws_runner_stops_if_durable_state_callback_fails(self):
         class FakeSocket:
             def __init__(self):
