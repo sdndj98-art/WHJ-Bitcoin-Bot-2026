@@ -152,6 +152,33 @@ class AdxForwardPaperTests(unittest.TestCase):
                     process_native_bars(bars, 20.0, 4, path)
             self.assertFalse(path.exists())
 
+
+    def test_daily_drawdown_and_loss_streak_pauses_block_new_entries(self):
+        for flag in ("daily_paused", "drawdown_paused", "loss_streak_paused"):
+            with self.subTest(flag=flag), tempfile.TemporaryDirectory() as directory:
+                path = Path(directory) / "isolated.json"
+                bars = make_bars()
+                process_native_bars(bars, 20.0, 4, path)
+                state = json.loads(path.read_text())
+                state[flag] = True
+                if flag == "daily_paused":
+                    next_timestamp = bars[-1]["timestamp"] + 4 * 3_600_000
+                    state["daily_date"] = __import__("datetime").datetime.fromtimestamp(
+                        (next_timestamp + 4 * 3_600_000) / 1000,
+                        __import__("datetime").timezone.utc,
+                    ).date().isoformat()
+                path.write_text(json.dumps(state))
+                extended = make_bars(301)
+                baseline = [True] * len(extended)
+                confirmed = [False] * len(extended)
+                confirmed[-2] = True
+                with patch("adx_forward_paper._build_sleeve_signals", return_value=(baseline, confirmed)):
+                    result = process_native_bars(extended, 20.0, 4, path)
+                saved = json.loads(path.read_text())
+                self.assertFalse(result["open_position"])
+                self.assertTrue(result["risk_paused"])
+                self.assertEqual(saved["cash"], 500.0)
+
     def test_corrupt_state_is_not_silently_reseeded(self):
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory) / "isolated.json"
