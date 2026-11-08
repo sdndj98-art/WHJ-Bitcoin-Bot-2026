@@ -61,6 +61,13 @@ class CvdCandleResearchTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "duplicate trade_id"):
             align_trade_flow_to_candles([candle(0)], events, continuity_verified=True)
 
+    def test_rejects_regressing_trade_ids_even_when_timestamps_increase(self):
+        events = [trade(2, 3590, 1, "buy"), trade(1, 3591, 1, "sell")]
+        with self.assertRaisesRegex(ValueError, "strictly increasing"):
+            align_trade_flow_to_candles(
+                [candle(0)], events, continuity_verified=True
+            )
+
     def test_rejects_out_of_order_timestamps(self):
         events = [trade(2, 3591, 1, "buy"), trade(3, 3590, 1, "sell")]
         with self.assertRaisesRegex(ValueError, "non-decreasing"):
