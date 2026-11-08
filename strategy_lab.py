@@ -4,6 +4,7 @@ Signals use only completed candles. Orders are simulated at the following close.
 This module is research-only and never connects to an exchange.
 """
 import math
+import statistics
 
 
 def _ema(values, period):
@@ -72,6 +73,7 @@ def _signals(prices):
         "donchian_20_10_breakout": [],
         "macd_trend_confirmation": [],
         "rsi_trend_pullback": [],
+        "volatility_contraction_breakout": [],
     }
     donchian_position = False
     rsi2_position = False
@@ -84,6 +86,31 @@ def _signals(prices):
     donchian_20_10_position = False
     macd_trend_position = False
     rsi_pullback_position = False
+    volatility_breakout_position = False
+
+    # Close-to-close volatility proxy; each value uses only returns known at
+    # that close. Compression is compared with the preceding 100 observations.
+    returns = [0.0] + [
+        float(prices[index]) / float(prices[index - 1]) - 1.0
+        for index in range(1, len(prices))
+    ]
+    rolling_volatility = [None] * len(prices)
+    volatility_compressed = [False] * len(prices)
+    for index in range(20, len(prices)):
+        window = returns[index - 19:index + 1]
+        average = sum(window) / len(window)
+        variance = sum((value - average) ** 2 for value in window) / len(window)
+        rolling_volatility[index] = math.sqrt(variance)
+        if index >= 120:
+            baseline = [
+                value for value in rolling_volatility[index - 100:index]
+                if value is not None
+            ]
+            if len(baseline) == 100:
+                volatility_compressed[index] = (
+                    rolling_volatility[index] <= statistics.median(baseline)
+                )
+
     for i, price in enumerate(prices):
         result["sma_trend"].append(
             bool(sma20[i] is not None and sma50[i] is not None
@@ -167,10 +194,22 @@ def _signals(prices):
                 rsi_pullback_position = True
             elif rsi_pullback_position and ((rsi[i] is not None and rsi[i] >= 68) or price < sma50[i]):
                 rsi_pullback_position = False
+
+            # Lag compression by one completed bar; the breakout bar cannot
+            # validate its own setup. The channel excludes the current close.
+            if (not volatility_breakout_position and i >= 200
+                    and volatility_compressed[i - 1]
+                    and price > max(prices[i - 20:i])
+                    and price > ema50[i] > ema200[i]):
+                volatility_breakout_position = True
+            elif volatility_breakout_position and i >= 10:
+                if price < min(prices[i - 10:i]) or price < ema50[i]:
+                    volatility_breakout_position = False
         result["ema_pullback_trend"].append(ema_pullback_position)
         result["donchian_20_10_breakout"].append(donchian_20_10_position)
         result["macd_trend_confirmation"].append(macd_trend_position)
         result["rsi_trend_pullback"].append(rsi_pullback_position)
+        result["volatility_contraction_breakout"].append(volatility_breakout_position)
     return result
 
 
@@ -512,6 +551,7 @@ def run_strategy_lab(prices, fee=0.001, slippage=0.0005):
             "donchian_20_10_breakout": "Enter above the prior 20 closes; exit below the prior 10 closes.",
             "macd_trend_confirmation": "Enter on rising MACD spread with EMA12 > EMA26 and close > EMA50; exit on bearish cross or below EMA50.",
             "rsi_trend_pullback": "Enter on RSI crossing above 40 in an EMA50/EMA200 uptrend; exit at RSI 68 or below SMA50.",
+            "volatility_contraction_breakout": "Enter above the prior 20-close high after prior-bar 20-return volatility is at or below its trailing 100-bar median, only when close > EMA50 > EMA200; exit below the prior 10-close low or EMA50.",
             "safety": "Long-only research candidates; next-close fills; same holdout and transaction-cost assumptions."
         },
         "selection_warning": "No strategy is declared a winner from these tests alone. Require positive out-of-sample evidence across multiple market regimes and longer periods before considering deployment.",
