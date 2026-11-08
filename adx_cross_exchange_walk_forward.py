@@ -37,7 +37,7 @@ def main():
         ),
     })
     Path("adx_bitstamp_walk_forward_report.json").write_text(
-        json.dumps(report, indent=2, sort_keys=True, allow_nan=False) + "\\n",
+        json.dumps(report, indent=2, sort_keys=True, allow_nan=False) + "\n",
         encoding="utf-8",
     )
     print(json.dumps(report, indent=2, sort_keys=True, allow_nan=False))
