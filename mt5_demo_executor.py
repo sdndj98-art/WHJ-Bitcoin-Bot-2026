@@ -5,6 +5,7 @@ in-process opt-in and WHJ_ENABLE_MT5_DEMO_ORDERS=YES, and it refuses non-demo
 accounts. It never supports live accounts, withdrawals, or position closing.
 """
 import os
+from contextlib import closing
 import re
 import sqlite3
 from datetime import datetime, timezone
@@ -62,7 +63,7 @@ class MetaTrader5DemoExecutor:
 
     def _reserve_signal(self, signal_id, symbol, side, volume):
         self._ledger_path.parent.mkdir(parents=True, exist_ok=True)
-        with sqlite3.connect(str(self._ledger_path), timeout=5) as db:
+        with closing(sqlite3.connect(str(self._ledger_path), timeout=5)) as db, db:
             db.execute(
                 """CREATE TABLE IF NOT EXISTS demo_order_guard (
                     signal_id TEXT PRIMARY KEY,
@@ -93,7 +94,7 @@ class MetaTrader5DemoExecutor:
                 ) from exc
 
     def _update_signal(self, signal_id, status, order_id=None, result_code=None, message=""):
-        with sqlite3.connect(str(self._ledger_path), timeout=5) as db:
+        with closing(sqlite3.connect(str(self._ledger_path), timeout=5)) as db, db:
             db.execute(
                 """UPDATE demo_order_guard SET status=?, broker_order_id=?,
                 result_code=?, message=? WHERE signal_id=?""",

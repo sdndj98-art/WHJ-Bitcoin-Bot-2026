@@ -92,6 +92,87 @@ class HistoricalResearchTests(unittest.TestCase):
             )["failed_checks"],
         )
 
+    def test_qualification_rejects_nonfinite_and_malformed_metrics(self):
+        base = {
+            "out_of_sample": {
+                "return_pct": 2.0,
+                "max_drawdown_pct": 4.0,
+                "profit_factor": 1.8,
+                "closed_trades": 40,
+            },
+            "walk_forward_windows": [
+                {"metrics": {"return_pct": 0.5, "closed_trades": 12}},
+                {"metrics": {"return_pct": 0.1, "closed_trades": 13}},
+                {"metrics": {"return_pct": 1.0, "closed_trades": 15}},
+            ],
+        }
+        stress = {"out_of_sample": {"return_pct": 0.4}}
+        benchmark = {"out_of_sample": {"return_pct": 1.0}}
+        stress_benchmark = {"out_of_sample": {"return_pct": 0.1}}
+
+        def assess(candidate):
+            return assess_strategy_qualification(
+                candidate, stress,
+                benchmark_metrics=benchmark,
+                stress_benchmark_metrics=stress_benchmark,
+            )
+
+        cases = [
+            ("NaN return", {"return_pct": float("nan")}, "positive_oos_return"),
+            ("infinite return", {"return_pct": float("inf")}, "positive_oos_return"),
+            ("boolean return", {"return_pct": True}, "positive_oos_return"),
+            ("infinite profit factor", {"profit_factor": float("inf")}, "minimum_profit_factor"),
+            ("negative drawdown", {"max_drawdown_pct": -1.0}, "maximum_oos_drawdown"),
+            ("infinite drawdown", {"max_drawdown_pct": float("inf")}, "maximum_oos_drawdown"),
+            ("fractional trade count", {"closed_trades": 40.5}, "minimum_oos_trades"),
+            ("boolean trade count", {"closed_trades": True}, "minimum_oos_trades"),
+        ]
+        for label, update, failed_check in cases:
+            with self.subTest(label=label):
+                candidate = {
+                    **base,
+                    "out_of_sample": {**base["out_of_sample"], **update},
+                }
+                result = assess(candidate)
+                self.assertFalse(result["qualified_for_extended_paper_review"])
+                self.assertIn(failed_check, result["failed_checks"])
+
+        malformed = [
+            {},
+            {"out_of_sample": None, "walk_forward_windows": []},
+            {**base, "walk_forward_windows": None},
+            {**base, "walk_forward_windows": [
+                {"metrics": {"return_pct": 0.5, "closed_trades": 12}},
+                None,
+                {"metrics": {"return_pct": 1.0, "closed_trades": 15}},
+            ]},
+            {**base, "walk_forward_windows": [
+                {"metrics": {"return_pct": float("nan"), "closed_trades": 12}},
+                {"metrics": {"return_pct": 0.1, "closed_trades": 13}},
+                {"metrics": {"return_pct": 1.0, "closed_trades": 15}},
+            ]},
+        ]
+        for candidate in malformed:
+            with self.subTest(candidate=candidate):
+                result = assess(candidate)
+                self.assertFalse(result["qualified_for_extended_paper_review"])
+
+        for kwargs in (
+            {"min_oos_trades": True},
+            {"min_window_trades": 1.5},
+            {"min_profit_factor": float("nan")},
+            {"max_drawdown_pct": float("inf")},
+        ):
+            with self.subTest(kwargs=kwargs):
+                with self.assertRaises(ValueError):
+                    assess_strategy_qualification(
+                        base, stress, benchmark_metrics=benchmark,
+                        stress_benchmark_metrics=stress_benchmark, **kwargs,
+                    )
+
+        result = assess(base)
+        self.assertTrue(result["qualified_for_extended_paper_review"])
+
     def test_download_paginates_and_discards_current_open_hour(self):
         now = datetime(2026, 11, 7, 12, 0, tzinfo=timezone.utc)
         with patch("historical_research.fetch_page", side_effect=self.make_page):

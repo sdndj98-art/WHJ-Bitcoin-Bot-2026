@@ -1176,74 +1176,118 @@ def assess_strategy_qualification(metrics, stress_metrics, min_oos_trades=30,
                                  min_profit_factor=1.2, max_drawdown_pct=10.0,
                                  min_window_trades=5, benchmark_metrics=None,
                                  stress_benchmark_metrics=None):
-    """Apply fixed, conservative promotion gates; passing is necessary, never sufficient."""
-    oos = metrics.get("out_of_sample", {})
-    stress_oos = stress_metrics.get("out_of_sample", {})
-    trades = int(oos.get("closed_trades", 0))
-    profit_factor = oos.get("profit_factor")
-    drawdown = float(oos.get("max_drawdown_pct", float("inf")))
-    walk_forward = metrics.get("walk_forward_windows", [])
-    windows = [
-        float(item["metrics"]["return_pct"])
-        for item in walk_forward
-    ]
-    window_trade_counts = [
-        int(item["metrics"].get("closed_trades", 0))
-        for item in walk_forward
-    ]
+    """Fail-closed research gates; passing never authorizes live trading."""
+    def finite_number(value):
+        if isinstance(value, bool):
+            return None
+        try:
+            number = float(value)
+        except (TypeError, ValueError, OverflowError):
+            return None
+        return number if math.isfinite(number) else None
+
+    def nonnegative_integer(value, label):
+        number = finite_number(value)
+        if number is None or number < 0 or not number.is_integer():
+            raise ValueError(label + " must be a finite non-negative integer")
+        return int(number)
+
+    minimum_oos_trades = nonnegative_integer(min_oos_trades, "min_oos_trades")
+    minimum_window_trades = nonnegative_integer(min_window_trades, "min_window_trades")
+    minimum_profit_factor = finite_number(min_profit_factor)
+    maximum_drawdown = finite_number(max_drawdown_pct)
+    if minimum_profit_factor is None or minimum_profit_factor < 0:
+        raise ValueError("min_profit_factor must be finite and non-negative")
+    if maximum_drawdown is None or maximum_drawdown < 0:
+        raise ValueError("max_drawdown_pct must be finite and non-negative")
+
+    def mapping(value):
+        return value if isinstance(value, dict) else {}
+
+    def metric_block(value):
+        return mapping(mapping(value).get("out_of_sample"))
+
+    oos = metric_block(metrics)
+    stress_oos = metric_block(stress_metrics)
+    benchmark_oos = metric_block(benchmark_metrics)
+    stress_benchmark_oos = metric_block(stress_benchmark_metrics)
+
+    trades_value = finite_number(oos.get("closed_trades"))
+    trades = (
+        int(trades_value)
+        if trades_value is not None and trades_value >= 0
+        and trades_value.is_integer()
+        else -1
+    )
+    profit_factor = finite_number(oos.get("profit_factor"))
+    drawdown = finite_number(oos.get("max_drawdown_pct"))
+    candidate_return = finite_number(oos.get("return_pct"))
+    stress_return = finite_number(stress_oos.get("return_pct"))
+    benchmark_return = finite_number(benchmark_oos.get("return_pct"))
+    stress_benchmark_return = finite_number(stress_benchmark_oos.get("return_pct"))
+
+    raw_windows = mapping(metrics).get("walk_forward_windows")
+    walk_forward = raw_windows if isinstance(raw_windows, list) else []
+    windows = []
+    window_trade_counts = []
+    valid_windows = len(walk_forward) == 3
+
+    for item in walk_forward:
+        block = mapping(mapping(item).get("metrics"))
+        window_return = finite_number(block.get("return_pct"))
+        count_value = finite_number(block.get("closed_trades"))
+        if (window_return is None or count_value is None
+                or count_value < 0 or not count_value.is_integer()):
+            valid_windows = False
+        windows.append(window_return)
+        window_trade_counts.append(
+            int(count_value) if count_value is not None
+            and count_value >= 0 and count_value.is_integer() else -1
+        )
+
     checks = {
-        "minimum_oos_trades": trades >= min_oos_trades,
+        "minimum_oos_trades": trades >= minimum_oos_trades,
         "minimum_trades_each_walk_forward_window": (
-            len(walk_forward) == 3
-            and all(count >= min_window_trades for count in window_trade_counts)
+            valid_windows and len(window_trade_counts) == 3
+            and all(count >= minimum_window_trades for count in window_trade_counts)
         ),
-        "positive_oos_return": float(oos.get("return_pct", -float("inf"))) > 0,
-        "positive_stress_oos_return": float(stress_oos.get("return_pct", -float("inf"))) > 0,
-        "minimum_profit_factor": profit_factor is not None and float(profit_factor) >= min_profit_factor,
-        "maximum_oos_drawdown": drawdown <= max_drawdown_pct,
-        "all_walk_forward_windows_nonnegative": bool(windows) and all(value >= 0 for value in windows),
-        # Missing benchmark evidence is a hard failure: no caller may
-        # accidentally promote a candidate by omitting the comparison.
+        "positive_oos_return": candidate_return is not None and candidate_return > 0,
+        "positive_stress_oos_return": stress_return is not None and stress_return > 0,
+        "minimum_profit_factor": (
+            profit_factor is not None and profit_factor >= minimum_profit_factor
+        ),
+        "maximum_oos_drawdown": (
+            drawdown is not None and 0 <= drawdown <= maximum_drawdown
+        ),
+        "all_walk_forward_windows_nonnegative": (
+            valid_windows and len(windows) == 3
+            and all(value is not None and value >= 0 for value in windows)
+        ),
         "outperform_buy_and_hold_oos": (
-            benchmark_metrics is not None
-            and float(oos.get("return_pct", -float("inf")))
-            > float(benchmark_metrics.get("out_of_sample", {}).get("return_pct", float("inf")))
+            candidate_return is not None and benchmark_return is not None
+            and candidate_return > benchmark_return
         ),
         "outperform_buy_and_hold_stress": (
-            stress_benchmark_metrics is not None
-            and float(stress_oos.get("return_pct", -float("inf")))
-            > float(stress_benchmark_metrics.get("out_of_sample", {}).get("return_pct", float("inf")))
+            stress_return is not None and stress_benchmark_return is not None
+            and stress_return > stress_benchmark_return
         ),
     }
-    benchmark_oos_return = (
-        float(benchmark_metrics.get("out_of_sample", {}).get("return_pct"))
-        if benchmark_metrics is not None
-        and benchmark_metrics.get("out_of_sample", {}).get("return_pct") is not None
-        else None
-    )
-    stress_benchmark_oos_return = (
-        float(stress_benchmark_metrics.get("out_of_sample", {}).get("return_pct"))
-        if stress_benchmark_metrics is not None
-        and stress_benchmark_metrics.get("out_of_sample", {}).get("return_pct") is not None
-        else None
-    )
-    candidate_oos_return = float(oos.get("return_pct", -float("inf")))
-    candidate_stress_return = float(stress_oos.get("return_pct", -float("inf")))
+
     benchmark_comparison = {
-        "candidate_oos_return_pct": candidate_oos_return,
-        "benchmark_oos_return_pct": benchmark_oos_return,
+        "candidate_oos_return_pct": candidate_return,
+        "benchmark_oos_return_pct": benchmark_return,
         "oos_outperformance_pct_points": (
-            round(candidate_oos_return - benchmark_oos_return, 4)
-            if benchmark_oos_return is not None else None
+            round(candidate_return - benchmark_return, 4)
+            if candidate_return is not None and benchmark_return is not None else None
         ),
-        "candidate_stress_oos_return_pct": candidate_stress_return,
-        "stress_benchmark_oos_return_pct": stress_benchmark_oos_return,
+        "candidate_stress_oos_return_pct": stress_return,
+        "stress_benchmark_oos_return_pct": stress_benchmark_return,
         "stress_oos_outperformance_pct_points": (
-            round(candidate_stress_return - stress_benchmark_oos_return, 4)
-            if stress_benchmark_oos_return is not None else None
+            round(stress_return - stress_benchmark_return, 4)
+            if stress_return is not None and stress_benchmark_return is not None else None
         ),
         "benchmark_available": (
-            benchmark_oos_return is not None and stress_benchmark_oos_return is not None
+            benchmark_return is not None and stress_benchmark_return is not None
         ),
     }
     return {
@@ -1252,10 +1296,10 @@ def assess_strategy_qualification(metrics, stress_metrics, min_oos_trades=30,
         "checks": checks,
         "failed_checks": [name for name, passed in checks.items() if not passed],
         "thresholds": {
-            "minimum_oos_trades": min_oos_trades,
-            "minimum_trades_each_walk_forward_window": min_window_trades,
-            "minimum_profit_factor": min_profit_factor,
-            "maximum_oos_drawdown_pct": max_drawdown_pct,
+            "minimum_oos_trades": minimum_oos_trades,
+            "minimum_trades_each_walk_forward_window": minimum_window_trades,
+            "minimum_profit_factor": minimum_profit_factor,
+            "maximum_oos_drawdown_pct": maximum_drawdown,
             "minimum_oos_and_stress_return_pct_exclusive": 0,
             "minimum_each_walk_forward_window_return_pct": 0,
             "benchmark": "Out-of-sample and elevated-cost returns must both exceed the matched 25%-allocation buy-and-hold benchmark.",
