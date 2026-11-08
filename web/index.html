@@ -473,6 +473,7 @@ else addTimeline("بوابة البيانات: غير محسومة","لا توج
 if(s.status)addTimeline("قرار ماسح السوق",scannerReady?((s.reasons||[]).join("، ")||String(s.status)):"النتيجة موجودة لكن لا تُعرض كفرصة فعالة بسبب قدم التقرير أو حظر جودة البيانات",scannerReady&&s.status==="PAPER_CANDIDATE"?"pass":scannerReady&&s.status==="WATCH"?"unknown":"fail",s.timestamp||report.time,String(s.status));
 else addTimeline("ماسح السوق","لا توجد بيانات ماسح في التقرير","unknown",report.time,"NO DATA");
 if(a.paused_for_drawdown||a.daily_loss_paused||a.paused_for_loss_streak||a.paused_for_strategy_health)addTimeline("حماية المحفظة مفعّلة",paperRiskPauseLabel(a),"fail",report.time,"PAUSED");
+const processedCandles=Number(a.processed_new_candles);
 if(Number.isFinite(processedCandles)&&processedCandles>0)addTimeline("المحاكي الورقي",processedCandles+" شمعة مغلقة جديدة تمت معالجتها · "+String(a.strategy||"الاستراتيجية الافتراضية"),"pass",a.last_processed_timestamp||report.time,"PAPER UPDATE");
 logTrades.slice(-8).forEach(t=>{const pnl=Number(t.pnl_usd??t.pnl);addTimeline(paperTrades.length?"صفقة ورقية "+String(t.side||"غير محددة"):"سجل اختبار تاريخي "+String(t.side||t.action||"غير محددة"),"النتيجة: "+String(t.result||"مغلقة")+" · صافي PnL: "+(Number.isFinite(pnl)?money(pnl):"غير متاح"),Number.isFinite(pnl)&&pnl<0?"fail":Number.isFinite(pnl)?"pass":"unknown",t.timestamp||t.date||"",String(t.result||"TRADE"));});
 const tl=$("agentDecisionTimeline");if(tl){const entries=timelineEvents.slice(-12).reverse();tl.innerHTML=entries.map(e=>"<div class='agent-event "+esc(e.kind)+"'><span class='agent-event-mark'></span><div><b>"+esc(e.title)+"</b><p>"+esc(e.detail)+"</p></div><time>"+esc(e.stamp?new Date(e.stamp).toLocaleString("ar-IQ"):"وقت غير متوفر")+"</time></div>").join("")||"<div class='empty'>لا توجد أحداث موثقة</div>";}
@@ -480,7 +481,7 @@ set("dataQuality",q.quality_status||"غير معروف");set("candleAge",fmt(q.l
 const hasEquity=Number.isFinite(Number(a.equity_after_estimated_exit_costs_usd));
 const riskLimits=a.risk_limits&&typeof a.risk_limits==="object"?a.risk_limits:{};
 const hasSizing=a.mode==="PERSISTENT_PAPER_ONLY"&&Number.isFinite(Number(a.initial_cash_usd))&&Number.isFinite(Number(a.cash_usd))&&Number.isFinite(Number(riskLimits.allocation_pct));
-const processedCandles=Number(a.processed_new_candles);
+
 const riskPaused=!!(a.paused_for_drawdown||a.daily_loss_paused||a.paused_for_loss_streak||a.paused_for_strategy_health);
 const scannerFresh=reportAgeMinutes!==null&&reportAgeMinutes>=-5&&reportAgeMinutes<=15;
 const scannerReady=!!s.status&&s.status!=="UNAVAILABLE"&&q.quality_status==="HEALTHY"&&scannerFresh;
