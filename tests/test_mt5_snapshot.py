@@ -37,7 +37,7 @@ class FakeAdapter:
         return {"account_balance": 987654.0, "account_equity": 999999.0, "login": 123}
 
     def get_quote(self, symbol):
-        return {"symbol": symbol, "bid": 101.0, "ask": 101.2, "time": 1700000000}
+        return {"symbol": symbol, "bid": 101.0, "ask": 101.2, "time": 1699987260}
 
     def fetch_closed_rates(self, symbol, timeframe, count):
         self.requested.append((symbol, timeframe, count))
@@ -52,6 +52,7 @@ class MT5SnapshotTests(unittest.TestCase):
         self.assertTrue(adapter.connected)
         self.assertEqual(set(snapshot["timeframes"]), {"1h", "4h", "6h"})
         self.assertEqual(snapshot["quote"]["spread"], 0.2)
+        self.assertEqual(snapshot["timeframes"]["1h"]["scanner"]["market"], "BTCUSD")
         serialized = str(snapshot)
         self.assertNotIn("account_balance", serialized)
         self.assertNotIn("account_equity", serialized)
@@ -64,7 +65,7 @@ class MT5SnapshotTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             with self.assertRaisesRegex(ValueError, "BTC/XBT"):
                 build_mt5_snapshot(
-                    FakeAdapter(), "XAUUSD", 70, now_timestamp=1700000000 + 70 * 21600,
+                    FakeAdapter(), "XAUUSD", 70, now_timestamp=1700000000 - (1700000000 % 43200) + 60,
                     update_paper_ledger=True, state_dir=directory
                 )
             self.assertEqual(list(Path(directory).iterdir()), [])
