@@ -210,6 +210,14 @@ def run_ema_adx_filter_lab(hourly_candles, fee=FEE_RATE, slippage=SLIPPAGE_RATE)
             **{name: value["out_of_sample"] for name, value in results.items()},
         },
         "training": {name: value["training"] for name, value in results.items()},
+        # These are fixed-rule slices of the held-out period, not rolling
+        # retraining or parameter re-selection. Keep explicit names for reports.
+        "temporal_subperiod_windows": walk_forward,
+        "temporal_subperiod_cost_sensitivity": walk_forward_costs,
+        "temporal_subperiod_robustness": robustness,
+        "walk_forward_retrained": False,
+        "walk_forward_semantics": "FIXED_RULE_OOS_SUBPERIOD_DIAGNOSTICS_NO_RETRAINING",
+        # Backward-compatible aliases for existing report consumers.
         "walk_forward_windows": walk_forward,
         "walk_forward_cost_sensitivity": walk_forward_costs,
         "walk_forward_robustness": robustness,
@@ -223,8 +231,10 @@ def run_ema_adx_filter_lab(hourly_candles, fee=FEE_RATE, slippage=SLIPPAGE_RATE)
         ),
         "interpretation": (
             "This is a fixed-rule research comparison, not an optimization. Thresholds 15, 20, "
-            "and 25 are all reported; the 20 threshold is the primary candidate. Historical "
-            "results do not imply forward-paper or live profitability."
+            "and 25 are all reported; the 20 threshold is the primary predeclared candidate. "
+            "Three equal temporal slices are descriptive OOS subperiod diagnostics with no "
+            "rolling retraining or parameter reselection; they are not a retrained walk-forward "
+            "test. Historical results do not imply forward-paper or live profitability."
         ),
     }
 
