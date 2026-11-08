@@ -184,7 +184,69 @@ body[data-whj-theme="light"] .agent-event-tag{background:#e7f0f7;color:#34516a}
 body[data-whj-theme="light"] .agent-step{background:#edf4fa;border-color:#cbd8e5}body[data-whj-theme="light"] .agent-note{background:#fff8e9;color:#765315;border-color:#e8d4a8}
 @media(max-width:950px){.agent-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.agent-flow{grid-template-columns:repeat(3,minmax(0,1fr))}}
 @media(max-width:700px){.agent-grid,.agent-lower{grid-template-columns:1fr}.agent-hero{align-items:flex-start;flex-direction:column}.agent-flow{grid-template-columns:repeat(2,minmax(0,1fr))}}
-</style></head><body><div class="shell"><aside class="side"><div class="brand"><div class="logo">₿</div><div><b>WHJ BITCOIN</b><small>مركز قيادة التداول الذكي</small></div></div><div class="navlabel">القائمة الرئيسية</div><nav class="nav"><button class="active" data-view="overview"><span class="ico">⌂</span>الرئيسية</button><button data-view="scanner"><span class="ico">⌁</span>ماسح السوق</button><button data-view="strategies"><span class="ico">◈</span>الاستراتيجيات</button><button data-view="trades"><span class="ico">⇄</span>الصفقات</button><button data-view="risk"><span class="ico">⌁</span>المخاطر</button><button data-view="system"><span class="ico">⚙</span>النظام</button><button data-view="agents"><span class="ico">✣</span>مركز الوكلاء</button><button data-view="forward"><span class="ico">◷</span>المراقبة المستقبلية</button><button data-view="mt5"><span class="ico">⌁</span>منصة MT5</button></nav><div class="sidefoot">WHJ Bitcoin Bot 2026<br>مراقبة وتحليل · Paper Trading فقط</div></aside><main>
+</style>
+<style id="whj-terminal-redesign">
+:root{--bg:#eef0f3;--p:#fff;--p2:#f6f7f9;--line:#d6d9df;--t:#242a32;--m:#737b86;--c:#2868b2;--g:#25845d;--r:#b84d62;--a:#a66b26}
+html,body{background:#eef0f3!important;color:#252a31!important;font-family:Tahoma,Arial,sans-serif}
+body{background:linear-gradient(180deg,#f8f9fb 0,#e9ebef 100%)!important}
+.shell{grid-template-columns:215px minmax(0,1fr);background:#f3f4f6}
+.side{background:#f8f9fb!important;border-left:1px solid #d9dce1!important;color:#333;box-shadow:3px 0 18px #1e293b08}
+.logo{background:linear-gradient(145deg,#2872c6,#164b88)!important;color:white!important;box-shadow:none!important;border-radius:50%}
+.brand b{color:#1e5b9e;font-size:18px}
+.nav button{color:#59616c}
+.nav button.active,.nav button:hover{background:#e7edf5!important;color:#1e5b9e!important;box-shadow:inset -3px 0 #2c6db3!important}
+main{max-width:1600px;padding-top:22px}
+.top h1{color:#222a33;font-size:27px}
+.eyebrow{color:#2868b2}
+.sub,.metric .hint,.head span{color:#7b828c}
+.pill,.refresh,.toolbtn,.whj-extra-btn,.whj-command-btn,.whj-alert-btn,.whj-clock{background:#f4f6f8!important;color:#4a5664!important;border:1px solid #d5d9df!important}
+.refresh{background:#e7eff8!important;color:#205b9a!important}
+.banner{background:#fff!important;border:1px solid #d9dde3!important;border-radius:8px!important;box-shadow:0 2px 8px #1c273408}
+.banner b{color:#28313b}
+.status{background:#e9f5ee!important;color:#25845d!important}
+.card{background:#fff!important;border:1px solid #d9dde3!important;border-radius:9px!important;box-shadow:0 2px 8px #1c273408!important;color:#252a31}
+.metric .label{color:#747d88}
+.metric .value{color:#242a32}
+.signalbox{background:#f3f5f7!important;border:1px solid #e1e4e8}
+.content,.lower{gap:11px}
+.head h2{color:#303943}
+th{color:#697582;border-bottom-color:#dfe2e6}
+td{color:#343d47;border-bottom-color:#eceef1}
+table{font-size:11px}
+canvas{filter:saturate(.8)}
+.scanner-head h2{color:#27313b}
+.radar-card,.scanner-signal-card{background:#fff!important}
+.radar-grid{border-color:#9eb8c8!important;background:repeating-radial-gradient(circle,transparent 0 27px,#d1dfe6 28px 29px,transparent 30px 55px),linear-gradient(90deg,transparent 49.7%,#c5d5de 50%,transparent 50.3%),linear-gradient(0deg,transparent 49.7%,#c5d5de 50%,transparent 50.3%)!important}
+.radar-grid:before{background:conic-gradient(from 0deg,transparent 0 72%,rgba(45,146,143,.03) 78%,rgba(45,146,143,.2) 100%)}
+.radar-center{background:#e8f4f3;color:#258d80;border-color:#8ac9bd}
+.radar-bottom,.scanner-reasons{background:#f4f6f8!important;border-color:#dce1e5!important}
+.gate-row{border-bottom-color:#e7eaee}
+.gate-copy b,.gate-row>strong{color:#3a4652}
+.scanner-safety{background:#eef7f2!important;border-color:#c9e1d4!important}
+.scanner-safety b{color:#287b58}
+.scanner-safety p{color:#687a70}
+.whj-command-box,.whj-shortcuts-card,.whj-alert-panel{background:#fff!important;color:#27313b!important}
+.whj-command-search{color:#27313b!important}
+.whj-command-item{color:#27313b!important}
+.whj-command-item:hover{background:#edf2f7!important}
+@media(max-width:700px){.shell{display:block}.side{background:#f8f9fb!important}.top h1{font-size:21px}}
+/* Terminal-inspired agent strip */
+.whj-agent-terminal{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:9px;margin:12px 0 15px}
+.whj-agent-card{background:#fff;border:1px solid #d8dce2;border-radius:8px;padding:12px;min-width:0;box-shadow:0 2px 7px #1c273407}
+.whj-agent-card .agent-top{display:flex;align-items:center;justify-content:space-between;gap:6px;margin-bottom:8px}
+.whj-agent-card b{font-size:11px;color:#2e3945}
+.whj-agent-card small{font-size:9px;color:#7a8490;display:block;line-height:1.7}
+.whj-agent-dot{width:7px;height:7px;border-radius:50%;background:#29976c;box-shadow:0 0 0 3px #29976c18}
+.whj-agent-state{font-size:8px;color:#277c5b;background:#eaf5ef;border-radius:4px;padding:4px 6px}
+.whj-liveflow{display:flex;align-items:center;gap:8px;flex-wrap:wrap;background:#fff;border:1px solid #d8dce2;border-radius:8px;padding:12px 14px;margin-bottom:13px}
+.whj-liveflow strong{font-size:10px;color:#4d5966;margin-left:auto}
+.whj-flow-step{border:1px solid #d8dde3;background:#f7f8fa;border-radius:6px;padding:8px 10px;font-size:9px;color:#3d4854}
+.whj-flow-arrow{color:#8a929c;font-size:12px}
+.whj-terminal-note{font-size:9px;color:#78818c;margin-top:8px}
+@media(max-width:1050px){.whj-agent-terminal{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:700px){.whj-agent-terminal{grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}.whj-agent-card{padding:10px}.whj-liveflow{gap:6px}.whj-liveflow strong{width:100%;margin:0}}
+</style>
+</head><body><div class="shell"><aside class="side"><div class="brand"><div class="logo">₿</div><div><b>WHJ BITCOIN</b><small>مركز قيادة التداول الذكي</small></div></div><div class="navlabel">القائمة الرئيسية</div><nav class="nav"><button class="active" data-view="overview"><span class="ico">⌂</span>الرئيسية</button><button data-view="scanner"><span class="ico">⌁</span>ماسح السوق</button><button data-view="strategies"><span class="ico">◈</span>الاستراتيجيات</button><button data-view="trades"><span class="ico">⇄</span>الصفقات</button><button data-view="risk"><span class="ico">⌁</span>المخاطر</button><button data-view="system"><span class="ico">⚙</span>النظام</button><button data-view="agents"><span class="ico">✣</span>مركز الوكلاء</button><button data-view="forward"><span class="ico">◷</span>المراقبة المستقبلية</button><button data-view="mt5"><span class="ico">⌁</span>منصة MT5</button></nav><div class="sidefoot">WHJ Bitcoin Bot 2026<br>مراقبة وتحليل · Paper Trading فقط</div></aside><main>
 <div class="mobilehead">WHJ BITCOIN · مركز القيادة</div><header class="top"><div><div class="eyebrow">WHJ / COMMAND CENTER</div><h1 id="pageTitle">نظرة عامة</h1><div class="sub">مراقبة أداء البوت وتحليل BTC/USD</div></div><div class="topright"><button class="toolbtn" id="exportJson" type="button">تنزيل التقرير JSON</button><button class="toolbtn" id="exportCsv" type="button">تصدير الصفقات CSV</button><span class="pill"><i class="dot"></i><span id="systemState">جارٍ تحميل البيانات</span></span><button class="refresh" id="refresh">↻ تحديث البيانات</button></div></header>
 <div class="banner"><div><b>وضع الحماية مفعّل — التداول الحقيقي متوقف</b><p>تعرض اللوحة بيانات التحليل والمحاكاة فقط، ولا ترسل أوامر إلى منصات التداول.</p></div><span class="status">● PAPER MODE</span></div>
 
@@ -657,4 +719,30 @@ document.querySelectorAll(".nav button").forEach(b=>b.addEventListener("click",(
  });
 })();
 
-</script></body></html>
+</script>
+<script id="whj-terminal-agents">
+(function(){
+ if(document.getElementById("whjAgentTerminal"))return;
+ const banner=document.querySelector("main .banner");
+ if(!banner)return;
+ const agents=document.createElement("section");
+ agents.id="whjAgentTerminal";
+ agents.className="whj-agent-terminal";
+ agents.setAttribute("aria-label","وكلاء WHJ");
+ const items=[
+  ["▣","SCANNER","يراقب السوق والحجم","رصد فقط"],
+  ["◆","RISK CHECK","يفحص حدود المخاطر","حماية"],
+  ["◈","SIZER","يحسب حجم الصفقة","تحديد الحجم"],
+  ["●","EXECUTOR","ينفذ أوامر المحاكاة","ورقي"],
+  ["▤","LOGGER","يسجل أسباب القرار","توثيق"],
+  ["◉","EQUITY","يتابع الرصيد والمنحنى","محفظة"]
+ ];
+ items.forEach((x)=>{const c=document.createElement("article");c.className="whj-agent-card";c.innerHTML='<div class="agent-top"><b></b><span class="whj-agent-dot"></span></div><small></small><div class="whj-terminal-note"></div>';c.querySelector("b").textContent=x[0]+"  "+x[1];c.querySelector("small").textContent=x[2];c.querySelector(".whj-terminal-note").textContent=x[3];agents.appendChild(c)});
+ banner.insertAdjacentElement("afterend",agents);
+ const flow=document.createElement("section");flow.className="whj-liveflow";flow.setAttribute("aria-label","تدفق العمليات");
+ const title=document.createElement("strong");title.textContent="LIVE FLOW · فحص ← تحقق ← تحجيم ← تنفيذ ورقي ← سجل";flow.appendChild(title);
+ ["SCAN","RISK CHECK","SIZER","PAPER EXEC","LOG"].forEach((v,i)=>{if(i){const a=document.createElement("span");a.className="whj-flow-arrow";a.textContent="›";flow.appendChild(a)}const s=document.createElement("span");s.className="whj-flow-step";s.textContent=v;flow.appendChild(s)});
+ agents.insertAdjacentElement("afterend",flow);
+})();
+</script>
+</body></html>
