@@ -240,7 +240,6 @@ class HistoricalResearchTests(unittest.TestCase):
         self.assertIn("donchian_55_20_sma200", result["strategies"])
         self.assertIn("donchian_55_20_sma200_atr3_trailing", result["strategies"])
         self.assertIn("buy_and_hold_25pct", result["strategies"])
-        self.assertEqual(len(result["strategies"]["ema50_200_close_below_ema50_exit"]["walk_forward_windows"]), 3)
         self.assertTrue(all(
             window["start_index"] >= result["split_index"]
             for window in result["strategies"]["donchian_55_20"]["walk_forward_windows"]
@@ -728,6 +727,7 @@ class HistoricalResearchTests(unittest.TestCase):
         self.assertEqual(result["atr_trailing_multiple"], 2.5)
         self.assertEqual(len(result["strategies"]["ema50_200_atr2_5_trailing"]["walk_forward_windows"]), 3)
         self.assertIn("buy_and_hold_25pct", result["strategies"])
+        self.assertEqual(len(result["strategies"]["ema50_200_close_below_ema50_exit"]["walk_forward_windows"]), 3)
         self.assertIn("next six-hour close", result["execution"])
 
     def test_six_hour_atr_trailing_lab_rejects_insufficient_data(self):
