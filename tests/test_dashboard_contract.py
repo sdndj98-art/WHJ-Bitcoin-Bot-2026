@@ -50,7 +50,10 @@ class DashboardContractTests(unittest.TestCase):
         self.assertIn('q.quality_status==="BLOCKED"', self.source)
         self.assertIn('Array.isArray(bt.trade_log)', self.source)
         self.assertIn('hasEquity', self.source)
-        self.assertIn('بيانات الماسح غير متاحة', self.source)
+        self.assertIn('الماسح محجوب أو التقرير قديم', self.source)
+        self.assertIn('scannerFresh', self.source)
+        self.assertIn('a.recent_trades', self.source)
+        self.assertIn('PAPER UPDATE', self.source)
 
     def test_agent_decision_timeline_and_risk_metrics_are_present(self):
         for element_id in (
