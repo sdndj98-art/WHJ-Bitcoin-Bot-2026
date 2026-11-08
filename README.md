@@ -117,4 +117,4 @@ python kraken_cvd_collector.py --pair ETH/USD --state-file state/eth_usd_cvd.jso
 
 Stop with Ctrl+C. The collector uses atomic JSON state replacement and resumes from the saved trade ID/timestamp. If it cannot recover a trade-ID gap, it stops/retries rather than silently claiming a continuous CVD series. The first WebSocket snapshot establishes a baseline; it does not claim historical completeness before startup.
 
-The collector is read-only: no API key is required, and it cannot place, amend, or cancel orders. It does not alter the main bot's scanner, MT5 integration, or any paper portfolio. To run multiple symbols, start one process and one state file per symbol.
+The collector is read-only: no API key is required, and it cannot place, amend, or cancel orders. It does not alter the main bot's scanner, MT5 integration, or any paper portfolio. To run multiple symbols, start one process and one state file per symbol. The generated `dashboard.html` also reads the default BTC/USD CVD state file and labels it fresh, stale, clock-skewed, or unavailable; custom state paths are not auto-discovered by the dashboard.

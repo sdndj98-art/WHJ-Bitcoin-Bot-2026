@@ -1,13 +1,123 @@
 """Build a self-contained HTML dashboard from report.json."""
 import html
 import json
+import math
+import time
 from pathlib import Path
 
 SOURCE = Path("report.json")
 OUTPUT = Path("dashboard.html")
 
+CVD_STATE_SOURCE = Path("state/kraken_cvd_btc_usd.json")
+
+
+def summarize_cvd_state(state, now_ns=None, stale_after_seconds=180):
+    """Validate a persisted CVD state and derive dashboard-only freshness metrics."""
+    if not isinstance(state, dict):
+        return {"status": "INVALID_STATE", "message": "CVD state must be a JSON object"}
+    try:
+        count = state.get("processed_trade_count")
+        last_id = state.get("last_trade_id", 0)
+        if isinstance(state.get("cumulative_buy_volume", 0.0), bool) or isinstance(state.get("cumulative_sell_volume", 0.0), bool):
+            raise ValueError("invalid cumulative volume")
+        buy = float(state.get("cumulative_buy_volume", 0.0))
+        sell = float(state.get("cumulative_sell_volume", 0.0))
+        timestamp_ns = state.get("last_trade_timestamp_ns")
+        if timestamp_ns is None and state.get("last_trade_timestamp") is not None:
+            legacy_timestamp = float(state["last_trade_timestamp"])
+            if not math.isfinite(legacy_timestamp) or legacy_timestamp < 0:
+                raise ValueError("invalid legacy trade timestamp")
+            timestamp_ns = int(legacy_timestamp * 1_000_000_000)
+        if isinstance(count, bool) or not isinstance(count, int) or count < 0:
+            raise ValueError("invalid processed trade count")
+        if isinstance(last_id, bool) or not isinstance(last_id, int) or last_id < 0:
+            raise ValueError("invalid last trade ID")
+        if not math.isfinite(buy) or not math.isfinite(sell) or buy < 0 or sell < 0:
+            raise ValueError("invalid cumulative volume")
+        if timestamp_ns is not None and (
+            isinstance(timestamp_ns, bool) or not isinstance(timestamp_ns, int) or timestamp_ns < 0
+        ):
+            raise ValueError("invalid nanosecond timestamp")
+    except (TypeError, ValueError, OverflowError) as exc:
+        return {"status": "INVALID_STATE", "message": str(exc)}
+
+    if count == 0 or timestamp_ns is None:
+        return {
+            "status": "NO_TRADES",
+            "pair": state.get("symbol", "—"),
+            "processed_trade_count": count,
+            "last_trade_id": last_id,
+        }
+
+    if isinstance(stale_after_seconds, bool) or not isinstance(stale_after_seconds, (int, float)) or not math.isfinite(stale_after_seconds) or stale_after_seconds <= 0:
+        raise ValueError("stale_after_seconds must be positive")
+    now_ns = time.time_ns() if now_ns is None else now_ns
+    if isinstance(now_ns, bool) or not isinstance(now_ns, int) or now_ns < 0:
+        raise ValueError("now_ns must be a non-negative integer")
+    age = (now_ns - timestamp_ns) / 1_000_000_000.0
+    total = buy + sell
+    delta = buy - sell
+    delta_pct = delta / total if total else 0.0
+    bias = (
+        "BUY_PRESSURE" if delta_pct >= 0.10 else
+        "SELL_PRESSURE" if delta_pct <= -0.10 else
+        "BALANCED"
+    )
+    if age < -30:
+        freshness = "CLOCK_SKEW"
+    elif age > stale_after_seconds:
+        freshness = "STALE"
+    else:
+        freshness = "FRESH"
+    return {
+        "status": freshness,
+        "pair": state.get("symbol", "—"),
+        "last_trade_id": last_id,
+        "processed_trade_count": count,
+        "cumulative_buy_volume": round(buy, 12),
+        "cumulative_sell_volume": round(sell, 12),
+        "cumulative_delta": round(delta, 12),
+        "cumulative_delta_pct": round(delta_pct * 100.0, 4),
+        "cumulative_bias": bias,
+        "last_trade_age_seconds": round(max(age, 0.0), 3),
+        "stale_after_seconds": stale_after_seconds,
+    }
+
+
+def load_dashboard_cvd_state(path=CVD_STATE_SOURCE):
+    """Read the optional BTC/USD collector state without resetting corrupt files."""
+    try:
+        state = json.loads(Path(path).read_text(encoding="utf-8"))
+    except FileNotFoundError:
+        return {"status": "NOT_RUNNING", "message": "No saved CVD state"}
+    except (OSError, json.JSONDecodeError) as exc:
+        return {"status": "INVALID_STATE", "message": str(exc)}
+    return summarize_cvd_state(state)
+
+
 
 def build_dashboard(report):
+    cvd = report.get("kraken_cvd", {"status": "NOT_RUNNING", "message": "No saved CVD state"})
+    cvd_fields = [
+        ("Status / freshness", cvd.get("status", "UNKNOWN")),
+        ("Trading pair", cvd.get("pair", "—")),
+        ("Cumulative buy volume", cvd.get("cumulative_buy_volume", "—")),
+        ("Cumulative sell volume", cvd.get("cumulative_sell_volume", "—")),
+        ("Cumulative delta", cvd.get("cumulative_delta", "—")),
+        ("Cumulative delta (%)", cvd.get("cumulative_delta_pct", "—")),
+        ("CVD pressure", cvd.get("cumulative_bias", "—")),
+        ("Last trade ID", cvd.get("last_trade_id", "—")),
+        ("Processed trades", cvd.get("processed_trade_count", "—")),
+        ("Last trade age (seconds)", cvd.get("last_trade_age_seconds", "—")),
+        ("Collector note", cvd.get("message", "Read-only public market data")),
+    ]
+    cvd_rows = "".join(
+        "<tr><th>{}</th><td>{}</td></tr>".format(
+            html.escape(str(label)), html.escape(str(value))
+        )
+        for label, value in cvd_fields
+    )
+
     bt = report.get("paper_backtest", {})
     trades = bt.get("trade_log", [])
     rows = "".join(
@@ -116,6 +226,7 @@ table{width:100%;border-collapse:collapse}td,th{text-align:left;padding:10px;bor
 <header><h1>WHJ Bitcoin Bot</h1><div class="muted">BTC/USD hourly analysis · Updated: """ + timestamp + """</div>
 <p class="signal">Current indicator: """ + signal + """</p></header>
 <div class="grid">""" + cards + """</div>
+<section><h2>Kraken CVD · Public market feed</h2><p class="muted">Read-only cumulative aggressor buy/sell volume. Freshness is based on the saved trade timestamp; stale or missing data is not a trading signal.</p><table><tbody>""" + cvd_rows + """</tbody></table></section>
 <section><h2>Recent simulated trades</h2><table><thead><tr><th>Result</th><th>P&amp;L (USD)</th></tr></thead><tbody>""" + rows + """</tbody></table></section>
 <section><h2>Strategy comparison · Out-of-sample</h2><p class="muted">Chronological holdout results; fixed rules, not a guarantee or a strategy recommendation.</p><table><thead><tr><th>Strategy</th><th>Return (%)</th><th>Max drawdown (%)</th><th>Closed trades</th><th>Worst walk-forward window (%)</th></tr></thead><tbody>""" + strategy_rows + """</tbody></table></section>
 <section><h2>Persistent paper strategy race</h2><p class="muted">Independent simulated accounts with identical initial capital, fees, slippage, sizing and risk limits. Equity includes estimated liquidation costs.</p><table><thead><tr><th>Strategy</th><th>Equity (USD)</th><th>Return (%)</th><th>Max drawdown (%)</th><th>Closed trades</th><th>Fees (USD)</th><th>Open position</th><th>Drawdown paused</th><th>Daily loss paused</th><th>Loss streak paused</th><th>Strategy health paused</th></tr></thead><tbody>""" + paper_strategy_rows + """</tbody></table></section>
@@ -126,6 +237,7 @@ table{width:100%;border-collapse:collapse}td,th{text-align:left;padding:10px;bor
 
 def main():
     report = json.loads(SOURCE.read_text(encoding="utf-8"))
+    report["kraken_cvd"] = load_dashboard_cvd_state()
     OUTPUT.write_text(build_dashboard(report), encoding="utf-8")
     print("Dashboard written to dashboard.html")
 
