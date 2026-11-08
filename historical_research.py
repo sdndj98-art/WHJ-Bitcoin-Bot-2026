@@ -1619,7 +1619,7 @@ def run_six_hour_atr_trailing_lab(hourly_candles, fee=FEE_RATE, slippage=SLIPPAG
     ema50_exit_position = False
     for index, close in enumerate(closes):
         trend_ok = bool(index >= 199 and ema50[index] > ema200[index] and close > ema200[index])
-        if not ema50_exit_position and trend_ok:
+        if not ema50_exit_position and trend_ok and close > ema50[index]:
             ema50_exit_position = True
         elif ema50_exit_position and (not trend_ok or close < ema50[index]):
             ema50_exit_position = False
