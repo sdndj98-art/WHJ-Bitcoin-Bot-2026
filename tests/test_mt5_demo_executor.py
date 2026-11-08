@@ -128,12 +128,23 @@ class DemoExecutorTests(unittest.TestCase):
                 self.submit(self.executor(), signal_id="signal-001")
             self.assertEqual(len(self.mt5.order_send_calls), 1)
 
+    def test_sell_order_uses_inverse_stop_geometry(self):
+        with patch.dict(os.environ, {"WHJ_ENABLE_MT5_DEMO_ORDERS": "YES"}):
+            result = self.submit(
+                self.executor(), signal_id="sell-001", side="SELL",
+                stop_loss=100.5, take_profit=99.5
+            )
+        self.assertEqual(result["status"], "SUBMITTED_TO_DEMO")
+        self.assertEqual(self.mt5.order_send_calls[0]["type"], self.mt5.ORDER_TYPE_SELL)
+
     def test_rejects_bad_stop_geometry_and_volume_step_before_order_check(self):
         with patch.dict(os.environ, {"WHJ_ENABLE_MT5_DEMO_ORDERS": "YES"}):
             with self.assertRaisesRegex(ValueError, "BUY protection"):
                 self.submit(self.executor(), stop_loss=100.3, take_profit=101.0)
             with self.assertRaisesRegex(ValueError, "volume step"):
                 self.submit(self.executor(), signal_id="signal-002", volume=0.025)
+            with self.assertRaisesRegex(ValueError, "stop loss"):
+                self.submit(self.executor(), signal_id="signal-003", stop_loss=0)
         self.assertFalse(hasattr(self.mt5, "checked_request"))
         self.assertEqual(self.mt5.order_send_calls, [])
 
