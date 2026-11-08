@@ -1575,6 +1575,7 @@ def run_six_hour_atr_trailing_lab(hourly_candles, fee=FEE_RATE, slippage=SLIPPAG
     ema200 = _ema_series(closes, 200)
     atr14 = _atr_series(six_hour, 14)
     signals = []
+    entry_indices = []
     in_position = False
     highest_close = None
     atr_multiple = 2.5
@@ -1585,6 +1586,7 @@ def run_six_hour_atr_trailing_lab(hourly_candles, fee=FEE_RATE, slippage=SLIPPAG
         if not in_position:
             if trend_ok and current_atr is not None and current_atr > 0:
                 in_position = True
+                entry_indices.append(index)
                 highest_close = close
         else:
             highest_close = max(highest_close, close)
@@ -1612,15 +1614,19 @@ def run_six_hour_atr_trailing_lab(hourly_candles, fee=FEE_RATE, slippage=SLIPPAG
         "out_of_sample": _simulate_ohlc(six_hour, signals, split, len(six_hour), fee, slippage),
         "walk_forward_windows": windows,
         "worst_window_return_pct": min(returns) if returns else None,
+        "entry_bar_indices": entry_indices,
     }
     # Compare a simpler, predeclared trend exit: close below EMA50.
-    # Entry remains identical, and both variants use next-bar close execution.
+    # Both variants must use exactly the same entries.
     ema50_exit_signals = []
+    ema50_entry_indices = []
     ema50_exit_position = False
     for index, close in enumerate(closes):
         trend_ok = bool(index >= 199 and ema50[index] > ema200[index] and close > ema200[index])
-        if not ema50_exit_position and trend_ok and close > ema50[index]:
+        current_atr = atr14[index]
+        if not ema50_exit_position and trend_ok and current_atr is not None and current_atr > 0:
             ema50_exit_position = True
+            ema50_entry_indices.append(index)
         elif ema50_exit_position and (not trend_ok or close < ema50[index]):
             ema50_exit_position = False
         ema50_exit_signals.append(ema50_exit_position)
@@ -1647,6 +1653,7 @@ def run_six_hour_atr_trailing_lab(hourly_candles, fee=FEE_RATE, slippage=SLIPPAG
         ),
         "walk_forward_windows": ema50_exit_windows,
         "worst_window_return_pct": min(ema50_exit_returns) if ema50_exit_returns else None,
+        "entry_bar_indices": ema50_entry_indices,
     }
 
     benchmark_metrics = _simulate_ohlc(
