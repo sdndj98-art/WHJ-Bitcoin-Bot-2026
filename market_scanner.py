@@ -294,7 +294,7 @@ def scan_btc_market(candles, market_data_quality=None, volume_lookback=20,
         "paper_candidate_only": True,
         "live_orders_placed": False,
         "limitations": [
-            "BTC/USD only; no new-token discovery or on-chain rug-pull assessment.",
+            "No instrument-specific fundamental, broker execution, or manipulation assessment is performed.",
             "A scanner candidate is not a validated profitable strategy or an order instruction.",
             "ATR risk-map levels are hypothetical research references, not orders or validated trade parameters.",
             "No stop-loss, take-profit, or live execution is performed by this scanner.",
