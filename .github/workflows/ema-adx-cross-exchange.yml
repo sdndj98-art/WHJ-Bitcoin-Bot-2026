@@ -1,14 +1,6 @@
 name: WHJ EMA ADX Independent Exchange Validation
 
 on:
-  push:
-    branches: [feature/efficiency-ratio-indicator]
-    paths:
-      - "ema_adx_cross_exchange_lab.py"
-      - "ema_adx_lab.py"
-      - "historical_research.py"
-      - "tests/test_ema_adx_cross_exchange_lab.py"
-      - ".github/workflows/ema-adx-cross-exchange.yml"
   pull_request:
     branches: [main]
     paths:
@@ -44,6 +36,7 @@ jobs:
         run: python -m unittest discover -s tests -p 'test_ema_adx_cross_exchange_lab.py' -v
 
       - name: Run independent Bitstamp historical comparison
+        timeout-minutes: 20
         run: python ema_adx_cross_exchange_lab.py
 
       - name: Upload independent exchange report
