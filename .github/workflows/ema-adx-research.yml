@@ -10,6 +10,8 @@ on:
       - "adx_walk_forward.py"
       - "adx_cross_exchange_walk_forward.py"
       - "tests/test_adx_walk_forward.py"
+      - "adx_exit_policy_lab.py"
+      - "tests/test_adx_exit_policy_lab.py"
       - ".github/workflows/ema-adx-research.yml"
   pull_request:
     branches: [main]
@@ -20,6 +22,8 @@ on:
       - "adx_walk_forward.py"
       - "adx_cross_exchange_walk_forward.py"
       - "tests/test_adx_walk_forward.py"
+      - "adx_exit_policy_lab.py"
+      - "tests/test_adx_exit_policy_lab.py"
       - ".github/workflows/ema-adx-research.yml"
   workflow_dispatch:
 
@@ -59,6 +63,12 @@ jobs:
       - name: Run independent Bitstamp expanding-window walk-forward
         run: python adx_cross_exchange_walk_forward.py
 
+      - name: Test ADX20 exit policy research
+        run: python -m unittest discover -s tests -p 'test_adx_exit_policy_lab.py' -v
+
+      - name: Run ADX20 exit policy comparison
+        run: python adx_exit_policy_lab.py
+
       - name: Upload ADX research reports
         uses: actions/upload-artifact@v4
         with:
@@ -67,5 +77,6 @@ jobs:
             ema_adx_research.json
             adx_walk_forward_report.json
             adx_bitstamp_walk_forward_report.json
+            adx_exit_policy_research.json
           if-no-files-found: error
           retention-days: 30
