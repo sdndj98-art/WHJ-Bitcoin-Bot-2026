@@ -55,7 +55,8 @@ class EfficiencyRatioLabTests(unittest.TestCase):
             [{"close": 100.0 + index} for index in range(250)], 0.35
         )
         self.assertTrue(all(not filtered[i] or baseline[i] for i in range(len(baseline))))
-        self.assertFalse(any(filtered[:220]))
+        self.assertFalse(any(filtered[:199]))
+        self.assertTrue(any(filtered[199:]))
 
     def test_lab_compares_same_50_50_portfolio_and_cost_scenarios(self):
         report = run_ema_efficiency_filter_lab(hourly_candles())
