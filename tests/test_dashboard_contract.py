@@ -1,7 +1,7 @@
 import unittest
 from collections import Counter
 from html.parser import HTMLParser
-from dashboard import build_dashboard
+from dashboard import build_dashboard, summarize_cvd_state
 from pathlib import Path
 
 
@@ -49,6 +49,68 @@ class DashboardContractTests(unittest.TestCase):
         self.assertIn("<th>Loss streak paused</th>", rendered)
         self.assertIn("<th>Strategy health paused</th>", rendered)
         self.assertIn("<td>True</td><td>True</td>", rendered)
+
+
+
+    def test_cvd_panel_displays_read_only_metrics_and_escapes_values(self):
+        rendered = build_dashboard({
+            "kraken_cvd": {
+                "status": "FRESH",
+                "pair": "BTC/USD <script>",
+                "cumulative_buy_volume": 12.5,
+                "cumulative_sell_volume": 4.0,
+                "cumulative_delta": 8.5,
+                "cumulative_delta_pct": 51.515,
+                "cumulative_bias": "BUY_PRESSURE",
+                "last_trade_id": 12345,
+                "processed_trade_count": 99,
+                "last_trade_age_seconds": 2.5,
+            }
+        })
+        self.assertIn("Kraken CVD · Public market feed", rendered)
+        self.assertIn("BUY_PRESSURE", rendered)
+        self.assertIn("BTC/USD &lt;script&gt;", rendered)
+        self.assertNotIn("BTC/USD <script>", rendered)
+        self.assertIn("Freshness is based on the saved trade timestamp", rendered)
+
+    def test_cvd_state_summary_marks_fresh_stale_and_clock_skew(self):
+        now = 1_800_000_000_000_000_000
+        state = {
+            "symbol": "BTC/USD",
+            "processed_trade_count": 10,
+            "last_trade_id": 10,
+            "cumulative_buy_volume": 3.0,
+            "cumulative_sell_volume": 1.0,
+            "last_trade_timestamp_ns": now - 30_000_000_000,
+        }
+        fresh = summarize_cvd_state(state, now_ns=now)
+        self.assertEqual(fresh["status"], "FRESH")
+        self.assertEqual(fresh["cumulative_delta"], 2.0)
+        self.assertEqual(fresh["cumulative_bias"], "BUY_PRESSURE")
+        stale = summarize_cvd_state(
+            {**state, "last_trade_timestamp_ns": now - 181_000_000_000},
+            now_ns=now,
+        )
+        self.assertEqual(stale["status"], "STALE")
+        skew = summarize_cvd_state(
+            {**state, "last_trade_timestamp_ns": now + 60_000_000_000},
+            now_ns=now,
+        )
+        self.assertEqual(skew["status"], "CLOCK_SKEW")
+
+    def test_cvd_state_summary_rejects_corrupt_metrics_and_handles_empty_state(self):
+        self.assertEqual(
+            summarize_cvd_state({"processed_trade_count": 0})["status"],
+            "NO_TRADES",
+        )
+        invalid = summarize_cvd_state({
+            "processed_trade_count": 2,
+            "last_trade_id": 2,
+            "cumulative_buy_volume": float("nan"),
+            "cumulative_sell_volume": 1,
+            "last_trade_timestamp_ns": 100,
+        })
+        self.assertEqual(invalid["status"], "INVALID_STATE")
 
     def test_navigation_targets_exist_and_ids_are_unique(self):
         ids = set(self.parser.ids)
