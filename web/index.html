@@ -332,7 +332,8 @@ function resetMt5View(){
  $("mt5PaperRows").innerHTML="<tr><td colspan='6' class='empty'>لا توجد بيانات محاكاة</td></tr>";
 }
 $("clearMt5").addEventListener("click",()=>{mt5Snapshot=null;$("mt5SnapshotFile").value="";$("mt5Message").textContent="تم مسح لقطة MT5 من عرض الصفحة.";resetMt5View();});
-\nfunction paperRiskPauseLabel(a){
+
+function paperRiskPauseLabel(a){
  const reasons=[];
  if(a.paused_for_drawdown) reasons.push("تراجع الحساب");
  if(a.daily_loss_paused) reasons.push("الخسارة اليومية");
