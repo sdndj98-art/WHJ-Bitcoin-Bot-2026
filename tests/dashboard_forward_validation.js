@@ -172,3 +172,54 @@ assert.match(html, /recent_missing_hour_gaps/, "Dashboard alerts must surface mi
 assert.match(html, /whjToast/, "Dashboard must expose accessible status notifications");
 
 console.log("Dashboard forward-report and premium UX tests passed.");
+
+
+// Isolated ADX forward report validation: four exact sleeves, no live orders, and no historical trades.
+const adxMatch = html.match(/function validateAdxForwardReport\(x\)\{[\s\S]*?\n\}\nfunction renderAdxForward\(/);
+assert.ok(adxMatch, "Could not locate isolated ADX report validator");
+const adxValidatorSource = adxMatch[0].replace(/\nfunction renderAdxForward\($/, "");
+const validateAdx = vm.runInNewContext(`${adxValidatorSource}; validateAdxForwardReport`);
+const adxKeys = { adx15_4h:[15,4], adx20_4h:[20,4], adx15_6h:[15,6], adx20_6h:[20,6] };
+const adxReport = {
+  schema_version:1, mode:"ISOLATED_ADX_FORWARD_PAPER_ONLY",
+  generated_at_utc:"2026-11-09T00:00:00Z", live_orders_enabled:false,
+  existing_paper_ledgers_touched:false,
+  allocation:"Separate 500 USD virtual sleeve per timeframe/threshold; not combined with existing accounts",
+  data_quality:"VALIDATED_NO_GAPS_NO_IMPUTED_CANDLES",
+  results:Object.fromEntries(Object.entries(adxKeys).map(([key,[threshold,timeframe]])=>[key,{
+    mode:"FORWARD_ONLY_PAPER_NO_LIVE_ORDERS",strategy:"EMA50_200_ADX14_ENTRY_ONLY",
+    threshold,timeframe_hours:timeframe,seeded_without_historical_trades:true,
+    processed_new_bars:0,last_processed_timestamp:Math.floor(Date.UTC(2026,10,8,0,0,0)/(timeframe*3600000))*(timeframe*3600000),
+    initial_cash_usd:500,equity_usd:500,return_pct:0,closed_trades:0,win_rate_pct:0,
+    profit_factor:0,max_drawdown_pct:0,fees_paid_usd:0,open_position:false,
+    risk_paused:false,risk_pause_reasons:[],minimum_trades_for_review:30,
+    assessment:"INSUFFICIENT_FORWARD_SAMPLE"
+  }]))
+};
+assert.equal(validateAdx(adxReport), adxReport);
+const adxBadLive = structuredClone(adxReport); adxBadLive.live_orders_enabled=true;
+assert.throws(()=>validateAdx(adxBadLive),/ضمانات العزل/);
+const adxMissingSleeve = structuredClone(adxReport); delete adxMissingSleeve.results.adx20_6h;
+assert.throws(()=>validateAdx(adxMissingSleeve),/المحافظ الأربع فقط/);
+const adxBadIdentity = structuredClone(adxReport); adxBadIdentity.results.adx15_4h.threshold=20;
+assert.throws(()=>validateAdx(adxBadIdentity),/هوية المحفظة/);
+const adxBadReturn = structuredClone(adxReport); adxBadReturn.results.adx15_4h.return_pct=2;
+assert.throws(()=>validateAdx(adxBadReturn),/العائد لا يطابق/);
+const adxHistoricalTrades = structuredClone(adxReport); adxHistoricalTrades.results.adx15_4h.closed_trades=1;
+assert.throws(()=>validateAdx(adxHistoricalTrades),/تهيئة/);
+
+// Exercise the ADX renderer with a minimal DOM to catch runtime errors.
+const adxRenderMatch=html.match(/function renderAdxForward\(x\)\{[\s\S]*?\n\}\n\$\("adxForwardFile"\)/);
+assert.ok(adxRenderMatch,"Could not locate ADX renderer");
+const adxRendererSource=adxRenderMatch[0].replace(/\n\$\("adxForwardFile"\)$/,"");
+const adxElements=new Map();
+const adxGet=(id)=>{if(!adxElements.has(id))adxElements.set(id,{textContent:"",innerHTML:""});return adxElements.get(id)};
+const adxRender=vm.runInNewContext(`${adxRendererSource}; renderAdxForward`,{
+  $:adxGet,fmt:(v)=>v===undefined||v===null?"—":String(v),
+  money:(v)=>"$"+Number(v).toFixed(2),pct:(v)=>Number(v).toFixed(2)+"%",
+  esc:(v)=>String(v??"")
+});
+adxRender(adxReport);
+assert.equal((adxGet("adxForwardRows").innerHTML.match(/<tr>/g)||[]).length,4);
+assert.match(adxGet("adxForwardRows").innerHTML,/ADX15 · 4h/);
+assert.match(adxGet("adxForwardSeed").textContent,/تهيئة المحافظ الأربع/);
