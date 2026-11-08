@@ -118,3 +118,19 @@ python kraken_cvd_collector.py --pair ETH/USD --state-file state/eth_usd_cvd.jso
 Stop with Ctrl+C. The collector uses atomic JSON state replacement and resumes from the saved trade ID/timestamp. If it cannot recover a trade-ID gap, it stops/retries rather than silently claiming a continuous CVD series. The first WebSocket snapshot establishes a baseline; it does not claim historical completeness before startup.
 
 The collector is read-only: no API key is required, and it cannot place, amend, or cancel orders. It does not alter the main bot's scanner, MT5 integration, or any paper portfolio. To run multiple symbols, start one process and one state file per symbol. The generated `dashboard.html` also reads the default BTC/USD CVD state file and labels it fresh, stale, clock-skewed, or unavailable; custom state paths are not auto-discovered by the dashboard.
+
+### Multi-timeframe CVD replay
+
+To retain the accepted raw trades for later replay, start the collector with its bounded JSONL journal enabled:
+
+```bash
+python kraken_cvd_collector.py --pair BTC/USD --trade-log state/kraken_btc_usd_trades.jsonl --max-trade-log-mb 250
+```
+
+In another Termux session (or after stopping the collector), build native trade-flow bars:
+
+```bash
+python cvd_timeframes.py --trade-log state/kraken_btc_usd_trades.jsonl --output state/kraken_cvd_timeframes.json
+```
+
+The replay produces 1s, 5s, 15s, 30s, 1m, 3m, 5m, 15m, 30m, 1h, 4h, 6h, 12h and 1d bars with OHLC, buy/sell volume, delta, cumulative CVD, closed-bar status and missing-interval flags. Empty intervals are not fabricated. The CVD history begins at the first event retained in the journal; it is venue-specific and is not a consolidated-market signal or a trading instruction.
