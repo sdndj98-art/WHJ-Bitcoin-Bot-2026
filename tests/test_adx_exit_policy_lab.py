@@ -1,7 +1,12 @@
 import math
 import unittest
+from unittest.mock import patch
 
-from adx_exit_policy_lab import _adx_atr_exit_signals, run_exit_policy_lab
+from adx_exit_policy_lab import (
+    _adx_atr_exit_signals,
+    _adx_entry_ema_exit_signals,
+    run_exit_policy_lab,
+)
 
 
 def hourly_candles(count=3600):
@@ -24,6 +29,16 @@ def hourly_candles(count=3600):
 
 
 class AdxExitPolicyTests(unittest.TestCase):
+    def test_ema_exit_holds_through_adx_weakness_until_regime_off(self):
+        baseline = [True, True, True, False, True, True]
+        confirmed = [True, False, False, False, False, True]
+        with patch(
+            "adx_exit_policy_lab._build_sleeve_signals",
+            return_value=(baseline, confirmed),
+        ):
+            signals = _adx_entry_ema_exit_signals([{}] * len(baseline), 20.0)
+        self.assertEqual(signals, [True, True, True, False, False, True])
+
     def test_atr_exit_rejects_invalid_multiple(self):
         bars = []
         with self.assertRaisesRegex(ValueError, "ATR multiple"):
