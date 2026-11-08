@@ -13,15 +13,23 @@ def analyze_multi_timeframe_cvd(
     min_trades_by_timeframe=None, max_last_trade_lag_seconds_by_timeframe=None,
     min_abs_delta_pct=10.0, consensus_ratio=0.60,
 ):
-    """Analyze supplied timeframes using one normalized raw-trade batch.
+    """Analyze supplied frames using a shared list or per-frame trade batches.
 
-    Sub-minute candles must be built from the trade feed, not Kraken OHLC REST.
+    Prefer a mapping of timeframe -> trades when each frame has a different
+    closed-candle coverage window. Sub-minute candles come from trade events.
     Continuity is independently asserted per timeframe. Research only.
     """
     if not isinstance(candles_by_timeframe, dict) or not candles_by_timeframe:
         raise ValueError("candles_by_timeframe must be a non-empty mapping")
-    if not isinstance(trades, list):
-        raise ValueError("trades must be a list")
+    if not isinstance(trades, (list, dict)):
+        raise ValueError("trades must be a list or timeframe mapping")
+    if isinstance(trades, list) and not all(isinstance(item, dict) for item in trades):
+        raise ValueError("each trade must be an object")
+    if isinstance(trades, dict) and not all(
+        isinstance(value, list) and all(isinstance(item, dict) for item in value)
+        for value in trades.values()
+    ):
+        raise ValueError("each per-timeframe trade batch must be a list of objects")
     if not isinstance(continuity_by_timeframe, dict):
         raise ValueError("continuity_by_timeframe must be a mapping")
     min_trades_by_timeframe = min_trades_by_timeframe or {}
@@ -37,8 +45,9 @@ def analyze_multi_timeframe_cvd(
     results, votes = {}, []
     for timeframe, candles in candles_by_timeframe.items():
         interval = TIMEFRAME_SECONDS[timeframe]
+        frame_trades = trades.get(timeframe, []) if isinstance(trades, dict) else trades
         report = align_trade_flow_to_candles(
-            candles, trades, interval_seconds=interval,
+            candles, frame_trades, interval_seconds=interval,
             continuity_verified=continuity_by_timeframe.get(timeframe, False),
             min_trades=min_trades_by_timeframe.get(timeframe, 1),
             max_last_trade_lag_seconds=max_last_trade_lag_seconds_by_timeframe.get(
@@ -87,8 +96,8 @@ def analyze_multi_timeframe_cvd(
         "limitations": [
             "Only supplied timeframes are analyzed; omitted timeframes do not vote.",
             "Each timeframe needs its own contiguous completed candles and independently verified trade continuity.",
+            "Per-timeframe trade batches are recommended because closed-candle coverage ends at different UTC boundaries.",
             "Sub-minute candles must be built from timestamped trades with deterministic UTC bucketing.",
-            "The common raw trade batch must cover every supplied candle range.",
             "Consensus is a research diagnostic, not a validated trading edge or order instruction.",
         ],
     }
