@@ -78,6 +78,7 @@ def aggregate_trade_events(events, timeframe_seconds, as_of=None):
     cumulative = 0.0
     previous_id = None
     previous_timestamp_ns = None
+    journal_symbol = None
     symbol = None
     event_count = 0
 
@@ -101,8 +102,16 @@ def aggregate_trade_events(events, timeframe_seconds, as_of=None):
             raise ValueError("trade IDs must be strictly increasing; duplicates are not replayed")
         if previous_timestamp_ns is not None and timestamp_ns < previous_timestamp_ns:
             raise ValueError("trade timestamps must be non-decreasing")
-        if symbol is not None and event_symbol != symbol:
+        if journal_symbol is not None and event_symbol != journal_symbol:
             raise ValueError("one journal aggregation cannot mix symbols")
+        journal_symbol = event_symbol
+        previous_id = trade_id
+        previous_timestamp_ns = timestamp_ns
+
+        # Validate the complete journal's ordering and schema, but never let
+        # events after the requested replay horizon influence historical bars.
+        if timestamp_ns > as_of_ns:
+            continue
 
         bucket_start_ns = (timestamp_ns // (timeframe_seconds * 1_000_000_000)) * timeframe_seconds * 1_000_000_000
         delta = qty if side == "buy" else -qty
@@ -141,8 +150,6 @@ def aggregate_trade_events(events, timeframe_seconds, as_of=None):
         cumulative += delta
         current["cvd_close"] = cumulative
         current["last_trade_timestamp_ns"] = timestamp_ns
-        previous_id = trade_id
-        previous_timestamp_ns = timestamp_ns
         symbol = event_symbol
         event_count += 1
 
