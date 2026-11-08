@@ -1,10 +1,12 @@
-"""Read-only Kraken trade-flow and order-book microstructure diagnostics.
+"""Read-only Kraken trade-flow, order-book and incremental CVD diagnostics.
 
-This module consumes Kraken public Trades and Depth payloads. It does not
-place orders, maintain a persistent CVD ledger, or infer hidden liquidity.
+This module consumes public Kraken market data. It does not place orders or
+infer hidden liquidity. WebSocket transport and durable state storage remain
+caller-managed.
 """
 import json
 import math
+import re
 import urllib.parse
 import urllib.request
 
@@ -60,11 +62,16 @@ def _kraken_get(endpoint, params, timeout=10):
     return result
 
 
-def fetch_recent_trades(pair="XBTUSD", timeout=10):
-    """Fetch a recent public trade batch; returned delta is batch-scoped."""
+def fetch_recent_trades(pair="XBTUSD", timeout=10, since=None):
+    """Fetch a public trade batch, optionally resuming from Kraken's cursor."""
     if not isinstance(pair, str) or not pair or len(pair) > 32:
         raise ValueError("pair must be a non-empty Kraken pair identifier")
-    result = _kraken_get("Trades", {"pair": pair}, timeout=timeout)
+    params = {"pair": pair}
+    if since is not None:
+        if isinstance(since, bool) or not str(since).isdigit() or int(since) <= 0:
+            raise ValueError("since must be a positive Kraken cursor or nanosecond timestamp")
+        params["since"] = str(since)
+    result = _kraken_get("Trades", params, timeout=timeout)
     pair_rows = _extract_pair_result(result)
     if not isinstance(pair_rows, list):
         raise ValueError("Kraken Trades payload must contain a trade list")
@@ -396,12 +403,16 @@ def evaluate_microstructure_confluence(
     }
 
 
-def _trade_event_timestamp(value):
-    """Normalize a numeric Unix timestamp or timezone-aware ISO timestamp."""
+def _trade_event_timestamp_ns(value):
+    """Convert Unix seconds or timezone-aware ISO-8601 to exact nanoseconds."""
     if isinstance(value, bool):
         raise ValueError("trade timestamp must be numeric or timezone-aware ISO text")
     if isinstance(value, (int, float)):
-        return _finite_number(value, "trade timestamp")
+        number = _finite_number(value, "trade timestamp")
+        if number < 0:
+            raise ValueError("trade timestamp must be non-negative")
+        from decimal import Decimal
+        return int(Decimal(str(value)) * Decimal(1_000_000_000))
     if not isinstance(value, str) or not value:
         raise ValueError("trade timestamp must be numeric or timezone-aware ISO text")
     from datetime import datetime
@@ -411,7 +422,18 @@ def _trade_event_timestamp(value):
         raise ValueError("trade timestamp must be valid ISO-8601 text") from exc
     if parsed.tzinfo is None or parsed.utcoffset() is None:
         raise ValueError("trade timestamp ISO text must include a timezone")
-    return parsed.timestamp()
+    base_seconds = int(parsed.replace(microsecond=0).timestamp())
+    match = re.search(r"\.(\d+)", value)
+    fraction_ns = int((match.group(1) + "000000000")[:9]) if match else 0
+    timestamp_ns = base_seconds * 1_000_000_000 + fraction_ns
+    if timestamp_ns < 0:
+        raise ValueError("trade timestamp must be non-negative")
+    return timestamp_ns
+
+
+def _trade_event_timestamp(value):
+    """Compatibility float timestamp derived from the exact nanosecond value."""
+    return _trade_event_timestamp_ns(value) / 1_000_000_000.0
 
 
 class PersistentCvdLedger:
@@ -434,6 +456,7 @@ class PersistentCvdLedger:
         self.cumulative_sell_volume = 0.0
         self.processed_trade_count = 0
         self.last_trade_timestamp = None
+        self.last_trade_timestamp_ns = None
         if state is not None:
             self._restore_state(state)
 
@@ -472,11 +495,19 @@ class PersistentCvdLedger:
             timestamp = _finite_number(timestamp, "last_trade_timestamp")
             if timestamp < 0:
                 raise ValueError("last_trade_timestamp must be non-negative")
+        timestamp_ns = state.get("last_trade_timestamp_ns")
+        if timestamp_ns is not None:
+            if isinstance(timestamp_ns, bool) or not isinstance(timestamp_ns, int) or timestamp_ns < 0:
+                raise ValueError("last_trade_timestamp_ns must be a non-negative integer")
+        elif timestamp is not None:
+            from decimal import Decimal
+            timestamp_ns = int(Decimal(str(timestamp)) * Decimal(1_000_000_000))
         self.last_trade_id = last_id
         self.cumulative_buy_volume = buy
         self.cumulative_sell_volume = sell
         self.processed_trade_count = count
         self.last_trade_timestamp = timestamp
+        self.last_trade_timestamp_ns = timestamp_ns
 
     def to_state(self):
         """Return JSON-serializable state for caller-managed durable storage."""
@@ -488,6 +519,7 @@ class PersistentCvdLedger:
             "cumulative_sell_volume": self.cumulative_sell_volume,
             "processed_trade_count": self.processed_trade_count,
             "last_trade_timestamp": self.last_trade_timestamp,
+            "last_trade_timestamp_ns": self.last_trade_timestamp_ns,
         }
 
     def process(self, events):
@@ -504,38 +536,49 @@ class PersistentCvdLedger:
             trade_id = self._trade_id(event.get("trade_id"))
             price = _finite_number(event.get("price"), "trade price")
             quantity = _finite_number(event.get("qty"), "trade quantity")
-            timestamp = _trade_event_timestamp(event.get("timestamp"))
+            timestamp_ns = _trade_event_timestamp_ns(event.get("timestamp"))
+            timestamp = timestamp_ns / 1_000_000_000.0
             side = event.get("side")
             if price <= 0 or quantity <= 0 or timestamp < 0:
                 raise ValueError("trade price/quantity must be positive and timestamp non-negative")
             if side not in ("buy", "sell"):
                 raise ValueError("trade side must be 'buy' or 'sell'")
-            item = (price, quantity, timestamp, side)
+            item = (price, quantity, timestamp_ns, side)
             if trade_id in normalized and normalized[trade_id] != item:
                 raise ValueError("conflicting payloads for duplicate trade_id")
             normalized[trade_id] = item
 
         accepted = []
         ignored = 0
-        last_timestamp = self.last_trade_timestamp
+        last_timestamp_ns = self.last_trade_timestamp_ns
         for trade_id in sorted(normalized):
             if trade_id <= self.last_trade_id:
                 ignored += 1
                 continue
-            price, quantity, timestamp, side = normalized[trade_id]
-            if last_timestamp is not None and timestamp < last_timestamp:
+            price, quantity, timestamp_ns, side = normalized[trade_id]
+            if last_timestamp_ns is not None and timestamp_ns < last_timestamp_ns:
                 raise ValueError("new trade timestamps must be non-decreasing by trade_id")
-            accepted.append((trade_id, quantity, timestamp, side))
-            last_timestamp = timestamp
+            expected_id = (
+                accepted[-1][0] + 1 if accepted
+                else self.last_trade_id + 1 if self.processed_trade_count else None
+            )
+            if expected_id is not None and trade_id != expected_id:
+                raise TradeIdGapError(
+                    f"trade ID gap detected: expected {expected_id}, received {trade_id}; "
+                    "recover missing trades before applying this batch"
+                )
+            accepted.append((trade_id, quantity, timestamp_ns, side))
+            last_timestamp_ns = timestamp_ns
 
         # Commit only after every event has passed validation.
-        for trade_id, quantity, timestamp, side in accepted:
+        for trade_id, quantity, timestamp_ns, side in accepted:
             if side == "buy":
                 self.cumulative_buy_volume += quantity
             else:
                 self.cumulative_sell_volume += quantity
             self.last_trade_id = trade_id
-            self.last_trade_timestamp = timestamp
+            self.last_trade_timestamp_ns = timestamp_ns
+            self.last_trade_timestamp = timestamp_ns / 1_000_000_000.0
             self.processed_trade_count += 1
 
         result = self.snapshot()
@@ -574,5 +617,169 @@ class PersistentCvdLedger:
                 "The feed adapter must provide unique, monotonic trade IDs and recover missed events after reconnect.",
                 "This ledger does not prove gap-free ingestion; reconnect recovery must be verified by the adapter.",
                 "CVD is specific to the supplied venue, symbol and feed.",
+            ],
+        }
+
+
+class TradeIdGapError(ValueError):
+    """Raised when a per-symbol trade sequence has a missing ID."""
+
+
+def normalize_kraken_ws_v2_trade_message(message, expected_symbol=None):
+    """Convert a Kraken Spot WebSocket v2 trade envelope to ledger events."""
+    if isinstance(message, str):
+        try:
+            message = json.loads(message)
+        except json.JSONDecodeError as exc:
+            raise ValueError("WebSocket message must be valid JSON") from exc
+    if not isinstance(message, dict):
+        raise ValueError("WebSocket message must be an object")
+    if message.get("channel") != "trade":
+        return []
+    if message.get("type") not in ("snapshot", "update"):
+        raise ValueError("Unknown Kraken WebSocket trade message type")
+    rows = message.get("data")
+    if not isinstance(rows, list):
+        raise ValueError("Kraken WebSocket trade data must be a list")
+    events = []
+    for row in rows:
+        if not isinstance(row, dict):
+            raise ValueError("Kraken WebSocket trade item must be an object")
+        symbol = row.get("symbol")
+        if not isinstance(symbol, str) or not symbol:
+            raise ValueError("Kraken WebSocket trade is missing symbol")
+        if expected_symbol is not None and symbol != expected_symbol:
+            raise ValueError("Kraken WebSocket trade symbol does not match subscription")
+        events.append({
+            "symbol": symbol,
+            "trade_id": row.get("trade_id"),
+            "price": row.get("price"),
+            "qty": row.get("qty"),
+            "side": row.get("side"),
+            "timestamp": row.get("timestamp"),
+        })
+    return events
+
+
+def normalize_kraken_rest_trade_rows(rows, symbol):
+    """Normalize REST Trades rows; require the exchange-provided seventh ID field."""
+    if not isinstance(rows, (list, tuple)):
+        raise ValueError("Kraken REST trade rows must be a list")
+    events = []
+    for row in rows:
+        if not isinstance(row, (list, tuple)) or len(row) < 7:
+            raise ValueError(
+                "Kraken REST trade row lacks trade_id; refusing unsafe CVD backfill"
+            )
+        side = row[3]
+        if side not in ("b", "s"):
+            raise ValueError("Kraken REST trade row has an unknown aggressor side")
+        events.append({
+            "symbol": symbol,
+            "trade_id": row[6],
+            "price": row[0],
+            "qty": row[1],
+            "side": "buy" if side == "b" else "sell",
+            "timestamp": row[2],
+        })
+    return events
+
+
+class KrakenSpotTradeFeedAdapter:
+    """Bridge decoded Kraken WS v2 trade envelopes into a persistent CVD ledger.
+
+    The caller owns the WebSocket connection, subscription, heartbeat,
+    reconnect loop, and atomic persistence of ledger.to_state(). On a detected
+    trade-ID gap, this adapter backfills through Kraken REST Trades before
+    applying the incoming WebSocket update.
+    """
+
+    def __init__(self, ledger, pair, timeout=10, max_backfill_pages=10):
+        if not isinstance(ledger, PersistentCvdLedger):
+            raise ValueError("ledger must be a PersistentCvdLedger")
+        if not isinstance(pair, str) or not pair.strip():
+            raise ValueError("pair must be a non-empty string")
+        if isinstance(timeout, bool) or not isinstance(timeout, (int, float)) or not math.isfinite(timeout) or timeout <= 0:
+            raise ValueError("timeout must be positive")
+        if isinstance(max_backfill_pages, bool) or not isinstance(max_backfill_pages, int) or max_backfill_pages < 1:
+            raise ValueError("max_backfill_pages must be a positive integer")
+        if ledger.symbol not in (None, pair):
+            raise ValueError("ledger symbol does not match adapter pair")
+        ledger.symbol = pair
+        self.ledger = ledger
+        self.pair = pair
+        self.timeout = timeout
+        self.max_backfill_pages = max_backfill_pages
+
+    def _backfill_until(self, target_trade_id):
+        if self.ledger.last_trade_timestamp is None:
+            raise TradeIdGapError(
+                "cannot recover a gap without a prior trade timestamp; bootstrap a fresh snapshot"
+            )
+        cursor = str(
+            self.ledger.last_trade_timestamp_ns
+            if self.ledger.last_trade_timestamp_ns is not None
+            else int(self.ledger.last_trade_timestamp * 1_000_000_000)
+        )
+        pages = 0
+        accepted = 0
+        while self.ledger.last_trade_id < target_trade_id and pages < self.max_backfill_pages:
+            batch = fetch_recent_trades(self.pair, timeout=self.timeout, since=cursor)
+            rows = batch.get("trades")
+            if not isinstance(rows, list):
+                raise ValueError("Kraken REST response is missing trade rows")
+            events = normalize_kraken_rest_trade_rows(rows, self.pair)
+            before_id = self.ledger.last_trade_id
+            if events:
+                result = self.ledger.process(events)
+                accepted += result["accepted_in_batch"]
+            next_cursor = batch.get("last")
+            pages += 1
+            if self.ledger.last_trade_id >= target_trade_id:
+                break
+            if not next_cursor or str(next_cursor) == cursor or self.ledger.last_trade_id == before_id:
+                break
+            cursor = str(next_cursor)
+        return {
+            "pages": pages,
+            "accepted_trades": accepted,
+            "recovered": self.ledger.last_trade_id >= target_trade_id,
+            "last_trade_id": self.ledger.last_trade_id,
+        }
+
+    def handle_message(self, message):
+        """Process a WS v2 envelope, backfilling a sequence gap before retry."""
+        events = normalize_kraken_ws_v2_trade_message(message, self.pair)
+        if not events:
+            return {
+                "status": "IGNORED_NON_TRADE_MESSAGE",
+                "execution_enabled": False,
+                "live_orders_placed": False,
+            }
+        target_id = max(self.ledger._trade_id(event.get("trade_id")) for event in events)
+        try:
+            result = self.ledger.process(events)
+            recovery = {"attempted": False, "recovered": True, "pages": 0}
+        except TradeIdGapError:
+            recovery = self._backfill_until(target_id)
+            if not recovery["recovered"]:
+                raise TradeIdGapError(
+                    "REST backfill did not reach the WebSocket trade ID; "
+                    "state is partial and must be persisted before retry"
+                )
+            result = self.ledger.process(events)
+        return {
+            "status": "OK",
+            "ledger": result,
+            "backfill": recovery,
+            "continuity_verified_to_trade_id": self.ledger.last_trade_id,
+            "research_only": True,
+            "execution_enabled": False,
+            "live_orders_placed": False,
+            "limitations": [
+                "The caller must persist ledger.to_state() atomically after each successful update.",
+                "The caller owns WebSocket connection, heartbeat, reconnect and subscription lifecycle.",
+                "Recovery is limited to Kraken REST history availability and the configured page cap.",
+                "A fresh ledger snapshot establishes a baseline; it does not recover trades before that baseline.",
             ],
         }

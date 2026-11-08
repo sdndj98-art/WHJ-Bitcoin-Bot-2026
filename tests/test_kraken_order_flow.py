@@ -7,6 +7,11 @@ from kraken_order_flow import (
     combine_microstructure,
     evaluate_microstructure_confluence,
     PersistentCvdLedger,
+    KrakenSpotTradeFeedAdapter,
+    TradeIdGapError,
+    normalize_kraken_ws_v2_trade_message,
+    normalize_kraken_rest_trade_rows,
+    fetch_recent_trades,
     _kraken_get,
 )
 
@@ -239,6 +244,133 @@ class KrakenOrderFlowTests(unittest.TestCase):
                 {"trade_id": 1, "price": 100, "qty": 1,
                  "side": "buy", "timestamp": "2026-11-08T09:00:00"},
             ])
+
+
+
+    def test_ws_v2_trade_message_normalizes_snapshot_and_update(self):
+        payload = {
+            "channel": "trade", "type": "update",
+            "data": [{
+                "symbol": "BTC/USD", "side": "buy", "qty": 0.25,
+                "price": 65000, "ord_type": "market", "trade_id": 5001,
+                "timestamp": "2026-11-08T10:00:00Z",
+            }],
+        }
+        events = normalize_kraken_ws_v2_trade_message(payload, "BTC/USD")
+        self.assertEqual(events[0]["trade_id"], 5001)
+        self.assertEqual(events[0]["side"], "buy")
+        self.assertEqual(normalize_kraken_ws_v2_trade_message(
+            {"channel": "heartbeat"}, "BTC/USD"
+        ), [])
+
+    def test_ws_v2_trade_parser_rejects_symbol_mismatch_and_bad_envelope(self):
+        payload = {
+            "channel": "trade", "type": "snapshot",
+            "data": [{"symbol": "ETH/USD", "side": "buy", "qty": 1,
+                      "price": 1, "trade_id": 1,
+                      "timestamp": "2026-11-08T10:00:00Z"}],
+        }
+        with self.assertRaisesRegex(ValueError, "symbol"):
+            normalize_kraken_ws_v2_trade_message(payload, "BTC/USD")
+        with self.assertRaisesRegex(ValueError, "valid JSON"):
+            normalize_kraken_ws_v2_trade_message("{bad json")
+
+    def test_rest_trade_normalizer_requires_exchange_trade_id(self):
+        with self.assertRaisesRegex(ValueError, "lacks trade_id"):
+            normalize_kraken_rest_trade_rows(
+                [["100", "1", "100", "b", "m", ""]], "BTC/USD"
+            )
+        events = normalize_kraken_rest_trade_rows(
+            [["100", "1", "100", "s", "m", "", "44"]], "BTC/USD"
+        )
+        self.assertEqual(events[0]["trade_id"], "44")
+        self.assertEqual(events[0]["side"], "sell")
+
+    def test_cvd_ledger_detects_trade_id_gap_atomically(self):
+        ledger = PersistentCvdLedger(symbol="BTC/USD")
+        ledger.process([
+            {"trade_id": 10, "price": 100, "qty": 1,
+             "side": "buy", "timestamp": 100},
+        ])
+        before = ledger.to_state()
+        with self.assertRaises(TradeIdGapError):
+            ledger.process([
+                {"trade_id": 12, "price": 101, "qty": 1,
+                 "side": "buy", "timestamp": 102},
+            ])
+        self.assertEqual(ledger.to_state(), before)
+
+    @patch("kraken_order_flow.fetch_recent_trades")
+    def test_ws_adapter_backfills_trade_id_gap_before_applying_update(self, fetch):
+        ledger = PersistentCvdLedger(symbol="BTC/USD")
+        ledger.process([
+            {"trade_id": 10, "price": 100, "qty": 1,
+             "side": "buy", "timestamp": 100},
+        ])
+        fetch.return_value = {
+            "trades": [
+                ["101", "1", 101.0, "b", "m", "", "11"],
+                ["102", "2", 102.0, "s", "m", "", "12"],
+                ["103", "1", 103.0, "b", "m", "", "13"],
+            ],
+            "last": "103000000000",
+        }
+        adapter = KrakenSpotTradeFeedAdapter(ledger, "BTC/USD")
+        result = adapter.handle_message({
+            "channel": "trade", "type": "update",
+            "data": [{
+                "symbol": "BTC/USD", "side": "buy", "qty": 1,
+                "price": 104, "trade_id": 13,
+                "timestamp": "1970-01-01T00:01:44Z",
+            }],
+        })
+        self.assertEqual(result["status"], "OK")
+        self.assertTrue(result["backfill"]["recovered"])
+        self.assertEqual(result["backfill"]["accepted_trades"], 3)
+        self.assertEqual(ledger.last_trade_id, 13)
+        self.assertEqual(ledger.processed_trade_count, 4)
+        fetch.assert_called_once_with(
+            "BTC/USD", timeout=10, since="100000000000"
+        )
+
+    def test_ws_adapter_ignores_non_trade_messages(self):
+        adapter = KrakenSpotTradeFeedAdapter(
+            PersistentCvdLedger(symbol="BTC/USD"), "BTC/USD"
+        )
+        result = adapter.handle_message({"channel": "heartbeat"})
+        self.assertEqual(result["status"], "IGNORED_NON_TRADE_MESSAGE")
+        self.assertFalse(result["execution_enabled"])
+
+
+
+    def test_cvd_preserves_exact_nanosecond_timestamp_for_recovery(self):
+        ledger = PersistentCvdLedger(symbol="BTC/USD")
+        ledger.process([{
+            "trade_id": 1, "price": 100, "qty": 1, "side": "buy",
+            "timestamp": "2026-11-08T10:00:00.123456789Z",
+        }])
+        self.assertEqual(
+            ledger.to_state()["last_trade_timestamp_ns"],
+            1794132000123456789,
+        )
+        restored = PersistentCvdLedger(state=ledger.to_state())
+        self.assertEqual(
+            restored.to_state()["last_trade_timestamp_ns"],
+            1794132000123456789,
+        )
+
+    @patch("kraken_order_flow._kraken_get")
+    def test_fetch_recent_trades_passes_since_cursor(self, get):
+        get.return_value = {"XXBTZUSD": [], "last": "123456789"}
+        result = fetch_recent_trades("XBTUSD", since="123456789")
+        self.assertEqual(result["last"], "123456789")
+        get.assert_called_once_with(
+            "Trades", {"pair": "XBTUSD", "since": "123456789"}, timeout=10
+        )
+
+    def test_fetch_recent_trades_rejects_invalid_since_cursor(self):
+        with self.assertRaisesRegex(ValueError, "since"):
+            fetch_recent_trades("XBTUSD", since="not-a-cursor")
 
     def test_public_fetch_rejects_non_finite_timeout_before_network(self):
         with self.assertRaisesRegex(ValueError, "timeout"):

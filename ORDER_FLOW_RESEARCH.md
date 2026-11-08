@@ -42,7 +42,7 @@ print(confluence["context"])
 
 - `net_delta` is the signed volume delta of the exact supplied batch. It is **not** persistent cumulative CVD.
 - `PersistentCvdLedger` accepts incremental uniquely identified trade events, accumulates buy/sell volume, ignores replayed/stale IDs, and exports JSON-serializable state through `to_state()` for caller-managed durable storage.
-- The CVD ledger does not open a websocket, write files, or guarantee gap-free ingestion. A feed adapter must restore state, resume from the last trade ID, recover missed events after reconnect, and atomically persist updated state.
+- The `KrakenSpotTradeFeedAdapter` converts public Spot WebSocket v2 trade envelopes into ledger events and detects missing per-symbol trade IDs. It attempts REST `Trades` backfill from the last exact nanosecond timestamp before applying a later WebSocket update. The caller still owns the socket, subscription, heartbeat, reconnect loop, and atomic state persistence.
 - Persistent CVD requires incremental cursor ingestion, durable last-trade cursor storage, trade-ID deduplication, reconnect recovery, and explicit handling of gaps and out-of-order events. Do not sum overlapping API batches.
 - Order-book depth is one venue-specific snapshot. It can change or be cancelled; it does not prove resting liquidity will remain available or identify spoofing.
 - Kraken trade-side labels represent the exchange's aggressor-side classification. They do not describe the entire crypto market.
@@ -50,7 +50,7 @@ print(confluence["context"])
 
 ## Safety and integration
 
-This module uses only Kraken public `Trades` and `Depth` endpoints. It contains no private API credentials, order submission, cancellation, position management, or live execution. It is not imported into `main.py` or the existing scanner until data-quality, latency, cursor recovery, and forward paper behavior have been independently reviewed.
+This module uses only Kraken public market data: REST `Trades`/`Depth` and the caller-supplied public Spot WebSocket v2 trade channel. It contains no private API credentials, order submission, cancellation, position management, or live execution. It is not imported into `main.py` or the existing scanner until data-quality, latency, cursor recovery, and forward paper behavior have been independently reviewed.
 
 The output is research context only, not an entry signal or profitability claim. Before any scanner integration, add replay tests, stale-data handling, rate-limit/backoff policy, cross-source timestamp alignment, and out-of-sample evaluation.
 
@@ -87,3 +87,32 @@ restored = PersistentCvdLedger(state=state_to_save)
 ```
 
 The ledger validates IDs, sides, prices, quantities and timestamps; deduplicates replayed IDs; rejects conflicting IDs and out-of-order new timestamps atomically; and reports that continuity depends on adapter-managed reconnect recovery.
+
+
+## Kraken Spot WebSocket v2 CVD adapter
+
+The public Spot v2 `trade` channel sends trade objects with `symbol`, `side`, `qty`, `price`, `trade_id`, and an ISO-8601 `timestamp`. Pass decoded envelopes to the adapter; no private token is needed for this public channel.
+
+```python
+from kraken_order_flow import PersistentCvdLedger, KrakenSpotTradeFeedAdapter
+
+# Restore this JSON object from your own durable store on process startup.
+saved_state = None
+ledger = PersistentCvdLedger(symbol="BTC/USD", state=saved_state)
+feed = KrakenSpotTradeFeedAdapter(ledger, pair="BTC/USD")
+
+# In your WebSocket receive loop:
+# message = websocket.recv()
+# result = feed.handle_message(message)
+# if result["status"] == "OK":
+#     atomically_save_json(ledger.to_state())
+```
+
+The adapter validates each event, rejects non-monotonic timestamps, deduplicates replayed IDs, and fails closed on trade-ID gaps. It attempts to recover missing trades through the public REST `Trades` endpoint, requiring the REST response's seventh trade-row field to contain the exchange trade ID; it will not synthesize IDs from timestamps or prices. Exact nanosecond timestamps are retained in the serialized state for restart recovery.
+
+Operational constraints:
+- Persist `ledger.to_state()` atomically after every successful update; store it separately per symbol.
+- If a gap cannot be recovered within the configured page cap, stop consuming that stream and alert the operator; do not treat the CVD as continuous.
+- The adapter does not implement the socket itself, reconnect policy, rate-limit backoff, or process supervision.
+- On first start, the initial WS snapshot establishes a baseline only; historical completeness before that snapshot is not claimed.
+- This remains a read-only research feed and cannot send or manage orders.
