@@ -44,9 +44,14 @@ class CvdTimeframeReplayTests(unittest.TestCase):
         self.assertTrue(second["is_closed"])
 
     def test_incomplete_current_bucket_is_flagged_not_dropped(self):
-        result = aggregate_trade_events([trade(1, 100.2, 100, 1)], 60, as_of=120)
+        events = [trade(1, 100.2, 100, 1)]
+        result = aggregate_trade_events(events, 60, as_of=119.9)
         self.assertEqual(result["bar_count"], 1)
         self.assertFalse(result["bars"][0]["is_closed"])
+
+        # Bucket end is exclusive: at exactly 120 seconds, [60, 120) is closed.
+        at_boundary = aggregate_trade_events(events, 60, as_of=120)
+        self.assertTrue(at_boundary["bars"][0]["is_closed"])
 
     def test_empty_intervals_are_not_synthesized_and_gap_is_marked(self):
         events = [trade(1, 100.2, 100, 1), trade(2, 103.2, 101, 1)]
