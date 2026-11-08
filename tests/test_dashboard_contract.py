@@ -71,6 +71,14 @@ class DashboardContractTests(unittest.TestCase):
         self.assertIn("التقرير قديم", self.source)
         self.assertIn("تحديث تلقائي كل 60 ثانية", self.source)
 
+    def test_scanner_dashboard_displays_all_eight_confirmation_gates(self):
+        self.assertIn("gateAdx", self.parser.ids)
+        self.assertIn("scannerAdx", self.parser.ids)
+        self.assertIn('passed+" / 8"', self.source)
+        self.assertIn("(passed/8*100)", self.source)
+        self.assertIn('adx_trend_strength_or_direction_missing', self.source)
+        self.assertIn('all_eight_scanner_checks_passed_paper_review_only', self.source)
+
     def test_generated_dashboard_displays_all_paper_risk_pause_reasons(self):
         report = {
             "persistent_paper_portfolio": {
