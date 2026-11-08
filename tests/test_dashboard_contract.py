@@ -26,6 +26,20 @@ class DashboardContractTests(unittest.TestCase):
         cls.parser = DashboardContractParser()
         cls.parser.feed(cls.source)
 
+    def test_multi_agent_command_center_is_present_and_paper_only(self):
+        required = {
+            "agents", "agentReportState", "agentReportTime",
+            "agentTradeCount", "agentDataQuality",
+        }
+        self.assertTrue(required.issubset(set(self.parser.ids)))
+        self.assertIn('data-view="agents"', self.source)
+        for label in ("SCANNER", "GUARD", "SIZER", "EXECUTOR", "LOGGER", "EQUITY"):
+            self.assertIn(label, self.source)
+        self.assertIn("لا تتحول إشارة الماسح وحدها إلى أمر تداول", self.source)
+        self.assertIn("ليست ستة وكلاء ذكاء اصطناعي مستقلين", self.source)
+        self.assertIn("التداول الحقيقي", self.source)
+        self.assertIn("محاكاة ورقية فقط", self.source)
+
     def test_generated_dashboard_displays_all_paper_risk_pause_reasons(self):
         report = {
             "persistent_paper_portfolio": {
