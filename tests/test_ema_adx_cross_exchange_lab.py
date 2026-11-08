@@ -1,60 +1,59 @@
 import math
 import unittest
-from unittest.mock import patch
 
 from ema_adx_cross_exchange_lab import (
-    fetch_binance_hourly_candles,
-    normalize_binance_klines,
+    fetch_bitstamp_hourly_candles,
+    normalize_bitstamp_ohlc,
     run_cross_exchange_adx_lab,
 )
 
 
-def synthetic_hourly_rows(count=3000):
+def synthetic_bitstamp_payload(count=3000):
     rows = []
     previous = 100.0
     for index in range(count):
         close = 100.0 + index * 0.03 + 3.0 * math.sin(index / 23.0)
         open_price = previous
-        rows.append([
-            index * 3600000,
-            open_price,
-            max(open_price, close) + 0.6,
-            min(open_price, close) - 0.6,
-            close,
-            10.0,
-        ])
+        rows.append({
+            "timestamp": str(index * 3600),
+            "open": str(open_price),
+            "high": str(max(open_price, close) + 0.6),
+            "low": str(min(open_price, close) - 0.6),
+            "close": str(close),
+            "volume": "10.0",
+        })
         previous = close
-    return rows
+    return {"data": {"ohlc": rows}}
 
 
 class CrossExchangeAdxTests(unittest.TestCase):
-    def test_normalizes_binance_ohlcv_rows(self):
-        result = normalize_binance_klines(synthetic_hourly_rows(3))
+    def test_normalizes_bitstamp_ohlc_rows(self):
+        result = normalize_bitstamp_ohlc(synthetic_bitstamp_payload(3))
         self.assertEqual(len(result), 3)
         self.assertEqual(result[0]["timestamp"], 0)
         self.assertFalse(result[0]["imputed"])
         self.assertAlmostEqual(result[1]["close"], 100.03 + 3.0 * math.sin(1 / 23.0))
 
     def test_rejects_hourly_gaps_and_malformed_values(self):
-        rows = synthetic_hourly_rows(3)
-        rows[2][0] += 3600000
+        payload = synthetic_bitstamp_payload(3)
+        payload["data"]["ohlc"][2]["timestamp"] = str(3 * 3600)
         with self.assertRaisesRegex(ValueError, "gap"):
-            normalize_binance_klines(rows)
-        malformed = synthetic_hourly_rows(1)
-        malformed[0][4] = float("nan")
+            normalize_bitstamp_ohlc(payload)
+        malformed = synthetic_bitstamp_payload(1)
+        malformed["data"]["ohlc"][0]["close"] = "nan"
         with self.assertRaisesRegex(ValueError, "Non-finite"):
-            normalize_binance_klines(malformed)
+            normalize_bitstamp_ohlc(malformed)
 
     def test_research_requires_sufficient_history(self):
         with self.assertRaisesRegex(ValueError, "at least 365"):
-            fetch_binance_hourly_candles(days=30)
+            fetch_bitstamp_hourly_candles(days=30)
 
     def test_cross_exchange_report_preserves_research_safety(self):
-        candles = normalize_binance_klines(synthetic_hourly_rows())
+        candles = normalize_bitstamp_ohlc(synthetic_bitstamp_payload())
         report = run_cross_exchange_adx_lab(candles)
         self.assertEqual(report["validation_type"], "INDEPENDENT_CROSS_EXCHANGE_REPLICATION")
-        self.assertEqual(report["data_source"], "Binance public spot klines")
-        self.assertEqual(report["symbol"], "BTCUSDT")
+        self.assertEqual(report["data_source"], "Bitstamp public spot OHLC")
+        self.assertEqual(report["symbol"], "BTCUSD")
         self.assertEqual(report["hourly_candles"], 3000)
         self.assertTrue(report["research_only"])
         self.assertFalse(report["paper_state_touched"])
