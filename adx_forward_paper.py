@@ -204,11 +204,15 @@ def _close_position(state, timestamp, price):
     fee = gross * FEE_RATE
     proceeds = gross - fee
     pnl = proceeds - state["entry_cost"]
+    # Persist the rounded PnL first, then derive its label from that exact
+    # persisted value. Otherwise a sub-micro-dollar win can round to 0.0
+    # while being labelled WIN, causing the next ledger validation to fail.
+    recorded_pnl = round(pnl, 6)
     state["cash"] += proceeds
     state["fees_paid"] += fee
     state["trades"].append({
         "timestamp": int(timestamp), "side": "SELL", "price": round(fill, 8),
-        "pnl_usd": round(pnl, 6), "result": "WIN" if pnl > 0 else "LOSS",
+        "pnl_usd": recorded_pnl, "result": "WIN" if recorded_pnl > 0 else "LOSS",
     })
     state["btc"] = 0.0
     state["entry_cost"] = 0.0
