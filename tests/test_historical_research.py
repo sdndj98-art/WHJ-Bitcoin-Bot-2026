@@ -728,6 +728,10 @@ class HistoricalResearchTests(unittest.TestCase):
         self.assertEqual(len(result["strategies"]["ema50_200_atr2_5_trailing"]["walk_forward_windows"]), 3)
         self.assertIn("buy_and_hold_25pct", result["strategies"])
         self.assertEqual(len(result["strategies"]["ema50_200_close_below_ema50_exit"]["walk_forward_windows"]), 3)
+        self.assertEqual(
+            result["strategies"]["ema50_200_atr2_5_trailing"]["entry_bar_indices"],
+            result["strategies"]["ema50_200_close_below_ema50_exit"]["entry_bar_indices"],
+        )
         self.assertIn("next six-hour close", result["execution"])
 
     def test_six_hour_atr_trailing_lab_rejects_insufficient_data(self):
