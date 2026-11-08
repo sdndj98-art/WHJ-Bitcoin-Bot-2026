@@ -6,6 +6,7 @@ from kraken_order_flow import (
     analyze_trade_flow,
     combine_microstructure,
     evaluate_microstructure_confluence,
+    PersistentCvdLedger,
     _kraken_get,
 )
 
@@ -161,6 +162,83 @@ class KrakenOrderFlowTests(unittest.TestCase):
                  "largest_bid_level_share": 0.2, "largest_ask_level_share": 0.2},
                 max_level_concentration=1.5,
             )
+
+
+
+    def test_persistent_cvd_accumulates_and_deduplicates_replayed_trade_ids(self):
+        ledger = PersistentCvdLedger(symbol="BTC/USD")
+        first = ledger.process([
+            {"symbol": "BTC/USD", "trade_id": 101, "price": "100",
+             "qty": "2", "side": "buy", "timestamp": "2026-11-08T09:00:00Z"},
+            {"symbol": "BTC/USD", "trade_id": 102, "price": "99",
+             "qty": "1", "side": "sell", "timestamp": "2026-11-08T09:00:01Z"},
+        ])
+        self.assertEqual(first["cumulative_delta"], 1.0)
+        self.assertEqual(first["accepted_in_batch"], 2)
+        second = ledger.process([
+            {"symbol": "BTC/USD", "trade_id": 102, "price": "99",
+             "qty": "1", "side": "sell", "timestamp": "2026-11-08T09:00:01Z"},
+            {"symbol": "BTC/USD", "trade_id": 103, "price": "101",
+             "qty": "3", "side": "buy", "timestamp": "2026-11-08T09:00:02Z"},
+        ])
+        self.assertEqual(second["accepted_in_batch"], 1)
+        self.assertEqual(second["ignored_replayed_or_stale_in_batch"], 1)
+        self.assertEqual(second["cumulative_buy_volume"], 5.0)
+        self.assertEqual(second["cumulative_sell_volume"], 1.0)
+        self.assertEqual(second["cumulative_delta"], 4.0)
+        self.assertTrue(second["is_persistent_cvd"])
+
+    def test_persistent_cvd_restores_json_serializable_state(self):
+        ledger = PersistentCvdLedger(symbol="BTC/USD")
+        ledger.process([
+            {"symbol": "BTC/USD", "trade_id": 10, "price": 100,
+             "qty": 2, "side": "buy", "timestamp": 1000},
+        ])
+        restored = PersistentCvdLedger(state=ledger.to_state())
+        result = restored.process([
+            {"trade_id": 11, "price": 101, "qty": 1,
+             "side": "sell", "timestamp": 1001},
+        ])
+        self.assertEqual(result["cumulative_delta"], 1.0)
+        self.assertEqual(result["processed_trade_count"], 2)
+
+    def test_persistent_cvd_rejects_out_of_order_timestamps_atomically(self):
+        ledger = PersistentCvdLedger(symbol="BTC/USD")
+        ledger.process([
+            {"trade_id": 1, "price": 100, "qty": 1,
+             "side": "buy", "timestamp": 100},
+        ])
+        before = ledger.to_state()
+        with self.assertRaisesRegex(ValueError, "non-decreasing"):
+            ledger.process([
+                {"trade_id": 2, "price": 101, "qty": 1,
+                 "side": "buy", "timestamp": 99},
+            ])
+        self.assertEqual(ledger.to_state(), before)
+
+    def test_persistent_cvd_rejects_conflicting_duplicate_ids_and_bad_symbols(self):
+        ledger = PersistentCvdLedger(symbol="BTC/USD")
+        with self.assertRaisesRegex(ValueError, "conflicting payloads"):
+            ledger.process([
+                {"trade_id": 1, "price": 100, "qty": 1, "side": "buy", "timestamp": 1},
+                {"trade_id": 1, "price": 101, "qty": 1, "side": "buy", "timestamp": 1},
+            ])
+        with self.assertRaisesRegex(ValueError, "symbol"):
+            ledger.process([
+                {"symbol": "ETH/USD", "trade_id": 2, "price": 100,
+                 "qty": 1, "side": "buy", "timestamp": 2},
+            ])
+        self.assertEqual(ledger.processed_trade_count, 0)
+
+    def test_persistent_cvd_validates_state_version_and_timezone(self):
+        with self.assertRaisesRegex(ValueError, "version"):
+            PersistentCvdLedger(state={"version": 99})
+        ledger = PersistentCvdLedger()
+        with self.assertRaisesRegex(ValueError, "timezone"):
+            ledger.process([
+                {"trade_id": 1, "price": 100, "qty": 1,
+                 "side": "buy", "timestamp": "2026-11-08T09:00:00"},
+            ])
 
     def test_public_fetch_rejects_non_finite_timeout_before_network(self):
         with self.assertRaisesRegex(ValueError, "timeout"):
