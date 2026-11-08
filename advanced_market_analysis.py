@@ -29,16 +29,25 @@ def _ema(values, period):
 
 
 def _rsi(values, period=14):
+    """Wilder RSI using an initial SMA seed and recursive Wilder smoothing."""
+    if len(values) <= period:
+        raise ValueError("Not enough values for RSI")
     changes = [b - a for a, b in zip(values, values[1:])]
-    gains = [max(x, 0.0) for x in changes]
-    losses = [max(-x, 0.0) for x in changes]
-    gain = sum(gains[-period:]) / period
-    loss = sum(losses[-period:]) / period
-    if loss == 0:
-        return 100.0 if gain > 0 else 50.0
-    if gain == 0:
+    gains = [max(change, 0.0) for change in changes]
+    losses = [max(-change, 0.0) for change in changes]
+
+    average_gain = sum(gains[:period]) / period
+    average_loss = sum(losses[:period]) / period
+    for gain, loss in zip(gains[period:], losses[period:]):
+        average_gain = ((average_gain * (period - 1)) + gain) / period
+        average_loss = ((average_loss * (period - 1)) + loss) / period
+
+    if average_loss == 0:
+        return 100.0 if average_gain > 0 else 50.0
+    if average_gain == 0:
         return 0.0
-    return 100.0 - 100.0 / (1.0 + gain / loss)
+    relative_strength = average_gain / average_loss
+    return 100.0 - 100.0 / (1.0 + relative_strength)
 
 
 def analyze_advanced_market(candles, volume_lookback=20, swing_lookback=20):
