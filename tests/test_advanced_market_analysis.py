@@ -1,6 +1,6 @@
 import unittest
 
-from advanced_market_analysis import analyze_advanced_market, _rsi
+from advanced_market_analysis import analyze_advanced_market, _rsi, _efficiency_ratio
 
 
 def sample_candles(count=80, final_volume=300.0, final_close=None):
@@ -31,7 +31,8 @@ class AdvancedMarketAnalysisTests(unittest.TestCase):
         result = analyze_advanced_market(sample_candles())
         self.assertIn("bullish_score", result)
         self.assertIn("bearish_score", result)
-        self.assertEqual(result["score_total"], 9)
+        self.assertEqual(result["score_total"], 10)
+        self.assertEqual(result["version"], "advanced_ohlcv_confluence_v2")
         self.assertTrue(result["research_only"])
         self.assertFalse(result["execution_enabled"])
         self.assertFalse(result["live_orders_placed"])
@@ -88,6 +89,30 @@ class AdvancedMarketAnalysisTests(unittest.TestCase):
         rows[-1][0] = rows[-2][0]
         with self.assertRaisesRegex(ValueError, "strictly increasing"):
             analyze_advanced_market(rows)
+
+    def test_efficiency_ratio_confirms_directional_trend(self):
+        rising = [100.0 + index for index in range(25)]
+        ratio, direction = _efficiency_ratio(rising, 20)
+        self.assertAlmostEqual(ratio, 1.0)
+        self.assertAlmostEqual(direction, 1.0)
+
+        falling = list(reversed(rising))
+        ratio, direction = _efficiency_ratio(falling, 20)
+        self.assertAlmostEqual(ratio, 1.0)
+        self.assertAlmostEqual(direction, -1.0)
+
+    def test_efficiency_ratio_rejects_choppy_path_and_flat_series(self):
+        alternating = [100.0 + (1.0 if index % 2 else 0.0) for index in range(25)]
+        ratio, direction = _efficiency_ratio(alternating, 20)
+        self.assertLess(ratio, 0.10)
+        self.assertAlmostEqual(direction, 0.0)
+        self.assertEqual(_efficiency_ratio([100.0] * 25, 20), (0.0, 0.0))
+
+    def test_efficiency_ratio_requires_valid_history_and_lookback(self):
+        with self.assertRaisesRegex(ValueError, "Not enough"):
+            _efficiency_ratio([100.0] * 20, 20)
+        with self.assertRaisesRegex(ValueError, "integer"):
+            _efficiency_ratio([100.0] * 25, True)
 
     def test_rsi_uses_wilder_recursive_smoothing(self):
         values = [100.0]
