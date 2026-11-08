@@ -92,15 +92,40 @@ def run_ema_adx_filter_lab(hourly_candles, fee=FEE_RATE, slippage=SLIPPAGE_RATE)
             "training": simulate(signals, train_start, oos_start),
             "walk_forward_windows": [],
         }
-        for fold in range(3):
-            start = oos_start + ((oos_end - oos_start) * fold) // 3
-            end = oos_start + ((oos_end - oos_start) * (fold + 1)) // 3
-            if end > start:
-                results[name]["walk_forward_windows"].append({
-                    "window": fold + 1,
-                    "start_time_ms": start,
-                    "end_time_ms_exclusive": end,
-                    "metrics": simulate(signals, start, end),
+
+    # Include baseline and matched benchmark in every identical time window.
+    # This prevents candidate-only fold reporting from overstating robustness.
+    walk_forward = {"baseline": [], "matched_benchmark": []}
+    walk_forward.update({name: [] for name in variants})
+    walk_forward_costs = {
+        multiplier: {"baseline": [], **{name: [] for name in variants}}
+        for multiplier in ("1x", "2x")
+    }
+    for fold in range(3):
+        start = oos_start + ((oos_end - oos_start) * fold) // 3
+        end = oos_start + ((oos_end - oos_start) * (fold + 1)) // 3
+        if end <= start:
+            continue
+        window = {
+            "window": fold + 1,
+            "start_time_ms": start,
+            "end_time_ms_exclusive": end,
+        }
+        for name, signals in (("baseline", baseline), ("matched_benchmark", benchmark), *variants.items()):
+            walk_forward[name].append({
+                **window,
+                "metrics": simulate(signals, start, end),
+            })
+        for multiplier in ("1x", "2x"):
+            factor = float(multiplier[:-1])
+            scenario_fee = fee * factor
+            scenario_slippage = slippage * factor
+            for name, signals in (("baseline", baseline), *variants.items()):
+                walk_forward_costs[multiplier][name].append({
+                    **window,
+                    "metrics": simulate(
+                        signals, start, end, scenario_fee, scenario_slippage
+                    ),
                 })
 
     stress = {}
@@ -137,9 +162,8 @@ def run_ema_adx_filter_lab(hourly_candles, fee=FEE_RATE, slippage=SLIPPAGE_RATE)
             **{name: value["out_of_sample"] for name, value in results.items()},
         },
         "training": {name: value["training"] for name, value in results.items()},
-        "walk_forward_windows": {
-            name: value["walk_forward_windows"] for name, value in results.items()
-        },
+        "walk_forward_windows": walk_forward,
+        "walk_forward_cost_sensitivity": walk_forward_costs,
         "cost_sensitivity": stress,
         "execution": (
             "ADX(14) and +DI/-DI are computed from each completed native 4h/6h OHLC bar. "
