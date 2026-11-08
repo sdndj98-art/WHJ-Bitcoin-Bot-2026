@@ -50,6 +50,21 @@ def _rsi(values, period=14):
     return 100.0 - 100.0 / (1.0 + relative_strength)
 
 
+def _efficiency_ratio(values, lookback=20):
+    """Return Kaufman-style directional efficiency over completed closes."""
+    if isinstance(lookback, bool) or not isinstance(lookback, int) or lookback < 2:
+        raise ValueError("Efficiency lookback must be an integer >= 2")
+    if len(values) <= lookback:
+        raise ValueError("Not enough values for efficiency ratio")
+    window = [float(value) for value in values[-(lookback + 1):]]
+    path = sum(abs(current - previous)
+               for previous, current in zip(window, window[1:]))
+    net_change = window[-1] - window[0]
+    if path <= 0:
+        return 0.0, 0.0
+    return abs(net_change) / path, net_change / path
+
+
 def analyze_advanced_market(candles, volume_lookback=20, swing_lookback=20):
     """Return independent long/short context, confluence and diagnostics.
 
@@ -147,6 +162,13 @@ def analyze_advanced_market(candles, volume_lookback=20, swing_lookback=20):
     macd_signal = _ema(macd_series, 9) if len(macd_series) >= 9 else macd_line
     macd_hist = macd_line - macd_signal
     rsi14 = _rsi(closes, 14)
+    efficiency_ratio20, efficiency_direction20 = _efficiency_ratio(closes, 20)
+    trend_efficiency_confirmed = (
+        efficiency_ratio20 >= 0.35 and efficiency_direction20 > 0
+    )
+    bearish_efficiency_confirmed = (
+        efficiency_ratio20 >= 0.35 and efficiency_direction20 < 0
+    )
 
     checks = {
         "relative_volume_expansion": rvol >= 1.5,
@@ -158,6 +180,7 @@ def analyze_advanced_market(candles, volume_lookback=20, swing_lookback=20):
         "bullish_displacement": bullish_displacement,
         "macd_momentum_positive": macd_hist > 0,
         "rsi_momentum_confirmed": 50.0 <= rsi14 <= 72.0,
+        "trend_efficiency_confirmed": trend_efficiency_confirmed,
     }
     short_checks = {
         "relative_volume_expansion": rvol >= 1.5,
@@ -169,24 +192,28 @@ def analyze_advanced_market(candles, volume_lookback=20, swing_lookback=20):
         "bearish_displacement": bearish_displacement,
         "macd_momentum_negative": macd_hist < 0,
         "rsi_momentum_confirmed": 28.0 <= rsi14 <= 50.0,
+        "trend_efficiency_confirmed": bearish_efficiency_confirmed,
     }
     bull_score = sum(checks.values())
     bear_score = sum(short_checks.values())
     # Keep sweep and structure as separate event types; do not require both
     # on the same candle to avoid making the layer structurally impossible.
-    bull_candidate = bull_score >= 6 and (
+    bull_candidate = bull_score >= 6 and trend_efficiency_confirmed and (
         bullish_sweep or bullish_bos
     ) and (checks["cmf_buying_pressure"] or checks["obv_accumulation"])
-    bear_candidate = bear_score >= 6 and (
+    bear_candidate = bear_score >= 6 and bearish_efficiency_confirmed and (
         bearish_sweep or bearish_bos
     ) and (short_checks["cmf_selling_pressure"] or short_checks["obv_distribution"])
     return {
-        "version": "advanced_ohlcv_confluence_v1",
+        "version": "advanced_ohlcv_confluence_v2",
         "status": ("BULLISH_RESEARCH_CANDIDATE" if bull_candidate else
                    "BEARISH_RESEARCH_CANDIDATE" if bear_candidate else "WATCH"),
         "bullish_score": bull_score,
         "bearish_score": bear_score,
         "score_total": len(checks),
+        "efficiency_ratio_20": round(efficiency_ratio20, 6),
+        "efficiency_direction_20": round(efficiency_direction20, 6),
+        "trend_efficiency_minimum": 0.35,
         "bullish_checks": checks,
         "bearish_checks": short_checks,
         "relative_volume": round(rvol, 4),
@@ -217,5 +244,6 @@ def analyze_advanced_market(candles, volume_lookback=20, swing_lookback=20):
             "CMF, OBV, VWAP and volume ratios are only as reliable as the supplied provider volume.",
             "Signals use completed input bars only; callers must exclude the still-forming candle.",
             "Thresholds are experimental and require out-of-sample and forward paper validation.",
+            "Kaufman efficiency ratio >= 0.35 is an experimental anti-chop confirmation, not a predictive guarantee.",
         ],
     }
