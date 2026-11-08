@@ -47,10 +47,10 @@ def validate_hourly_candles(candles):
             raise ValueError("Inconsistent hourly high")
         if values["low"] > min(values["open"], values["close"], values["high"]):
             raise ValueError("Inconsistent hourly low")
-    # EMA200 on 6h needs 1,200 hourly observations; reject synthetic data in
-    # the indicator warm-up horizon.
-    if any(row.get("imputed", False) for row in candles[-1300:]):
-        raise ValueError("Imputed candles inside the ADX indicator warm-up horizon are not accepted")
+    # The report declares the full feed gap-free and non-imputed. Reject
+    # synthetic candles anywhere in the supplied history, not only the tail.
+    if any(row.get("imputed", False) for row in candles):
+        raise ValueError("Imputed candles are not accepted in the ADX forward feed")
     now_ms = int(datetime.now(timezone.utc).timestamp() * 1000)
     latest_close_ms = int(candles[-1]["timestamp"]) + 3_600_000
     age_minutes = (now_ms - latest_close_ms) / 60_000
