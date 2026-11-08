@@ -6,7 +6,7 @@ from market_scanner import scan_btc_market, scan_btc_multi_timeframe, _aggregate
 def candles(prior_high=97.8, current_close=98.2, current_volume=30.0):
     rows = []
     for index in range(50):
-        close = 95.0 + index * 0.05 + (0.01 if index % 2 == 0 else -0.01)
+        close = 95.0 + index * 0.05 + (0.12 if index % 2 == 0 else -0.12)
         open_price = close - 0.03
         prior_bar_high = close + 0.35 if prior_high == 97.8 else prior_high
         rows.append([
