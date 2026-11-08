@@ -17,7 +17,9 @@ def summarize_cvd_state(state, now_ns=None, stale_after_seconds=180):
         return {"status": "INVALID_STATE", "message": "CVD state must be a JSON object"}
     try:
         count = state.get("processed_trade_count")
-        last_id = state.get("last_trade_id")
+        last_id = state.get("last_trade_id", 0)
+        if isinstance(state.get("cumulative_buy_volume", 0.0), bool) or isinstance(state.get("cumulative_sell_volume", 0.0), bool):
+            raise ValueError("invalid cumulative volume")
         buy = float(state.get("cumulative_buy_volume", 0.0))
         sell = float(state.get("cumulative_sell_volume", 0.0))
         timestamp_ns = state.get("last_trade_timestamp_ns")
