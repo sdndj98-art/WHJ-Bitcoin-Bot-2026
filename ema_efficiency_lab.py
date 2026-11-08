@@ -37,6 +37,21 @@ def _efficiency_ratio_series(values, lookback=20):
     return ratios, directions
 
 
+def _entry_only_filter(baseline, efficiency, direction, threshold):
+    """Use ER only to authorize a new entry; never force an existing EMA position out."""
+    if not (len(baseline) == len(efficiency) == len(direction)):
+        raise ValueError("Baseline and efficiency arrays must have equal length")
+    output = []
+    in_position = False
+    for base, er, signed_direction in zip(baseline, efficiency, direction):
+        if not base:
+            in_position = False
+        elif not in_position and er is not None and er >= threshold and signed_direction > 0:
+            in_position = True
+        output.append(bool(in_position))
+    return output
+
+
 def _build_sleeve_signals(bars, threshold):
     closes = [float(row["close"]) for row in bars]
     ema50 = _ema_series(closes, 50)
@@ -46,12 +61,13 @@ def _build_sleeve_signals(bars, threshold):
         bool(i >= 199 and ema50[i] > ema200[i] and closes[i] > ema200[i])
         for i in range(len(bars))
     ]
-    filtered = [
+    gated = [
         bool(baseline[i] and efficiency[i] is not None
              and efficiency[i] >= threshold and direction[i] > 0)
         for i in range(len(bars))
     ]
-    return baseline, filtered
+    entry_only = _entry_only_filter(baseline, efficiency, direction, threshold)
+    return baseline, gated, entry_only
 
 
 def run_ema_efficiency_filter_lab(hourly_candles, fee=FEE_RATE,
@@ -67,8 +83,8 @@ def run_ema_efficiency_filter_lab(hourly_candles, fee=FEE_RATE,
     if len(four_hour) < 500 or len(six_hour) < 200:
         raise ValueError("Insufficient 4h/6h bars for EMA efficiency research")
 
-    base_4h, filtered_4h = _build_sleeve_signals(four_hour, threshold)
-    base_6h, filtered_6h = _build_sleeve_signals(six_hour, threshold)
+    base_4h, filtered_4h, entry_only_4h = _build_sleeve_signals(four_hour, threshold)
+    base_6h, filtered_6h, entry_only_6h = _build_sleeve_signals(six_hour, threshold)
     split = int(len(four_hour) * 0.70)
     close_times_4h = [int(row["timestamp"]) + 4 * 3600000 for row in four_hour]
     oos_start = close_times_4h[split]
@@ -81,6 +97,7 @@ def run_ema_efficiency_filter_lab(hourly_candles, fee=FEE_RATE,
     benchmark_signals = [[True] * len(four_hour), [True] * len(six_hour)]
     baseline_signals = [base_4h, base_6h]
     filtered_signals = [filtered_4h, filtered_6h]
+    entry_only_signals = [entry_only_4h, entry_only_6h]
     bar_sets = [four_hour, six_hour]
     hours = [4, 6]
 
@@ -91,6 +108,7 @@ def run_ema_efficiency_filter_lab(hourly_candles, fee=FEE_RATE,
 
     baseline_oos = simulate(baseline_signals, oos_start, oos_end)
     filtered_oos = simulate(filtered_signals, oos_start, oos_end)
+    entry_only_oos = simulate(entry_only_signals, oos_start, oos_end)
     benchmark_oos = simulate(benchmark_signals, oos_start, oos_end)
 
     walk_forward = []
@@ -103,6 +121,7 @@ def run_ema_efficiency_filter_lab(hourly_candles, fee=FEE_RATE,
                 "end_time_ms_exclusive": end,
                 "baseline": simulate(baseline_signals, start, end),
                 "er20_filtered": simulate(filtered_signals, start, end),
+                "er20_entry_only": simulate(entry_only_signals, start, end),
                 "matched_benchmark": simulate(benchmark_signals, start, end),
             })
 
@@ -117,6 +136,8 @@ def run_ema_efficiency_filter_lab(hourly_candles, fee=FEE_RATE,
                                  scenario_fee, scenario_slippage),
             "er20_filtered": simulate(filtered_signals, oos_start, oos_end,
                                       scenario_fee, scenario_slippage),
+            "er20_entry_only": simulate(entry_only_signals, oos_start, oos_end,
+                                        scenario_fee, scenario_slippage),
             "matched_benchmark": simulate(benchmark_signals, oos_start, oos_end,
                                           scenario_fee, scenario_slippage),
         }
@@ -147,6 +168,7 @@ def run_ema_efficiency_filter_lab(hourly_candles, fee=FEE_RATE,
         "out_of_sample": {
             "baseline": baseline_oos,
             "er20_filtered": filtered_oos,
+            "er20_entry_only": entry_only_oos,
             "matched_50_50_benchmark": benchmark_oos,
             "baseline_edge_pp": round(
                 baseline_oos["return_pct"] - benchmark_oos["return_pct"], 2
@@ -161,7 +183,7 @@ def run_ema_efficiency_filter_lab(hourly_candles, fee=FEE_RATE,
             "ER20 is calculated only from closes available at each completed native-timeframe bar. "
             "Signals are acted on at the next native bar close. The 4h/6h capital split, "
             "allocation, benchmark, fee and slippage assumptions are identical between variants. "
-            "This is a research comparison, not a profitability guarantee."
+            "ER20 is tested both as a continuous gate and as an entry-only authorization; the latter does not exit an open EMA position merely because ER20 falls. This is a research comparison, not a profitability guarantee."
         ),
     }
 
