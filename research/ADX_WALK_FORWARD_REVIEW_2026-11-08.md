@@ -56,6 +56,33 @@ Fold 2 is a material weakness: the training-only selector chose ADX20, but the s
 - Require genuine forward-only paper observations, with separate ADX15/ADX20 and 4h/6h ledgers, before any strategy qualification decision. Existing EMA paper ledgers remain untouched.
 - The isolated ADX forward-paper workflow has not been bootstrapped or verified as running on the default branch. No forward trades are claimed in this note.
 
+## Independent Bitstamp expanding-window walk-forward replication
+
+A second walk-forward run applied the identical expanding-window selector and shared UTC 12-hour fold boundaries to 72,000 Bitstamp BTCUSD hourly candles (2018-08-22 19:00 UTC through 2026-11-08 18:00 UTC). This is a separate exchange-data replication of the selection process, not merely the fixed-threshold comparison.
+
+| Fold | Selected threshold | Selected return | Baseline return | Benchmark return | Selected 2x-cost return |
+|---|---:|---:|---:|---:|---:|
+| 1 | ADX25 | +4.71% | +5.49% | +4.96% | +4.00% |
+| 2 | ADX20 | -0.42% | +1.10% | +2.65% | -1.16% |
+| 3 | ADX20 | +0.97% | +0.69% | -4.11% | +0.40% |
+
+The same weakness reproduced on the independent exchange: fold 1 selected ADX25 but trailed both baseline and benchmark; fold 2 selected ADX20 and lost money, trailing both; only fold 3 modestly beat baseline. The similarity of fold outcomes across feeds is a useful warning against promoting the selector, not proof of future behavior. This independent replication materially strengthens the conclusion that the current adaptive ADX selector is **not qualified for promotion**.
+
+## Updated decision after independent walk-forward
+
+- Keep the EMA50/EMA200 baseline as the control strategy.
+- Retain ADX20 only as the predeclared isolated forward-paper candidate; ADX15 remains a comparator, not a production default.
+- Do not deploy the adaptive threshold selector or promote ADX25.
+- Before reconsidering promotion, require forward-only paper evidence across enough market regimes and at least 30 closed forward trades per sleeve, with cost stress and benchmark comparison. The 30-trade threshold is a minimum review gate, not a guarantee of statistical confidence.
+- No forward-paper run has been bootstrapped; no forward trades are claimed. Existing EMA paper ledgers remain untouched.
+
+## Latest reproducibility
+
+- Primary boundary-aligned research and independent Bitstamp walk-forward both completed successfully in workflow run `42516038074` (artifact `whj-ema-adx-research-71`).
+- The same workflow completed successfully on the pull request in run `42516043530` (artifact `whj-ema-adx-research-72`).
+- The independent fixed-threshold Bitstamp validation completed successfully in run `42516043586`.
+- Latest source commit at the time of this update: `979917a4c59a227478b444af8b4dfcd41256a4f6`.
+
 ## Reproducibility
 
 Research workflow run: `42513865324` (completed successfully; artifact `whj-ema-adx-research-66`).
