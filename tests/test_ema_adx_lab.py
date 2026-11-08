@@ -51,6 +51,12 @@ class EmaAdxLabTests(unittest.TestCase):
         self.assertEqual(report["thresholds_tested"], [15.0, 20.0, 25.0])
         self.assertEqual(set(report["cost_sensitivity"]), {"1x", "2x"})
         self.assertEqual(len(report["walk_forward_windows"]["adx_20_entry_only"]), 3)
+        self.assertEqual(len(report["walk_forward_windows"]["baseline"]), 3)
+        self.assertEqual(len(report["walk_forward_windows"]["matched_benchmark"]), 3)
+        self.assertEqual(len(report["walk_forward_cost_sensitivity"]["2x"]["baseline"]), 3)
+        self.assertEqual(
+            len(report["walk_forward_cost_sensitivity"]["2x"]["adx_15_entry_only"]), 3
+        )
         self.assertIn("baseline", report["out_of_sample"])
         self.assertIn("matched_50_50_benchmark", report["out_of_sample"])
 
