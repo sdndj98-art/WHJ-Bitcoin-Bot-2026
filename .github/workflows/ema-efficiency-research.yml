@@ -1,8 +1,8 @@
 name: WHJ EMA Efficiency Filter Research
 
 on:
-  pull_request:
-    branches: [main]
+  push:
+    branches: [feature/efficiency-ratio-indicator]
     paths:
       - "ema_efficiency_lab.py"
       - "tests/test_ema_efficiency_lab.py"
@@ -12,7 +12,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: whj-ema-efficiency-research-${{ github.event.pull_request.number }}
+  group: whj-ema-efficiency-research
   cancel-in-progress: false
 
 jobs:
@@ -20,10 +20,8 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
-      - name: Checkout pull request code
+      - name: Checkout research branch
         uses: actions/checkout@v4
-        with:
-          ref: ${{ github.event.pull_request.head.sha }}
 
       - name: Set up Python
         uses: actions/setup-python@v5
