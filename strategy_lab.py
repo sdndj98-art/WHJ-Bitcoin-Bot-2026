@@ -707,7 +707,27 @@ def run_volume_liquidity_lab(bars, fee=0.001, slippage=0.0005):
             })
     full_metrics = _simulate(prices, signals, 1, len(prices), fee, slippage)
     oos_metrics = _simulate(prices, signals, split, len(prices), fee, slippage)
-    active_scores = [value for value in scores[split:] if value > 0]
+    active_scores = [scores[i] for i in range(split, len(scores)) if signals[i]]
+    benchmark_signals = [True] * len(prices)
+    benchmark_windows = [
+        {
+            "window": fold + 1,
+            "start_index": edges[fold],
+            "end_index_exclusive": edges[fold + 1],
+            "metrics": _simulate(prices, benchmark_signals, edges[fold], edges[fold + 1], fee, slippage),
+        }
+        for fold in range(3) if edges[fold + 1] > edges[fold]
+    ]
+    benchmark = {
+        "full_sample": _simulate(prices, benchmark_signals, 1, len(prices), fee, slippage),
+        "out_of_sample": _simulate(prices, benchmark_signals, split, len(prices), fee, slippage),
+        "walk_forward_windows": benchmark_windows,
+    }
+    candidate = {
+        "full_sample": full_metrics,
+        "out_of_sample": oos_metrics,
+        "walk_forward_windows": windows,
+    }
     return {
         "mode": "OHLCV_VOLUME_LIQUIDITY_RESEARCH_ONLY",
         "strategy": "volume_liquidity_momentum_confluence",
@@ -727,6 +747,10 @@ def run_volume_liquidity_lab(bars, fee=0.001, slippage=0.0005):
         "full_sample": full_metrics,
         "out_of_sample": oos_metrics,
         "walk_forward_windows": windows,
+        "strategies": {
+            "volume_liquidity_momentum_confluence": candidate,
+            "buy_and_hold_25pct": benchmark,
+        },
         "research_only": True,
         "execution_enabled": False,
         "limitations": [
