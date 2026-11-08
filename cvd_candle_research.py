@@ -93,7 +93,7 @@ def align_trade_flow_to_candles(candles, trades, interval_seconds=3600,
         raise ValueError("duplicate candle timestamp")
 
     buckets = {start: [] for start in starts}
-    seen_ids = set()
+    previous_trade_id = None
     previous_timestamp = -1.0
     for trade in trades:
         if not isinstance(trade, dict):
@@ -102,9 +102,9 @@ def align_trade_flow_to_candles(candles, trades, interval_seconds=3600,
         if isinstance(trade_id, bool) or not str(trade_id).isdigit() or int(trade_id) <= 0:
             raise ValueError("trade_id must be a positive integer")
         trade_id = int(trade_id)
-        if trade_id in seen_ids:
-            raise ValueError("duplicate trade_id in supplied events")
-        seen_ids.add(trade_id)
+        if previous_trade_id is not None and trade_id <= previous_trade_id:
+            raise ValueError("trade IDs must be strictly increasing")
+        previous_trade_id = trade_id
         timestamp = _timestamp(trade.get("timestamp"))
         if timestamp < previous_timestamp:
             raise ValueError("trade timestamps must be non-decreasing")
