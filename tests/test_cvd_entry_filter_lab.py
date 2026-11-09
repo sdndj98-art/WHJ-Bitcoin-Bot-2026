@@ -5,6 +5,7 @@ from cvd_entry_filter_lab import build_cvd_gated_signals, run_cvd_entry_filter_l
 
 def flow(available=True, bullish=True, absorption=False):
     return {
+        "candle_timestamp": 0,
         "available": available,
         "bullish_flow_confirmation": bullish,
         "bullish_absorption_divergence": absorption,
@@ -49,15 +50,36 @@ class CvdEntryFilterLabTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             build_cvd_gated_signals([True], [flow()], "unknown")
 
+    def test_lab_rejects_timestamp_misalignment(self):
+        prices = [100.0 + index for index in range(500)]
+        timestamps = [index * 3600 for index in range(500)]
+        bars = [dict(flow(True, True), candle_timestamp=timestamp)
+                for timestamp in timestamps]
+        bars[250]["candle_timestamp"] += 1
+        with self.assertRaisesRegex(ValueError, "timestamps must exactly match"):
+            run_cvd_entry_filter_lab(prices, timestamps, bars)
+
+    def test_lab_rejects_duplicate_price_timestamps(self):
+        prices = [100.0 + index for index in range(500)]
+        timestamps = [index * 3600 for index in range(500)]
+        timestamps[250] = timestamps[249]
+        bars = [dict(flow(True, True), candle_timestamp=timestamp)
+                for timestamp in timestamps]
+        with self.assertRaisesRegex(ValueError, "strictly increasing"):
+            run_cvd_entry_filter_lab(prices, timestamps, bars)
+
     def test_lab_reports_costs_benchmark_and_research_only(self):
         prices = [100.0]
         for index in range(1, 700):
             drift = 0.0004 if (index // 90) % 2 == 0 else -0.00015
             pulse = 0.001 * ((index % 13) - 6) / 6
             prices.append(prices[-1] * (1 + drift + pulse))
-        bars = [flow(True, True) for _ in prices]
-        report = run_cvd_entry_filter_lab(prices, bars)
+        timestamps = [index * 3600 for index in range(len(prices))]
+        bars = [dict(flow(True, True), candle_timestamp=timestamp)
+                for timestamp in timestamps]
+        report = run_cvd_entry_filter_lab(prices, timestamps, bars)
         self.assertEqual(report["mode"], "CVD_ENTRY_FILTER_CAUSAL_RESEARCH_ONLY")
+        self.assertTrue(report["cvd_data_quality"]["timestamp_alignment_verified"])
         self.assertFalse(report["execution_enabled"])
         self.assertIn("benchmark_25pct_buy_and_hold", report)
         self.assertEqual(
