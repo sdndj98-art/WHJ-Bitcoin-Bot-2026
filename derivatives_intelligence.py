@@ -99,6 +99,8 @@ def classify_derivatives_flow(
 
     if price_start != oi_start or price_end != oi_end:
         return _blocked("Price and open-interest measurement intervals are not aligned")
+    if price_end <= price_start or oi_end <= oi_start:
+        return _blocked("Measurement intervals must have positive duration")
     if price_end > now or oi_end > now or price_observed > now or oi_observed > now:
         return _blocked("Future-dated market observations are not accepted")
     if abs((price_observed - oi_observed).total_seconds()) > max_timestamp_skew_seconds:
