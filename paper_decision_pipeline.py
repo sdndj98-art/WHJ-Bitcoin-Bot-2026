@@ -7,7 +7,6 @@ import math
 
 
 REQUIRED_SCANNER_CHECKS = (
-    "ohlcv_valid",
     "market_data_quality_pass",
     "volume_spike",
     "close_above_prior_high",
