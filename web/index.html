@@ -287,11 +287,35 @@ body[data-whj-theme="light"] .agent-nav button:hover,body[data-whj-theme="light"
  .agent-nav-label,.agent-nav{display:none}
  .agent-card.agent-focused{outline-offset:0}
 }
+
+/* WHJ unified command surface: all operational views remain visible together */
+.shell{display:block!important;min-height:100vh}
+.side{display:none!important}
+main{max-width:1720px!important;padding:22px clamp(12px,2vw,30px) 42px!important}
+.view,.view.active{display:block!important;scroll-margin-top:14px}
+.view+.view{margin-top:16px;padding-top:16px;border-top:1px solid rgba(100,228,242,.14)}
+.top{position:relative}
+@media(max-width:700px){
+ main{padding:14px 10px 28px!important}
+ .mobilehead{display:block}
+ .view+.view{margin-top:12px;padding-top:12px}
+}
 </style>
 </head><body><div class="shell"><aside class="side"><div class="brand"><div class="logo">₿</div><div><b>WHJ BITCOIN</b><small>مركز قيادة التداول الذكي</small></div></div><div class="navlabel">القائمة الرئيسية</div><nav class="nav"><button class="active" data-view="overview"><span class="ico">⌂</span>الرئيسية</button><button data-view="scanner"><span class="ico">⌁</span>ماسح السوق</button><button data-view="strategies"><span class="ico">◈</span>الاستراتيجيات</button><button data-view="trades"><span class="ico">⇄</span>الصفقات</button><button data-view="risk"><span class="ico">⌁</span>المخاطر</button><button data-view="system"><span class="ico">⚙</span>النظام</button><button data-view="agents"><span class="ico">✣</span>مركز الوكلاء</button><button data-view="forward"><span class="ico">◷</span>المراقبة المستقبلية</button><button data-view="mt5"><span class="ico">⌁</span>منصة MT5</button></nav><div class="navlabel agent-nav-label">وحدات التشغيل الست</div><nav class="agent-nav" aria-label="وحدات التشغيل"><button type="button" data-agent-target="0"><span>⌕</span>ماسح السوق</button><button type="button" data-agent-target="1"><span>⚑</span>بوابة التحقق</button><button type="button" data-agent-target="2"><span>◈</span>مدير الحجم</button><button type="button" data-agent-target="3"><span>Ⅱ</span>المحاكي الورقي</button><button type="button" data-agent-target="4"><span>≡</span>سجل القرارات</button><button type="button" data-agent-target="5"><span>◉</span>مراقب المحفظة</button></nav><div class="sidefoot">WHJ Bitcoin Bot 2026<br>مراقبة وتحليل · Paper Trading فقط</div></aside><main>
 <div class="mobilehead">WHJ BITCOIN · مركز القيادة</div><header class="top"><div><div class="eyebrow">WHJ / COMMAND CENTER</div><h1 id="pageTitle">نظرة عامة</h1><div class="sub">مراقبة أداء البوت وتحليل BTC/USD</div></div><div class="topright"><button class="toolbtn" id="exportJson" type="button">تنزيل التقرير JSON</button><button class="toolbtn" id="exportCsv" type="button">تصدير الصفقات CSV</button><span class="pill"><i class="dot"></i><span id="systemState">جارٍ تحميل البيانات</span></span><button class="refresh" id="refresh">↻ تحديث البيانات</button></div></header>
 <div class="banner"><div><b>وضع الحماية مفعّل — التداول الحقيقي متوقف</b><p>تعرض اللوحة بيانات التحليل والمحاكاة فقط، ولا ترسل أوامر إلى منصات التداول.</p></div><span class="status">● PAPER MODE</span></div>
 
+<section class="view active" id="overview"><div class="grid">
+<article class="card metric"><div class="label">سعر Bitcoin <span>BTC / USD</span></div><div class="value neutral" id="price">—</div><div class="hint" id="updated">بانتظار آخر تقرير</div></article>
+<article class="card metric"><div class="label">قيمة المحفظة الافتراضية <span>USD</span></div><div class="value" id="equity">—</div><div class="hint">القيمة المقدّرة للحساب</div></article>
+<article class="card metric"><div class="label">العائد الافتراضي <span>ROI</span></div><div class="value" id="return">—</div><div class="hint">منذ بداية المحاكاة</div></article>
+<article class="card metric"><div class="label">أقصى تراجع <span>MAX DD</span></div><div class="value" id="drawdown">—</div><div class="hint">مقياس المخاطر التاريخي</div></article>
+<article class="card metric"><div class="label">الصفقات المغلقة</div><div class="value" id="tradeCountMetric">—</div><div class="hint">صفقات المحاكاة</div></article>
+<article class="card metric"><div class="label">نسبة الصفقات الرابحة</div><div class="value" id="winrate">—</div><div class="hint">من الصفقات المغلقة</div></article>
+<article class="card metric"><div class="label">معامل الربحية</div><div class="value" id="pf">—</div><div class="hint">إجمالي الربح إلى الخسارة</div></article>
+<article class="card metric"><div class="label">الرسوم المدفوعة</div><div class="value" id="fees">—</div><div class="hint">رسوم المحاكاة المسجلة</div></article></div>
+<div class="content"><article class="card"><div class="head"><h2>منحنى رأس المال</h2><span>آخر تقرير متاح</span></div><canvas id="equityChart"></canvas></article><article class="card"><div class="head"><h2>إشارة السوق الحالية</h2><span>تحليل فني</span></div><div class="signalbox"><div><b id="signal">—</b><small id="signalText">إشارة النموذج</small></div><span class="sigbadge" id="signalBadge">—</span></div><div class="mini"><span>المتوسط SMA 20</span><b id="sma20">—</b></div><div class="mini"><span>المتوسط SMA 50</span><b id="sma50">—</b></div><div class="mini"><span>الشموع المغلقة</span><b id="candles">—</b></div></article></div>
+<div class="card tablecard"><div class="head"><h2>أداء الحسابات الافتراضية</h2><span>مقارنة الاستراتيجيات</span></div><div class="tablewrap"><table><thead><tr><th>الاستراتيجية</th><th>قيمة الحساب</th><th>العائد</th><th>التراجع</th><th>الصفقات</th><th>الحالة</th></tr></thead><tbody id="portfolioRows"><tr><td colspan="6" class="empty">لا توجد بيانات بعد</td></tr></tbody></table></div></div></section>
 <section class="view" id="agents">
  <div class="scanner-head"><div><div class="eyebrow">WHJ / MULTI-AGENT CONTROL</div><h2>مركز الوكلاء وسير العمل</h2><p>تقسيم واضح لمهام التحليل والتحقق وإدارة المخاطر والتوثيق، مع فصل المراقبة عن التنفيذ.</p></div><div class="scanner-head-tags"><span class="scan-chip muted">6 SYSTEM MODULES</span><span class="scan-chip"><i></i> PAPER ONLY</span></div></div>
  <div class="agent-hero"><div><strong>خط معالجة الصفقة · من الرصد إلى المراجعة</strong><p>كل مرحلة لها مسؤولية محددة. لا تتحول إشارة الماسح وحدها إلى أمر تداول.</p></div><span class="agent-mode">● التنفيذ الحقيقي معطّل</span></div>
@@ -322,17 +346,6 @@ body[data-whj-theme="light"] .agent-nav button:hover,body[data-whj-theme="light"
  </div>
  <div class="agent-note">تنبيه: هذه وحدات وظيفية داخل النظام وليست ستة وكلاء ذكاء اصطناعي مستقلين يعملون في الخلفية. حالة كل منها تصف دورها البرمجي؛ أما النشاط الفعلي فيظهر فقط عند توفر تقرير حديث وبيانات موثقة.</div>
 </section>
-<section class="view active" id="overview"><div class="grid">
-<article class="card metric"><div class="label">سعر Bitcoin <span>BTC / USD</span></div><div class="value neutral" id="price">—</div><div class="hint" id="updated">بانتظار آخر تقرير</div></article>
-<article class="card metric"><div class="label">قيمة المحفظة الافتراضية <span>USD</span></div><div class="value" id="equity">—</div><div class="hint">القيمة المقدّرة للحساب</div></article>
-<article class="card metric"><div class="label">العائد الافتراضي <span>ROI</span></div><div class="value" id="return">—</div><div class="hint">منذ بداية المحاكاة</div></article>
-<article class="card metric"><div class="label">أقصى تراجع <span>MAX DD</span></div><div class="value" id="drawdown">—</div><div class="hint">مقياس المخاطر التاريخي</div></article>
-<article class="card metric"><div class="label">الصفقات المغلقة</div><div class="value" id="tradeCountMetric">—</div><div class="hint">صفقات المحاكاة</div></article>
-<article class="card metric"><div class="label">نسبة الصفقات الرابحة</div><div class="value" id="winrate">—</div><div class="hint">من الصفقات المغلقة</div></article>
-<article class="card metric"><div class="label">معامل الربحية</div><div class="value" id="pf">—</div><div class="hint">إجمالي الربح إلى الخسارة</div></article>
-<article class="card metric"><div class="label">الرسوم المدفوعة</div><div class="value" id="fees">—</div><div class="hint">رسوم المحاكاة المسجلة</div></article></div>
-<div class="content"><article class="card"><div class="head"><h2>منحنى رأس المال</h2><span>آخر تقرير متاح</span></div><canvas id="equityChart"></canvas></article><article class="card"><div class="head"><h2>إشارة السوق الحالية</h2><span>تحليل فني</span></div><div class="signalbox"><div><b id="signal">—</b><small id="signalText">إشارة النموذج</small></div><span class="sigbadge" id="signalBadge">—</span></div><div class="mini"><span>المتوسط SMA 20</span><b id="sma20">—</b></div><div class="mini"><span>المتوسط SMA 50</span><b id="sma50">—</b></div><div class="mini"><span>الشموع المغلقة</span><b id="candles">—</b></div></article></div>
-<div class="card tablecard"><div class="head"><h2>أداء الحسابات الافتراضية</h2><span>مقارنة الاستراتيجيات</span></div><div class="tablewrap"><table><thead><tr><th>الاستراتيجية</th><th>قيمة الحساب</th><th>العائد</th><th>التراجع</th><th>الصفقات</th><th>الحالة</th></tr></thead><tbody id="portfolioRows"><tr><td colspan="6" class="empty">لا توجد بيانات بعد</td></tr></tbody></table></div></div></section>
 <section class="view" id="scanner">
 <div class="scanner-head">
  <div><div class="eyebrow">MARKET INTELLIGENCE / BTC-USD</div><h2>ماسح الاختراق الذكي</h2><p>تحليل الشمعة المغلقة على إطار الساعة — السعر والحجم وجودة البيانات في شاشة واحدة</p></div>
