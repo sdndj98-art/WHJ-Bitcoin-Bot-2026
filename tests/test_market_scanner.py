@@ -33,6 +33,16 @@ class MarketScannerTests(unittest.TestCase):
         self.assertFalse(result["derivatives_intelligence"]["execution_enabled"])
         self.assertEqual(result["confluence_score"], 8)
 
+    def test_compact_ohlcv_rows_are_supported_without_fabricated_trade_counts(self):
+        compact = [
+            [row[0], row[1], row[2], row[3], row[4], row[6]]
+            for row in candles()
+        ]
+        result = scan_btc_market(compact, HEALTHY)
+        self.assertEqual(result["status"], "PAPER_CANDIDATE")
+        self.assertEqual(result["confluence_score"], 8)
+        self.assertEqual(result["confluence_total"], 8)
+
     def test_aligned_derivatives_snapshots_are_exposed_as_research_context(self):
         price = {
             "source": "example-venue",
