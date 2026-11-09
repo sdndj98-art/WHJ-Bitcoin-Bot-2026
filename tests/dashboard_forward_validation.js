@@ -127,7 +127,7 @@ const getElement = (id) => {
   if (!elements.has(id)) elements.set(id, { textContent: "", className: "", innerHTML: "" });
   return elements.get(id);
 };
-const decisionRendererMatch = html.match(/function renderDecisionTools\\(x\\)\\{[\\s\\S]*?\\n\\}/);
+const decisionRendererMatch = html.match(/function renderDecisionTools\(x\)\{[\s\S]*?\n\}/);
 assert.ok(decisionRendererMatch, "Could not locate SCANNER/GUARD/SIZER renderer");
 const context = {
   $: getElement,
