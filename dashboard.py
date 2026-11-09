@@ -181,13 +181,14 @@ def build_dashboard(report):
     )
     portfolio = report.get("persistent_paper_portfolio", {}).get("accounts", {})
     paper_strategy_rows = "".join(
-        "<tr><td>{}</td><td>{}</td><td>{}</td><td>{}</td><td>{}</td><td>{}</td><td>{}</td><td>{}</td><td>{}</td><td>{}</td><td>{}</td><td>{}</td><td>{}</td></tr>".format(
+        "<tr><td>{}</td><td>{}</td><td>{}</td><td>{}</td><td>{}</td><td>{}</td><td>{}</td><td>{}</td><td>{}</td><td>{}</td><td>{}</td><td>{}</td><td>{}</td><td>{}</td></tr>".format(
             html.escape(name),
             html.escape(str(item.get("equity_after_estimated_exit_costs_usd", "—"))),
             html.escape(str(item.get("return_pct", "—"))),
             html.escape(str(item.get("max_drawdown_pct", "—"))),
             html.escape(str(item.get("completed_trades", "—"))),
             html.escape(str(item.get("strategy_health", {}).get("status", "NOT_AVAILABLE"))),
+            html.escape(str(item.get("strategy_health", {}).get("reason", "Health diagnostic unavailable"))),
             html.escape(str(item.get("strategy_health", {}).get("recent_profit_factor", "—"))),
             html.escape(str(item.get("fees_paid_usd", "—"))),
             html.escape(str(item.get("open_position", "—"))),
@@ -197,7 +198,7 @@ def build_dashboard(report):
             html.escape(str(item.get("paused_for_strategy_health", "—")))
         )
         for name, item in portfolio.items()
-    ) or '<tr><td colspan="13">Persistent paper portfolio not available</td></tr>'
+    ) or '<tr><td colspan="14">Persistent paper portfolio not available</td></tr>'
     lab = report.get("strategy_lab", {}).get("strategies", {})
     strategy_rows = "".join(
         "<tr><td>{}</td><td>{}</td><td>{}</td><td>{}</td><td>{}</td></tr>".format(
@@ -231,7 +232,7 @@ table{width:100%;border-collapse:collapse}td,th{text-align:left;padding:10px;bor
 <section><h2>Kraken CVD · Public market feed</h2><p class="muted">Read-only cumulative aggressor buy/sell volume. Freshness is based on the saved trade timestamp; stale or missing data is not a trading signal.</p><table><tbody>""" + cvd_rows + """</tbody></table></section>
 <section><h2>Recent simulated trades</h2><table><thead><tr><th>Result</th><th>P&amp;L (USD)</th></tr></thead><tbody>""" + rows + """</tbody></table></section>
 <section><h2>Strategy comparison · Out-of-sample</h2><p class="muted">Chronological holdout results; fixed rules, not a guarantee or a strategy recommendation.</p><table><thead><tr><th>Strategy</th><th>Return (%)</th><th>Max drawdown (%)</th><th>Closed trades</th><th>Worst walk-forward window (%)</th></tr></thead><tbody>""" + strategy_rows + """</tbody></table></section>
-<section><h2>Persistent paper strategy race</h2><p class="muted">Independent simulated accounts with identical initial capital, fees, slippage, sizing and risk limits. Health uses each account's own realized closed trades and observed drawdown; it is a review diagnostic, not a promotion signal.</p><table><thead><tr><th>Strategy</th><th>Equity (USD)</th><th>Return (%)</th><th>Max drawdown (%)</th><th>Closed trades</th><th>Health status</th><th>Recent PF</th><th>Fees (USD)</th><th>Open position</th><th>Drawdown paused</th><th>Daily loss paused</th><th>Loss streak paused</th><th>Strategy health paused</th></tr></thead><tbody>""" + paper_strategy_rows + """</tbody></table></section>
+<section><h2>Persistent paper strategy race</h2><p class="muted">Independent simulated accounts with identical initial capital, fees, slippage, sizing and risk limits. Health uses each account's own realized closed trades and observed drawdown; it is a review diagnostic, not a promotion signal.</p><table><thead><tr><th>Strategy</th><th>Equity (USD)</th><th>Return (%)</th><th>Max drawdown (%)</th><th>Closed trades</th><th>Health status</th><th>Health reason</th><th>Recent PF</th><th>Fees (USD)</th><th>Open position</th><th>Drawdown paused</th><th>Daily loss paused</th><th>Loss streak paused</th><th>Strategy health paused</th></tr></thead><tbody>""" + paper_strategy_rows + """</tbody></table></section>
 <section><h2>Monte Carlo trade-risk diagnostic</h2><p class="muted">IID and circular moving-block bootstrap resampling of completed backtest trades. The block method retains short local sequences but cannot reliably estimate dependence from a small sample. Percentiles are diagnostics, not forecasts.</p></section>
 <p class="foot notice">Simulation only. No real orders are placed. Historical results do not predict future performance and are not financial advice.</p>
 </body></html>"""
