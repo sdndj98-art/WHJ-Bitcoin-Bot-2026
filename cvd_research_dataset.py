@@ -6,6 +6,7 @@ matching checkpoint. This tool is offline/read-only and never places orders.
 """
 import argparse
 import json
+import math
 import os
 import tempfile
 
@@ -45,8 +46,12 @@ def build_research_report(candles, trades, checkpoint, trade_log_path, pair,
         raise ValueError("pair must be non-empty")
     if isinstance(as_of_timestamp, bool) or not isinstance(as_of_timestamp, (int, float)):
         raise ValueError("as_of_timestamp must be a Unix timestamp")
-    if not isinstance(as_of_timestamp, (int, float)) or as_of_timestamp < 0:
-        raise ValueError("as_of_timestamp must be non-negative")
+    if (not isinstance(as_of_timestamp, (int, float))
+            or not math.isfinite(as_of_timestamp) or as_of_timestamp < 0):
+        raise ValueError("as_of_timestamp must be a finite non-negative Unix timestamp")
+    journal_events = _read_trade_journal(trade_log_path)
+    if trades != journal_events:
+        raise ValueError("trade events must be read from the exact checkpointed journal")
     metadata = validate_continuity_checkpoint(
         checkpoint, trade_log_path, pair.strip(), checkpoint.get("last_trade_id")
         if isinstance(checkpoint, dict) else None
@@ -55,6 +60,8 @@ def build_research_report(candles, trades, checkpoint, trade_log_path, pair,
         raise ValueError("candles must be a non-empty Kraken OHLCV list")
     if isinstance(interval_seconds, bool) or not isinstance(interval_seconds, int) or interval_seconds <= 0:
         raise ValueError("interval_seconds must be a positive integer")
+    if any(not isinstance(row, (list, tuple)) or len(row) < 8 for row in candles):
+        raise ValueError("each candle must contain all eight Kraken OHLCV fields")
     last_start = candles[-1][0]
     if (isinstance(last_start, bool) or not isinstance(last_start, (int, float))
             or not float(last_start).is_integer()):
