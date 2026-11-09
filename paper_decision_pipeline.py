@@ -65,6 +65,8 @@ def evaluate_paper_decision(scanner_result, guard_account, sizing=None):
     if not isinstance(checks, dict):
         reasons.append("scanner_checks_missing")
     else:
+        if checks.get("ohlcv_valid") is not True:
+            reasons.append("scanner_check_failed:ohlcv_valid")
         for check in REQUIRED_SCANNER_CHECKS:
             if checks.get(check) is not True:
                 reasons.append(f"scanner_check_failed:{check}")
