@@ -5,6 +5,8 @@ import math
 import time
 from pathlib import Path
 
+from strategy_ranking import rank_strategy_results
+
 SOURCE = Path("report.json")
 OUTPUT = Path("dashboard.html")
 
@@ -200,17 +202,25 @@ def build_dashboard(report):
         for name, item in portfolio.items()
     ) or '<tr><td colspan="14">Persistent paper portfolio not available</td></tr>'
     lab = report.get("strategy_lab", {}).get("strategies", {})
+    ranking = rank_strategy_results(lab)
     strategy_rows = "".join(
-        "<tr><td>{}</td><td>{}</td><td>{}</td><td>{}</td><td>{}</td></tr>".format(
-            html.escape(name),
-            html.escape(str(metrics.get("return_pct", "—"))),
-            html.escape(str(metrics.get("max_drawdown_pct", "—"))),
-            html.escape(str(metrics.get("closed_trades", "—"))),
-            html.escape(str(item.get("worst_window_return_pct") if item.get("worst_window_return_pct") is not None else "—"))
+        "<tr><td>{}</td><td>{}</td><td>{}</td><td>{}</td><td>{}</td><td>{}</td><td>{}</td></tr>".format(
+            html.escape(str(item["rank"])),
+            html.escape(item["strategy"]),
+            html.escape(str(item["score"])),
+            html.escape(str(item["out_of_sample_return_pct"])),
+            html.escape(str(item["max_drawdown_pct"])),
+            html.escape(str(item["closed_trades"])),
+            html.escape("{}/{} · {}%".format(
+                item["positive_windows"], item["window_count"],
+                item["worst_window_return_pct"]
+            ))
         )
-        for name, item in lab.items()
-        for metrics in [item.get("out_of_sample", {})]
-    ) or '<tr><td colspan="5">Strategy comparison not available</td></tr>'
+        for item in ranking["ranked_strategies"]
+    ) or '<tr><td colspan="7">No strategy has enough valid OOS trades and walk-forward evidence to rank</td></tr>'
+    ranking_note = "Ranked: {} · Excluded for insufficient or invalid evidence: {}".format(
+        len(ranking["ranked_strategies"]), len(ranking["excluded_strategies"])
+    )
     timestamp = html.escape(str(report.get("time", "Unknown")))
     signal = html.escape(str(report.get("signal", "HOLD")))
     return """<!doctype html>
@@ -231,7 +241,7 @@ table{width:100%;border-collapse:collapse}td,th{text-align:left;padding:10px;bor
 <div class="grid">""" + cards + """</div>
 <section><h2>Kraken CVD · Public market feed</h2><p class="muted">Read-only cumulative aggressor buy/sell volume. Freshness is based on the saved trade timestamp; stale or missing data is not a trading signal.</p><table><tbody>""" + cvd_rows + """</tbody></table></section>
 <section><h2>Recent simulated trades</h2><table><thead><tr><th>Result</th><th>P&amp;L (USD)</th></tr></thead><tbody>""" + rows + """</tbody></table></section>
-<section><h2>Strategy comparison · Out-of-sample</h2><p class="muted">Chronological holdout results; fixed rules, not a guarantee or a strategy recommendation.</p><table><thead><tr><th>Strategy</th><th>Return (%)</th><th>Max drawdown (%)</th><th>Closed trades</th><th>Worst walk-forward window (%)</th></tr></thead><tbody>""" + strategy_rows + """</tbody></table></section>
+<section><h2>Strategy research ranking · Out-of-sample</h2><p class="muted">""" + html.escape(ranking_note) + """ · Score weights: return 25%, drawdown 25%, worst window 20%, positive-window consistency 20%, sample size 10%. At least 10 closed trades and three walk-forward windows are required. Buy-and-hold is shown separately as a benchmark, not ranked as a strategy.</p><table><thead><tr><th>Rank</th><th>Strategy</th><th>Score / 100</th><th>OOS return (%)</th><th>Max drawdown (%)</th><th>Closed trades</th><th>Positive windows / worst (%)</th></tr></thead><tbody>""" + strategy_rows + """</tbody></table></section>
 <section><h2>Persistent paper strategy race</h2><p class="muted">Independent simulated accounts with identical initial capital, fees, slippage, sizing and risk limits. Health uses each account's own realized closed trades and observed drawdown; it is a review diagnostic, not a promotion signal.</p><table><thead><tr><th>Strategy</th><th>Equity (USD)</th><th>Return (%)</th><th>Max drawdown (%)</th><th>Closed trades</th><th>Health status</th><th>Health reason</th><th>Recent PF</th><th>Fees (USD)</th><th>Open position</th><th>Drawdown paused</th><th>Daily loss paused</th><th>Loss streak paused</th><th>Strategy health paused</th></tr></thead><tbody>""" + paper_strategy_rows + """</tbody></table></section>
 <section><h2>Monte Carlo trade-risk diagnostic</h2><p class="muted">IID and circular moving-block bootstrap resampling of completed backtest trades. The block method retains short local sequences but cannot reliably estimate dependence from a small sample. Percentiles are diagnostics, not forecasts.</p></section>
 <p class="foot notice">Simulation only. No real orders are placed. Historical results do not predict future performance and are not financial advice.</p>
