@@ -225,7 +225,7 @@ def build_dashboard(report):
             html.escape(str(metrics.get("max_drawdown_pct", "—"))),
             html.escape(str(metrics.get("closed_trades", "—"))),
             html.escape("Worst window: {} · Excluded: {}".format(
-                item.get("worst_window_return_pct", "—"), item["status"]
+                lab.get(item["strategy"], {}).get("worst_window_return_pct", "—"), item["status"]
             ))
         )
         for item in ranking["excluded_strategies"]
