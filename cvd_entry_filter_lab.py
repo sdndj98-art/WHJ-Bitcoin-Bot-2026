@@ -67,7 +67,7 @@ def _benchmark_25pct(prices, start, end, fee, slippage):
     }
 
 
-def run_cvd_entry_filter_lab(prices, cvd_bars, fee=0.001, slippage=0.0005):
+def run_cvd_entry_filter_lab(prices, candle_timestamps, cvd_bars, fee=0.001, slippage=0.0005):
     """Compare EMA50/200 baseline with two predeclared CVD entry gates.
 
     Uses the same 70/30 chronological split, three non-overlapping OOS windows,
@@ -79,8 +79,27 @@ def run_cvd_entry_filter_lab(prices, cvd_bars, fee=0.001, slippage=0.0005):
     if any(isinstance(value, bool) or not isinstance(value, (int, float))
            or not math.isfinite(value) or value <= 0 for value in prices):
         raise ValueError("prices must be finite positive numbers")
+    if not isinstance(candle_timestamps, list) or len(candle_timestamps) != len(prices):
+        raise ValueError("one candle timestamp is required for every price")
+    previous_timestamp = None
+    for timestamp in candle_timestamps:
+        if (isinstance(timestamp, bool) or not isinstance(timestamp, (int, float))
+                or not math.isfinite(timestamp) or timestamp < 0
+                or not float(timestamp).is_integer()):
+            raise ValueError("candle timestamps must be non-negative integer seconds")
+        if previous_timestamp is not None and timestamp <= previous_timestamp:
+            raise ValueError("candle timestamps must be strictly increasing")
+        previous_timestamp = timestamp
     if not isinstance(cvd_bars, list) or len(cvd_bars) != len(prices):
         raise ValueError("one aligned CVD bar is required for every price candle")
+    for index, flow in enumerate(cvd_bars):
+        if not isinstance(flow, dict):
+            raise ValueError("each CVD bar must be an object")
+        if flow.get("candle_timestamp") != candle_timestamps[index]:
+            raise ValueError("CVD candle timestamps must exactly match price candle timestamps")
+        for key in ("available", "bullish_flow_confirmation", "bullish_absorption_divergence"):
+            if not isinstance(flow.get(key), bool):
+                raise ValueError("CVD availability and signal fields must be boolean")
     if (isinstance(fee, bool) or isinstance(slippage, bool)
             or not isinstance(fee, (int, float)) or not isinstance(slippage, (int, float))
             or not math.isfinite(fee) or not math.isfinite(slippage)
@@ -129,6 +148,7 @@ def run_cvd_entry_filter_lab(prices, cvd_bars, fee=0.001, slippage=0.0005):
         "cvd_data_quality": {
             "available_bars": available,
             "total_bars": len(cvd_bars),
+            "timestamp_alignment_verified": True,
             "availability_pct": round(available / len(cvd_bars) * 100.0, 2),
             "unavailable_bars_fail_closed_for_new_entries": True,
         },
@@ -143,7 +163,8 @@ def run_cvd_entry_filter_lab(prices, cvd_bars, fee=0.001, slippage=0.0005):
             "Continuity must be independently verified before a CVD bar is marked available.",
             "CVD gates entries only; exits remain governed by the EMA50/200 baseline.",
             "Unavailable CVD bars block new entries but do not force exits from existing positions.",
-            "The comparison requires aligned completed candles and does not infer missing trades.",
+            "Price and CVD candle timestamps are required to match exactly before comparison.",
+            "The comparison uses completed candles and does not infer missing trades.",
             "A positive comparison is not proof of a durable edge; fixed qualification gates and forward paper evidence remain mandatory.",
         ],
     }
