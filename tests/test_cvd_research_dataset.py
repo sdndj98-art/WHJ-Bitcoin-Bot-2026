@@ -48,7 +48,9 @@ class CvdResearchDatasetTests(unittest.TestCase):
             self.journal_path, "BTC/USD", self.as_of,
         )
         self.assertTrue(report["dataset"]["journal_continuity_checkpoint_validated"])
-        self.assertEqual(report["dataset"]["available_cvd_bars"], 500)
+        self.assertEqual(report["dataset"]["available_cvd_bars"], 499)
+        self.assertTrue(report["dataset"]["partial_initial_candle_excluded"])
+        self.assertEqual(report["dataset"]["first_fully_covered_candle_unix"], 3600)
         self.assertTrue(report["research_only"])
         self.assertFalse(report["execution_enabled"])
         self.assertEqual(report["promotion_status"], "NOT_EVALUATED")
