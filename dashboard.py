@@ -217,7 +217,20 @@ def build_dashboard(report):
             ))
         )
         for item in ranking["ranked_strategies"]
-    ) or '<tr><td colspan="7">No strategy has enough valid OOS trades and walk-forward evidence to rank</td></tr>'
+    )
+    excluded_rows = "".join(
+        "<tr><td>—</td><td>{}</td><td>NOT RANKED</td><td>{}</td><td>{}</td><td>{}</td><td>{}</td></tr>".format(
+            html.escape(item["strategy"]),
+            html.escape(str(metrics.get("return_pct", "—"))),
+            html.escape(str(metrics.get("max_drawdown_pct", "—"))),
+            html.escape(str(metrics.get("closed_trades", "—"))),
+            html.escape("Excluded: " + item["status"])
+        )
+        for item in ranking["excluded_strategies"]
+        for metrics in [lab.get(item["strategy"], {}).get("out_of_sample", {})]
+    )
+    strategy_rows += excluded_rows
+    strategy_rows = strategy_rows or '<tr><td colspan="7">Strategy comparison not available</td></tr>'
     ranking_note = "Ranked: {} · Excluded for insufficient or invalid evidence: {}".format(
         len(ranking["ranked_strategies"]), len(ranking["excluded_strategies"])
     )
