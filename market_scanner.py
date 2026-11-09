@@ -122,25 +122,31 @@ def scan_btc_market(candles, market_data_quality=None, volume_lookback=20,
 
     normalized = []
     for row in candles[-required_history:]:
-        if not isinstance(row, (list, tuple)) or len(row) < 8:
-            raise ValueError("Each scanner candle must contain OHLCV and trade count")
-        raw_fields = (row[0], row[1], row[2], row[3], row[4], row[6], row[7])
-        if any(isinstance(value, bool) for value in raw_fields):
+        if not isinstance(row, (list, tuple)) or len(row) not in (6, 7, 8):
+            raise ValueError("Each scanner candle must contain timestamp and OHLCV values")
+        if len(row) == 8:
+            raw_fields = (row[0], row[1], row[2], row[3], row[4], row[6])
+            raw_trades = row[7]
+        else:
+            raw_fields = (row[0], row[1], row[2], row[3], row[4], row[5])
+            raw_trades = row[6] if len(row) == 7 else None
+        if any(isinstance(value, bool) for value in raw_fields) or isinstance(raw_trades, bool):
             raise ValueError("Scanner candle fields cannot be booleans")
         try:
-            timestamp, open_price, high, low, close, volume, trades = (
+            timestamp, open_price, high, low, close, volume = (
                 float(value) for value in raw_fields
             )
+            trades = None if raw_trades is None else float(raw_trades)
         except (TypeError, ValueError, OverflowError) as exc:
             raise ValueError("Scanner candle fields must be numeric") from exc
-        values = (timestamp, open_price, high, low, close, volume, trades)
+        values = (timestamp, open_price, high, low, close, volume)
         if any(not math.isfinite(value) for value in values):
             raise ValueError("Scanner candle fields must be finite")
+        if trades is not None and (not math.isfinite(trades) or not trades.is_integer() or trades < 0):
+            raise ValueError("Scanner trade count must be a finite non-negative integer")
         if not timestamp.is_integer() or timestamp < 0:
             raise ValueError("Scanner candle timestamp must be a non-negative integer")
-        if not trades.is_integer():
-            raise ValueError("Scanner trade count must be an integer")
-        if min(open_price, high, low, close) <= 0 or volume < 0 or trades < 0:
+        if min(open_price, high, low, close) <= 0 or volume < 0:
             raise ValueError("Scanner candle contains invalid price or activity values")
         if high < max(open_price, close, low) or low > min(open_price, close, high):
             raise ValueError("Scanner candle has inconsistent OHLC bounds")
