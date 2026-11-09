@@ -27,6 +27,48 @@ HEALTHY = {"quality_status": "HEALTHY", "paper_execution_allowed": True}
 
 
 class MarketScannerTests(unittest.TestCase):
+    def test_derivatives_context_is_optional_and_does_not_change_scanner_score(self):
+        result = scan_btc_market(candles(), HEALTHY)
+        self.assertEqual(result["derivatives_intelligence"]["status"], "UNAVAILABLE")
+        self.assertFalse(result["derivatives_intelligence"]["execution_enabled"])
+        self.assertEqual(result["confluence_score"], 8)
+
+    def test_aligned_derivatives_snapshots_are_exposed_as_research_context(self):
+        price = {
+            "source": "example-venue",
+            "symbol": "BTC-PERP",
+            "interval_start": "2026-11-10T11:00:00Z",
+            "interval_end": "2026-11-10T12:00:00Z",
+            "observed_at": "2026-11-10T11:59:58Z",
+            "change_pct": 1.2,
+        }
+        open_interest = dict(price)
+        open_interest["observed_at"] = "2026-11-10T11:59:59Z"
+        open_interest["change_pct"] = 0.8
+        result = scan_btc_market(
+            candles(), HEALTHY,
+            derivatives_snapshots={"price": price, "open_interest": open_interest},
+            derivatives_as_of="2026-11-10T12:00:00Z",
+        )
+        context = result["derivatives_intelligence"]
+        self.assertEqual(context["status"], "OK")
+        self.assertEqual(context["classification"], "LONG_BUILDUP")
+        self.assertTrue(context["research_only"])
+        self.assertFalse(context["execution_enabled"])
+        self.assertEqual(result["confluence_score"], 8)
+        self.assertEqual(result["confluence_total"], 8)
+
+    def test_incomplete_derivatives_data_is_blocked_not_guessed(self):
+        result = scan_btc_market(
+            candles(), HEALTHY,
+            derivatives_snapshots={"price": {"source": "spot-only"}},
+            derivatives_as_of="2026-11-10T12:00:00Z",
+        )
+        context = result["derivatives_intelligence"]
+        self.assertEqual(context["status"], "DATA_BLOCKED")
+        self.assertEqual(context["classification"], "UNAVAILABLE")
+        self.assertFalse(context["execution_enabled"])
+
     def test_advanced_layer_is_exposed_without_changing_legacy_score(self):
         result = scan_btc_market(candles(), HEALTHY)
         advanced = result["advanced_analysis"]
