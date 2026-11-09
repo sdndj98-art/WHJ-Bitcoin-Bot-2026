@@ -562,11 +562,13 @@ def update_paper_account(candles, state_path="paper_account_state.json",
         else:
             loss_streak = 0
     account_drawdown_pct = float(state.get("max_drawdown_pct", 0.0))
+    observed_peak_equity = float(state.get("peak_equity", initial))
     health_equity_curve = None
-    if 0.0 <= account_drawdown_pct < 100.0:
+    if observed_peak_equity > 0 and 0.0 <= account_drawdown_pct < 100.0:
+        # Preserve the account's measured peak-to-trough drawdown exactly.
         health_equity_curve = [
-            initial,
-            initial * (1.0 - account_drawdown_pct / 100.0),
+            observed_peak_equity,
+            observed_peak_equity * (1.0 - account_drawdown_pct / 100.0),
         ]
     strategy_health = evaluate_strategy_health(
         [{"pnl": float(trade.get("pnl_usd", 0.0))} for trade in completed],
