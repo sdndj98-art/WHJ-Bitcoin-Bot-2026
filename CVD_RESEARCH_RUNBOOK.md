@@ -36,7 +36,7 @@ python kraken_cvd_collector.py \
   --max-trade-log-mb 250
 ```
 
-Leave this process running. Stop it with Ctrl+C only after at least 500 hourly
+Leave this process running. Stop it with Ctrl+C only after at least 501 hourly
 bars have elapsed since its initial snapshot. The collector writes the
 checkpoint beside the journal as accepted events are durably saved. If it
 reports an error or cannot recover a trade-ID gap, do not manually mark the
@@ -72,14 +72,17 @@ python cvd_research_dataset.py \
 
 A successful run prints `REPORT_WRITTEN` and writes a JSON report. Review the
 dataset metadata first: journal hash, checkpoint validation, first/last trade
-IDs, available versus total CVD bars, and availability percentage. Then review
+IDs, the explicitly excluded initial partial candle, available versus total CVD
+bars, and availability percentage. Then review
 the chronological holdout and walk-forward results, fees/slippage, and matched
 buy-and-hold comparisons.
 
 ## 4. Validate the local code
 
 ```bash
-python -m unittest tests.test_cvd_entry_filter_lab tests.test_cvd_research_dataset -v
+python -m unittest discover -s tests -p "test_cvd_entry_filter_lab.py" -v
+python -m unittest discover -s tests -p "test_cvd_research_dataset.py" -v
+python -m unittest discover -s tests -p "test_kraken_ohlc_export.py" -v
 python -m py_compile cvd_research_dataset.py kraken_ohlc_export.py
 ```
 
