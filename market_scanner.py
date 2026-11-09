@@ -249,7 +249,7 @@ def scan_btc_market(candles, market_data_quality=None, volume_lookback=20,
     )
     reasons.extend(code for failed, code in reason_checks if failed)
     if candidate:
-        reasons.append("all_seven_scanner_checks_passed_paper_review_only")
+        reasons.append("all_eight_scanner_checks_passed_paper_review_only")
 
     advanced_analysis = analyze_advanced_market(normalized)
     derivatives_context = (
