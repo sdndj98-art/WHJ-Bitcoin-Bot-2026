@@ -6,6 +6,8 @@ import tempfile
 from datetime import datetime, timezone
 from pathlib import Path
 
+from strategy_health import evaluate_strategy_health
+
 STATE_VERSION = 1
 
 
@@ -559,6 +561,21 @@ def update_paper_account(candles, state_path="paper_account_state.json",
             max_loss_streak = max(max_loss_streak, loss_streak)
         else:
             loss_streak = 0
+    account_drawdown_pct = float(state.get("max_drawdown_pct", 0.0))
+    observed_peak_equity = float(state.get("peak_equity", initial))
+    health_equity_curve = None
+    if observed_peak_equity > 0 and 0.0 <= account_drawdown_pct < 100.0:
+        # Preserve the account's measured peak-to-trough drawdown exactly.
+        health_equity_curve = [
+            observed_peak_equity,
+            observed_peak_equity * (1.0 - account_drawdown_pct / 100.0),
+        ]
+    strategy_health = evaluate_strategy_health(
+        [{"pnl": float(trade.get("pnl_usd", 0.0))} for trade in completed],
+        equity_curve=health_equity_curve,
+        min_trades=20,
+        recent_window=20,
+    )
     return {
         "mode": "PERSISTENT_PAPER_ONLY",
         "strategy": strategy,
@@ -571,6 +588,7 @@ def update_paper_account(candles, state_path="paper_account_state.json",
         "return_pct": round((equity / initial - 1) * 100, 2),
         "open_position": state["btc"] > 0,
         "completed_trades": len(completed),
+        "strategy_health": strategy_health,
         "win_rate_pct": round(len(winning) / len(completed) * 100, 2) if completed else 0.0,
         "profit_factor": round(gross_profit / gross_loss, 2) if gross_loss else (None if gross_profit else 0.0),
         "gross_profit_usd": round(gross_profit, 4),
