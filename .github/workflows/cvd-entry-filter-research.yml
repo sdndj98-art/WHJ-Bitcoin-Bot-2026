@@ -1,0 +1,22 @@
+name: WHJ CVD Entry Filter Research
+
+on:
+  push:
+    branches: [research/cvd-entry-filter-20261109]
+    paths:
+      - "cvd_entry_filter_lab.py"
+      - "tests/test_cvd_entry_filter_lab.py"
+      - ".github/workflows/cvd-entry-filter-research.yml"
+
+jobs:
+  focused-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Compile research module
+        run: python -m py_compile cvd_entry_filter_lab.py
+      - name: Run focused CVD entry-filter tests
+        run: python -m unittest discover -s tests -p "test_cvd_entry_filter_lab.py" -v
