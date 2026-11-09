@@ -373,6 +373,50 @@ main{max-width:1720px!important;padding:22px clamp(12px,2vw,30px) 42px!important
  .mobilehead{display:block}
  .view+.view{margin-top:12px;padding-top:12px}
 }
+
+/* Decision network: six inputs converge on the existing WHJ signal; display-only. */
+#quantumorb{grid-template-columns:minmax(250px,.72fr) minmax(0,2fr);grid-template-areas:"left core" "bottom bottom"}
+.q-right{display:none!important}
+.q-core{min-height:650px}
+.q-network-stage{position:relative;width:100%;height:510px;min-height:470px;margin:8px 0 12px;isolation:isolate;overflow:hidden;border:1px solid rgba(81,229,242,.13);border-radius:18px;background:radial-gradient(ellipse at 50% 48%,rgba(42,80,132,.22),rgba(5,12,26,.25) 55%,rgba(3,8,18,.65))}
+#q-network{position:absolute;inset:0;width:100%;height:100%;min-height:0;z-index:0;opacity:.65}
+.q-links{position:absolute;inset:0;width:100%;height:100%;z-index:1;overflow:visible}
+.q-module-node{position:absolute;z-index:2;width:174px;min-height:100px;padding:11px 12px 10px 48px;border:1px solid rgba(91,188,224,.42);border-radius:15px;background:linear-gradient(145deg,rgba(14,34,57,.97),rgba(7,16,32,.96));box-shadow:0 9px 28px rgba(0,0,0,.32),inset 0 1px rgba(255,255,255,.06);display:flex;flex-direction:column;gap:4px;direction:ltr;text-align:left}
+.q-node-icon{position:absolute;left:11px;top:13px;width:27px;height:27px;display:grid;place-items:center;border-radius:9px;background:rgba(81,229,242,.12);border:1px solid rgba(81,229,242,.34);color:#7debf4;font-size:16px;box-shadow:0 0 17px rgba(81,229,242,.12)}
+.q-module-node b{font:700 11px ui-monospace,monospace;letter-spacing:.09em;color:#e3f6ff}
+.q-module-node small{font-size:10px;color:#92aac8;direction:rtl;text-align:left}
+.q-module-node em{font-style:normal;font-size:9px;color:#70dce8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.q-node-scanner{left:2%;top:11%}.q-node-guard{left:calc(50% - 87px);top:1%}.q-node-sizer{right:2%;top:11%}
+.q-node-executor{left:2%;bottom:10%}.q-node-logger{left:calc(50% - 87px);bottom:1%}.q-node-equity{right:2%;bottom:10%}
+.q-decision-core{position:absolute;z-index:3;left:50%;top:48%;transform:translate(-50%,-50%);width:220px;min-height:168px;border-radius:28px;border:1px solid rgba(165,139,255,.72);background:radial-gradient(circle at 50% 15%,rgba(92,82,164,.4),rgba(10,22,43,.98) 70%);box-shadow:0 0 0 8px rgba(165,139,255,.045),0 0 42px rgba(112,112,255,.22),inset 0 1px rgba(255,255,255,.1);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px;text-align:center;padding:15px}
+.q-core-orbit{position:absolute;inset:-9px;border:1px dashed rgba(165,139,255,.38);border-radius:34px;pointer-events:none}
+.q-decision-core>small{font:9px ui-monospace,monospace;letter-spacing:.13em;color:#b7a9ff}
+.q-decision-core>b{font:800 19px/1.12 ui-monospace,monospace;letter-spacing:.04em;color:#f2efff}
+.q-decision-core>strong{font:800 13px ui-monospace,monospace;color:#70e8f1;border:1px solid rgba(81,229,242,.28);border-radius:7px;padding:4px 12px;min-width:92px}
+.q-decision-core>span:last-child{font-size:9px;color:#9db4d1}
+.q-decision-output{position:absolute;z-index:4;left:50%;bottom:0;transform:translateX(-50%);width:250px;min-height:58px;border:1px solid rgba(81,229,242,.5);border-radius:13px;background:linear-gradient(90deg,rgba(11,35,54,.98),rgba(25,28,62,.98));display:grid;grid-template-columns:1fr auto;align-items:center;column-gap:9px;padding:7px 13px;box-shadow:0 0 25px rgba(81,229,242,.12);text-align:left}
+.q-decision-output>span{font:8px ui-monospace,monospace;color:#83b4d0;letter-spacing:.12em}
+.q-decision-output>b{grid-column:2;grid-row:1/3;color:#72e8f3;font-size:22px}
+.q-decision-output>strong{font:700 11px ui-monospace,monospace;color:#e4faff}
+.q-decision-output>small{grid-column:1;font-size:8px;color:#77dcb7}
+@media(max-width:980px){#quantumorb{grid-template-columns:1fr;grid-template-areas:"core" "left" "bottom"}.q-core{min-height:640px}}
+@media(max-width:620px){
+ #quantumorb{grid-template-areas:"core" "left" "bottom"}
+ .q-core{min-height:0}
+ .q-network-stage{height:580px;min-height:580px}
+ .q-module-node{width:128px;min-height:86px;padding:9px 7px 8px 36px;border-radius:12px}
+ .q-node-icon{left:7px;top:10px;width:23px;height:23px;font-size:13px}
+ .q-module-node b{font-size:9px;letter-spacing:.03em}
+ .q-module-node small{font-size:8px}
+ .q-module-node em{font-size:8px}
+ .q-node-scanner{left:1%;top:8%}.q-node-guard{left:calc(50% - 64px);top:0}.q-node-sizer{right:1%;top:8%}
+ .q-node-executor{left:1%;bottom:10%}.q-node-logger{left:calc(50% - 64px);bottom:0}.q-node-equity{right:1%;bottom:10%}
+ .q-decision-core{width:166px;min-height:142px;top:49%;padding:10px}
+ .q-decision-core>b{font-size:15px}.q-decision-core>small{font-size:7px}.q-decision-core>span:last-child{font-size:8px}
+ .q-decision-output{width:190px;min-height:52px}
+ .q-decision-output>strong{font-size:9px}.q-decision-output>small{font-size:7px}
+ .q-core-top{flex-wrap:wrap}
+}
 </style>
 </head><body><div class="shell"><aside class="side"><div class="brand"><div class="logo">₿</div><div><b>WHJ BITCOIN</b><small>مركز قيادة التداول الذكي</small></div></div><div class="navlabel">القائمة الرئيسية</div><nav class="nav"><button class="active" data-view="overview"><span class="ico">⌂</span>الرئيسية</button><button data-view="scanner"><span class="ico">⌁</span>ماسح السوق</button><button data-view="strategies"><span class="ico">◈</span>الاستراتيجيات</button><button data-view="trades"><span class="ico">⇄</span>الصفقات</button><button data-view="risk"><span class="ico">⌁</span>المخاطر</button><button data-view="system"><span class="ico">⚙</span>النظام</button><button data-view="agents"><span class="ico">✣</span>مركز الوكلاء</button><button data-view="forward"><span class="ico">◷</span>المراقبة المستقبلية</button><button data-view="mt5"><span class="ico">⌁</span>منصة MT5</button></nav><div class="navlabel agent-nav-label">وحدات التشغيل الست</div><nav class="agent-nav" aria-label="وحدات التشغيل"><button type="button" data-agent-target="0"><span>⌕</span>ماسح السوق</button><button type="button" data-agent-target="1"><span>⚑</span>بوابة التحقق</button><button type="button" data-agent-target="2"><span>◈</span>مدير الحجم</button><button type="button" data-agent-target="3"><span>Ⅱ</span>المحاكي الورقي</button><button type="button" data-agent-target="4"><span>≡</span>سجل القرارات</button><button type="button" data-agent-target="5"><span>◉</span>مراقب المحفظة</button></nav><div class="sidefoot">WHJ Bitcoin Bot 2026<br>مراقبة وتحليل · Paper Trading فقط</div></aside><main>
 <div class="mobilehead">WHJ BITCOIN · مركز القيادة</div><header class="top"><div><div class="eyebrow">WHJ / COMMAND CENTER</div><h1 id="pageTitle">نظرة عامة</h1><div class="sub">مراقبة أداء البوت وتحليل BTC/USD</div></div><div class="topright"><button class="toolbtn" id="exportJson" type="button">تنزيل التقرير JSON</button><button class="toolbtn" id="exportCsv" type="button">تصدير الصفقات CSV</button><span class="pill"><i class="dot"></i><span id="systemState">جارٍ تحميل البيانات</span></span><button class="refresh" id="refresh">↻ تحديث البيانات</button></div></header>
@@ -392,7 +436,26 @@ main{max-width:1720px!important;padding:22px clamp(12px,2vw,30px) 42px!important
  </article>
  <article class="q-panel q-core">
   <div class="q-core-top"><div><div class="q-kicker">WHJ / QUANTUMORB INSPIRED CORE</div><div class="q-core-title">شبكة ذكاء السوق والعُقد المترابطة</div><div class="q-core-sub">MARKET GRAPH · VISUAL MONITOR · NOT A LIVE ON-CHAIN FEED</div></div><span class="q-pill">PAPER MODE ONLY</span></div>
-  <canvas id="q-network" aria-label="شبكة مرئية متحركة لعقد النظام"></canvas>
+  <div class="q-network-stage" aria-label="شبكة وحدات WHJ المتصلة بمحرك القرار">
+   <canvas id="q-network" aria-hidden="true"></canvas>
+   <svg class="q-links" viewBox="0 0 1000 520" preserveAspectRatio="none" aria-hidden="true">
+    <defs><linearGradient id="qLinkGrad" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#51e5f2" stop-opacity=".18"/><stop offset=".52" stop-color="#8b9cff" stop-opacity=".95"/><stop offset="1" stop-color="#51e5f2" stop-opacity=".22"/></linearGradient><marker id="qArrow" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0 0 L6 3 L0 6" fill="none" stroke="#7debf4" stroke-width="1"/></marker></defs>
+    <g fill="none" stroke="url(#qLinkGrad)" stroke-width="2" marker-end="url(#qArrow)">
+     <path d="M170 105 C260 105 330 190 425 235"/><path d="M500 65 L500 185"/><path d="M830 105 C740 105 670 190 575 235"/>
+     <path d="M170 385 C260 385 330 300 425 265"/><path d="M500 435 L500 305"/><path d="M830 385 C740 385 670 300 575 265"/>
+     <path d="M500 310 L500 466" stroke="#a58bff" stroke-width="3"/>
+    </g>
+    <g fill="#62e8f4"><circle cx="170" cy="105" r="4"/><circle cx="500" cy="65" r="4"/><circle cx="830" cy="105" r="4"/><circle cx="170" cy="385" r="4"/><circle cx="500" cy="435" r="4"/><circle cx="830" cy="385" r="4"/></g>
+   </svg>
+   <div class="q-module-node q-node-scanner"><span class="q-node-icon">⌕</span><b>SCANNER</b><small>اتجاه السوق والزخم</small><em data-mirror="agentScanState">بانتظار البيانات</em></div>
+   <div class="q-module-node q-node-guard"><span class="q-node-icon">⚑</span><b>GUARD</b><small>سلامة البيانات والإشارة</small><em data-mirror="agentGuardState">بانتظار الفحص</em></div>
+   <div class="q-module-node q-node-sizer"><span class="q-node-icon">◈</span><b>SIZER</b><small>حجم المركز والمخاطرة</small><em data-mirror="agentSizerState">بانتظار الحساب</em></div>
+   <div class="q-module-node q-node-executor"><span class="q-node-icon">Ⅱ</span><b>EXECUTOR</b><small>محاكاة الصفقات</small><em data-mirror="agentExecState">لا توجد بيانات</em></div>
+   <div class="q-module-node q-node-logger"><span class="q-node-icon">≡</span><b>LOGGER</b><small>أسباب القرارات</small><em data-mirror="agentLogState">بانتظار السجل</em></div>
+   <div class="q-module-node q-node-equity"><span class="q-node-icon">◉</span><b>EQUITY WATCH</b><small>الرصيد والتراجع</small><em data-mirror="agentEquityState">بانتظار الرصيد</em></div>
+   <div class="q-decision-core"><span class="q-core-orbit"></span><small>WHJ · CENTRAL INTELLIGENCE</small><b>DECISION<br>ENGINE</b><strong data-mirror="signalBadge">WAITING</strong><span data-mirror="signalText">بانتظار إشارة النموذج</span></div>
+   <div class="q-decision-output"><span>DECISION OUTPUT</span><b>→</b><strong>PAPER EXECUTOR</strong><small>محاكاة فقط · NO LIVE ORDERS</small></div>
+  </div>
   <div class="q-core-foot"><span>الحركة المرئية تمثيل بصري للنظام وليست بيانات بلوكتشين مباشرة</span><b id="q-report-state">WAITING FOR REPORT</b><span id="q-clock">--:--:--</span></div>
  </article>
  <article class="q-panel q-right">
