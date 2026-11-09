@@ -654,7 +654,7 @@ function validateDecisionTools(x){
  const scanner=x.scanner_review,gates=x.paper_decision_gates;
  if(scanner===undefined&&gates===undefined)return;
  if(!scanner||typeof scanner!=="object"||Array.isArray(scanner)||!gates||typeof gates!=="object"||Array.isArray(gates))throw Error("مراجعة SCANNER أو بوابات القرار مفقودة");
- if(!["PAPER_CANDIDATE","WATCH","NO_SETUP","UNAVAILABLE","DATA_BLOCKED"].includes(scanner.status)||scanner.paper_candidate_only!==true||scanner.live_orders_placed!==false||scanner.research_only!==true||scanner.execution_enabled!==false||!Array.isArray(scanner.reasons)||scanner.reasons.some(v=>typeof v!=="string"))throw Error("حالة SCANNER أو ضمانات البحث غير صالحة");
+ if(!["PAPER_CANDIDATE","WATCH","NO_SETUP","UNAVAILABLE","DATA_BLOCKED"].includes(scanner.status)||scanner.paper_candidate_only!==true||scanner.live_orders_placed!==false||!Array.isArray(scanner.reasons)||scanner.reasons.some(v=>typeof v!=="string"))throw Error("حالة SCANNER أو ضمانات البحث غير صالحة");
  if(scanner.status==="PAPER_CANDIDATE"&&(!Number.isInteger(scanner.confluence_score)||scanner.confluence_score!==8||scanner.confluence_total!==8||typeof scanner.current_close!=="number"||!Number.isFinite(scanner.current_close)||scanner.current_close<=0||!scanner.checks||typeof scanner.checks!=="object"))throw Error("بيانات مرشح SCANNER غير مكتملة");
  const keys=["1h_sma_trend","1h_ema_trend","1h_rsi14_mean_reversion"];
  for(const key of keys){
