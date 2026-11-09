@@ -6,6 +6,7 @@ on:
       - "web/**"
       - ".github/workflows/whj.yml"
       - ".github/workflows/dashboard-check.yml"
+      - "tests/dashboard_forward_validation.js"
   pull_request:
     branches: [main]
     paths:
