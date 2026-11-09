@@ -141,8 +141,9 @@ The replay produces 1s, 5s, 15s, 30s, 1m, 3m, 5m, 15m, 30m, 1h, 4h, 6h, 12h and 
 A separate research-only pipeline can compare EMA50/200 entries with Kraken
 trade-flow confirmation using an exact local trade journal and its matching
 continuity checkpoint. It requires at least 500 completed contiguous hourly
-candles and at least that much captured trade-flow history; the live collector
-does not claim historical completeness before its initial snapshot. Kraken's
+candles; collect for at least 501 hours so the first partial candle touched by
+the initial live snapshot can be excluded and 500 later hours remain. The live
+collector does not claim historical completeness before its initial snapshot. Kraken's
 public OHLC exporter and the full Termux collection/replay procedure are
 documented in [CVD_RESEARCH_RUNBOOK.md](CVD_RESEARCH_RUNBOOK.md). These tools
 are offline/read-only research utilities and do not connect CVD signals to the
