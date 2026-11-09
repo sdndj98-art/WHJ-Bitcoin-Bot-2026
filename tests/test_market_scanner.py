@@ -83,6 +83,7 @@ class MarketScannerTests(unittest.TestCase):
         result = scan_btc_market(candles(), HEALTHY)
         self.assertEqual(result["status"], "PAPER_CANDIDATE")
         self.assertEqual(result["confluence_score"], 8)
+        self.assertIn("all_eight_scanner_checks_passed_paper_review_only", result["reasons"])
         self.assertEqual(result["confluence_total"], 8)
         self.assertTrue(result["paper_candidate_only"])
         self.assertFalse(result["live_orders_placed"])
