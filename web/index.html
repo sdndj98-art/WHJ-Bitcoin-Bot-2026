@@ -732,9 +732,10 @@ function renderDecisionTools(x){
   return "<tr><td>"+esc(labels[k])+"</td><td>"+esc(guardState)+"</td><td>"+((a.open_position===true||summary.open_position===true)?"مفتوح":"فارغ")+"</td><td>"+esc(guardReasons.join("، ")||"لا توجد أسباب توقف مسجلة")+"</td></tr>";
  }).join("");
  $("decisionGuardRows").innerHTML=guardRows;
- const blocked=keys.filter(k=>!gates[k]||gates[k].status!=="APPROVED_FOR_PAPER_SIMULATION_REVIEW_ONLY").length;
- $("decisionGuardStatus").textContent=blocked===0?"الفحوص صافية":"توجد موانع / مراجعة";
- $("decisionGuardStatus").className=blocked===0?"positive":"negative";
+ const guardBlocked=keys.some(k=>{const a=x.sleeves&&x.sleeves[k]&&x.sleeves[k].account||{},s=x.sleeves_summary&&x.sleeves_summary[k]||{};return ["paused_for_drawdown","daily_loss_paused","paused_for_loss_streak","paused_for_strategy_health"].some(flag=>a[flag]===true)||((a.risk_pause_reasons||s.risk_pause_reasons||[]).length>0)});
+ const guardOpen=keys.some(k=>{const a=x.sleeves&&x.sleeves[k]&&x.sleeves[k].account||{},s=x.sleeves_summary&&x.sleeves_summary[k]||{};return a.open_position===true||s.open_position===true});
+ $("decisionGuardStatus").textContent=guardBlocked?"توقف وقائي":guardOpen?"مركز مفتوح":"لا يوجد إيقاف مسجل";
+ $("decisionGuardStatus").className=guardBlocked?"negative":guardOpen?"":"positive";
  $("decisionSizerRows").innerHTML=keys.map(k=>{
   const g=gates[k]||{},approved=g.status==="APPROVED_FOR_PAPER_SIMULATION_REVIEW_ONLY";
   const value=approved?money(g.notional_usd)+" · "+fmt(g.units,8)+" BTC":(Array.isArray(g.reasons)?g.reasons.join("، "):"غير متاح");
