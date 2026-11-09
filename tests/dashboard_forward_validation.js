@@ -160,7 +160,7 @@ assert.equal(getElement("forwardOpenPositions").textContent, "0");
 assert.equal(getElement("forwardFees").textContent, "$0.00");
 assert.match(getElement("decisionScannerStatus").textContent, /مراقبة فقط/);
 assert.equal(getElement("decisionScannerScore").textContent, "6 / 8");
-assert.match(getElement("decisionGuardStatus").textContent, /توجد موانع/);
+assert.match(getElement("decisionGuardStatus").textContent, /لا يوجد إيقاف مسجل/);
 assert.match(getElement("decisionSizerRows").innerHTML, /scanner_candidate_not_approved/);
 assert.match(getElement("decisionSizerStatus").textContent, /0 \/ 3 مؤهل للمراجعة الورقية فقط/);
 
