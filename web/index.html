@@ -257,6 +257,25 @@ body{background:radial-gradient(ellipse at 50% 42%,rgba(28,46,91,.34),transparen
 @media(max-width:980px){#quantumorb{grid-template-columns:1fr 1.2fr;grid-template-areas:"core core" "left right" "bottom bottom"}.q-core{min-height:380px}.q-bottom{grid-template-columns:1fr 1fr}}
 @media(max-width:620px){main{padding:10px 8px 20px!important}.top{align-items:flex-start!important;flex-direction:column}.topright{width:100%}#quantumorb{grid-template-columns:1fr;grid-template-areas:"core" "left" "right" "bottom";gap:9px}.q-core{min-height:340px}.q-bottom{grid-template-columns:1fr}.q-panel{padding:12px}.q-metric strong{font-size:15px}}
 
+
+/* Verified module-state visualization and animated converging network */
+.q-module-node{transition:border-color .25s,box-shadow .25s,background .25s}
+.q-module-node[data-state="pass"]{border-color:rgba(71,223,173,.78);box-shadow:0 0 0 1px rgba(71,223,173,.12),0 0 24px rgba(71,223,173,.13),inset 0 1px rgba(255,255,255,.06)}
+.q-module-node[data-state="pass"] .q-node-icon{color:#72efc1;border-color:#3cae89;background:rgba(48,194,145,.16);box-shadow:0 0 18px rgba(71,223,173,.2)}
+.q-module-node[data-state="pass"] em{color:#72efc1}
+.q-module-node[data-state="unknown"]{border-color:rgba(255,198,111,.68);box-shadow:0 0 20px rgba(255,198,111,.08)}
+.q-module-node[data-state="unknown"] .q-node-icon{color:#ffd18a;border-color:#8f7040;background:rgba(255,198,111,.12)}
+.q-module-node[data-state="unknown"] em{color:#ffd18a}
+.q-module-node[data-state="blocked"]{border-color:rgba(255,120,141,.82);box-shadow:0 0 22px rgba(255,120,141,.14)}
+.q-module-node[data-state="blocked"] .q-node-icon{color:#ff899b;border-color:#a94d62;background:rgba(255,90,120,.15)}
+.q-module-node[data-state="blocked"] em{color:#ff899b}
+.q-agent em[data-state="pass"]{color:#72efc1}.q-agent em[data-state="unknown"]{color:#ffd18a}.q-agent em[data-state="blocked"]{color:#ff899b}
+.q-flow-path{stroke-dasharray:9 13;animation:qFlow 2.4s linear infinite;filter:drop-shadow(0 0 4px rgba(81,229,242,.42))}
+.q-flow-path:nth-of-type(even){animation-duration:3.1s;animation-direction:reverse}
+.q-branch-path{stroke:rgba(119,157,255,.55);stroke-width:1.2;stroke-dasharray:3 8;animation:qFlow 4s linear infinite;marker-end:none}
+.q-output-path{stroke:#b69cff;stroke-width:3.2;stroke-dasharray:8 11;animation:qFlow 1.65s linear infinite;filter:drop-shadow(0 0 6px rgba(165,139,255,.65));marker-end:url(#qArrow)}
+@keyframes qFlow{to{stroke-dashoffset:-88}}
+@media(prefers-reduced-motion:reduce){.q-flow-path,.q-branch-path,.q-output-path{animation:none}}
 </style>
 
 
@@ -441,10 +460,16 @@ main{max-width:1720px!important;padding:22px clamp(12px,2vw,30px) 42px!important
    <svg class="q-links" viewBox="0 0 1000 520" preserveAspectRatio="none" aria-hidden="true">
     <defs><linearGradient id="qLinkGrad" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#51e5f2" stop-opacity=".18"/><stop offset=".52" stop-color="#8b9cff" stop-opacity=".95"/><stop offset="1" stop-color="#51e5f2" stop-opacity=".22"/></linearGradient><marker id="qArrow" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0 0 L6 3 L0 6" fill="none" stroke="#7debf4" stroke-width="1"/></marker></defs>
     <g fill="none" stroke="url(#qLinkGrad)" stroke-width="2" marker-end="url(#qArrow)">
-     <path d="M170 105 C260 105 330 190 425 235"/><path d="M500 65 L500 185"/><path d="M830 105 C740 105 670 190 575 235"/>
-     <path d="M170 385 C260 385 330 300 425 265"/><path d="M500 435 L500 305"/><path d="M830 385 C740 385 670 300 575 265"/>
-     <path d="M500 310 L500 466" stroke="#a58bff" stroke-width="3"/>
+     <path class="q-flow-path" d="M170 105 C245 105 286 142 330 178 S395 220 425 235"/>
+     <path class="q-flow-path" d="M500 65 C500 112 500 145 500 185"/>
+     <path class="q-flow-path" d="M830 105 C755 105 714 142 670 178 S605 220 575 235"/>
+     <path class="q-flow-path" d="M170 385 C245 385 286 348 330 312 S395 280 425 265"/>
+     <path class="q-flow-path" d="M500 435 C500 388 500 355 500 305"/>
+     <path class="q-flow-path" d="M830 385 C755 385 714 348 670 312 S605 280 575 265"/>
+     <path class="q-branch-path" d="M330 178 Q375 178 405 210 M670 178 Q625 178 595 210 M330 312 Q375 312 405 290 M670 312 Q625 312 595 290"/>
+     <path class="q-output-path" d="M500 310 C500 355 500 410 500 466"/>
     </g>
+    <g fill="#62e8f4"><circle cx="170" cy="105" r="4"/><circle cx="500" cy="65" r="4"/><circle cx="830" cy="105" r="4"/><circle cx="170" cy="385" r="4"/><circle cx="500" cy="435" r="4"/><circle cx="830" cy="385" r="4"/></g>
     <g fill="#62e8f4"><circle cx="170" cy="105" r="4"/><circle cx="500" cy="65" r="4"/><circle cx="830" cy="105" r="4"/><circle cx="170" cy="385" r="4"/><circle cx="500" cy="435" r="4"/><circle cx="830" cy="385" r="4"/></g>
    </svg>
    <div class="q-module-node q-node-scanner"><span class="q-node-icon">⌕</span><b>SCANNER</b><small>اتجاه السوق والزخم</small><em data-mirror="agentScanState">بانتظار البيانات</em></div>
@@ -1099,7 +1124,7 @@ document.querySelectorAll(".agent-nav button").forEach(b=>b.addEventListener("cl
 /* Unified QUANTUMORB-inspired display layer. Original WHJ logic remains intact. */
 (()=> {
  const $q=id=>document.getElementById(id);
- const mirror=()=>document.querySelectorAll("[data-mirror]").forEach(el=>{const src=document.getElementById(el.dataset.mirror);if(src)el.textContent=(src.textContent||"—").trim()||"—"});
+ const mirror=()=>document.querySelectorAll("[data-mirror]").forEach(el=>{const src=document.getElementById(el.dataset.mirror);if(!src){el.textContent="غير متاح";el.dataset.state="unknown";return}el.textContent=(src.textContent||"—").trim()||"غير متاح";const state=["pass","blocked","unknown"].includes(src.dataset.state)?src.dataset.state:"unknown";el.dataset.state=state;el.classList.toggle("pass",state==="pass");el.classList.toggle("blocked",state==="blocked");el.classList.toggle("unknown",state==="unknown")});
  const feed=()=>{
   const box=$q("q-decision-feed");if(!box)return;
   const pairs=[["إشارة السوق", "signal"],["حالة الماسح","scannerStatus"],["حالة التقرير","agentReportState"],["جودة البيانات","agentDataQuality"],["آخر تحديث","agentReportTime"]];
