@@ -1,7 +1,7 @@
 name: WHJ Dashboard Validation
 on:
   push:
-    branches: [research/cost-sensitivity]
+    branches: [research/cost-sensitivity, feature/strategy-health-monitor]
     paths:
       - "web/**"
       - ".github/workflows/whj.yml"
