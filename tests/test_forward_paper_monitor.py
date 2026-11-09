@@ -345,6 +345,17 @@ class ForwardPaperMonitorTests(unittest.TestCase):
             self.assertEqual(first["gross_exposure_pct_of_equity"], 0.0)
             self.assertEqual(first["fees_paid_usd"], 0.0)
             self.assertEqual(first["open_positions"], 0)
+            self.assertIn("scanner_review", first)
+            self.assertIn(first["scanner_review"]["status"], ("WATCH", "NO_SETUP"))
+            self.assertEqual(
+                set(first["paper_decision_gates"]),
+                {"1h_sma_trend", "1h_ema_trend", "1h_rsi14_mean_reversion"},
+            )
+            for gate in first["paper_decision_gates"].values():
+                self.assertEqual(gate["status"], "BLOCKED")
+                self.assertIn("scanner_candidate_not_approved", gate["reasons"])
+                self.assertFalse(gate["execution_enabled"])
+                self.assertFalse(gate["order_placed"])
             self.assertEqual(
                 set(first["sleeves_summary"]),
                 {"1h_sma_trend", "1h_ema_trend", "1h_rsi14_mean_reversion", "4h", "6h"},
