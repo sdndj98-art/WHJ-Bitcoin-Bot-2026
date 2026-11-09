@@ -2,6 +2,7 @@
 import math
 
 from advanced_market_analysis import analyze_advanced_market
+from derivatives_intelligence import classify_derivatives_flow
 
 
 def _ema(values, period):
@@ -94,7 +95,8 @@ def _adx(rows, period=14):
 
 
 def scan_btc_market(candles, market_data_quality=None, volume_lookback=20,
-                    volume_spike_multiple=1.5, interval_hours=1, market_label="BTC/USD"):
+                    volume_spike_multiple=1.5, interval_hours=1, market_label="BTC/USD",
+                    derivatives_snapshots=None, derivatives_as_of=None):
     """Score a completed hourly candle against eight independent confirmation checks.
 
     Uses 50 prior candles for EMA trend context, 20 prior candles for breakout
@@ -250,10 +252,29 @@ def scan_btc_market(candles, market_data_quality=None, volume_lookback=20,
         reasons.append("all_seven_scanner_checks_passed_paper_review_only")
 
     advanced_analysis = analyze_advanced_market(normalized)
+    derivatives_context = (
+        classify_derivatives_flow(
+            derivatives_snapshots.get("price"),
+            derivatives_snapshots.get("open_interest"),
+            as_of=derivatives_as_of,
+        )
+        if isinstance(derivatives_snapshots, dict)
+        else {
+            "status": "UNAVAILABLE",
+            "classification": "UNAVAILABLE",
+            "direction": "UNKNOWN",
+            "signal_strength_score": None,
+            "score_type": "HEURISTIC_MAGNITUDE_NOT_PROBABILITY",
+            "reason": "No validated derivatives snapshots supplied",
+            "research_only": True,
+            "execution_enabled": False,
+        }
+    )
 
     return {
         "market": market_label.strip(),
         "advanced_analysis": advanced_analysis,
+        "derivatives_intelligence": derivatives_context,
         "timeframe": timeframe,
         "status": status,
         "lookback_candles": volume_lookback,
