@@ -49,13 +49,13 @@ def build_research_report(candles, trades, checkpoint, trade_log_path, pair,
     if (not isinstance(as_of_timestamp, (int, float))
             or not math.isfinite(as_of_timestamp) or as_of_timestamp < 0):
         raise ValueError("as_of_timestamp must be a finite non-negative Unix timestamp")
-    journal_events = _read_trade_journal(trade_log_path)
-    if trades != journal_events:
-        raise ValueError("trade events must be read from the exact checkpointed journal")
     metadata = validate_continuity_checkpoint(
         checkpoint, trade_log_path, pair.strip(), checkpoint.get("last_trade_id")
         if isinstance(checkpoint, dict) else None
     )
+    journal_events = _read_trade_journal(trade_log_path)
+    if trades != journal_events:
+        raise ValueError("trade events must be read from the exact checkpointed journal")
     if not isinstance(candles, list) or not candles:
         raise ValueError("candles must be a non-empty Kraken OHLCV list")
     if isinstance(interval_seconds, bool) or not isinstance(interval_seconds, int) or interval_seconds <= 0:
