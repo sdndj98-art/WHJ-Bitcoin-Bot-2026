@@ -36,13 +36,13 @@ class KrakenOhlcExportTests(unittest.TestCase):
         rows = self._rows()
         with patch.object(
             kraken_ohlc_export.urllib.request, "urlopen",
-            return_value=_Response(self._payload(rows)),
+            return_value=_Response(self._payload(self._rows(501))),
         ):
             candles = kraken_ohlc_export.fetch_completed_ohlc(
-                as_of_timestamp=500 * 3600 - 1
+                as_of_timestamp=500 * 3600
             )
-        self.assertEqual(len(candles), 499)
-        self.assertEqual(candles[-1][0], 498 * 3600)
+        self.assertEqual(len(candles), 500)
+        self.assertEqual(candles[-1][0], 499 * 3600)
         self.assertEqual(len(candles[-1]), 8)
 
     def test_rejects_fewer_than_500_completed_rows(self):
