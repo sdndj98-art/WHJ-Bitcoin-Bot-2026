@@ -6,6 +6,9 @@ on:
     paths:
       - "cvd_entry_filter_lab.py"
       - "cvd_research_dataset.py"
+      - "kraken_ohlc_export.py"
+      - "tests/test_kraken_ohlc_export.py"
+      - "CVD_RESEARCH_RUNBOOK.md"
       - "cvd_candle_research.py"
       - "trade_journal_checkpoint.py"
       - "tests/test_cvd_entry_filter_lab.py"
@@ -27,8 +30,9 @@ jobs:
         with:
           python-version: "3.12"
       - name: Compile research modules
-        run: python -m py_compile cvd_entry_filter_lab.py cvd_research_dataset.py cvd_candle_research.py trade_journal_checkpoint.py
+        run: python -m py_compile cvd_entry_filter_lab.py cvd_research_dataset.py cvd_candle_research.py trade_journal_checkpoint.py kraken_ohlc_export.py
       - name: Run focused CVD research tests
         run: |
           python -m unittest discover -s tests -p "test_cvd_entry_filter_lab.py" -v
           python -m unittest discover -s tests -p "test_cvd_research_dataset.py" -v
+          python -m unittest discover -s tests -p "test_kraken_ohlc_export.py" -v
