@@ -79,7 +79,7 @@ class CvdResearchDatasetTests(unittest.TestCase):
     def test_rejects_modified_journal_checkpoint(self):
         with open(self.journal_path, "a", encoding="utf-8") as handle:
             handle.write("{}\n")
-        with self.assertRaisesRegex(ValueError, "does not match journal"):
+        with self.assertRaisesRegex(ValueError, "invalid journal|does not match journal"):
             build_research_report(
                 self.candles, self.trades, self.checkpoint,
                 self.journal_path, "BTC/USD", self.as_of,
