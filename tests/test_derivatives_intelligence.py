@@ -57,8 +57,23 @@ class DerivativesIntelligenceTests(unittest.TestCase):
         self.assertEqual(result["status"], "DATA_BLOCKED")
 
     def test_stale_observations_are_blocked(self):
-        result = self.classify(1.0, 1.0, price={"observed_at": "2026-11-10T11:50:00Z"})
+        stale = "2026-11-10T11:50:00Z"
+        result = self.classify(
+            1.0, 1.0,
+            price={"observed_at": stale},
+            oi={"observed_at": stale},
+        )
         self.assertEqual(result["status"], "DATA_BLOCKED")
+        self.assertIn("stale", result["reason"].lower())
+
+    def test_non_positive_interval_is_blocked(self):
+        result = self.classify(
+            1.0, 1.0,
+            price={"interval_end": "2026-11-10T10:00:00Z"},
+            oi={"interval_end": "2026-11-10T10:00:00Z"},
+        )
+        self.assertEqual(result["status"], "DATA_BLOCKED")
+        self.assertIn("positive duration", result["reason"].lower())
 
     def test_missing_snapshot_is_blocked(self):
         result = classify_derivatives_flow(None, {}, as_of=AS_OF)
