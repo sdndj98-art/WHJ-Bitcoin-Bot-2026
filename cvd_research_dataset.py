@@ -9,6 +9,7 @@ import json
 import math
 import os
 import tempfile
+from datetime import datetime
 
 from cvd_candle_research import align_trade_flow_to_candles
 from cvd_entry_filter_lab import run_cvd_entry_filter_lab
@@ -73,6 +74,40 @@ def build_research_report(candles, trades, checkpoint, trade_log_path, pair,
         candles, trades, interval_seconds=interval_seconds,
         continuity_verified=True,
     )
+    # The initial WebSocket snapshot establishes a continuity baseline, but
+    # cannot prove that the first candle was captured from its opening second.
+    # Conservatively invalidate that entire first trade-containing candle.
+    first_trade_timestamp = trades[0].get("timestamp")
+    if isinstance(first_trade_timestamp, bool):
+        raise ValueError("first journal trade timestamp is invalid")
+    if isinstance(first_trade_timestamp, (int, float)):
+        first_trade_epoch = float(first_trade_timestamp)
+    elif isinstance(first_trade_timestamp, str):
+        try:
+            parsed = datetime.fromisoformat(first_trade_timestamp.replace("Z", "+00:00"))
+        except ValueError as exc:
+            raise ValueError("first journal trade timestamp is invalid") from exc
+        if parsed.tzinfo is None or parsed.utcoffset() is None:
+            raise ValueError("first journal trade timestamp must include timezone")
+        first_trade_epoch = parsed.timestamp()
+    else:
+        raise ValueError("first journal trade timestamp is invalid")
+    if not math.isfinite(first_trade_epoch) or first_trade_epoch < 0:
+        raise ValueError("first journal trade timestamp is invalid")
+    partial_bucket_start = int(first_trade_epoch // interval_seconds) * interval_seconds
+    for bar in aligned["bars"]:
+        if bar["candle_timestamp"] <= partial_bucket_start:
+            bar["available"] = False
+            bar["status"] = "PARTIAL_INITIAL_CANDLE"
+            bar["bullish_flow_confirmation"] = False
+            bar["bearish_flow_confirmation"] = False
+            bar["bullish_absorption_divergence"] = False
+            bar["bearish_absorption_divergence"] = False
+    aligned["available_bars"] = sum(bar["available"] for bar in aligned["bars"])
+    aligned["status"] = (
+        "OK" if aligned["available_bars"] == aligned["total_bars"]
+        else "PARTIAL_OR_UNAVAILABLE"
+    )
     prices = [float(row[4]) for row in candles]
     timestamps = [int(row[0]) for row in candles]
     report = run_cvd_entry_filter_lab(
@@ -97,6 +132,7 @@ def build_research_report(candles, trades, checkpoint, trade_log_path, pair,
         "limitations": [
             "Checkpoint integrity binds the report to the local journal bytes; it is not a cryptographic signature.",
             "Continuity covers only the captured Kraken feed interval, not earlier exchange history.",
+            "The first trade-containing candle is excluded because the initial snapshot cannot prove full-candle coverage.",
             "CVD is venue-specific and cannot represent consolidated market-wide order flow.",
             "Unavailable or stale candle flow is excluded from new entries by the research filter.",
         ],
