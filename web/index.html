@@ -244,6 +244,25 @@ body[data-whj-theme="light"] .agent-visual{background:#f1f6fa;border-color:#d2df
 body[data-whj-theme="light"] .av-donut:before{background:#f1f6fa}
 body[data-whj-theme="light"] .av-order{background:#e8f0f6}
 @media(max-width:700px){.agent-card{min-height:0}.agent-visual{height:88px}.av-readouts span{font-size:7px}.av-order b{font-size:7px}}
+
+.decision-tools-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin:13px 0}
+.decision-tool{min-width:0;border-color:#29465e}
+.decision-tool-head{display:flex;align-items:center;gap:10px;min-height:48px;margin-bottom:13px}
+.decision-tool-head>div{display:grid;gap:4px;min-width:0;flex:1}
+.decision-tool-head b{font-size:12px}.decision-tool-head small{font-size:9px;color:var(--m)}
+.decision-tool-head>strong{font-size:9px;color:var(--a);text-align:left}
+.decision-icon{width:34px;height:34px;border-radius:11px;display:grid;place-items:center;background:#17354b;color:var(--c);font-size:20px}
+.guard-tool .decision-icon{background:#382333;color:#ff9bb0}.sizer-tool .decision-icon{background:#292747;color:#b9aaff}
+.decision-metrics{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px}
+.decision-metrics>div{background:#0b1a2a;border:1px solid #233d55;border-radius:9px;padding:10px;min-width:0}
+.decision-metrics small,.decision-metrics b{display:block}.decision-metrics small{font-size:8px;color:var(--m)}.decision-metrics b{font-size:13px;margin-top:6px;overflow-wrap:anywhere}
+.decision-reasons{font-size:10px;line-height:1.8;color:var(--m);margin:12px 0 0;overflow-wrap:anywhere}
+.decision-tool table{font-size:9px}.decision-tool th,.decision-tool td{padding:8px 6px;white-space:normal;vertical-align:top}
+.decision-safety-note{border-right:3px solid var(--a);padding:8px 11px;background:#211e18;border-radius:7px;line-height:1.8}
+@media(max-width:1050px){.decision-tools-grid{grid-template-columns:1fr 1fr}.scanner-tool{grid-column:1/-1}}
+@media(max-width:700px){.decision-tools-grid{grid-template-columns:1fr}.scanner-tool{grid-column:auto}.decision-tool{padding:12px}.decision-tool table{font-size:8px}}
+body[data-whj-theme="light"] .decision-metrics>div{background:#f4f7fa;border-color:#dce4eb}
+body[data-whj-theme="light"] .decision-safety-note{background:#fff8e9;border-color:#d8a84e}
 </style>
 <style id="whj-left-command-rail">
 /* Desktop command rail: left anchored, Arabic content remains RTL */
@@ -433,6 +452,19 @@ body[data-whj-theme="light"] .agent-nav button:hover,body[data-whj-theme="light"
 </div>
 <div class="banner"><div><b id="forwardStatus">بانتظار التقرير</b><p id="forwardGenerated">لم يتم تحميل تقرير بعد.</p><p id="forwardCycle">بانتظار التقرير.</p>
 <p id="forwardFreshness" class="sub" role="status">عمر التقرير: —</p></div><span class="status">FORWARD PAPER</span></div>
+
+<div class="decision-tools-grid" aria-label="مراجعة أدوات قرار المحاكاة">
+ <article class="card decision-tool scanner-tool"><div class="decision-tool-head"><span class="decision-icon">⌕</span><div><b>SCANNER · رادار السوق</b><small>النتيجة الفنية من الشموع المكتملة</small></div><strong id="decisionScannerStatus">بانتظار التقرير</strong></div>
+  <div class="decision-metrics"><div><small>التوافق</small><b id="decisionScannerScore">—</b></div><div><small>إغلاق BTC</small><b id="decisionScannerClose">—</b></div><div><small>مضاعف الحجم</small><b id="decisionScannerVolume">—</b></div></div><p class="decision-reasons" id="decisionScannerReasons">لا توجد مراجعة ماسح محمّلة.</p>
+ </article>
+ <article class="card decision-tool guard-tool"><div class="decision-tool-head"><span class="decision-icon">⚑</span><div><b>GUARD · درع المخاطر</b><small>حالة الحماية لكل حساب ساعة</small></div><strong id="decisionGuardStatus">بانتظار التقرير</strong></div>
+  <div class="tablewrap"><table><thead><tr><th>الحساب</th><th>الإيقاف الوقائي</th><th>المركز</th><th>الأسباب</th></tr></thead><tbody id="decisionGuardRows"><tr><td colspan="4" class="empty">بانتظار بيانات الحماية</td></tr></tbody></table></div>
+ </article>
+ <article class="card decision-tool sizer-tool"><div class="decision-tool-head"><span class="decision-icon">◈</span><div><b>SIZER · حاسبة الحجم</b><small>حجم افتراضي محسوب بحدود المخاطر</small></div><strong id="decisionSizerStatus">بانتظار التقرير</strong></div>
+  <div class="tablewrap"><table><thead><tr><th>الاستراتيجية</th><th>القيمة الافتراضية</th><th>المخاطرة</th></tr></thead><tbody id="decisionSizerRows"><tr><td colspan="3" class="empty">بانتظار حساب الحجم</td></tr></tbody></table></div>
+ </article>
+</div>
+<p class="sub decision-safety-note">هذه بوابة قرار وحساب حجم للمراجعة فقط. حتى عند ظهور «مؤهل للمراجعة الورقية» لا يتم فتح صفقة أو تعديل دفتر الحساب أو إرسال أي أمر. لا تتوفر بيانات OI مشتقات موثقة ضمن هذا التقرير.</p>
 <div class="grid">
 <article class="card metric"><div class="label">إجمالي رأس المال الافتراضي</div><div class="value" id="forwardInitial">—</div><div class="hint">خمسة حسابات مستقلة</div></article>
 <article class="card metric"><div class="label">القيمة الحالية</div><div class="value" id="forwardEquity">—</div><div class="hint">بعد تكاليف الخروج المقدّرة</div></article>
@@ -617,6 +649,23 @@ $("adxForwardFile").addEventListener("change",async e=>{
 $("clearAdxForward").addEventListener("click",()=>{adxForwardReport=null;$("adxForwardFile").value="";$("adxForwardMessage").textContent="تم مسح تقرير ADX من عرض الصفحة.";["adxForwardGenerated","adxForwardQuality","adxForwardSeed","adxForwardFreshness"].forEach(id=>$(id).textContent="—");$("adxForwardStatus").textContent="بانتظار تقرير ADX";$("adxForwardRows").innerHTML="<tr><td colspan='11' class='empty'>لا يوجد تقرير ADX محمّل</td></tr>";});
 
 let forwardReport=null;
+
+function validateDecisionTools(x){
+ const scanner=x.scanner_review,gates=x.paper_decision_gates;
+ if(scanner===undefined&&gates===undefined)return;
+ if(!scanner||typeof scanner!=="object"||Array.isArray(scanner)||!gates||typeof gates!=="object"||Array.isArray(gates))throw Error("مراجعة SCANNER أو بوابات القرار مفقودة");
+ if(!["PAPER_CANDIDATE","WATCH","NO_SETUP","UNAVAILABLE","DATA_BLOCKED"].includes(scanner.status)||scanner.paper_candidate_only!==true||scanner.live_orders_placed!==false||scanner.research_only!==true||scanner.execution_enabled!==false||!Array.isArray(scanner.reasons)||scanner.reasons.some(v=>typeof v!=="string"))throw Error("حالة SCANNER أو ضمانات البحث غير صالحة");
+ if(scanner.status==="PAPER_CANDIDATE"&&(!Number.isInteger(scanner.confluence_score)||scanner.confluence_score!==8||scanner.confluence_total!==8||typeof scanner.current_close!=="number"||!Number.isFinite(scanner.current_close)||scanner.current_close<=0||!scanner.checks||typeof scanner.checks!=="object"))throw Error("بيانات مرشح SCANNER غير مكتملة");
+ const keys=["1h_sma_trend","1h_ema_trend","1h_rsi14_mean_reversion"];
+ for(const key of keys){
+  const gate=gates[key];
+  if(!gate||typeof gate!=="object"||!["BLOCKED","APPROVED_FOR_PAPER_SIMULATION_REVIEW_ONLY"].includes(gate.status)||gate.paper_only!==true||gate.execution_enabled!==false||gate.order_placed!==false||!Array.isArray(gate.reasons)||gate.reasons.some(v=>typeof v!=="string"))throw Error("بوابة GUARD/SIZER غير صالحة للحساب "+key);
+  if(gate.status==="APPROVED_FOR_PAPER_SIMULATION_REVIEW_ONLY"){
+   for(const field of ["reference_price","notional_usd","units","allocation_cap_usd","risk_budget_usd","estimated_stop_risk_usd","stop_level","target_level"])if(typeof gate[field]!=="number"||!Number.isFinite(gate[field])||gate[field]<=0)throw Error("قيمة SIZER غير صالحة: "+field);
+   if(gate.notional_usd>gate.allocation_cap_usd+1e-8||gate.estimated_stop_risk_usd>gate.risk_budget_usd+1e-8)throw Error("حساب SIZER يتجاوز سقف التخصيص أو المخاطرة");
+  }
+ }
+}
 function validateForwardReport(x){
  const n=v=>typeof v==="number"&&Number.isFinite(v);
  const integer=v=>Number.isInteger(v)&&v>=0;
@@ -655,12 +704,46 @@ function validateForwardReport(x){
  const sleeveStatuses=keys.map(k=>x.sleeves_summary[k].health_assessment.status);
  const expectedStatus=sleeveStatuses.includes("RISK_PAUSED")?"RISK_PAUSED":sleeveStatuses.includes("REVIEW_REQUIRED")?"REVIEW_REQUIRED":"PAPER_MONITORING";
  if(x.status!==expectedStatus)throw Error("حالة المحفظة لا تطابق حالات الاستراتيجيات الخمس");
+ validateDecisionTools(x);
  if(x.cycle_status!==undefined||x.total_processed_new_candles!==undefined){
   if(!["WAITING_FOR_NEW_CLOSED_CANDLES","PROCESSED_NEW_CANDLES"].includes(x.cycle_status)||!integer(x.total_processed_new_candles))throw Error("حالة دورة المراقبة غير صالحة");
   const processed=keys.reduce((sum,k)=>sum+(integer(x.sleeves_summary[k].processed_new_candles)?x.sleeves_summary[k].processed_new_candles:0),0);
   if(processed!==x.total_processed_new_candles||(x.cycle_status==="WAITING_FOR_NEW_CLOSED_CANDLES")!==(processed===0))throw Error("إجمالي الشموع المعالجة لا يطابق حسابات الاستراتيجيات");
  }
  return x;
+}
+
+function renderDecisionTools(x){
+ const scanner=x.scanner_review||{},gates=x.paper_decision_gates||{},keys=["1h_sma_trend","1h_ema_trend","1h_rsi14_mean_reversion"];
+ const labels={"1h_sma_trend":"1h SMA","1h_ema_trend":"1h EMA","1h_rsi14_mean_reversion":"1h RSI14"};
+ const statusLabels={PAPER_CANDIDATE:"مرشح للمراجعة الورقية",WATCH:"مراقبة فقط",NO_SETUP:"لا توجد فرصة",UNAVAILABLE:"غير متاح",DATA_BLOCKED:"محظور بسبب البيانات"};
+ $("decisionScannerStatus").textContent=statusLabels[scanner.status]||"غير متاح";
+ $("decisionScannerScore").textContent=Number.isInteger(scanner.confluence_score)?scanner.confluence_score+" / "+(scanner.confluence_total||8):"—";
+ $("decisionScannerClose").textContent=Number.isFinite(scanner.current_close)?money(scanner.current_close):"—";
+ $("decisionScannerVolume").textContent=Number.isFinite(scanner.volume_ratio)?fmt(scanner.volume_ratio,2)+"×":"—";
+ $("decisionScannerReasons").textContent=Array.isArray(scanner.reasons)&&scanner.reasons.length?scanner.reasons.join(" · "):"لم يقدّم الماسح أسباباً إضافية.";
+ $("decisionScannerStatus").className=scanner.status==="PAPER_CANDIDATE"?"positive":"";
+ const guardRows=keys.map(k=>{
+  const sleeve=x.sleeves&&x.sleeves[k],a=sleeve&&sleeve.account||{},summary=x.sleeves_summary&&x.sleeves_summary[k]||{},reasons=Array.isArray(a.risk_pause_reasons)?a.risk_pause_reasons:(summary.risk_pause_reasons||[]);
+  const flags=[["تراجع",a.paused_for_drawdown],["خسارة يومية",a.daily_loss_paused],["سلسلة خسائر",a.paused_for_loss_streak],["صحة الاستراتيجية",a.paused_for_strategy_health]];
+  const active=flags.filter(v=>v[1]===true).map(v=>v[0]);
+  const guardState=active.length||reasons.length?"متوقف / محظور":a.open_position===true||summary.open_position===true?"مركز مفتوح":"لا يوجد إيقاف";
+  const guardReasons=active.concat(reasons).filter((v,i,all)=>all.indexOf(v)===i);
+  return "<tr><td>"+esc(labels[k])+"</td><td>"+esc(guardState)+"</td><td>"+((a.open_position===true||summary.open_position===true)?"مفتوح":"فارغ")+"</td><td>"+esc(guardReasons.join("، ")||"لا توجد أسباب توقف مسجلة")+"</td></tr>";
+ }).join("");
+ $("decisionGuardRows").innerHTML=guardRows;
+ const blocked=keys.filter(k=>!gates[k]||gates[k].status!=="APPROVED_FOR_PAPER_SIMULATION_REVIEW_ONLY").length;
+ $("decisionGuardStatus").textContent=blocked===0?"الفحوص صافية":"توجد موانع / مراجعة";
+ $("decisionGuardStatus").className=blocked===0?"positive":"negative";
+ $("decisionSizerRows").innerHTML=keys.map(k=>{
+  const g=gates[k]||{},approved=g.status==="APPROVED_FOR_PAPER_SIMULATION_REVIEW_ONLY";
+  const value=approved?money(g.notional_usd)+" · "+fmt(g.units,8)+" BTC":(Array.isArray(g.reasons)?g.reasons.join("، "):"غير متاح");
+  const risk=approved?"ميزانية "+money(g.risk_budget_usd)+" · مخاطرة الوقف "+money(g.estimated_stop_risk_usd):"لا يُحسب حجم عند الحظر";
+  return "<tr><td>"+esc(labels[k])+"</td><td>"+esc(approved?value:"محظور: "+value)+"</td><td>"+esc(risk)+"</td></tr>";
+ }).join("");
+ const approvedCount=keys.filter(k=>gates[k]&&gates[k].status==="APPROVED_FOR_PAPER_SIMULATION_REVIEW_ONLY").length;
+ $("decisionSizerStatus").textContent=approvedCount+" / 3 مؤهل للمراجعة الورقية فقط";
+ $("decisionSizerStatus").className=approvedCount?"positive":"negative";
 }
 function renderForward(x){
  const f=(id,v)=>$(id).textContent=v;
@@ -674,6 +757,7 @@ function renderForward(x){
  const sleeveLabels={"1h_sma_trend":"1h · SMA Trend","1h_ema_trend":"1h · EMA Trend","1h_rsi14_mean_reversion":"1h · RSI14 Mean Reversion","4h":"4h · EMA50/200","6h":"6h · EMA50/200"};const sleeveKeys=Object.keys(sleeveLabels);$("forwardRows").innerHTML=sleeveKeys.map(k=>{const a=x.sleeves_summary[k],p=Array.isArray(a.risk_pause_reasons)?a.risk_pause_reasons:[],health=a.health_assessment||{},labels={RISK_PAUSED:"متوقف وقائياً",INSUFFICIENT_FORWARD_SAMPLE:"العينة غير كافية",REVIEW_REQUIRED:"مراجعة مطلوبة",CONTINUE_PAPER_REVIEW:"استمرار ورقي بحذر"},rolling={ROLLING_REVIEW_REQUIRED:"تراجع آخر الصفقات",ROLLING_STABLE:"آخر الصفقات مستقرة",INSUFFICIENT_ROLLING_SAMPLE:"عينة متحركة غير كافية"};const rollingText=rolling[health.rolling_status]||"—";const rollingPnl=typeof health.rolling_net_pnl_usd==="number"&&Number.isFinite(health.rolling_net_pnl_usd)?money(health.rolling_net_pnl_usd):"—";const rollingDd=typeof health.rolling_max_drawdown_pct==="number"&&Number.isFinite(health.rolling_max_drawdown_pct)?pct(health.rolling_max_drawdown_pct):"—";return "<tr><td>"+esc(sleeveLabels[k])+"</td><td>"+esc(money(a.equity_usd))+"</td><td>"+esc(pct(a.return_pct))+"</td><td>"+esc(fmt(a.completed_trades,0))+"</td><td>"+esc(pct(a.win_rate_pct))+"</td><td>"+esc(fmt(a.profit_factor))+"</td><td>"+esc(pct(a.max_drawdown_pct))+"</td><td>"+esc(money(a.exposure_usd))+"<div class='hint'>"+esc(pct(a.exposure_pct_of_equity))+"</div></td><td>"+(a.open_position?"مفتوح":"لا يوجد")+"</td><td>"+(p.length?esc(p.join("، ")):"سليم")+"</td><td>"+esc(labels[health.status]||"غير متوفر")+"<div class=\"hint\">"+esc(rollingText)+" · صافي آخر الصفقات: "+esc(rollingPnl)+" · تراجع آخر الصفقات: "+esc(rollingDd)+"</div></td></tr>"}).join("");
  const r=x.risk_limits||{};f("forwardAllocation",fmt(r.allocation_pct_per_sleeve,0)+"%");f("forwardMaxDD",fmt(r.max_drawdown_pause_pct,0)+"%");f("forwardDaily",fmt(r.daily_loss_pause_pct,0)+"%");f("forwardStreak",fmt(r.consecutive_loss_pause_count,0)+" خسائر");f("forwardQuality",x.data_quality&&x.data_quality.quality||"—");f("forwardCandle",x.latest_hourly_candle_timestamp?new Date(x.latest_hourly_candle_timestamp).toLocaleString("ar-IQ"):"—");
  $("forwardStatus").className=x.status==="RISK_PAUSED"||x.status==="REVIEW_REQUIRED"?"negative":"positive";
+ renderDecisionTools(x);
 }
 $("forwardFile").addEventListener("change",async e=>{
  const file=e.target.files&&e.target.files[0];if(!file)return;
@@ -685,6 +769,9 @@ function resetForwardView(){
  ["forwardInitial","forwardEquity","forwardReturn","forwardTrades","forwardCash","forwardExposure","forwardOpenPositions","forwardFees","forwardGenerated","forwardFreshness","forwardQuality","forwardCandle","forwardAllocation","forwardMaxDD","forwardDaily","forwardStreak"].forEach(id=>$(id).textContent="—");
  $("forwardStatus").textContent="بانتظار التقرير";$("forwardStatus").className="";
  $("forwardRows").innerHTML="<tr><td colspan='11' class='empty'>لا توجد بيانات صالحة للعرض</td></tr>";
+ ["decisionScannerStatus","decisionScannerScore","decisionScannerClose","decisionScannerVolume","decisionScannerReasons","decisionGuardStatus","decisionSizerStatus"].forEach(id=>$(id).textContent="—");
+ $("decisionGuardRows").innerHTML="<tr><td colspan='4' class='empty'>بانتظار بيانات الحماية</td></tr>";
+ $("decisionSizerRows").innerHTML="<tr><td colspan='3' class='empty'>بانتظار حساب الحجم</td></tr>";
 }
 $("clearForward").addEventListener("click",()=>{forwardReport=null;$("forwardFile").value="";$("forwardMessage").textContent="تم مسح التقرير من عرض الصفحة.";resetForwardView();});
 function filterRows(id,query){const q=String(query||"").trim().toLocaleLowerCase();document.querySelectorAll("#"+id+" tr").forEach(row=>{row.hidden=!!q&&!row.textContent.toLocaleLowerCase().includes(q)})}
