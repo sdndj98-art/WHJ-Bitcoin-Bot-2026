@@ -7,6 +7,12 @@ on:
       - "cvd_entry_filter_lab.py"
       - "tests/test_cvd_entry_filter_lab.py"
       - ".github/workflows/cvd-entry-filter-research.yml"
+  pull_request:
+    branches: [main]
+    paths:
+      - "cvd_entry_filter_lab.py"
+      - "tests/test_cvd_entry_filter_lab.py"
+      - ".github/workflows/cvd-entry-filter-research.yml"
 
 jobs:
   focused-tests:
