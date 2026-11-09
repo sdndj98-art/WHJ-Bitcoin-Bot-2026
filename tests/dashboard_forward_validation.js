@@ -51,12 +51,31 @@ const report = {
       rolling_status: "INSUFFICIENT_ROLLING_SAMPLE"
     }
   }]))
+
 };
+report.scanner_review = {
+  status: "WATCH", paper_candidate_only: true, live_orders_placed: false,
+  reasons: ["volume_spike_not_confirmed"], confluence_score: 6, confluence_total: 8,
+  current_close: 68000, volume_ratio: 1.2
+};
+report.paper_decision_gates = Object.fromEntries([
+  "1h_sma_trend", "1h_ema_trend", "1h_rsi14_mean_reversion"
+].map(key => [key, {
+  status: "BLOCKED", reasons: ["scanner_candidate_not_approved"],
+  paper_only: true, execution_enabled: false, order_placed: false
+}]));
 
 assert.equal(validate(report), report, "Valid five-sleeve report should pass");
 assert.match(report.cycle_status, /WAITING_FOR_NEW_CLOSED_CANDLES/);
 assert.equal(report.gross_exposure_usd, 0);
 assert.equal(report.open_positions, 0);
+
+const unsafeDecisionGate = structuredClone(report);
+unsafeDecisionGate.paper_decision_gates["1h_sma_trend"].order_placed = true;
+assert.throws(() => validate(unsafeDecisionGate), /بوابة GUARD\/SIZER غير صالحة/);
+const unsafeScanner = structuredClone(report);
+unsafeScanner.scanner_review.live_orders_placed = true;
+assert.throws(() => validate(unsafeScanner), /حالة SCANNER أو ضمانات البحث غير صالحة/);
 const inconsistentExposure = structuredClone(report);
 inconsistentExposure.gross_exposure_usd = 10;
 assert.throws(() => validate(inconsistentExposure), /تفاصيل الحسابات لا تطابق إجمالي التعرّض والسيولة/);
@@ -108,12 +127,21 @@ const getElement = (id) => {
   if (!elements.has(id)) elements.set(id, { textContent: "", className: "", innerHTML: "" });
   return elements.get(id);
 };
+const decisionRendererMatch = html.match(/function renderDecisionTools\\(x\\)\\{[\\s\\S]*?\\n\\}/);
+assert.ok(decisionRendererMatch, "Could not locate SCANNER/GUARD/SIZER renderer");
 const context = {
   $: getElement,
   money: (value) => value === undefined || value === null ? "—" : "$" + Number(value).toFixed(2),
   pct: (value) => value === undefined || value === null ? "—" : Number(value).toFixed(2) + "%",
   fmt: (value) => value === undefined || value === null ? "—" : String(value),
-  esc: (value) => String(value ?? "")
+  esc: (value) => String(value ?? ""),
+  renderDecisionTools: vm.runInNewContext(decisionRendererMatch[0] + "; renderDecisionTools", {
+    $: getElement,
+    money: (value) => value === undefined || value === null ? "—" : "$" + Number(value).toFixed(2),
+    pct: (value) => value === undefined || value === null ? "—" : Number(value).toFixed(2) + "%",
+    fmt: (value) => value === undefined || value === null ? "—" : String(value),
+    esc: (value) => String(value ?? "")
+  })
 };
 const render = vm.runInNewContext(`${rendererSource}; renderForward`, context);
 const renderableReport = structuredClone(report);
@@ -130,6 +158,12 @@ assert.match(getElement("forwardRows").innerHTML, /\$0\.00/);
 assert.equal(getElement("forwardExposure").textContent, "$0.00 · 0.00%");
 assert.equal(getElement("forwardOpenPositions").textContent, "0");
 assert.equal(getElement("forwardFees").textContent, "$0.00");
+assert.match(getElement("decisionScannerStatus").textContent, /مراقبة فقط/);
+assert.equal(getElement("decisionScannerScore").textContent, "6 / 8");
+assert.match(getElement("decisionGuardStatus").textContent, /توجد موانع/);
+assert.match(getElement("decisionSizerRows").innerHTML, /scanner_candidate_not_approved/);
+assert.match(getElement("decisionSizerStatus").textContent, /0 \/ 3 مؤهل للمراجعة الورقية فقط/);
+
 assert.equal((getElement("forwardRows").innerHTML.match(/<tr>/g) || []).length, 5);
 
 
