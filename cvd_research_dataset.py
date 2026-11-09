@@ -124,6 +124,8 @@ def build_research_report(candles, trades, checkpoint, trade_log_path, pair,
         "journal_continuity_checkpoint_validated": True,
         "as_of_timestamp": int(as_of_timestamp),
         "last_candle_completed": True,
+        "partial_initial_candle_excluded": True,
+        "first_fully_covered_candle_unix": partial_bucket_start + interval_seconds,
         "available_cvd_bars": aligned["available_bars"],
         "total_cvd_bars": aligned["total_bars"],
         "availability_pct": round(
