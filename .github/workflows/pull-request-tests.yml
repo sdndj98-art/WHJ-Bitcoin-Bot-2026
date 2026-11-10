@@ -2,7 +2,7 @@ name: WHJ Pull Request Tests
 
 on:
   pull_request:
-    branches: [main]
+    branches: [main, bridge/termux-agent-20261110]
   workflow_dispatch:
 
 permissions:
