@@ -48,6 +48,13 @@ class DerivativesIntelligenceTests(unittest.TestCase):
         self.assertEqual(result["direction"], "NEUTRAL")
         self.assertEqual(result["signal_strength_score"], 0.0)
 
+    def test_zero_noise_threshold_is_rejected(self):
+        price, oi = snapshots(0.0, 0.0)
+        with self.assertRaisesRegex(ValueError, "min_abs_change_pct.*positive"):
+            classify_derivatives_flow(
+                price, oi, as_of=AS_OF, min_abs_change_pct=0.0
+            )
+
     def test_mismatched_interval_is_blocked(self):
         result = self.classify(1.0, 1.0, oi={"interval_start": "2026-11-10T10:00:00Z"})
         self.assertEqual(result["status"], "DATA_BLOCKED")
