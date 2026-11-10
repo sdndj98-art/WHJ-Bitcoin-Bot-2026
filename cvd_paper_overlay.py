@@ -148,7 +148,8 @@ def build_latest_cvd_confirmation(
         if not math.isfinite(timestamp_ms) or not float(timestamp_ms).is_integer():
             return _unavailable("cvd_market_candle_timestamp_invalid")
         timestamp = int(timestamp_ms // 1000)
-        now = float(now_timestamp)
+        import time
+        now = float(time.time() if now_timestamp is None else now_timestamp)
         if timestamp + interval_seconds > now:
             return _unavailable("cvd_candle_not_yet_closed")
 
