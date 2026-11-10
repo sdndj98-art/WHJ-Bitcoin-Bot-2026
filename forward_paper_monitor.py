@@ -360,7 +360,7 @@ def build_qualified_ensemble(sleeves_summary, sleeves):
     }
 
 
-def process_forward_accounts(candles, state_dir=".", now_timestamp=None):
+def process_forward_accounts(candles, state_dir=".", now_timestamp=None, cvd_confirmation=None, require_cvd_confirmation=False):
     quality = validate_hourly_feed(candles, now_timestamp)
     scanner_review = _build_scanner_review(candles, quality)
     directory = Path(state_dir)
@@ -423,7 +423,9 @@ def process_forward_accounts(candles, state_dir=".", now_timestamp=None):
         sleeve_result = {"seed": seed, "account": account}
         if hours == 1:
             sleeve_result["decision_gate"] = evaluate_paper_decision(
-                scanner_review, account
+                scanner_review, account,
+                cvd_confirmation=cvd_confirmation,
+                require_cvd_confirmation=require_cvd_confirmation,
             )
         results[sleeve] = sleeve_result
 
@@ -486,6 +488,8 @@ def process_forward_accounts(candles, state_dir=".", now_timestamp=None):
         "market": "BTC/USD",
         "data_quality": quality,
         "scanner_review": scanner_review,
+        "cvd_confirmation": cvd_confirmation,
+        "cvd_requirement_enabled": require_cvd_confirmation,
         "paper_decision_gates": {
             sleeve: value["decision_gate"]
             for sleeve, value in results.items()
