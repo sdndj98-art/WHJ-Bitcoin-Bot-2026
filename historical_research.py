@@ -1444,15 +1444,24 @@ def summarize_qualification(result, watchlist_limit=5):
 def build_qualification_markdown(result):
     """Create a concise human-readable report from qualification JSON."""
     policy = result["strategy_qualification_policy"]
+    extended_groups = result.get("extended_lab_strategy_qualification", {})
+    if not isinstance(extended_groups, dict):
+        extended_groups = {}
+    group_labels = {
+        "ohlc_breakout": "OHLC breakout strategies",
+        "long_short": "Long/short research (paper only)",
+        "daily_regime_filter": "Daily regime filters",
+        "multi_timeframe_ensemble": "4h / 6h consensus ensemble",
+        "six_hour_atr_trailing": "6h EMA50/EMA200 exit comparison (ATR trailing vs close below EMA50)",
+        "volume_liquidity_momentum": "OHLCV volume / liquidity / momentum confluence",
+    }
     groups = {
         "Hourly / multi-timeframe strategies": result.get("strategy_qualification", {}),
-        "OHLC breakout strategies": result.get("extended_lab_strategy_qualification", {}).get("ohlc_breakout", {}),
-        "Long/short research (paper only)": result.get("extended_lab_strategy_qualification", {}).get("long_short", {}),
-        "Daily regime filters": result.get("extended_lab_strategy_qualification", {}).get("daily_regime_filter", {}),
-        "4h / 6h consensus ensemble": result.get("extended_lab_strategy_qualification", {}).get("multi_timeframe_ensemble", {}),
-        "6h EMA50/EMA200 exit comparison (ATR trailing vs close below EMA50)": result.get("extended_lab_strategy_qualification", {}).get("six_hour_atr_trailing", {}),
-        "OHLCV volume / liquidity / momentum confluence": result.get("extended_lab_strategy_qualification", {}).get("volume_liquidity_momentum", {}),
     }
+    for key, strategies in extended_groups.items():
+        if isinstance(strategies, dict):
+            label = group_labels.get(key, key.replace("_", " ").title() + " strategies")
+            groups[label] = strategies
     lines = [
         "# WHJ Bitcoin Bot — Strategy Qualification Report", "",
         f"- Data source: {result.get('source', 'unknown')}",
