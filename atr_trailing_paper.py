@@ -210,7 +210,7 @@ def update_atr_trailing_account(four_hour_bars, daily_bars, state_path,
         true_range = max(bar["high"] - bar["low"], abs(bar["high"] - old_close), abs(bar["low"] - old_close))
         state["atr14"] = (state["atr14"] * 13.0 + true_range) / 14.0
         state["ema20"] = (2.0 / 21.0) * close + (19.0 / 21.0) * state["ema20"]
-        state["ema50"] = (2.0 / 51.0) * close + (50.0 / 51.0) * state["ema50"]
+        state["ema50"] = (2.0 / 51.0) * close + (49.0 / 51.0) * state["ema50"]
         bucket = datetime.fromtimestamp(bar["timestamp"], timezone.utc).date().isoformat()
         if bucket != state["daily_bucket"]:
             state["daily_bucket"] = bucket
