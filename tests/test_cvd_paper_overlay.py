@@ -1,6 +1,11 @@
+import json
+import tempfile
 import unittest
+from pathlib import Path
 
-from cvd_paper_overlay import validate_cvd_confirmation
+from trade_journal_checkpoint import build_continuity_checkpoint, save_continuity_checkpoint_atomic
+
+from cvd_paper_overlay import build_latest_cvd_confirmation, validate_cvd_confirmation
 
 
 class CvdPaperOverlayTests(unittest.TestCase):
@@ -75,6 +80,61 @@ class CvdPaperOverlayTests(unittest.TestCase):
         self.assertFalse(
             self.assess(dict(self.evidence, delta_pct=float("nan")))["available"]
         )
+
+    def test_verified_journal_builds_latest_closed_candle_confirmation(self):
+        with tempfile.TemporaryDirectory() as folder:
+            journal = Path(folder) / "trades.jsonl"
+            checkpoint_path = Path(folder) / "checkpoint.json"
+            events = []
+            for offset in range(12):
+                events.append({
+                    "trade_id": 1000 + offset,
+                    "timestamp": 3600 + 100 + offset * 300,
+                    "price": 101.0,
+                    "qty": 1.0,
+                    "side": "buy" if offset < 10 else "sell",
+                    "symbol": "BTC/USD",
+                })
+            journal.write_text(
+                "".join(json.dumps(event, separators=(",", ":")) + "\\n" for event in events),
+                encoding="utf-8",
+            )
+            checkpoint = build_continuity_checkpoint(str(journal), "BTC/USD", 1011)
+            save_continuity_checkpoint_atomic(str(checkpoint_path), checkpoint)
+            candles = [{
+                "timestamp": 3600 * 1000, "open": 100.0, "high": 103.0,
+                "low": 99.0, "close": 102.0, "volume": 12.0,
+            }]
+            result = build_latest_cvd_confirmation(
+                candles, str(journal), str(checkpoint_path), now_timestamp=7200,
+                max_last_trade_lag_seconds=1200,
+            )
+            self.assertEqual(result["status"], "OK")
+            self.assertEqual(result["direction"], "BULLISH")
+            self.assertTrue(result["continuity_verified"])
+            self.assertFalse(result["execution_enabled"])
+
+    def test_verified_cvd_reader_fails_closed_on_checkpoint_mismatch(self):
+        with tempfile.TemporaryDirectory() as folder:
+            journal = Path(folder) / "trades.jsonl"
+            checkpoint_path = Path(folder) / "checkpoint.json"
+            event = {
+                "trade_id": 1000, "timestamp": 4000, "price": 101.0,
+                "qty": 1.0, "side": "buy", "symbol": "BTC/USD",
+            }
+            journal.write_text(json.dumps(event) + "\\n", encoding="utf-8")
+            checkpoint = build_continuity_checkpoint(str(journal), "BTC/USD", 1000)
+            save_continuity_checkpoint_atomic(str(checkpoint_path), checkpoint)
+            journal.write_text(journal.read_text(encoding="utf-8") + json.dumps(dict(event, trade_id=1001, timestamp=4100)) + "\\n", encoding="utf-8")
+            candles = [{
+                "timestamp": 3600 * 1000, "open": 100.0, "high": 103.0,
+                "low": 99.0, "close": 102.0, "volume": 12.0,
+            }]
+            result = build_latest_cvd_confirmation(
+                candles, str(journal), str(checkpoint_path), now_timestamp=7200,
+            )
+            self.assertFalse(result["available"])
+            self.assertTrue(result["reason"].startswith("cvd_source_validation_failed:"))
 
     def test_invalid_timestamp_and_thresholds_raise(self):
         with self.assertRaises(ValueError):
