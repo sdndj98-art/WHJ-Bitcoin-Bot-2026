@@ -228,6 +228,24 @@ def update_atr_trailing_account(four_hour_bars, daily_bars, state_path,
             state["last_signal"] = "blocked_synthetic_bar"
             continue
 
+        # Apply risk guards to the current mark before allowing a queued entry.
+        pre_equity = state["cash"] + state["quantity"] * close
+        state["peak_equity"] = max(state["peak_equity"], pre_equity)
+        pre_drawdown = (
+            (state["peak_equity"] - pre_equity) / state["peak_equity"]
+            if state["peak_equity"] > 0 else 0.0
+        )
+        pre_daily_loss = (
+            (state["daily_start_equity"] - pre_equity) / state["daily_start_equity"]
+            if state["daily_start_equity"] > 0 else 0.0
+        )
+        if pre_drawdown >= max_drawdown_fraction:
+            state["paused"], state["pause_reason"] = True, "maximum_drawdown"
+        elif pre_daily_loss >= daily_loss_fraction:
+            state["paused"], state["pause_reason"] = True, "daily_loss_limit"
+        elif state["consecutive_losses"] >= max_consecutive_losses:
+            state["paused"], state["pause_reason"] = True, "consecutive_loss_limit"
+
         # Execute only the prior bar's signal at this bar's close.
         action = state["pending_action"]
         fill = close * (1.0 + slippage_rate) if action == "buy" else close * (1.0 - slippage_rate)
