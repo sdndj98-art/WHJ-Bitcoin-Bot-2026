@@ -1,0 +1,60 @@
+import tempfile
+import unittest
+
+from historical_research import run_forward_paper_accounts
+
+
+class QualifiedForwardPaperCandidateTests(unittest.TestCase):
+    @staticmethod
+    def candles(hours=24 * 220):
+        rows = []
+        for index in range(hours):
+            price = 100.0 + index * 0.01
+            rows.append({
+                "timestamp": index * 60 * 60 * 1000,
+                "open": price,
+                "high": price + 0.2,
+                "low": price - 0.2,
+                "close": price,
+                "volume": 10.0,
+                "imputed": False,
+            })
+        return rows
+
+    def test_qualified_candidates_seed_without_historical_trades_or_pnl(self):
+        with tempfile.TemporaryDirectory() as folder:
+            result = run_forward_paper_accounts(self.candles(), state_dir=folder)
+            portfolio = result["forward_only_qualified_candidates"]
+            self.assertEqual(portfolio["initial_cash_usd"], 750.0)
+            self.assertEqual(portfolio["equity_after_estimated_exit_costs_usd"], 750.0)
+            self.assertEqual(portfolio["return_pct"], 0.0)
+            self.assertEqual(portfolio["completed_trades"], 0)
+            self.assertEqual(
+                set(portfolio["candidates"]),
+                {"1d_sma_trend", "6h_ema50_200_regime", "6h_ema_pullback_trend"},
+            )
+            for account in portfolio["candidates"].values():
+                self.assertEqual(account["initial_cash_usd"], 250.0)
+                self.assertEqual(account["completed_trades"], 0)
+                self.assertEqual(account["return_pct"], 0.0)
+                self.assertEqual(account["processed_new_candles"], 0)
+
+    def test_qualified_candidate_ledgers_are_idempotent_on_repeated_history(self):
+        with tempfile.TemporaryDirectory() as folder:
+            candles = self.candles()
+            first = run_forward_paper_accounts(candles, state_dir=folder)
+            second = run_forward_paper_accounts(candles, state_dir=folder)
+            first_candidates = first["forward_only_qualified_candidates"]["candidates"]
+            second_candidates = second["forward_only_qualified_candidates"]["candidates"]
+            for name in first_candidates:
+                self.assertTrue(first["forward_only_qualified_candidates"]["seed"][name]["created"])
+                self.assertFalse(second["forward_only_qualified_candidates"]["seed"][name]["created"])
+                self.assertEqual(second_candidates[name]["processed_new_candles"], 0)
+                self.assertEqual(
+                    second_candidates[name]["completed_trades"],
+                    first_candidates[name]["completed_trades"],
+                )
+
+
+if __name__ == "__main__":
+    unittest.main()
