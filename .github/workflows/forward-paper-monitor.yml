@@ -5,12 +5,14 @@ on:
   schedule:
     - cron: "17 * * * *"
   push:
-    branches: [main, research/regime-aware-consensus-ensemble]
+    branches: [main, research/regime-aware-consensus-ensemble, strategy/qualified-forward-monitor-20261111]
     paths:
       - "forward_paper_monitor.py"
+      - "qualified_forward_paper_monitor.py"
       - "paper_account.py"
       - "historical_research.py"
       - "tests/test_forward_paper_monitor.py"
+      - "tests/test_qualified_forward_paper_monitor.py"
       - ".github/workflows/forward-paper-monitor.yml"
 
 permissions:
@@ -41,6 +43,10 @@ jobs:
             paper_forward_1h_rsi14_mean_reversion.json
             paper_forward_4h_ema50_200.json
             paper_forward_6h_ema50_200.json
+            research_runs/20261111_atr_forward_validation/paper_state/paper_qualified_1d_sma_trend.json
+            research_runs/20261111_atr_forward_validation/paper_state/paper_qualified_6h_ema50_200_regime.json
+            research_runs/20261111_atr_forward_validation/paper_state/paper_qualified_6h_ema_pullback_trend.json
+            research_runs/20261111_atr_forward_validation/paper_state/paper_qualified_4h_ema20_50_daily_sma200_atr3.json
           key: whj-forward-paper-v1-${{ github.run_id }}-${{ github.run_attempt }}
           restore-keys: |
             whj-forward-paper-v1-
@@ -53,6 +59,10 @@ jobs:
         run: python -m unittest discover -s tests -p 'test_forward_paper_monitor.py' -v
       - name: Run forward-only paper monitor
         run: python forward_paper_monitor.py
+      - name: Run four qualified candidate forward-only ledgers
+        run: |
+          python -m unittest discover -s tests -p 'test_qualified_forward_paper_monitor.py' -v
+          python qualified_forward_paper_monitor.py
       - name: Save forward-only ledgers
         if: success()
         uses: actions/cache/save@v4
@@ -118,10 +128,46 @@ jobs:
           with open(__import__("os").environ["GITHUB_STEP_SUMMARY"], "a", encoding="utf-8") as handle:
               handle.write("\n".join(lines) + "\n")
           PY
+      - name: Publish qualified candidate status
+        if: success()
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          report = json.loads(Path("qualified_forward_paper_report.json").read_text(encoding="utf-8"))
+          lines = [
+              "",
+              "## Four historically qualified candidates — forward-only paper",
+              "",
+              f"- **Status:** {report['status']}",
+              f"- **Cycle:** {report['cycle_status']} ({report['total_processed_new_candles']} new native-timeframe bars)",
+              f"- **Combined equity:** ${report['equity_usd']:.2f} / ${report['initial_cash_usd']:.2f} ({report['return_pct']:.4f}%)",
+              f"- **Closed trades:** {report['completed_trades']}",
+              "",
+              "| Candidate | TF | Equity | Return | New bars | Closed trades | Max DD | Fees | Open | Risk pauses |",
+              "|---|---:|---:|---:|---:|---:|---:|---:|---|---|",
+          ]
+          for name, item in report["candidates"].items():
+              pauses = ", ".join(item["risk_pause_reasons"]) or "None"
+              lines.append(
+                  f"| {name} | {item['timeframe_hours']}h | ${item['equity_usd']:.2f} | "
+                  f"{item['return_pct']:.4f}% | {item['processed_new_candles']} | "
+                  f"{item['completed_trades']} | {item['max_drawdown_pct']:.2f}% | "
+                  f"${item['fees_paid_usd']:.4f} | {item['open_position']} | {pauses} |"
+              )
+          lines += [
+              "",
+              "> Independent $250 ledgers. Historical bars warm indicators only; synthetic bars cannot execute. Paper only, no live orders.",
+          ]
+          with open(__import__("os").environ["GITHUB_STEP_SUMMARY"], "a", encoding="utf-8") as handle:
+              handle.write("\\n".join(lines) + "\\n")
+          PY
       - name: Upload forward paper snapshot
         uses: actions/upload-artifact@v4
         with:
           name: whj-forward-paper-snapshot-${{ github.run_number }}
-          path: forward_paper_report.json
+          path: |
+            forward_paper_report.json
+            qualified_forward_paper_report.json
           if-no-files-found: error
           retention-days: 30
