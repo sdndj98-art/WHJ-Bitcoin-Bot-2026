@@ -920,6 +920,27 @@ class HistoricalResearchTests(unittest.TestCase):
 
 
 
+    def test_qualification_markdown_includes_new_extended_groups_automatically(self):
+        result = {
+            "strategy_qualification_policy": {
+                "minimum_oos_trades": 30,
+                "minimum_trades_each_walk_forward_window": 5,
+                "minimum_profit_factor": 1.2,
+                "maximum_oos_drawdown_pct": 10.0,
+            },
+            "extended_lab_strategy_qualification": {
+                "experimental_volume_profile": {
+                    "candidate_alpha": {
+                        "qualified_for_extended_paper_review": False,
+                        "failed_checks": ["minimum_oos_trades"],
+                        "benchmark_comparison": {"benchmark_available": False},
+                    },
+                },
+            },
+        }
+        report = build_qualification_markdown(result)
+        self.assertIn("## Experimental Volume Profile strategies", report)
+        self.assertIn("candidate_alpha: NOT QUALIFIED", report)
     def test_qualification_summary_includes_volume_liquidity_group(self):
         qualification = {
             "qualified_for_extended_paper_review": True,
