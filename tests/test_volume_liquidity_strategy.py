@@ -72,6 +72,22 @@ class VolumeLiquidityStrategyTests(unittest.TestCase):
         bars[300]["timestamp"] += 1
         with self.assertRaisesRegex(ValueError, "evenly spaced"):
             _volume_liquidity_signals(bars)
+    def test_imputed_candles_block_signals_until_200_bar_context_clears(self):
+        bars = synthetic_bars()
+        bars[300]["imputed"] = True
+        signals, _, diagnostics = _volume_liquidity_signals(bars)
+        self.assertTrue(all(not value for value in signals[300:500]))
+        self.assertTrue(all(
+            diagnostics[index].get("data_quality_blocked", False)
+            for index in range(300, 500)
+        ))
+        self.assertNotIn("data_quality_blocked", diagnostics[500])
+
+    def test_rejects_non_boolean_imputed_flag(self):
+        bars = synthetic_bars()
+        bars[250]["imputed"] = "false"
+        with self.assertRaisesRegex(ValueError, "imputed flag must be boolean"):
+            _volume_liquidity_signals(bars)
     def test_rejects_nonfinite_volume(self):
         bars = synthetic_bars()
         bars[300]["volume"] = float("nan")
