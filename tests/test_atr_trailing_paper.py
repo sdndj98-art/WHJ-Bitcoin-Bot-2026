@@ -131,6 +131,34 @@ class AtrTrailingForwardPaperTests(unittest.TestCase):
             self.assertFalse(fifth["open_position"])
             self.assertEqual(fifth["completed_trades"], 1)
 
+    def test_synthetic_bar_cannot_fill_or_create_a_signal(self):
+        four_hour, daily = self.market()
+        with tempfile.TemporaryDirectory() as folder:
+            path = f"{folder}/atr.json"
+            seed_atr_trailing_account(four_hour, daily, path)
+            index = len(four_hour)
+            price = 100.0 + index * 0.1
+            synthetic = {
+                "timestamp": index * 4 * 3600,
+                "open": price - 0.05, "high": price + 0.5,
+                "low": price - 0.5, "close": price,
+                "execution_eligible": False,
+            }
+            blocked = update_atr_trailing_account(four_hour + [synthetic], daily, path)
+            self.assertEqual(blocked["last_signal"], "blocked_synthetic_bar")
+            self.assertIsNone(blocked["pending_action"])
+            self.assertFalse(blocked["open_position"])
+            real = dict(synthetic)
+            real["timestamp"] += 4 * 3600
+            real["execution_eligible"] = True
+            for field in ("open", "high", "low", "close"):
+                real[field] += 0.1
+            allowed = update_atr_trailing_account(
+                four_hour + [synthetic, real], daily, path
+            )
+            self.assertEqual(allowed["last_signal"], "entry_queued")
+            self.assertEqual(allowed["pending_action"], "buy")
+
     def test_rejects_gap_between_saved_checkpoint_and_new_bar(self):
         four_hour, daily = self.market()
         with tempfile.TemporaryDirectory() as folder:
