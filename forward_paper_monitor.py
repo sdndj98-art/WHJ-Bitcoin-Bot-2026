@@ -329,8 +329,35 @@ def process_forward_accounts(candles, state_dir=".", now_timestamp=None):
         ("4h", 4, "ema50_200_regime", 500.0),
         ("6h", 6, "ema50_200_regime", 500.0),
     )
+    # Preflight every timeframe before creating or updating any account ledger.
+    # Each sleeve needs 200 complete native-timeframe bars for indicator warm-up.
+    bars_by_hours = {1: candles}
+    for hours in (4, 6):
+        try:
+            bars_by_hours[hours] = aggregate_candles(candles, hours)
+        except ValueError as exc:
+            expected = f"Not enough complete {hours}-hour bars for strategy comparison"
+            if str(exc) != expected:
+                raise
+            bars_by_hours[hours] = None
+
+    insufficient = [
+        (
+            f"{hours}h: fewer than 200 complete bars"
+            if bars is None else f"{hours}h: {len(bars)}/200"
+        )
+        for hours, bars in bars_by_hours.items()
+        if bars is None or len(bars) < 200
+    ]
+    if insufficient:
+        raise ValueError(
+            "Insufficient completed candles for forward paper warm-up ("
+            + ", ".join(insufficient)
+            + "); no paper account state was changed"
+        )
+
     for sleeve, hours, strategy, initial_cash in configurations:
-        bars = candles if hours == 1 else aggregate_candles(candles, hours)
+        bars = bars_by_hours[hours]
         rows = _account_rows(bars)
         state_path = directory / STATE_FILES[sleeve]
         seed = seed_forward_paper_account(
