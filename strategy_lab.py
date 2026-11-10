@@ -213,32 +213,35 @@ def _signals(prices):
     return result
 
 
-def _simulate(prices, signals, start, end, fee=0.001, slippage=0.0005):
+def _simulate(prices, signals, start, end, fee=0.001, slippage=0.0005, blocked_execution_indices=None):
     cash = 1000.0
     units = 0.0
     entry_value = 0.0
     trades = []
     peak = cash
     max_dd = 0.0
+    blocked = set(blocked_execution_indices or ())
     for i in range(max(start, 1), end):
         # signal[i-1] only; fill at current close, with 25% of available equity.
+        # Synthetic bars can be marked for continuity but cannot execute fills.
         want_long = signals[i - 1]
-        if want_long and units == 0:
-            allocation = cash * 0.25
-            fill = prices[i] * (1 + slippage)
-            fee_paid = allocation * fee
-            units = (allocation - fee_paid) / fill
-            cash -= allocation
-            entry_value = allocation
-        elif not want_long and units > 0:
-            fill = prices[i] * (1 - slippage)
-            proceeds = units * fill
-            proceeds -= proceeds * fee
-            pnl = proceeds - entry_value
-            cash += proceeds
-            trades.append(pnl)
-            units = 0.0
-            entry_value = 0.0
+        if i not in blocked:
+            if want_long and units == 0:
+                allocation = cash * 0.25
+                fill = prices[i] * (1 + slippage)
+                fee_paid = allocation * fee
+                units = (allocation - fee_paid) / fill
+                cash -= allocation
+                entry_value = allocation
+            elif not want_long and units > 0:
+                fill = prices[i] * (1 - slippage)
+                proceeds = units * fill
+                proceeds -= proceeds * fee
+                pnl = proceeds - entry_value
+                cash += proceeds
+                trades.append(pnl)
+                units = 0.0
+                entry_value = 0.0
         # Measure drawdown on net liquidation value, not a frictionless mark.
         # This includes the estimated exit slippage and fee while a position is open.
         if units > 0:
@@ -723,6 +726,9 @@ def run_volume_liquidity_lab(bars, fee=0.001, slippage=0.0005):
             raise ValueError(name + " must be a finite number between 0 and 1")
     signals, scores, diagnostics = _volume_liquidity_signals(bars)
     prices = [float(row["close"]) for row in bars]
+    blocked_execution_indices = {
+        index for index, row in enumerate(bars) if row.get("imputed", False)
+    }
     split = int(len(bars) * 0.7)
     edges = [split + ((len(bars) - split) * k) // 3 for k in range(4)]
     windows = []
@@ -733,7 +739,7 @@ def run_volume_liquidity_lab(bars, fee=0.001, slippage=0.0005):
                 "window": fold + 1,
                 "start_index": start,
                 "end_index_exclusive": end,
-                "metrics": _simulate(prices, signals, start, end, fee, slippage),
+                "metrics": _simulate(prices, signals, start, end, fee, slippage, blocked_execution_indices),
             })
     full_metrics = _simulate(prices, signals, 1, len(prices), fee, slippage)
     oos_metrics = _simulate(prices, signals, split, len(prices), fee, slippage)
@@ -744,13 +750,13 @@ def run_volume_liquidity_lab(bars, fee=0.001, slippage=0.0005):
             "window": fold + 1,
             "start_index": edges[fold],
             "end_index_exclusive": edges[fold + 1],
-            "metrics": _simulate(prices, benchmark_signals, edges[fold], edges[fold + 1], fee, slippage),
+            "metrics": _simulate(prices, benchmark_signals, edges[fold], edges[fold + 1], fee, slippage, blocked_execution_indices),
         }
         for fold in range(3) if edges[fold + 1] > edges[fold]
     ]
     benchmark = {
-        "full_sample": _simulate(prices, benchmark_signals, 1, len(prices), fee, slippage),
-        "out_of_sample": _simulate(prices, benchmark_signals, split, len(prices), fee, slippage),
+        "full_sample": _simulate(prices, benchmark_signals, 1, len(prices), fee, slippage, blocked_execution_indices),
+        "out_of_sample": _simulate(prices, benchmark_signals, split, len(prices), fee, slippage, blocked_execution_indices),
         "walk_forward_windows": benchmark_windows,
     }
     candidate = {
