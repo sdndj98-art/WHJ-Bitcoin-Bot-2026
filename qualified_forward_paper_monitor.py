@@ -134,11 +134,19 @@ def process_qualified_forward_candidates(
     directory = Path(state_dir)
 
     # Preflight every required timeframe before mutating any account.
-    bars = {
-        4: _native_bars(candles, 4),
-        6: _native_bars(candles, 6),
-        24: _native_bars(candles, 24),
-    }
+    try:
+        bars = {
+            4: _native_bars(candles, 4),
+            6: _native_bars(candles, 6),
+            24: _native_bars(candles, 24),
+        }
+    except ValueError as exc:
+        if "Not enough complete" in str(exc):
+            raise ValueError(
+                "Insufficient native timeframe history; no qualified ledger was changed: "
+                + str(exc)
+            ) from exc
+        raise
     insufficient = [
         f"{hours}h={len(rows)} (need {201 if hours == 4 else 200})"
         for hours, rows in bars.items()
@@ -199,6 +207,15 @@ def process_qualified_forward_candidates(
 
     four_hour = bars[4]
     daily = bars[24]
+    atr_processed_before = 0
+    if atr_path.exists():
+        try:
+            atr_state_before = json.loads(atr_path.read_text(encoding="utf-8"))
+            atr_processed_before = int(atr_state_before.get("processed_new_candles", 0))
+        except (OSError, json.JSONDecodeError, TypeError, ValueError) as exc:
+            raise ValueError(
+                "Existing ATR ledger processing counter is unreadable; refusing update"
+            ) from exc
     atr_seed = seed_atr_trailing_account(
         four_hour,
         daily,
@@ -220,12 +237,18 @@ def process_qualified_forward_candidates(
         "account": atr_account,
         "native_timeframe_hours": 4,
         "last_processed_timestamp": atr_account["last_timestamp"],
+        "processed_this_cycle": max(
+            0, int(atr_account["processed_new_candles"]) - atr_processed_before
+        ),
     }
 
-    processed = sum(
-        int(item["account"]["processed_new_candles"])
-        for item in results.values()
-    )
+    for name, item in results.items():
+        if "processed_this_cycle" not in item:
+            item["processed_this_cycle"] = int(
+                item["account"]["processed_new_candles"]
+            )
+
+    processed = sum(int(item["processed_this_cycle"]) for item in results.values())
     paused = any(
         bool(item["account"].get("paused"))
         or bool(item["account"].get("risk_pause_reasons"))
@@ -243,7 +266,7 @@ def process_qualified_forward_candidates(
             open_position = bool(account["open_position"])
             cash = float(account["cash_usd"])
             risk_pauses = list(account["risk_pause_reasons"])
-            processed_count = int(account["processed_new_candles"])
+            processed_count = int(item["processed_this_cycle"])
             last_timestamp = account["last_processed_timestamp"]
         else:
             equity = float(account["equity_usd"])
@@ -254,7 +277,7 @@ def process_qualified_forward_candidates(
             open_position = bool(account["open_position"])
             cash = float(account["cash_usd"])
             risk_pauses = [account["pause_reason"]] if account["paused"] else []
-            processed_count = int(account["processed_new_candles"])
+            processed_count = int(item["processed_this_cycle"])
             last_timestamp = account["last_timestamp"]
         summary[name] = {
             "timeframe_hours": item["native_timeframe_hours"],
