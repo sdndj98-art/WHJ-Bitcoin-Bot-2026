@@ -58,7 +58,11 @@ def validate_hourly_feed(candles, now_timestamp=None):
             raise ValueError("Hourly candle imputed flag must be boolean")
     if timestamps != sorted(timestamps) or len(set(timestamps)) != len(timestamps):
         raise ValueError("Hourly candles must be strictly increasing and unique")
-    if any(b - a != 3_600_000 for a, b in zip(timestamps[-25:], timestamps[-24:])):
+    recent_timestamps = timestamps[-25:]
+    if any(
+        current - previous != 3_600_000
+        for previous, current in zip(recent_timestamps, recent_timestamps[1:])
+    ):
         raise ValueError("Recent hourly candles contain a gap; paper processing is blocked")
     if any(row.get("imputed", False) for row in candles[-25:]):
         raise ValueError("Recent imputed candles detected; paper processing is blocked")
