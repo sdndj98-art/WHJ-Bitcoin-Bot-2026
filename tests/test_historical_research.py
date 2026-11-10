@@ -4,7 +4,7 @@ import unittest
 from datetime import datetime, timezone
 from unittest.mock import patch
 
-from historical_research import (INTERVAL_MS, _blocked_execution_indices, _research_output_paths, aggregate_candles, load_two_year_candles, run_forward_paper_accounts, run_ohlc_breakout_lab, run_long_short_lab, run_daily_regime_filter_lab, run_multi_timeframe_ensemble_lab, run_six_hour_atr_trailing_lab, _adx_di_series, _atr_series, _regime_switching_atr_signals, _rsi_series, _simulate_equal_weight_multitimeframe, _simulate_ohlc, assess_strategy_qualification, assess_research_lab_qualification, build_qualification_markdown, summarize_qualification, _turtle_signals)
+from historical_research import (INTERVAL_MS, _blocked_execution_indices, _research_output_paths, aggregate_candles, load_two_year_candles, run_forward_paper_accounts, run_ohlc_breakout_lab, run_long_short_lab, run_daily_regime_filter_lab, run_multi_timeframe_ensemble_lab, run_six_hour_atr_trailing_lab, _adx_di_series, _atr_series, _regime_switching_atr_signals, _rsi_series, _simulate_equal_weight_multitimeframe, _simulate_long_short, _simulate_ohlc, assess_strategy_qualification, assess_research_lab_qualification, build_qualification_markdown, summarize_qualification, _turtle_signals)
 from strategy_lab import _simulate, run_strategy_lab
 
 
@@ -290,6 +290,63 @@ class HistoricalResearchTests(unittest.TestCase):
             with self.subTest(invalid=invalid):
                 with self.assertRaises(ValueError):
                     run_strategy_lab(prices, blocked_execution_indices=invalid)
+
+    def test_ohlc_simulator_blocks_synthetic_entry_and_exit_fills(self):
+        bars = [
+            {"close": price, "imputed": index in {1, 3}}
+            for index, price in enumerate((100.0, 105.0, 120.0, 130.0, 140.0))
+        ]
+        signals = [True, True, False, False, False]
+        metrics = _simulate_ohlc(bars, signals, 1, len(bars), 0.0, 0.0)
+        self.assertEqual(metrics["closed_trades"], 1)
+        self.assertEqual(metrics["final_equity_usd"], 1041.67)
+        self.assertFalse(metrics["open_position"])
+
+    def test_ohlc_terminal_valuation_uses_last_executable_bar(self):
+        bars = [
+            {"close": price, "imputed": index == 3}
+            for index, price in enumerate((100.0, 100.0, 120.0, 130.0))
+        ]
+        metrics = _simulate_ohlc(bars, [True] * 4, 1, len(bars), 0.0, 0.0)
+        self.assertTrue(metrics["open_position"])
+        self.assertEqual(metrics["final_equity_usd"], 1050.0)
+
+    def test_long_short_simulator_blocks_synthetic_reversals(self):
+        bars = [
+            {"close": price, "imputed": index in {1, 3}}
+            for index, price in enumerate((100.0, 105.0, 120.0, 130.0, 140.0))
+        ]
+        metrics = _simulate_long_short(
+            bars, [1, 1, -1, -1, -1], 1, len(bars), 0.0, 0.0, 0.0
+        )
+        self.assertEqual(metrics["closed_trades"], 2)
+        self.assertFalse(metrics["open_position"])
+
+    def test_equal_weight_simulator_blocks_synthetic_fills(self):
+        bars = [
+            {"timestamp": index * INTERVAL_MS, "close": price, "imputed": index in {1, 3}}
+            for index, price in enumerate((100.0, 105.0, 120.0, 130.0, 140.0))
+        ]
+        result = _simulate_equal_weight_multitimeframe(
+            [bars], [[True, True, False, False, False]], [1],
+            0, 6 * INTERVAL_MS, 0.0, 0.0,
+        )
+        self.assertEqual(result["closed_trades"], 1)
+        self.assertEqual(result["final_equity_usd"], 1041.67)
+
+    def test_ohlc_buy_and_hold_benchmark_skips_synthetic_entry_and_exit(self):
+        bars = []
+        for index in range(500):
+            bars.append({
+                "timestamp": index * 86400000,
+                "open": 100.0, "high": 101.0, "low": 99.0,
+                "close": 100.0, "volume": 1.0,
+                "imputed": index in {350, 499},
+            })
+        result = run_ohlc_breakout_lab(bars)
+        benchmark = result["strategies"]["buy_and_hold_25pct"]["out_of_sample"]
+        self.assertEqual(benchmark["entry_index"], 351)
+        self.assertEqual(benchmark["exit_index"], 498)
 
     def test_forward_paper_accounts_persist_and_are_idempotent(self):
         import tempfile
