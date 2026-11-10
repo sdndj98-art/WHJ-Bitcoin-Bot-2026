@@ -5,8 +5,11 @@ not a cryptographic signature or proof against a malicious local file editor.
 """
 import hashlib
 import json
+import math
 import os
 import tempfile
+
+from kraken_order_flow import _trade_event_timestamp_ns
 
 
 SOURCE = "kraken_spot_trade_feed_adapter"
@@ -22,6 +25,7 @@ def inspect_trade_journal(path):
     first_id = last_id = None
     symbol = None
     count = 0
+    last_timestamp_ns = None
     for line_number, raw_line in enumerate(raw.splitlines(), 1):
         try:
             event = json.loads(raw_line.decode("utf-8"))
@@ -44,6 +48,23 @@ def inspect_trade_journal(path):
             first_id = trade_id
         elif current_symbol != symbol:
             raise ValueError("journal contains mixed symbols")
+        timestamp_ns = _trade_event_timestamp_ns(event.get("timestamp"))
+        if last_timestamp_ns is not None and timestamp_ns < last_timestamp_ns:
+            raise ValueError(f"journal timestamp moved backwards at line {line_number}")
+        last_timestamp_ns = timestamp_ns
+        if isinstance(event.get("price"), bool) or isinstance(event.get("qty"), bool):
+            raise ValueError(f"invalid journal price or quantity at line {line_number}")
+        try:
+            price = float(event.get("price"))
+            qty = float(event.get("qty"))
+        except (TypeError, ValueError, OverflowError) as exc:
+            raise ValueError(f"invalid journal price or quantity at line {line_number}") from exc
+        if not math.isfinite(price) or price <= 0:
+            raise ValueError(f"invalid journal price at line {line_number}")
+        if not math.isfinite(qty) or qty <= 0:
+            raise ValueError(f"invalid journal quantity at line {line_number}")
+        if event.get("side") not in ("buy", "sell"):
+            raise ValueError(f"invalid journal side at line {line_number}")
         last_id = trade_id
         count += 1
     return {
