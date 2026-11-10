@@ -4,14 +4,17 @@ The ER threshold is selected only from earlier completed 4h/6h bars.
 Each subsequent fold is untouched until selection is frozen. Research-only:
 no paper state, credentials, exchange orders, or execution integration.
 """
+import json
 import math
 from datetime import datetime, timezone
+from pathlib import Path
 
 from historical_research import (
     FEE_RATE,
     SLIPPAGE_RATE,
     _simulate_equal_weight_multitimeframe,
     aggregate_candles,
+    load_two_year_candles,
 )
 from ema_efficiency_lab import _build_sleeve_signals
 
@@ -210,8 +213,6 @@ def run_er_expanding_walk_forward(
         "oos_end_exclusive_utc": _utc_iso(edges[-1]),
         "folds": reports,
         "no_same_fold_test_feedback": True,
-        "paper_state_touched": False,
-        "live_orders_enabled": False,
         "interpretation": (
             "This is a stricter sequential test of ER20 entry-only thresholds. "
             "The EMA50/200 control remains the default whenever ER fails its training eligibility "
@@ -219,3 +220,17 @@ def run_er_expanding_walk_forward(
             "Historical results are research only, not forward-paper or live performance."
         ),
     }
+
+
+
+def main():
+    candles = load_two_year_candles()
+    report = run_er_expanding_walk_forward(candles)
+    Path("ema_er_walk_forward_report.json").write_text(
+        json.dumps(report, indent=2, sort_keys=True), encoding="utf-8"
+    )
+    print(json.dumps(report, indent=2, sort_keys=True))
+
+
+if __name__ == "__main__":
+    main()
