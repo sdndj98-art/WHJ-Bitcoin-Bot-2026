@@ -2183,30 +2183,6 @@ def run_forward_paper_accounts(candles, state_dir="."):
             max_consecutive_losses=5,
             strategy=candidate_strategy,
         )
-    qualified_forward_portfolio = {
-        "mode": "QUALIFIED_CANDIDATES_FORWARD_ONLY_PAPER",
-        "initial_cash_usd": 750.0,
-        "equity_after_estimated_exit_costs_usd": round(sum(
-            account["equity_after_estimated_exit_costs_usd"]
-            for account in qualified_accounts.values()
-        ), 2),
-        "return_pct": round((
-            sum(account["equity_after_estimated_exit_costs_usd"]
-                for account in qualified_accounts.values()) / 750.0 - 1.0
-        ) * 100.0, 2),
-        "completed_trades": sum(
-            account["completed_trades"] for account in qualified_accounts.values()
-        ),
-        "candidates": qualified_accounts,
-        "seed": qualified_seed,
-        "atr3_trailing_candidate": atr_forward,
-        "atr3_trailing_seed": atr_seed,
-        "note": (
-            "Three close-based candidates use independent $250 ledgers. The fourth "
-            "candidate has a separate OHLC-native $250 ledger with Wilder ATR14 and a "
-            "3x ATR trailing stop. All ledgers are forward-only; history warms indicators."
-        ),
-    }
     # Dedicated OHLC-native ledger for the fourth qualified ATR-trailing candidate.
     # Convert Coinbase milliseconds to whole Unix seconds for the standalone adapter.
     def _atr_rows(rows):
@@ -2235,6 +2211,30 @@ def run_forward_paper_accounts(candles, state_dir="."):
         max_consecutive_losses=5,
     )
 
+    qualified_forward_portfolio = {
+        "mode": "QUALIFIED_CANDIDATES_FORWARD_ONLY_PAPER",
+        "initial_cash_usd": 750.0,
+        "equity_after_estimated_exit_costs_usd": round(sum(
+            account["equity_after_estimated_exit_costs_usd"]
+            for account in qualified_accounts.values()
+        ), 2),
+        "return_pct": round((
+            sum(account["equity_after_estimated_exit_costs_usd"]
+                for account in qualified_accounts.values()) / 750.0 - 1.0
+        ) * 100.0, 2),
+        "completed_trades": sum(
+            account["completed_trades"] for account in qualified_accounts.values()
+        ),
+        "candidates": qualified_accounts,
+        "seed": qualified_seed,
+        "atr3_trailing_candidate": atr_forward,
+        "atr3_trailing_seed": atr_seed,
+        "note": (
+            "Three close-based candidates use independent $250 ledgers. The fourth "
+            "candidate has a separate OHLC-native $250 ledger with Wilder ATR14 and a "
+            "3x ATR trailing stop. All ledgers are forward-only; history warms indicators."
+        ),
+    }
     forward_four_hour = update_paper_account(
         account_rows(four_hour),
         state_path=str(directory / "paper_forward_4h_ema50_200.json"),
