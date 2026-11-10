@@ -71,6 +71,7 @@ def _new_state(initial_cash, strategy="sma_trend"):
         "daily_start_equity": float(initial_cash),
         "paused_for_drawdown": False,
         "paused_for_strategy_health": False,
+        "pending_exit_on_next_executable": False,
         "trades": [],
         "fees_paid": 0.0,
     }
@@ -94,6 +95,9 @@ def _load_state(path, initial_cash, strategy="sma_trend"):
     )
     if any(key not in state for key in required):
         raise ValueError("Paper account state is incomplete; refusing to reset it")
+    state.setdefault("pending_exit_on_next_executable", False)
+    if not isinstance(state["pending_exit_on_next_executable"], bool):
+        raise ValueError("Saved pending paper exit flag is invalid")
     _number(state["initial_cash"], "state initial cash", 0)
     if state["initial_cash"] <= 0:
         raise ValueError("Saved paper account initial cash must be positive")
@@ -503,6 +507,17 @@ def update_paper_account(candles, state_path="paper_account_state.json",
                 or state.get("paused_for_loss_streak", False)
                 or state.get("paused_for_strategy_health", False)
             )
+            exit_required = (
+                want_flat or daily_loss_hit
+                or state.get("paused_for_drawdown", False)
+                or state.get("paused_for_loss_streak", False)
+                or state.get("paused_for_strategy_health", False)
+                or state.get("daily_loss_paused", False)
+            )
+            if state["btc"] > 0 and exit_required:
+                state["pending_exit_on_next_executable"] = True
+            elif state["btc"] <= 0:
+                state["pending_exit_on_next_executable"] = False
 
             confirmation_matches = (
                 entry_confirmation_available is True
@@ -524,7 +539,7 @@ def update_paper_account(candles, state_path="paper_account_state.json",
                     state["fees_paid"] += fee
                     if strategy in ("bollinger_mean_reversion", "rsi14_mean_reversion"):
                         state["holding_bars"] = 0
-            elif executable and (want_flat or daily_loss_hit or state.get("paused_for_drawdown", False) or state.get("paused_for_loss_streak", False) or state.get("paused_for_strategy_health", False) or state.get("daily_loss_paused", False)) and state["btc"] > 0:
+            elif executable and state["pending_exit_on_next_executable"] and state["btc"] > 0:
                 fill = close * (1 - slippage_rate)
                 gross = state["btc"] * fill
                 fee = gross * fee_rate
@@ -542,6 +557,7 @@ def update_paper_account(candles, state_path="paper_account_state.json",
                 state["btc"] = 0.0
                 state["entry_cost"] = 0.0
                 state["holding_bars"] = 0
+                state["pending_exit_on_next_executable"] = False
                 state["trades"].append(trade)
                 new_trades.append(trade)
 
@@ -610,6 +626,7 @@ def update_paper_account(candles, state_path="paper_account_state.json",
         "equity_after_estimated_exit_costs_usd": round(equity, 2),
         "return_pct": round((equity / initial - 1) * 100, 2),
         "open_position": state["btc"] > 0,
+        "pending_exit_on_next_executable": bool(state["pending_exit_on_next_executable"]),
         "completed_trades": len(completed),
         "strategy_health": strategy_health,
         "win_rate_pct": round(len(winning) / len(completed) * 100, 2) if completed else 0.0,
