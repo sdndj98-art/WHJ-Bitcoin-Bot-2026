@@ -41,6 +41,21 @@ class VolumeLiquidityStrategyTests(unittest.TestCase):
         prefix = _volume_liquidity_signals(bars[:700])[0]
         self.assertEqual(full[:700], prefix)
 
+    def test_research_lab_rejects_invalid_cost_assumptions_and_bar_container(self):
+        bars = synthetic_bars()
+        for fee, slippage in ((True, 0.001), (0.001, float("nan")),
+                              ("0.001", 0.001), (0.001, float("inf"))):
+            with self.subTest(fee=fee, slippage=slippage):
+                with self.assertRaisesRegex(ValueError, "finite number"):
+                    run_volume_liquidity_lab(bars, fee=fee, slippage=slippage)
+        with self.assertRaisesRegex(ValueError, "At least 300 OHLCV bars"):
+            run_volume_liquidity_lab(None)
+
+    def test_research_lab_validates_bars_before_extracting_close_prices(self):
+        bars = synthetic_bars()
+        del bars[350]["close"]
+        with self.assertRaisesRegex(ValueError, "missing or non-numeric fields"):
+            run_volume_liquidity_lab(bars)
     def test_research_report_has_holdout_and_three_walk_forward_windows(self):
         report = run_volume_liquidity_lab(synthetic_bars())
         self.assertEqual(report["mode"], "OHLCV_VOLUME_LIQUIDITY_RESEARCH_ONLY")
