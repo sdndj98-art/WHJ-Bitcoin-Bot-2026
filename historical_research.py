@@ -1369,14 +1369,12 @@ def summarize_qualification(result, watchlist_limit=5):
     if isinstance(watchlist_limit, bool) or not isinstance(watchlist_limit, int) or watchlist_limit < 0:
         raise ValueError("watchlist_limit must be a non-negative integer")
 
+    extended_groups = result.get("extended_lab_strategy_qualification", {})
+    if not isinstance(extended_groups, dict):
+        extended_groups = {}
     groups = {
         "hourly_multi_timeframe": result.get("strategy_qualification", {}),
-        "ohlc_breakout": result.get("extended_lab_strategy_qualification", {}).get("ohlc_breakout", {}),
-        "long_short": result.get("extended_lab_strategy_qualification", {}).get("long_short", {}),
-        "daily_regime_filter": result.get("extended_lab_strategy_qualification", {}).get("daily_regime_filter", {}),
-        "multi_timeframe_ensemble": result.get("extended_lab_strategy_qualification", {}).get("multi_timeframe_ensemble", {}),
-        "six_hour_atr_trailing": result.get("extended_lab_strategy_qualification", {}).get("six_hour_atr_trailing", {}),
-        "volume_liquidity_momentum": result.get("extended_lab_strategy_qualification", {}).get("volume_liquidity_momentum", {}),
+        **extended_groups,
     }
     counts = {}
     candidates = []
