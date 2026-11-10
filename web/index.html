@@ -514,6 +514,71 @@ main{max-width:1720px!important;padding:22px clamp(12px,2vw,30px) 42px!important
 }
 @media (max-width:380px){main{zoom:.76}.q-module-node{width:76px!important;height:84px!important;min-height:84px!important}.q-decision-core{width:116px!important}}
 </style>
+
+<style id="whj-neural-tree-pro">
+/* Premium neural architecture: presentation-only override */
+.q-network-stage{
+ position:relative!important;isolation:isolate!important;overflow:hidden!important;
+ border:1px solid rgba(89,177,220,.2)!important;border-radius:22px!important;
+ background:
+  radial-gradient(ellipse at 50% 48%,rgba(86,91,190,.16),transparent 26%),
+  radial-gradient(ellipse at 50% 50%,rgba(33,173,191,.08),transparent 58%),
+  linear-gradient(135deg,rgba(7,18,34,.96),rgba(9,15,33,.96))!important;
+ box-shadow:inset 0 0 45px rgba(42,133,180,.09),0 16px 38px rgba(0,0,0,.22)!important;
+}
+.q-network-stage:before,.q-network-stage:after{content:"";position:absolute;inset:12px;border:1px solid rgba(94,160,211,.09);border-radius:17px;pointer-events:none;z-index:0}
+.q-network-stage:after{inset:24px;border-style:dashed;border-color:rgba(94,160,211,.07);border-radius:13px}
+#q-network{opacity:.32!important;mix-blend-mode:screen}
+.q-links{z-index:1!important;filter:drop-shadow(0 0 5px rgba(76,207,237,.2))}
+.q-flow-path{stroke:#62ddeb!important;stroke-width:2.4!important;stroke-dasharray:5 12!important;animation:qFlow 1.9s linear infinite!important;filter:drop-shadow(0 0 5px rgba(81,229,242,.55))!important}
+.q-flow-path:nth-of-type(2n){animation-duration:2.7s!important}
+.q-branch-path{stroke:rgba(151,139,255,.65)!important;stroke-width:1.7!important;stroke-dasharray:4 7!important}
+.q-output-path{stroke:#b7a1ff!important;stroke-width:3.5!important;filter:drop-shadow(0 0 8px rgba(165,139,255,.8))!important}
+.q-module-node{
+ width:174px!important;min-height:104px!important;padding:12px 12px 10px 49px!important;
+ border:1px solid rgba(96,190,225,.48)!important;border-radius:17px!important;
+ background:linear-gradient(145deg,rgba(20,48,72,.98),rgba(7,17,34,.98))!important;
+ box-shadow:0 10px 28px rgba(0,0,0,.34),inset 0 1px rgba(255,255,255,.09),0 0 18px rgba(67,186,220,.07)!important;
+ backdrop-filter:blur(8px);gap:5px!important
+}
+.q-module-node:before{content:"";position:absolute;inset:4px;border:1px solid rgba(115,187,221,.09);border-radius:12px;pointer-events:none}
+.q-node-icon{left:11px!important;top:13px!important;width:29px!important;height:29px!important;border-radius:10px!important;background:linear-gradient(145deg,rgba(73,205,224,.2),rgba(86,112,194,.12))!important;border-color:rgba(99,215,235,.45)!important;box-shadow:0 0 18px rgba(75,202,230,.16)!important}
+.q-node-icon svg{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.q-module-node b{font-size:11px!important;letter-spacing:.13em!important;color:#effaff!important}
+.q-module-node small{font-size:9px!important;color:#a9bfd4!important}
+.q-module-node em{font-size:8px!important;color:#76dce8!important}
+.q-module-node[data-state="pass"]{border-color:rgba(72,231,179,.82)!important;box-shadow:0 0 0 1px rgba(72,231,179,.15),0 0 26px rgba(72,231,179,.16),inset 0 1px rgba(255,255,255,.08)!important}
+.q-module-node[data-state="unknown"]{border-color:rgba(255,198,111,.75)!important}
+.q-module-node[data-state="blocked"]{border-color:rgba(255,112,139,.9)!important}
+.q-decision-core{
+ width:218px!important;min-height:166px!important;border-radius:30px!important;
+ border:1px solid rgba(178,157,255,.82)!important;
+ background:radial-gradient(circle at 50% 8%,rgba(132,105,225,.34),rgba(13,22,48,.98) 67%)!important;
+ box-shadow:0 0 0 7px rgba(165,139,255,.055),0 0 48px rgba(125,105,255,.28),inset 0 1px rgba(255,255,255,.13)!important;
+}
+.q-core-orbit{border:1px solid rgba(172,153,255,.25)!important;box-shadow:0 0 22px rgba(165,139,255,.12)!important}
+.q-decision-core>b{font-size:17px!important;letter-spacing:.12em!important;text-shadow:0 0 18px rgba(184,167,255,.4)}
+.q-decision-core>strong{border:1px solid rgba(169,151,255,.42)!important;border-radius:99px!important;padding:5px 13px!important;background:rgba(113,93,196,.17)!important}
+.q-decision-output{border:1px solid rgba(172,151,255,.62)!important;border-radius:13px!important;background:linear-gradient(90deg,rgba(49,39,94,.96),rgba(14,25,49,.98))!important;box-shadow:0 0 22px rgba(153,126,255,.16)!important}
+@media(max-width:700px){
+ .q-network-stage{height:300px!important;min-height:300px!important;flex:0 0 300px!important;border-radius:15px!important}
+ .q-network-stage:before{inset:8px}.q-network-stage:after{inset:16px}
+ .q-module-node{width:82px!important;height:88px!important;min-height:88px!important;padding:5px 3px!important;gap:3px!important;border-radius:12px!important;backdrop-filter:blur(5px)}
+ .q-module-node:before{inset:3px;border-radius:9px}
+ .q-node-icon{position:relative!important;left:auto!important;top:auto!important;width:27px!important;height:27px!important;flex:0 0 27px!important;margin:0 auto 1px!important}
+ .q-node-icon svg{width:16px!important;height:16px!important}
+ .q-module-node b{font-size:6.8px!important;letter-spacing:.08em!important;text-align:center}
+ .q-module-node small{font-size:6px!important;line-height:1.15!important;text-align:center!important}
+ .q-module-node em{font-size:5.8px!important;max-width:100%;text-align:center}
+ .q-decision-core{width:128px!important;min-height:106px!important;border-radius:22px!important;padding:7px!important}
+ .q-decision-core>b{font-size:11px!important;letter-spacing:.08em!important}
+ .q-decision-core>small{font-size:5.8px!important}
+ .q-decision-core>span:last-child{font-size:6px!important}
+ .q-decision-output{width:150px!important;min-height:39px!important;border-radius:9px!important}
+}
+@media(prefers-reduced-motion:reduce){.q-flow-path,.q-branch-path,.q-output-path{animation:none!important}}
+</style>
+
 </head><body><div class="shell"><aside class="side"><div class="brand"><div class="logo">₿</div><div><b>WHJ BITCOIN</b><small>مركز قيادة التداول الذكي</small></div></div><div class="navlabel">القائمة الرئيسية</div><nav class="nav"><button class="active" data-view="overview"><span class="ico">⌂</span>الرئيسية</button><button data-view="scanner"><span class="ico">⌁</span>ماسح السوق</button><button data-view="strategies"><span class="ico">◈</span>الاستراتيجيات</button><button data-view="trades"><span class="ico">⇄</span>الصفقات</button><button data-view="risk"><span class="ico">⌁</span>المخاطر</button><button data-view="system"><span class="ico">⚙</span>النظام</button><button data-view="agents"><span class="ico">✣</span>مركز الوكلاء</button><button data-view="forward"><span class="ico">◷</span>المراقبة المستقبلية</button><button data-view="mt5"><span class="ico">⌁</span>منصة MT5</button></nav><div class="navlabel agent-nav-label">وحدات التشغيل الست</div><nav class="agent-nav" aria-label="وحدات التشغيل"><button type="button" data-agent-target="0"><span>⌕</span>ماسح السوق</button><button type="button" data-agent-target="1"><span>⚑</span>بوابة التحقق</button><button type="button" data-agent-target="2"><span>◈</span>مدير الحجم</button><button type="button" data-agent-target="3"><span>Ⅱ</span>المحاكي الورقي</button><button type="button" data-agent-target="4"><span>≡</span>سجل القرارات</button><button type="button" data-agent-target="5"><span>◉</span>مراقب المحفظة</button></nav><div class="sidefoot">WHJ Bitcoin Bot 2026<br>مراقبة وتحليل · Paper Trading فقط</div></aside><main>
 <div class="mobilehead">WHJ BITCOIN · مركز القيادة</div><header class="top"><div><div class="eyebrow">WHJ / COMMAND CENTER</div><h1 id="pageTitle">نظرة عامة</h1><div class="sub">مراقبة أداء البوت وتحليل BTC/USD</div></div><div class="topright"><button class="toolbtn" id="exportJson" type="button">تنزيل التقرير JSON</button><button class="toolbtn" id="exportCsv" type="button">تصدير الصفقات CSV</button><span class="pill"><i class="dot"></i><span id="systemState">جارٍ تحميل البيانات</span></span><button class="refresh" id="refresh">↻ تحديث البيانات</button></div></header>
 <div class="banner"><div><b>وضع الحماية مفعّل — التداول الحقيقي متوقف</b><p>تعرض اللوحة بيانات التحليل والمحاكاة فقط، ولا ترسل أوامر إلى منصات التداول.</p></div><span class="status">● PAPER MODE</span></div>
