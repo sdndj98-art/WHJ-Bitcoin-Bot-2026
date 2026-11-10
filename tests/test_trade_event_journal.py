@@ -143,5 +143,17 @@ class TradeEventJournalTests(unittest.TestCase):
                         journal.append([row])
             self.assertIsNone(journal.last_trade_id)
 
+    def test_accepts_mixed_iso_and_unix_timestamps_with_equal_times(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = os.path.join(directory, "trades.jsonl")
+            journal = JsonlTradeJournal(path)
+            first = event(10, "2026-11-10T03:29:27.161334Z")
+            second = event(11, 1794281367.6102128)
+            third = event(12, 1794281367.6102128)
+            self.assertEqual(journal.append([first, second, third])["appended"], 3)
+            restored = JsonlTradeJournal(path)
+            self.assertEqual(restored.last_trade_id, 12)
+            self.assertEqual(restored.last_timestamp_ns, 1794281367610212800)
+
 if __name__ == "__main__":
     unittest.main()
