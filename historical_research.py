@@ -2217,6 +2217,7 @@ def run_forward_paper_accounts(candles, state_dir="."):
                 "high": float(row["high"]),
                 "low": float(row["low"]),
                 "close": float(row["close"]),
+                "execution_eligible": not bool(row.get("imputed", False)),
             }
             for row in rows
         ]
