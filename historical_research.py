@@ -2129,9 +2129,13 @@ def run_forward_paper_accounts(candles, state_dir="."):
 
 
 def _research_output_paths(output_dir="."):
-    """Keep research artifacts and its optional paper ledgers in one isolated directory."""
+    """Keep explicit research runs isolated without moving legacy workflow ledgers."""
     output_path = Path(output_dir)
-    return output_path, output_path / "paper_state"
+    # Scheduled workflows historically keep their persistent paper ledgers in
+    # the repository working directory. Preserve that default; only manual runs
+    # that opt into a dedicated output directory get a separate paper_state dir.
+    paper_state_dir = Path(".") if output_path == Path(".") else output_path / "paper_state"
+    return output_path, paper_state_dir
 
 
 def main(output_dir="."):
