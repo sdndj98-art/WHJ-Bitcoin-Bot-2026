@@ -213,6 +213,21 @@ def _signals(prices):
     return result
 
 
+def _normalize_blocked_execution_indices(blocked_execution_indices, count):
+    """Validate indices where synthetic candles must never receive simulated fills."""
+    try:
+        blocked = set(blocked_execution_indices or ())
+    except TypeError as exc:
+        raise ValueError("Blocked execution indices must be an iterable of integers") from exc
+    if any(
+        isinstance(index, bool) or not isinstance(index, int)
+        or index < 0 or index >= count
+        for index in blocked
+    ):
+        raise ValueError("Blocked execution indices must be in-range integers")
+    return blocked
+
+
 def _simulate(prices, signals, start, end, fee=0.001, slippage=0.0005, blocked_execution_indices=None):
     cash = 1000.0
     units = 0.0
@@ -220,7 +235,7 @@ def _simulate(prices, signals, start, end, fee=0.001, slippage=0.0005, blocked_e
     trades = []
     peak = cash
     max_dd = 0.0
-    blocked = set(blocked_execution_indices or ())
+    blocked = _normalize_blocked_execution_indices(blocked_execution_indices, len(prices))
     for i in range(max(start, 1), end):
         # signal[i-1] only; fill at current close, with 25% of available equity.
         # Synthetic bars can be marked for continuity but cannot execute fills.
@@ -255,7 +270,16 @@ def _simulate(prices, signals, start, end, fee=0.001, slippage=0.0005, blocked_e
     # Report net liquidation value, including estimated exit fee and slippage
     # for any position still open at the end of this evaluation window.
     if units > 0:
-        estimated_exit = units * prices[end - 1] * (1 - slippage)
+        # A terminal valuation may include imputed bars, but an estimated exit
+        # fill must use the latest executable (non-synthetic) close in this run.
+        last_executable = next(
+            (index for index in range(end - 1, max(start, 1) - 1, -1)
+             if index not in blocked),
+            None,
+        )
+        if last_executable is None:
+            raise RuntimeError("Open position has no executable bar for terminal valuation")
+        estimated_exit = units * prices[last_executable] * (1 - slippage)
         estimated_exit -= estimated_exit * fee
         final_equity = cash + estimated_exit
     else:
@@ -447,7 +471,7 @@ def _market_regime_diagnostics(prices, signals, start_index):
         "regimes": result,
     }
 
-def run_strategy_lab(prices, fee=0.001, slippage=0.0005):
+def run_strategy_lab(prices, fee=0.001, slippage=0.0005, blocked_execution_indices=None):
     if len(prices) < 120:
         raise ValueError("At least 120 prices are required for strategy holdout testing")
     if any(isinstance(p, bool) or not isinstance(p, (int, float))
@@ -455,6 +479,9 @@ def run_strategy_lab(prices, fee=0.001, slippage=0.0005):
         raise ValueError("Prices must be finite positive numbers")
     if not 0 <= fee < 1 or not 0 <= slippage < 1:
         raise ValueError("Fee and slippage must be between 0 and 1")
+    blocked = _normalize_blocked_execution_indices(
+        blocked_execution_indices, len(prices)
+    )
 
     split = int(len(prices) * 0.7)
     signals = _signals(prices)
@@ -478,53 +505,71 @@ def run_strategy_lab(prices, fee=0.001, slippage=0.0005):
                     "window": fold + 1,
                     "start_index": start,
                     "end_index_exclusive": end,
-                    "metrics": _simulate(prices, values, start, end, fee, slippage),
+                    "metrics": _simulate(prices, values, start, end, fee, slippage, blocked),
                 })
         returns = [item["metrics"]["return_pct"] for item in windows]
         results[name] = {
-            "in_sample": _simulate(prices, values, 50, split, fee, slippage),
-            "out_of_sample": _simulate(prices, values, split, len(prices), fee, slippage),
+            "in_sample": _simulate(prices, values, 50, split, fee, slippage, blocked),
+            "out_of_sample": _simulate(prices, values, split, len(prices), fee, slippage, blocked),
             "walk_forward_windows": windows,
             "worst_window_return_pct": min(returns) if returns else None,
         }
 
-    # Buy-and-hold benchmark over exactly the same out-of-sample window.
-    # Mark-to-market drawdown uses spot value; final return includes exit costs.
-    # Match the 25% strategy allocation for a fair risk/exposure comparison.
+    # Buy-and-hold benchmark uses the first executable OOS close and the
+    # latest executable close; synthetic bars can inform continuity but never fills.
     benchmark_allocation = 250.0
+    benchmark_entry_index = next(
+        (index for index in range(split, len(prices)) if index not in blocked),
+        None,
+    )
+    benchmark_exit_index = (
+        next(
+            (index for index in range(len(prices) - 1, benchmark_entry_index - 1, -1)
+             if index not in blocked),
+            None,
+        )
+        if benchmark_entry_index is not None else None
+    )
     benchmark_cash = 1000.0 - benchmark_allocation
-    start_price = float(prices[split]) * (1 + slippage)
-    entry_fee = benchmark_allocation * fee
-    benchmark_units = (benchmark_allocation - entry_fee) / start_price
+    benchmark_units = 0.0
     benchmark_peak = 1000.0
     benchmark_max_dd = 0.0
-    for price in prices[split:]:
-        # Compare drawdown on the same net-liquidation basis as strategies:
-        # estimate exit slippage and fee at every observation, not only at the end.
-        liquidation = benchmark_units * float(price) * (1 - slippage)
-        liquidation -= liquidation * fee
-        marked_equity = benchmark_cash + liquidation
-        benchmark_peak = max(benchmark_peak, marked_equity)
-        if benchmark_peak > 0:
-            benchmark_max_dd = max(
-                benchmark_max_dd,
-                (benchmark_peak - marked_equity) / benchmark_peak * 100,
-            )
-    benchmark_exit = benchmark_units * float(prices[-1]) * (1 - slippage)
-    benchmark_exit -= benchmark_exit * fee
-    benchmark_equity = benchmark_cash + benchmark_exit
+    if benchmark_entry_index is not None:
+        start_price = float(prices[benchmark_entry_index]) * (1 + slippage)
+        entry_fee = benchmark_allocation * fee
+        benchmark_units = (benchmark_allocation - entry_fee) / start_price
+        for price in prices[benchmark_entry_index:]:
+            # Mark-to-market can observe a synthetic flat bar; it never fills there.
+            liquidation = benchmark_units * float(price) * (1 - slippage)
+            liquidation -= liquidation * fee
+            marked_equity = benchmark_cash + liquidation
+            benchmark_peak = max(benchmark_peak, marked_equity)
+            if benchmark_peak > 0:
+                benchmark_max_dd = max(
+                    benchmark_max_dd,
+                    (benchmark_peak - marked_equity) / benchmark_peak * 100,
+                )
+        benchmark_exit = benchmark_units * float(prices[benchmark_exit_index]) * (1 - slippage)
+        benchmark_exit -= benchmark_exit * fee
+        benchmark_equity = benchmark_cash + benchmark_exit
+        benchmark_trades = 1
+    else:
+        benchmark_equity = 1000.0
+        benchmark_trades = 0
     benchmark_pnl = benchmark_equity - 1000.0
     results["buy_and_hold"] = {
         "out_of_sample": {
             "return_pct": round((benchmark_equity / 1000.0 - 1) * 100, 2),
             "final_equity_usd": round(benchmark_equity, 2),
             "max_drawdown_pct": round(benchmark_max_dd, 2),
-            "closed_trades": 1,
+            "closed_trades": benchmark_trades,
             "win_rate_pct": 100.0 if benchmark_pnl > 0 else 0.0,
             "profit_factor": None,
             "open_position": False,
             "fees_and_slippage_included": True,
             "allocation_fraction": benchmark_allocation / 1000.0,
+            "entry_index": benchmark_entry_index,
+            "exit_index": benchmark_exit_index,
         }
     }
     regime_diagnostics = _market_regime_diagnostics(prices, signals, split)
@@ -532,10 +577,11 @@ def run_strategy_lab(prices, fee=0.001, slippage=0.0005):
         "mode": "FIXED_RULE_CHRONOLOGICAL_HOLDOUT",
         "market_regime_diagnostics": regime_diagnostics,
         "sample_count": len(prices),
+        "blocked_execution_bar_count": len(blocked),
         "split_index": split,
         "in_sample_fraction_pct": 70,
         "out_of_sample_fraction_pct": 30,
-        "execution": "Previous completed close signal; next close fill; 25% equity allocation; fee and slippage applied.",
+        "execution": "Previous completed close signal; next executable close fill; imputed synthetic bars are blocked from entry and exit fills; 25% equity allocation; fee and slippage applied.",
         "benchmark_note": "Buy-and-hold benchmark uses the same 25% initial allocation as strategy entries; remaining cash stays uninvested for an exposure-matched comparison.",
         "walk_forward_note": "The 30% out-of-sample holdout is split into three sequential non-overlapping windows; parameters are fixed and not retuned.",
         "ensemble_methodology": {
