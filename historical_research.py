@@ -1664,6 +1664,29 @@ def build_qualification_markdown(result):
             "",
         ])
 
+    qualified_forward = paper_accounts.get("forward_only_qualified_candidates", {})
+    qualified_candidates = qualified_forward.get("candidates", {})
+    if qualified_candidates:
+        lines.extend([
+            "## Forward-only paper review of qualified candidates",
+            "",
+            "Each candidate has an independent $250 ledger seeded at the latest completed native-timeframe bar. Historical candles initialize indicators only and contribute zero trades or PnL. These ledgers are not live-trading approvals.",
+            "",
+        ])
+        for candidate_name, account in qualified_candidates.items():
+            pauses = account.get("risk_pause_reasons", [])
+            status = "PAUSED — " + ", ".join(pauses) if pauses else "active"
+            lines.append(
+                f"- **{candidate_name}:** equity "
+                f"${account.get('equity_after_estimated_exit_costs_usd', 0):,.2f}; "
+                f"{account.get('completed_trades', 0)} forward closed trades; "
+                f"drawdown {account.get('max_drawdown_pct', 0):.2f}%; status {status}."
+            )
+        lines.extend([
+            "- The fourth qualified ATR-trailing candidate is not yet tracked here: the current paper adapter supplies close-only bars, so it cannot safely reproduce an OHLC-based ATR trailing stop.",
+            "",
+        ])
+
     # Diagnostic shortlist only: rank by the weaker of base/stress benchmark edges.
     # This is deliberately not a promotion gate and never changes qualification.
     watchlist = []
@@ -2465,6 +2488,22 @@ def main(output_dir="."):
             "sleeve_drawdowns_pct": {
                 timeframe: forward_paper["forward_only_ema50_200_4h_6h_50_50_portfolio"]["sleeves"][timeframe]["max_drawdown_pct"]
                 for timeframe in ("4h", "6h")
+            },
+        },
+        "forward_only_qualified_candidates": {
+            "initial_cash_usd": forward_paper["forward_only_qualified_candidates"]["initial_cash_usd"],
+            "equity_usd": forward_paper["forward_only_qualified_candidates"]["equity_after_estimated_exit_costs_usd"],
+            "return_pct": forward_paper["forward_only_qualified_candidates"]["return_pct"],
+            "completed_trades": forward_paper["forward_only_qualified_candidates"]["completed_trades"],
+            "candidates": {
+                name: {
+                    "equity_usd": account["equity_after_estimated_exit_costs_usd"],
+                    "return_pct": account["return_pct"],
+                    "completed_trades": account["completed_trades"],
+                    "max_drawdown_pct": account["max_drawdown_pct"],
+                    "risk_pause_reasons": account["risk_pause_reasons"],
+                }
+                for name, account in forward_paper["forward_only_qualified_candidates"]["candidates"].items()
             },
         },
         "strategies": {
