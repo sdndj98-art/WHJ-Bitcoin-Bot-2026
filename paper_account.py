@@ -307,7 +307,10 @@ def update_paper_account(candles, state_path="paper_account_state.json",
                          slippage_rate=0.0005, allocation_fraction=0.25,
                          max_drawdown_fraction=0.10, daily_loss_fraction=0.03,
                          max_consecutive_losses=5, strategy="sma_trend", strategy_health_pause=False,
-                         strategy_health_drawdown_fraction=0.08):
+                         strategy_health_drawdown_fraction=0.08,
+                         require_entry_confirmation=False,
+                         entry_confirmation_timestamp=None,
+                         entry_confirmation_available=False):
     """Process each newly closed hourly candle once and persist the simulated account."""
     initial_cash = _number(initial_cash, "initial_cash", 0)
     if initial_cash <= 0:
@@ -321,6 +324,16 @@ def update_paper_account(candles, state_path="paper_account_state.json",
         raise ValueError("max_consecutive_losses must be a positive integer")
     if not isinstance(strategy_health_pause, bool):
         raise ValueError("strategy_health_pause must be boolean")
+    if not isinstance(require_entry_confirmation, bool):
+        raise ValueError("require_entry_confirmation must be boolean")
+    if not isinstance(entry_confirmation_available, bool):
+        raise ValueError("entry_confirmation_available must be boolean")
+    if entry_confirmation_timestamp is not None and (
+        isinstance(entry_confirmation_timestamp, bool)
+        or not isinstance(entry_confirmation_timestamp, int)
+        or entry_confirmation_timestamp < 0
+    ):
+        raise ValueError("entry_confirmation_timestamp must be a non-negative integer")
     strategy_health_drawdown_fraction = _number(
         strategy_health_drawdown_fraction, "strategy_health_drawdown_fraction", 0.001, 1
     )
@@ -488,7 +501,14 @@ def update_paper_account(candles, state_path="paper_account_state.json",
                 or state.get("paused_for_strategy_health", False)
             )
 
-            if want_long and state["btc"] == 0 and not paused:
+            confirmation_matches = (
+                entry_confirmation_available is True
+                and entry_confirmation_timestamp == timestamp
+            )
+            entry_permitted = (
+                not require_entry_confirmation or confirmation_matches
+            )
+            if want_long and state["btc"] == 0 and not paused and entry_permitted:
                 equity = state["cash"]
                 allocation = min(state["cash"], equity * allocation_fraction)
                 if allocation > 0:

@@ -103,5 +103,80 @@ class TradeEventJournalTests(unittest.TestCase):
             self.assertFalse(os.path.exists(path))
 
 
+    def test_restore_rejects_invalid_trade_payload_fields(self):
+        invalid_cases = (
+            ("price", 0),
+            ("price", -1),
+            ("price", float("nan")),
+            ("price", float("inf")),
+            ("price", True),
+            ("qty", 0),
+            ("qty", -1),
+            ("qty", float("nan")),
+            ("qty", float("inf")),
+            ("qty", True),
+            ("side", "hold"),
+            ("side", "BUY"),
+        )
+        for field, value in invalid_cases:
+            with self.subTest(field=field, value=value):
+                with tempfile.TemporaryDirectory() as directory:
+                    path = os.path.join(directory, "trades.jsonl")
+                    row = event(10)
+                    row[field] = value
+                    with open(path, "w", encoding="utf-8") as handle:
+                        handle.write(json.dumps(row) + "\n")
+                    with self.assertRaises(TradeJournalError):
+                        JsonlTradeJournal(path)
+
+    def test_append_rejects_boolean_and_non_finite_price_or_qty(self):
+        with tempfile.TemporaryDirectory() as directory:
+            journal = JsonlTradeJournal(os.path.join(directory, "trades.jsonl"))
+            for field, value in (
+                ("price", True), ("price", float("nan")),
+                ("qty", False), ("qty", float("inf")),
+            ):
+                row = event(10)
+                row[field] = value
+                with self.subTest(field=field, value=value):
+                    with self.assertRaises(ValueError):
+                        journal.append([row])
+            self.assertIsNone(journal.last_trade_id)
+
+    def test_accepts_mixed_iso_and_unix_timestamps_with_equal_times(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = os.path.join(directory, "trades.jsonl")
+            journal = JsonlTradeJournal(path)
+            first = event(10, "2026-11-10T03:29:27.161334Z")
+            second = event(11, 1794281367.6102128)
+            third = event(12, 1794281367.6102128)
+            self.assertEqual(journal.append([first, second, third])["appended"], 3)
+            restored = JsonlTradeJournal(path)
+            self.assertEqual(restored.last_trade_id, 12)
+            self.assertEqual(restored.last_timestamp_ns, 1794281367610212800)
+
+    def test_persists_feed_source_for_websocket_and_rest_trades(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = os.path.join(directory, "trades.jsonl")
+            journal = JsonlTradeJournal(path)
+            ws = event(10)
+            ws["source"] = "websocket_v2"
+            rest = event(11)
+            rest["source"] = "rest_trades"
+            journal.append([ws, rest])
+            with open(path, encoding="utf-8") as handle:
+                rows = [json.loads(line) for line in handle]
+            self.assertEqual([row["source"] for row in rows], ["websocket_v2", "rest_trades"])
+            restored = JsonlTradeJournal(path)
+            self.assertEqual(restored.last_trade_id, 11)
+
+    def test_legacy_event_without_source_remains_readable(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = os.path.join(directory, "trades.jsonl")
+            journal = JsonlTradeJournal(path)
+            journal.append([event(10)])
+            restored = JsonlTradeJournal(path)
+            self.assertEqual(restored.last_trade_id, 10)
+
 if __name__ == "__main__":
     unittest.main()
