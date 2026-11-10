@@ -161,6 +161,8 @@ def seed_atr_trailing_account(four_hour_bars, daily_bars, state_path, initial_ca
         "pause_reason": None,
         "processed_new_candles": 0,
         "last_signal": "seeded_no_trade",
+        "last_daily_regime": None,
+        "last_setup": None,
     }
     _save(state_path, state)
     return {"created": True, "last_timestamp": last["timestamp"]}
@@ -293,6 +295,8 @@ def update_atr_trailing_account(four_hour_bars, daily_bars, state_path,
 
         regime = _daily_regime(daily, bar["timestamp"])
         setup = regime and state["ema20"] > state["ema50"] and close > state["ema50"]
+        state["last_daily_regime"] = regime
+        state["last_setup"] = setup
         if state["quantity"] > 0:
             state["position_peak"] = max(state["position_peak"] or close, close)
             trailing_stop = state["position_peak"] - 3.0 * state["atr14"]
@@ -334,4 +338,9 @@ def _summary(state):
         "processed_new_candles": state["processed_new_candles"],
         "last_timestamp": state["last_timestamp"],
         "last_signal": state["last_signal"],
+        "last_daily_regime": state.get("last_daily_regime"),
+        "last_setup": state.get("last_setup"),
+        "ema20": round(state["ema20"], 6),
+        "ema50": round(state["ema50"], 6),
+        "atr14": round(state["atr14"], 6),
     }
