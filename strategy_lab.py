@@ -213,32 +213,35 @@ def _signals(prices):
     return result
 
 
-def _simulate(prices, signals, start, end, fee=0.001, slippage=0.0005):
+def _simulate(prices, signals, start, end, fee=0.001, slippage=0.0005, blocked_execution_indices=None):
     cash = 1000.0
     units = 0.0
     entry_value = 0.0
     trades = []
     peak = cash
     max_dd = 0.0
+    blocked = set(blocked_execution_indices or ())
     for i in range(max(start, 1), end):
         # signal[i-1] only; fill at current close, with 25% of available equity.
+        # Synthetic bars can be marked for continuity but cannot execute fills.
         want_long = signals[i - 1]
-        if want_long and units == 0:
-            allocation = cash * 0.25
-            fill = prices[i] * (1 + slippage)
-            fee_paid = allocation * fee
-            units = (allocation - fee_paid) / fill
-            cash -= allocation
-            entry_value = allocation
-        elif not want_long and units > 0:
-            fill = prices[i] * (1 - slippage)
-            proceeds = units * fill
-            proceeds -= proceeds * fee
-            pnl = proceeds - entry_value
-            cash += proceeds
-            trades.append(pnl)
-            units = 0.0
-            entry_value = 0.0
+        if i not in blocked:
+            if want_long and units == 0:
+                allocation = cash * 0.25
+                fill = prices[i] * (1 + slippage)
+                fee_paid = allocation * fee
+                units = (allocation - fee_paid) / fill
+                cash -= allocation
+                entry_value = allocation
+            elif not want_long and units > 0:
+                fill = prices[i] * (1 - slippage)
+                proceeds = units * fill
+                proceeds -= proceeds * fee
+                pnl = proceeds - entry_value
+                cash += proceeds
+                trades.append(pnl)
+                units = 0.0
+                entry_value = 0.0
         # Measure drawdown on net liquidation value, not a frictionless mark.
         # This includes the estimated exit slippage and fee while a position is open.
         if units > 0:
@@ -571,8 +574,16 @@ def _volume_liquidity_signals(bars):
     for row in bars:
         if not isinstance(row, dict):
             raise ValueError("Each OHLCV bar must be a dictionary")
+        raw_timestamp = row.get("timestamp")
+        if (
+            isinstance(raw_timestamp, bool)
+            or not isinstance(raw_timestamp, (int, float))
+            or (isinstance(raw_timestamp, float)
+                and (not math.isfinite(raw_timestamp) or not raw_timestamp.is_integer()))
+        ):
+            raise ValueError("OHLCV timestamp must be a finite integer")
         try:
-            timestamp = int(row["timestamp"])
+            timestamp = int(raw_timestamp)
             op = float(row["open"])
             high = float(row["high"])
             low = float(row["low"])
@@ -583,6 +594,9 @@ def _volume_liquidity_signals(bars):
         values = (op, high, low, close, volume)
         if any(not math.isfinite(value) for value in values):
             raise ValueError("OHLCV values must be finite")
+        imputed = row.get("imputed", False)
+        if not isinstance(imputed, bool):
+            raise ValueError("OHLCV imputed flag must be boolean")
         if timestamp < 0 or min(op, high, low, close) <= 0 or volume < 0:
             raise ValueError("OHLCV bar contains invalid timestamp, price or volume")
         if high < max(op, close, low) or low > min(op, close, high):
@@ -590,9 +604,16 @@ def _volume_liquidity_signals(bars):
         normalized.append({
             "timestamp": timestamp, "open": op, "high": high,
             "low": low, "close": close, "volume": volume,
+            "imputed": imputed,
         })
     if any(b["timestamp"] <= a["timestamp"] for a, b in zip(normalized, normalized[1:])):
         raise ValueError("OHLCV timestamps must be strictly increasing")
+    timestamp_deltas = [
+        b["timestamp"] - a["timestamp"]
+        for a, b in zip(normalized, normalized[1:])
+    ]
+    if timestamp_deltas and any(delta != timestamp_deltas[0] for delta in timestamp_deltas[1:]):
+        raise ValueError("OHLCV timestamps must be evenly spaced")
 
     closes = [row["close"] for row in normalized]
     highs = [row["high"] for row in normalized]
@@ -615,6 +636,16 @@ def _volume_liquidity_signals(bars):
     for i, row in enumerate(normalized):
         if i < 200:
             diagnostics.append({})
+            continue
+        # A synthetic forward-filled candle can distort EMA, volume baselines,
+        # CMF and VWAP. Keep the strategy flat until its full 200-bar context
+        # contains observed exchange candles only.
+        if any(item["imputed"] for item in normalized[i - 199:i + 1]):
+            in_position = False
+            diagnostics.append({
+                "data_quality_blocked": True,
+                "reason": "imputed_candle_in_200_bar_indicator_context",
+            })
             continue
         prior_volumes = volumes[i - 20:i]
         average_volume = sum(prior_volumes) / 20
@@ -687,12 +718,17 @@ def _volume_liquidity_signals(bars):
 
 def run_volume_liquidity_lab(bars, fee=0.001, slippage=0.0005):
     """Evaluate the fixed OHLCV confluence strategy on chronological holdout windows."""
-    if len(bars) < 300:
+    if not isinstance(bars, list) or len(bars) < 300:
         raise ValueError("At least 300 OHLCV bars are required for holdout testing")
-    if not 0 <= fee < 1 or not 0 <= slippage < 1:
-        raise ValueError("Fee and slippage must be between 0 and 1")
-    prices = [float(row["close"]) for row in bars]
+    for name, value in (("fee", fee), ("slippage", slippage)):
+        if (isinstance(value, bool) or not isinstance(value, (int, float))
+                or not math.isfinite(value) or not 0 <= value < 1):
+            raise ValueError(name + " must be a finite number between 0 and 1")
     signals, scores, diagnostics = _volume_liquidity_signals(bars)
+    prices = [float(row["close"]) for row in bars]
+    blocked_execution_indices = {
+        index for index, row in enumerate(bars) if row.get("imputed", False)
+    }
     split = int(len(bars) * 0.7)
     edges = [split + ((len(bars) - split) * k) // 3 for k in range(4)]
     windows = []
@@ -703,10 +739,10 @@ def run_volume_liquidity_lab(bars, fee=0.001, slippage=0.0005):
                 "window": fold + 1,
                 "start_index": start,
                 "end_index_exclusive": end,
-                "metrics": _simulate(prices, signals, start, end, fee, slippage),
+                "metrics": _simulate(prices, signals, start, end, fee, slippage, blocked_execution_indices),
             })
-    full_metrics = _simulate(prices, signals, 1, len(prices), fee, slippage)
-    oos_metrics = _simulate(prices, signals, split, len(prices), fee, slippage)
+    full_metrics = _simulate(prices, signals, 1, len(prices), fee, slippage, blocked_execution_indices)
+    oos_metrics = _simulate(prices, signals, split, len(prices), fee, slippage, blocked_execution_indices)
     active_scores = [scores[i] for i in range(split, len(scores)) if signals[i]]
     benchmark_signals = [True] * len(prices)
     benchmark_windows = [
@@ -714,13 +750,13 @@ def run_volume_liquidity_lab(bars, fee=0.001, slippage=0.0005):
             "window": fold + 1,
             "start_index": edges[fold],
             "end_index_exclusive": edges[fold + 1],
-            "metrics": _simulate(prices, benchmark_signals, edges[fold], edges[fold + 1], fee, slippage),
+            "metrics": _simulate(prices, benchmark_signals, edges[fold], edges[fold + 1], fee, slippage, blocked_execution_indices),
         }
         for fold in range(3) if edges[fold + 1] > edges[fold]
     ]
     benchmark = {
-        "full_sample": _simulate(prices, benchmark_signals, 1, len(prices), fee, slippage),
-        "out_of_sample": _simulate(prices, benchmark_signals, split, len(prices), fee, slippage),
+        "full_sample": _simulate(prices, benchmark_signals, 1, len(prices), fee, slippage, blocked_execution_indices),
+        "out_of_sample": _simulate(prices, benchmark_signals, split, len(prices), fee, slippage, blocked_execution_indices),
         "walk_forward_windows": benchmark_windows,
     }
     candidate = {

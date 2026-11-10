@@ -1,6 +1,6 @@
 import unittest
 
-from strategy_lab import _volume_liquidity_signals, run_volume_liquidity_lab
+from strategy_lab import _simulate, _volume_liquidity_signals, run_volume_liquidity_lab
 
 
 def synthetic_bars(count=900):
@@ -41,6 +41,21 @@ class VolumeLiquidityStrategyTests(unittest.TestCase):
         prefix = _volume_liquidity_signals(bars[:700])[0]
         self.assertEqual(full[:700], prefix)
 
+    def test_research_lab_rejects_invalid_cost_assumptions_and_bar_container(self):
+        bars = synthetic_bars()
+        for fee, slippage in ((True, 0.001), (0.001, float("nan")),
+                              ("0.001", 0.001), (0.001, float("inf"))):
+            with self.subTest(fee=fee, slippage=slippage):
+                with self.assertRaisesRegex(ValueError, "finite number"):
+                    run_volume_liquidity_lab(bars, fee=fee, slippage=slippage)
+        with self.assertRaisesRegex(ValueError, "At least 300 OHLCV bars"):
+            run_volume_liquidity_lab(None)
+
+    def test_research_lab_validates_bars_before_extracting_close_prices(self):
+        bars = synthetic_bars()
+        del bars[350]["close"]
+        with self.assertRaisesRegex(ValueError, "missing or non-numeric fields"):
+            run_volume_liquidity_lab(bars)
     def test_research_report_has_holdout_and_three_walk_forward_windows(self):
         report = run_volume_liquidity_lab(synthetic_bars())
         self.assertEqual(report["mode"], "OHLCV_VOLUME_LIQUIDITY_RESEARCH_ONLY")
@@ -59,6 +74,45 @@ class VolumeLiquidityStrategyTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "strictly increasing"):
             _volume_liquidity_signals(bars)
 
+    def test_rejects_non_integer_and_non_numeric_timestamps(self):
+        for value in (True, 36000.5, float("nan"), float("inf"), "36000"):
+            with self.subTest(timestamp=value):
+                bars = synthetic_bars()
+                bars[10]["timestamp"] = value
+                with self.assertRaisesRegex(ValueError, "timestamp must be a finite integer"):
+                    _volume_liquidity_signals(bars)
+
+    def test_rejects_irregular_timestamp_spacing(self):
+        bars = synthetic_bars()
+        bars[300]["timestamp"] += 1
+        with self.assertRaisesRegex(ValueError, "evenly spaced"):
+            _volume_liquidity_signals(bars)
+    def test_simulator_skips_fills_on_imputed_execution_bars(self):
+        prices = [100.0, 100.0, 110.0, 110.0]
+        signals = [True, False, False, False]
+        blocked = _simulate(prices, signals, 1, 4, blocked_execution_indices={1})
+        immediate = _simulate(prices, signals, 1, 4)
+        self.assertFalse(blocked["open_position"])
+        self.assertEqual(blocked["closed_trades"], 0)
+        self.assertEqual(blocked["final_equity_usd"], 1000.0)
+        self.assertEqual(immediate["closed_trades"], 1)
+        self.assertGreater(immediate["final_equity_usd"], 1000.0)
+    def test_imputed_candles_block_signals_until_200_bar_context_clears(self):
+        bars = synthetic_bars()
+        bars[300]["imputed"] = True
+        signals, _, diagnostics = _volume_liquidity_signals(bars)
+        self.assertTrue(all(not value for value in signals[300:500]))
+        self.assertTrue(all(
+            diagnostics[index].get("data_quality_blocked", False)
+            for index in range(300, 500)
+        ))
+        self.assertNotIn("data_quality_blocked", diagnostics[500])
+
+    def test_rejects_non_boolean_imputed_flag(self):
+        bars = synthetic_bars()
+        bars[250]["imputed"] = "false"
+        with self.assertRaisesRegex(ValueError, "imputed flag must be boolean"):
+            _volume_liquidity_signals(bars)
     def test_rejects_nonfinite_volume(self):
         bars = synthetic_bars()
         bars[300]["volume"] = float("nan")
