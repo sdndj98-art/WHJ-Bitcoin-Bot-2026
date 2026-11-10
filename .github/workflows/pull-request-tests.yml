@@ -2,7 +2,7 @@ name: WHJ Pull Request Tests
 
 on:
   pull_request:
-    branches: [main]
+    branches: [main, strategy/qualified-forward-paper-20261111]
   workflow_dispatch:
 
 permissions:
