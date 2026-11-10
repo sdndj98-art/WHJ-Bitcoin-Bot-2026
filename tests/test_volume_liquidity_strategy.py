@@ -1,6 +1,6 @@
 import unittest
 
-from strategy_lab import _volume_liquidity_signals, run_volume_liquidity_lab
+from strategy_lab import _simulate, _volume_liquidity_signals, run_volume_liquidity_lab
 
 
 def synthetic_bars(count=900):
