@@ -2,7 +2,7 @@ name: WHJ Dashboard Contract
 
 on:
   push:
-    branches: [feature/efficiency-ratio-indicator]
+    branches: [feature/efficiency-ratio-indicator, feature/strategy-health-monitor]
     paths:
       - "web/index.html"
       - "dashboard.py"

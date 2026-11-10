@@ -2,6 +2,7 @@
 import math
 
 from advanced_market_analysis import analyze_advanced_market
+from derivatives_intelligence import classify_derivatives_flow
 
 
 def _ema(values, period):
@@ -94,7 +95,8 @@ def _adx(rows, period=14):
 
 
 def scan_btc_market(candles, market_data_quality=None, volume_lookback=20,
-                    volume_spike_multiple=1.5, interval_hours=1, market_label="BTC/USD"):
+                    volume_spike_multiple=1.5, interval_hours=1, market_label="BTC/USD",
+                    derivatives_snapshots=None, derivatives_as_of=None):
     """Score a completed hourly candle against eight independent confirmation checks.
 
     Uses 50 prior candles for EMA trend context, 20 prior candles for breakout
@@ -120,25 +122,31 @@ def scan_btc_market(candles, market_data_quality=None, volume_lookback=20,
 
     normalized = []
     for row in candles[-required_history:]:
-        if not isinstance(row, (list, tuple)) or len(row) < 8:
-            raise ValueError("Each scanner candle must contain OHLCV and trade count")
-        raw_fields = (row[0], row[1], row[2], row[3], row[4], row[6], row[7])
-        if any(isinstance(value, bool) for value in raw_fields):
+        if not isinstance(row, (list, tuple)) or len(row) not in (6, 7, 8):
+            raise ValueError("Each scanner candle must contain timestamp and OHLCV values")
+        if len(row) == 8:
+            raw_fields = (row[0], row[1], row[2], row[3], row[4], row[6])
+            raw_trades = row[7]
+        else:
+            raw_fields = (row[0], row[1], row[2], row[3], row[4], row[5])
+            raw_trades = row[6] if len(row) == 7 else None
+        if any(isinstance(value, bool) for value in raw_fields) or isinstance(raw_trades, bool):
             raise ValueError("Scanner candle fields cannot be booleans")
         try:
-            timestamp, open_price, high, low, close, volume, trades = (
+            timestamp, open_price, high, low, close, volume = (
                 float(value) for value in raw_fields
             )
+            trades = None if raw_trades is None else float(raw_trades)
         except (TypeError, ValueError, OverflowError) as exc:
             raise ValueError("Scanner candle fields must be numeric") from exc
-        values = (timestamp, open_price, high, low, close, volume, trades)
+        values = (timestamp, open_price, high, low, close, volume)
         if any(not math.isfinite(value) for value in values):
             raise ValueError("Scanner candle fields must be finite")
+        if trades is not None and (not math.isfinite(trades) or not trades.is_integer() or trades < 0):
+            raise ValueError("Scanner trade count must be a finite non-negative integer")
         if not timestamp.is_integer() or timestamp < 0:
             raise ValueError("Scanner candle timestamp must be a non-negative integer")
-        if not trades.is_integer():
-            raise ValueError("Scanner trade count must be an integer")
-        if min(open_price, high, low, close) <= 0 or volume < 0 or trades < 0:
+        if min(open_price, high, low, close) <= 0 or volume < 0:
             raise ValueError("Scanner candle contains invalid price or activity values")
         if high < max(open_price, close, low) or low > min(open_price, close, high):
             raise ValueError("Scanner candle has inconsistent OHLC bounds")
@@ -247,13 +255,32 @@ def scan_btc_market(candles, market_data_quality=None, volume_lookback=20,
     )
     reasons.extend(code for failed, code in reason_checks if failed)
     if candidate:
-        reasons.append("all_seven_scanner_checks_passed_paper_review_only")
+        reasons.append("all_eight_scanner_checks_passed_paper_review_only")
 
     advanced_analysis = analyze_advanced_market(normalized)
+    derivatives_context = (
+        classify_derivatives_flow(
+            derivatives_snapshots.get("price"),
+            derivatives_snapshots.get("open_interest"),
+            as_of=derivatives_as_of,
+        )
+        if isinstance(derivatives_snapshots, dict)
+        else {
+            "status": "UNAVAILABLE",
+            "classification": "UNAVAILABLE",
+            "direction": "UNKNOWN",
+            "signal_strength_score": None,
+            "score_type": "HEURISTIC_MAGNITUDE_NOT_PROBABILITY",
+            "reason": "No validated derivatives snapshots supplied",
+            "research_only": True,
+            "execution_enabled": False,
+        }
+    )
 
     return {
         "market": market_label.strip(),
         "advanced_analysis": advanced_analysis,
+        "derivatives_intelligence": derivatives_context,
         "timeframe": timeframe,
         "status": status,
         "lookback_candles": volume_lookback,

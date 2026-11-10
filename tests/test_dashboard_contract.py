@@ -254,8 +254,8 @@ class DashboardContractTests(unittest.TestCase):
         self.assertIn("function renderAdxForward(x)", self.source)
         self.assertIn("ISOLATED_ADX_FORWARD_PAPER_ONLY", self.source)
         self.assertIn("existing_paper_ledgers_touched!==false", self.source)
-        self.assertIn("يجب أن يحتوي التقرير على المحافظ الأربع فقط", self.source)
-        self.assertIn("ADX15 / ADX20", self.source)
+        self.assertIn("يجب أن يحتوي التقرير على المحافظ الست فقط", self.source)
+        self.assertIn("ADX15 / ADX20 / ADX25", self.source)
         self.assertIn("لا تُخلط هذه الدفاتر مع الحسابات الورقية القديمة", self.source)
         self.assertIn("30 صفقة مستقبلية مغلقة لكل محفظة", self.source)
 

@@ -1,11 +1,12 @@
 name: WHJ Dashboard Validation
 on:
   push:
-    branches: [research/cost-sensitivity]
+    branches: [research/cost-sensitivity, feature/strategy-health-monitor]
     paths:
       - "web/**"
       - ".github/workflows/whj.yml"
       - ".github/workflows/dashboard-check.yml"
+      - "tests/dashboard_forward_validation.js"
   pull_request:
     branches: [main]
     paths:

@@ -6,7 +6,9 @@ const html = fs.readFileSync("web/index.html", "utf8");
 const match = html.match(/function validateForwardReport\(x\)\{[\s\S]*?\n\}\nfunction renderForward\(/);
 assert.ok(match, "Could not locate validateForwardReport in dashboard");
 const validatorSource = match[0].replace(/\nfunction renderForward\($/, "");
-const validate = vm.runInNewContext(`${validatorSource}; validateForwardReport`);
+const decisionValidatorMatch = html.match(/function validateDecisionTools\(x\)\{[\s\S]*?\n\}/);
+assert.ok(decisionValidatorMatch, "Could not locate SCANNER/GUARD/SIZER report validator");
+const validate = vm.runInNewContext(`${decisionValidatorMatch[0]}; ${validatorSource}; validateForwardReport`);
 
 const keys = ["1h_sma_trend", "1h_ema_trend", "1h_rsi14_mean_reversion", "4h", "6h"];
 const allocations = [200, 200, 200, 500, 500];
@@ -51,12 +53,31 @@ const report = {
       rolling_status: "INSUFFICIENT_ROLLING_SAMPLE"
     }
   }]))
+
 };
+report.scanner_review = {
+  status: "WATCH", paper_candidate_only: true, live_orders_placed: false,
+  reasons: ["volume_spike_not_confirmed"], confluence_score: 6, confluence_total: 8,
+  current_close: 68000, volume_ratio: 1.2
+};
+report.paper_decision_gates = Object.fromEntries([
+  "1h_sma_trend", "1h_ema_trend", "1h_rsi14_mean_reversion"
+].map(key => [key, {
+  status: "BLOCKED", reasons: ["scanner_candidate_not_approved"],
+  paper_only: true, execution_enabled: false, order_placed: false
+}]));
 
 assert.equal(validate(report), report, "Valid five-sleeve report should pass");
 assert.match(report.cycle_status, /WAITING_FOR_NEW_CLOSED_CANDLES/);
 assert.equal(report.gross_exposure_usd, 0);
 assert.equal(report.open_positions, 0);
+
+const unsafeDecisionGate = structuredClone(report);
+unsafeDecisionGate.paper_decision_gates["1h_sma_trend"].order_placed = true;
+assert.throws(() => validate(unsafeDecisionGate), /بوابة GUARD\/SIZER غير صالحة/);
+const unsafeScanner = structuredClone(report);
+unsafeScanner.scanner_review.live_orders_placed = true;
+assert.throws(() => validate(unsafeScanner), /حالة SCANNER أو ضمانات البحث غير صالحة/);
 const inconsistentExposure = structuredClone(report);
 inconsistentExposure.gross_exposure_usd = 10;
 assert.throws(() => validate(inconsistentExposure), /تفاصيل الحسابات لا تطابق إجمالي التعرّض والسيولة/);
@@ -108,12 +129,21 @@ const getElement = (id) => {
   if (!elements.has(id)) elements.set(id, { textContent: "", className: "", innerHTML: "" });
   return elements.get(id);
 };
+const decisionRendererMatch = html.match(/function renderDecisionTools\(x\)\{[\s\S]*?\n\}/);
+assert.ok(decisionRendererMatch, "Could not locate SCANNER/GUARD/SIZER renderer");
 const context = {
   $: getElement,
   money: (value) => value === undefined || value === null ? "—" : "$" + Number(value).toFixed(2),
   pct: (value) => value === undefined || value === null ? "—" : Number(value).toFixed(2) + "%",
   fmt: (value) => value === undefined || value === null ? "—" : String(value),
-  esc: (value) => String(value ?? "")
+  esc: (value) => String(value ?? ""),
+  renderDecisionTools: vm.runInNewContext(decisionRendererMatch[0] + "; renderDecisionTools", {
+    $: getElement,
+    money: (value) => value === undefined || value === null ? "—" : "$" + Number(value).toFixed(2),
+    pct: (value) => value === undefined || value === null ? "—" : Number(value).toFixed(2) + "%",
+    fmt: (value) => value === undefined || value === null ? "—" : String(value),
+    esc: (value) => String(value ?? "")
+  })
 };
 const render = vm.runInNewContext(`${rendererSource}; renderForward`, context);
 const renderableReport = structuredClone(report);
@@ -130,6 +160,12 @@ assert.match(getElement("forwardRows").innerHTML, /\$0\.00/);
 assert.equal(getElement("forwardExposure").textContent, "$0.00 · 0.00%");
 assert.equal(getElement("forwardOpenPositions").textContent, "0");
 assert.equal(getElement("forwardFees").textContent, "$0.00");
+assert.match(getElement("decisionScannerStatus").textContent, /مراقبة فقط/);
+assert.equal(getElement("decisionScannerScore").textContent, "6 / 8");
+assert.match(getElement("decisionGuardStatus").textContent, /لا يوجد إيقاف مسجل/);
+assert.match(getElement("decisionSizerRows").innerHTML, /scanner_candidate_not_approved/);
+assert.match(getElement("decisionSizerStatus").textContent, /0 \/ 3 مؤهل للمراجعة الورقية فقط/);
+
 assert.equal((getElement("forwardRows").innerHTML.match(/<tr>/g) || []).length, 5);
 
 
@@ -174,12 +210,12 @@ assert.match(html, /whjToast/, "Dashboard must expose accessible status notifica
 console.log("Dashboard forward-report and premium UX tests passed.");
 
 
-// Isolated ADX forward report validation: four exact sleeves, no live orders, and no historical trades.
+// Isolated ADX forward report validation: six exact sleeves, no live orders, and no historical trades.
 const adxMatch = html.match(/function validateAdxForwardReport\(x\)\{[\s\S]*?\n\}\nfunction renderAdxForward\(/);
 assert.ok(adxMatch, "Could not locate isolated ADX report validator");
 const adxValidatorSource = adxMatch[0].replace(/\nfunction renderAdxForward\($/, "");
 const validateAdx = vm.runInNewContext(`${adxValidatorSource}; validateAdxForwardReport`);
-const adxKeys = { adx15_4h:[15,4], adx20_4h:[20,4], adx15_6h:[15,6], adx20_6h:[20,6] };
+const adxKeys = { adx15_4h:[15,4], adx20_4h:[20,4], adx25_4h:[25,4], adx15_6h:[15,6], adx20_6h:[20,6], adx25_6h:[25,6] };
 const adxReport = {
   schema_version:1, mode:"ISOLATED_ADX_FORWARD_PAPER_ONLY",
   generated_at_utc:"2026-11-09T00:00:00Z", live_orders_enabled:false,
@@ -200,7 +236,7 @@ assert.equal(validateAdx(adxReport), adxReport);
 const adxBadLive = structuredClone(adxReport); adxBadLive.live_orders_enabled=true;
 assert.throws(()=>validateAdx(adxBadLive),/ضمانات العزل/);
 const adxMissingSleeve = structuredClone(adxReport); delete adxMissingSleeve.results.adx20_6h;
-assert.throws(()=>validateAdx(adxMissingSleeve),/المحافظ الأربع فقط/);
+assert.throws(()=>validateAdx(adxMissingSleeve),/المحافظ الست فقط/);
 const adxBadIdentity = structuredClone(adxReport); adxBadIdentity.results.adx15_4h.threshold=20;
 assert.throws(()=>validateAdx(adxBadIdentity),/هوية المحفظة/);
 const adxBadReturn = structuredClone(adxReport); adxBadReturn.results.adx15_4h.return_pct=2;
@@ -220,6 +256,6 @@ const adxRender=vm.runInNewContext(`${adxRendererSource}; renderAdxForward`,{
   esc:(v)=>String(v??"")
 });
 adxRender(adxReport);
-assert.equal((adxGet("adxForwardRows").innerHTML.match(/<tr>/g)||[]).length,4);
+assert.equal((adxGet("adxForwardRows").innerHTML.match(/<tr>/g)||[]).length,6);
 assert.match(adxGet("adxForwardRows").innerHTML,/ADX15 · 4h/);
-assert.match(adxGet("adxForwardSeed").textContent,/تهيئة المحافظ الأربع/);
+assert.match(adxGet("adxForwardSeed").textContent,/تهيئة المحافظ الست/);

@@ -130,6 +130,35 @@ class ForwardPaperMonitorTests(unittest.TestCase):
             })
         return rows
 
+    def test_forward_monitor_builds_verified_cvd_when_requirement_is_enabled(self):
+        candles = self.make_candles()
+        now = candles[-1]["timestamp"] / 1000 + 3600 + 30
+        with tempfile.TemporaryDirectory() as folder:
+            with patch(
+                "forward_paper_monitor.build_latest_cvd_confirmation",
+                return_value={
+                    "status": "UNAVAILABLE", "available": False,
+                    "direction": "UNKNOWN", "reason": "test_missing_source",
+                    "research_only": True, "execution_enabled": False,
+                },
+            ) as builder:
+                report = process_forward_accounts(
+                    candles, state_dir=folder, now_timestamp=now,
+                    require_cvd_confirmation=True,
+                    cvd_journal_path=str(Path(folder) / "trades.jsonl"),
+                    cvd_checkpoint_path=str(Path(folder) / "checkpoint.json"),
+                )
+            builder.assert_called_once()
+            self.assertTrue(report["cvd_requirement_enabled"])
+            self.assertEqual(report["cvd_confirmation"]["reason"], "test_missing_source")
+            self.assertEqual(
+                report["paper_decision_gates"]["1h_sma_trend"]["status"],
+                "BLOCKED",
+            )
+            self.assertFalse(
+                report["paper_decision_gates"]["1h_sma_trend"]["execution_enabled"]
+            )
+
     def test_health_assessment_requires_forward_sample_and_never_promotes_live(self):
         base = {
             "completed_trades": 0,
@@ -345,6 +374,17 @@ class ForwardPaperMonitorTests(unittest.TestCase):
             self.assertEqual(first["gross_exposure_pct_of_equity"], 0.0)
             self.assertEqual(first["fees_paid_usd"], 0.0)
             self.assertEqual(first["open_positions"], 0)
+            self.assertIn("scanner_review", first)
+            self.assertIn(first["scanner_review"]["status"], ("WATCH", "NO_SETUP"))
+            self.assertEqual(
+                set(first["paper_decision_gates"]),
+                {"1h_sma_trend", "1h_ema_trend", "1h_rsi14_mean_reversion"},
+            )
+            for gate in first["paper_decision_gates"].values():
+                self.assertEqual(gate["status"], "BLOCKED")
+                self.assertIn("scanner_candidate_not_approved", gate["reasons"])
+                self.assertFalse(gate["execution_enabled"])
+                self.assertFalse(gate["order_placed"])
             self.assertEqual(
                 set(first["sleeves_summary"]),
                 {"1h_sma_trend", "1h_ema_trend", "1h_rsi14_mean_reversion", "4h", "6h"},
@@ -525,6 +565,17 @@ class ForwardPaperMonitorTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "imputed"):
             validate_hourly_feed(candles, last_close + 60)
 
+
+
+    def test_invalid_cvd_requirement_flag_is_rejected_before_account_state_changes(self):
+        candles = self.make_candles()
+        now = candles[-1]["timestamp"] / 1000 + 3600 + 30
+        with tempfile.TemporaryDirectory() as folder:
+            with self.assertRaisesRegex(ValueError, "require_cvd_confirmation must be boolean"):
+                process_forward_accounts(
+                    candles, folder, now, require_cvd_confirmation="yes"
+                )
+            self.assertEqual(list(Path(folder).iterdir()), [])
 
     def test_forward_monitor_loads_verified_cvd_and_reports_entry_gate(self):
         candles = self.make_candles()

@@ -7,7 +7,9 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from historical_research import aggregate_candles, load_two_year_candles
+from market_scanner import scan_btc_market
 from paper_account import seed_forward_paper_account, update_paper_account
+from paper_decision_pipeline import evaluate_paper_decision
 from cvd_paper_overlay import build_latest_cvd_confirmation
 
 STATE_FILES = {
@@ -84,6 +86,46 @@ def validate_hourly_feed(candles, now_timestamp=None):
         "imputed_hourly_pct": round(imputed_count / total_count * 100.0, 4),
     }
 
+
+
+def _build_scanner_review(candles, quality):
+    """Build an informational scanner result from the validated OHLCV feed."""
+    if len(candles) < 51:
+        return {
+            "status": "UNAVAILABLE",
+            "paper_candidate_only": True,
+            "live_orders_placed": False,
+            "reasons": ["at_least_51_completed_hourly_candles_required"],
+            "research_only": True,
+            "execution_enabled": False,
+        }
+    scanner_rows = [
+        [
+            int(row["timestamp"]) // 1000,
+            row["open"], row["high"], row["low"], row["close"], row["volume"],
+        ]
+        for row in candles
+    ]
+    scanner_quality = {
+        "quality_status": "HEALTHY" if quality.get("quality") == "HEALTHY" else "BLOCKED",
+        "paper_execution_allowed": quality.get("quality") == "HEALTHY",
+    }
+    try:
+        return scan_btc_market(
+            scanner_rows,
+            market_data_quality=scanner_quality,
+            interval_hours=1,
+            market_label="BTC/USD",
+        )
+    except (TypeError, ValueError, OverflowError) as exc:
+        return {
+            "status": "DATA_BLOCKED",
+            "paper_candidate_only": True,
+            "live_orders_placed": False,
+            "reasons": [f"scanner_input_rejected:{exc}"],
+            "research_only": True,
+            "execution_enabled": False,
+        }
 
 
 def assess_sleeve_health(account, min_closed_trades=30, review_drawdown_pct=8.0):
@@ -319,14 +361,11 @@ def build_qualified_ensemble(sleeves_summary, sleeves):
     }
 
 
-def process_forward_accounts(
-    candles, state_dir=".", now_timestamp=None, cvd_confirmation=None,
-    require_cvd_confirmation=False, cvd_journal_path=None,
-    cvd_checkpoint_path=None,
-):
-    quality = validate_hourly_feed(candles, now_timestamp)
+def process_forward_accounts(candles, state_dir=".", now_timestamp=None, cvd_confirmation=None, require_cvd_confirmation=False, cvd_journal_path=None, cvd_checkpoint_path=None):
     if not isinstance(require_cvd_confirmation, bool):
         raise ValueError("require_cvd_confirmation must be boolean")
+    quality = validate_hourly_feed(candles, now_timestamp)
+    scanner_review = _build_scanner_review(candles, quality)
     if require_cvd_confirmation and cvd_confirmation is None:
         if cvd_journal_path and cvd_checkpoint_path:
             cvd_confirmation = build_latest_cvd_confirmation(
@@ -342,8 +381,9 @@ def process_forward_accounts(
         ("4h", 4, "ema50_200_regime", 500.0),
         ("6h", 6, "ema50_200_regime", 500.0),
     )
-    # Preflight every timeframe before creating or updating any account ledger.
-    # Each sleeve needs 200 complete native-timeframe bars for indicator warm-up.
+
+    # Prepare and validate every timeframe before creating or updating any ledger.
+    # Each sleeve needs 200 completed native-timeframe bars for indicator warm-up.
     bars_by_hours = {1: candles}
     for hours in (4, 6):
         try:
@@ -406,7 +446,14 @@ def process_forward_accounts(
                 and cvd_confirmation.get("execution_enabled") is False
             ),
         )
-        results[sleeve] = {"seed": seed, "account": account}
+        sleeve_result = {"seed": seed, "account": account}
+        if hours == 1:
+            sleeve_result["decision_gate"] = evaluate_paper_decision(
+                scanner_review, account,
+                cvd_confirmation=cvd_confirmation,
+                require_cvd_confirmation=require_cvd_confirmation,
+            )
+        results[sleeve] = sleeve_result
 
     total_initial = sum(v["account"]["initial_cash_usd"] for v in results.values())
     total_equity = sum(
@@ -466,8 +513,14 @@ def process_forward_accounts(
         "total_processed_new_candles": total_processed_new_candles,
         "market": "BTC/USD",
         "data_quality": quality,
+        "scanner_review": scanner_review,
         "cvd_confirmation": cvd_confirmation,
         "cvd_requirement_enabled": require_cvd_confirmation,
+        "paper_decision_gates": {
+            sleeve: value["decision_gate"]
+            for sleeve, value in results.items()
+            if "decision_gate" in value
+        },
         "latest_hourly_candle_timestamp": candles[-1]["timestamp"],
         "initial_cash_usd": round(total_initial, 2),
         "equity_after_estimated_exit_costs_usd": round(total_equity, 2),

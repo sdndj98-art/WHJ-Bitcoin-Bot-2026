@@ -184,6 +184,98 @@ body[data-whj-theme="light"] .agent-event-tag{background:#e7f0f7;color:#34516a}
 body[data-whj-theme="light"] .agent-step{background:#edf4fa;border-color:#cbd8e5}body[data-whj-theme="light"] .agent-note{background:#fff8e9;color:#765315;border-color:#e8d4a8}
 @media(max-width:950px){.agent-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.agent-flow{grid-template-columns:repeat(3,minmax(0,1fr))}}
 @media(max-width:700px){.agent-grid,.agent-lower{grid-template-columns:1fr}.agent-hero{align-items:flex-start;flex-direction:column}.agent-flow{grid-template-columns:repeat(2,minmax(0,1fr))}}
+
+/* WHJ unified command dashboard: keep essential trading panels, remove duplicate UI */
+html,body{overflow-x:hidden}
+.shell{display:block!important;min-height:100vh}
+.side{display:none!important}
+main{display:grid!important;grid-template-columns:repeat(12,minmax(0,1fr));gap:14px;max-width:1780px!important;padding:20px clamp(12px,2vw,30px) 34px!important}
+main>.mobilehead,main>.top,main>.banner,main>.footer{grid-column:1/-1}
+main>.view{display:block!important;min-width:0;margin:0!important;padding:0!important;border:0!important;scroll-margin:0}
+#overview,#strategies,#trades{grid-column:1/-1}
+#scanner{grid-column:span 7}
+#risk{grid-column:span 5}
+#forward{grid-column:1/-1}
+#agents,#system,#mt5{display:none!important}
+#overview .grid{grid-template-columns:repeat(4,minmax(0,1fr))}
+#overview .content{grid-template-columns:minmax(0,1.5fr) minmax(260px,1fr)}
+#scanner .scanner-layout{grid-template-columns:minmax(220px,.85fr) minmax(0,1.15fr)}
+#scanner .scanner-lower{grid-template-columns:1fr 1fr}
+#risk .grid,#risk .lower{grid-template-columns:repeat(2,minmax(0,1fr))}
+#strategies,#trades,#forward,#risk,#scanner,#overview{align-self:start}
+#exportJson,#exportCsv,.whj-extra-btn,.whj-command-btn,.whj-clock,#whjShortcutHelp{display:none!important}
+.top{margin-bottom:0}
+.topright{gap:8px}
+.banner{margin:0}
+.card{box-shadow:0 10px 28px #0003}
+.view+.view{border:0}
+@media(max-width:1050px){
+ main{grid-template-columns:repeat(6,minmax(0,1fr))}
+ #overview,#strategies,#trades,#forward{grid-column:1/-1}
+ #scanner,#risk{grid-column:1/-1}
+ #scanner .scanner-layout{grid-template-columns:minmax(220px,.85fr) minmax(0,1.15fr)}
+}
+@media(max-width:700px){
+ main{display:grid!important;grid-template-columns:minmax(0,1fr);gap:10px;padding:13px 10px 24px!important}
+ main>.mobilehead,main>.top,main>.banner,main>.footer,
+ #overview,#scanner,#strategies,#trades,#risk,#forward{grid-column:1}
+ #overview .grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+ #overview .content,#scanner .scanner-layout,#scanner .scanner-lower{grid-template-columns:1fr}
+ #risk .grid,#risk .lower{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .top{align-items:flex-start;flex-direction:column}
+ .topright{width:100%;flex-direction:row;align-items:center;flex-wrap:wrap}
+ .banner{align-items:flex-start;flex-direction:column}
+}
+
+
+/* QUANTUMORB-inspired unified command center */
+:root{--q-bg:#050914;--q-panel:rgba(12,20,39,.88);--q-line:rgba(100,150,210,.19);--q-cyan:#51e5f2;--q-violet:#a58bff;--q-green:#55e6ad;--q-muted:#8da3c2}
+html,body{min-height:100%;background:#050914!important}
+body{background:radial-gradient(ellipse at 50% 42%,rgba(28,46,91,.34),transparent 48%),radial-gradient(ellipse at 90% 0%,rgba(25,107,130,.16),transparent 38%),#050914!important;color:#e9f4ff}
+.shell{display:block!important;min-height:100vh}.side{display:none!important}main{width:100%;max-width:none!important;padding:18px clamp(10px,2vw,30px) 28px!important}
+.top{display:flex!important;align-items:center;gap:16px;padding:10px 4px 16px!important;border-bottom:1px solid var(--q-line)}
+.top h1{font-size:clamp(20px,2.2vw,30px)!important;letter-spacing:.04em}.top .eyebrow{color:var(--q-cyan)!important;letter-spacing:.2em}
+.top .sub{color:#93a7c7}.topright{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.banner{margin:12px 0!important;background:linear-gradient(90deg,rgba(17,45,59,.72),rgba(14,20,39,.9))!important;border:1px solid rgba(81,229,242,.2)!important}
+#quantumorb{display:grid;grid-template-columns:minmax(220px, .9fr) minmax(360px,1.45fr) minmax(220px,.9fr);grid-template-areas:"left core right" "bottom bottom bottom";gap:12px;margin:14px 0 18px;direction:ltr}
+.q-panel{direction:rtl;min-width:0;background:linear-gradient(155deg,rgba(15,26,49,.96),rgba(7,13,27,.96));border:1px solid var(--q-line);border-radius:15px;padding:14px;box-shadow:0 12px 36px rgba(0,0,0,.22),inset 0 1px rgba(255,255,255,.025);overflow:hidden}
+.q-panel-head{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:12px}
+.q-panel-head b{font-size:12px;letter-spacing:.12em;color:#d9eaff}.q-kicker{font:10px ui-monospace,monospace;color:var(--q-cyan);letter-spacing:.14em}
+.q-live{font-size:10px;color:var(--q-green);white-space:nowrap}.q-live:before{content:"";display:inline-block;width:6px;height:6px;border-radius:50%;background:currentColor;margin-left:6px;box-shadow:0 0 10px currentColor}
+.q-left{grid-area:left}.q-core{grid-area:core;min-height:440px;position:relative;display:flex;flex-direction:column}.q-right{grid-area:right}.q-bottom{grid-area:bottom;display:grid;grid-template-columns:1.2fr 1fr 1fr;gap:12px}
+.q-metric{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid rgba(130,160,210,.11);gap:12px}.q-metric:last-child{border-bottom:0}.q-metric span{font-size:11px;color:var(--q-muted)}.q-metric strong{font:600 17px ui-monospace,monospace;color:#eaf8ff;text-align:left}.q-metric strong.cyan{color:var(--q-cyan)}.q-metric strong.green{color:var(--q-green)}
+.q-core-top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;z-index:2}.q-core-title{font-size:17px;font-weight:700}.q-core-sub{font:10px ui-monospace,monospace;color:var(--q-muted);margin-top:5px;direction:ltr}
+#q-network{width:100%;height:330px;display:block;min-height:260px;flex:1;filter:drop-shadow(0 0 18px rgba(65,180,255,.09))}
+.q-core-foot{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;color:var(--q-muted);font-size:10px;border-top:1px solid var(--q-line);padding-top:10px}
+.q-core-foot b{color:var(--q-cyan);font:11px ui-monospace,monospace}
+.q-pill{border:1px solid rgba(81,229,242,.24);color:var(--q-cyan);border-radius:30px;padding:5px 9px;font:10px ui-monospace,monospace;white-space:nowrap}
+.q-agent{display:grid;grid-template-columns:25px 1fr auto;align-items:center;gap:8px;padding:9px 0;border-bottom:1px solid rgba(130,160,210,.1)}.q-agent:last-child{border:0}.q-agent-icon{width:24px;height:24px;display:grid;place-items:center;border-radius:8px;background:rgba(81,229,242,.09);color:var(--q-cyan);font-size:12px}.q-agent b{font-size:11px;display:block}.q-agent small{font-size:9px;color:var(--q-muted)}.q-agent em{font-style:normal;font-size:9px;color:#b9cbe2}
+.q-stream{max-height:220px;overflow:auto}.q-event{padding:8px 0;border-bottom:1px solid rgba(130,160,210,.1);font-size:10px}.q-event b{color:#c8eaff;display:block;margin-bottom:3px}.q-event span{color:var(--q-muted)}
+.q-chiprow{display:flex;gap:6px;flex-wrap:wrap;margin-top:12px}.q-chip{font:9px ui-monospace,monospace;color:#a9bbd7;border:1px solid var(--q-line);border-radius:6px;padding:5px 7px}
+.q-chartline{height:54px;width:100%;display:block;margin-top:8px}
+#quantumorb~.view{display:none!important}.view{display:none!important}
+@media(max-width:980px){#quantumorb{grid-template-columns:1fr 1.2fr;grid-template-areas:"core core" "left right" "bottom bottom"}.q-core{min-height:380px}.q-bottom{grid-template-columns:1fr 1fr}}
+@media(max-width:620px){main{padding:10px 8px 20px!important}.top{align-items:flex-start!important;flex-direction:column}.topright{width:100%}#quantumorb{grid-template-columns:1fr;grid-template-areas:"core" "left" "right" "bottom";gap:9px}.q-core{min-height:340px}.q-bottom{grid-template-columns:1fr}.q-panel{padding:12px}.q-metric strong{font-size:15px}}
+
+
+/* Verified module-state visualization and animated converging network */
+.q-module-node{transition:border-color .25s,box-shadow .25s,background .25s}
+.q-module-node[data-state="pass"]{border-color:rgba(71,223,173,.78);box-shadow:0 0 0 1px rgba(71,223,173,.12),0 0 24px rgba(71,223,173,.13),inset 0 1px rgba(255,255,255,.06)}
+.q-module-node[data-state="pass"] .q-node-icon{color:#72efc1;border-color:#3cae89;background:rgba(48,194,145,.16);box-shadow:0 0 18px rgba(71,223,173,.2)}
+.q-module-node[data-state="pass"] em{color:#72efc1}
+.q-module-node[data-state="unknown"]{border-color:rgba(255,198,111,.68);box-shadow:0 0 20px rgba(255,198,111,.08)}
+.q-module-node[data-state="unknown"] .q-node-icon{color:#ffd18a;border-color:#8f7040;background:rgba(255,198,111,.12)}
+.q-module-node[data-state="unknown"] em{color:#ffd18a}
+.q-module-node[data-state="blocked"]{border-color:rgba(255,120,141,.82);box-shadow:0 0 22px rgba(255,120,141,.14)}
+.q-module-node[data-state="blocked"] .q-node-icon{color:#ff899b;border-color:#a94d62;background:rgba(255,90,120,.15)}
+.q-module-node[data-state="blocked"] em{color:#ff899b}
+.q-agent em[data-state="pass"]{color:#72efc1}.q-agent em[data-state="unknown"]{color:#ffd18a}.q-agent em[data-state="blocked"]{color:#ff899b}
+.q-flow-path{stroke-dasharray:9 13;animation:qFlow 2.4s linear infinite;filter:drop-shadow(0 0 4px rgba(81,229,242,.42))}
+.q-flow-path:nth-of-type(even){animation-duration:3.1s;animation-direction:reverse}
+.q-branch-path{stroke:rgba(119,157,255,.55);stroke-width:1.2;stroke-dasharray:3 8;animation:qFlow 4s linear infinite;marker-end:none}
+.q-output-path{stroke:#b69cff;stroke-width:3.2;stroke-dasharray:8 11;animation:qFlow 1.65s linear infinite;filter:drop-shadow(0 0 6px rgba(165,139,255,.65));marker-end:url(#qArrow)}
+@keyframes qFlow{to{stroke-dashoffset:-88}}
+@media(prefers-reduced-motion:reduce){.q-flow-path,.q-branch-path,.q-output-path{animation:none}}
 </style>
 
 
@@ -244,6 +336,25 @@ body[data-whj-theme="light"] .agent-visual{background:#f1f6fa;border-color:#d2df
 body[data-whj-theme="light"] .av-donut:before{background:#f1f6fa}
 body[data-whj-theme="light"] .av-order{background:#e8f0f6}
 @media(max-width:700px){.agent-card{min-height:0}.agent-visual{height:88px}.av-readouts span{font-size:7px}.av-order b{font-size:7px}}
+
+.decision-tools-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin:13px 0}
+.decision-tool{min-width:0;border-color:#29465e}
+.decision-tool-head{display:flex;align-items:center;gap:10px;min-height:48px;margin-bottom:13px}
+.decision-tool-head>div{display:grid;gap:4px;min-width:0;flex:1}
+.decision-tool-head b{font-size:12px}.decision-tool-head small{font-size:9px;color:var(--m)}
+.decision-tool-head>strong{font-size:9px;color:var(--a);text-align:left}
+.decision-icon{width:34px;height:34px;border-radius:11px;display:grid;place-items:center;background:#17354b;color:var(--c);font-size:20px}
+.guard-tool .decision-icon{background:#382333;color:#ff9bb0}.sizer-tool .decision-icon{background:#292747;color:#b9aaff}
+.decision-metrics{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px}
+.decision-metrics>div{background:#0b1a2a;border:1px solid #233d55;border-radius:9px;padding:10px;min-width:0}
+.decision-metrics small,.decision-metrics b{display:block}.decision-metrics small{font-size:8px;color:var(--m)}.decision-metrics b{font-size:13px;margin-top:6px;overflow-wrap:anywhere}
+.decision-reasons{font-size:10px;line-height:1.8;color:var(--m);margin:12px 0 0;overflow-wrap:anywhere}
+.decision-tool table{font-size:9px}.decision-tool th,.decision-tool td{padding:8px 6px;white-space:normal;vertical-align:top}
+.decision-safety-note{border-right:3px solid var(--a);padding:8px 11px;background:#211e18;border-radius:7px;line-height:1.8}
+@media(max-width:1050px){.decision-tools-grid{grid-template-columns:1fr 1fr}.scanner-tool{grid-column:1/-1}}
+@media(max-width:700px){.decision-tools-grid{grid-template-columns:1fr}.scanner-tool{grid-column:auto}.decision-tool{padding:12px}.decision-tool table{font-size:8px}}
+body[data-whj-theme="light"] .decision-metrics>div{background:#f4f7fa;border-color:#dce4eb}
+body[data-whj-theme="light"] .decision-safety-note{background:#fff8e9;border-color:#d8a84e}
 </style>
 <style id="whj-left-command-rail">
 /* Desktop command rail: left anchored, Arabic content remains RTL */
@@ -268,11 +379,458 @@ body[data-whj-theme="light"] .agent-nav button:hover,body[data-whj-theme="light"
  .agent-nav-label,.agent-nav{display:none}
  .agent-card.agent-focused{outline-offset:0}
 }
+
+/* WHJ unified command surface: all operational views remain visible together */
+.shell{display:block!important;min-height:100vh}
+.side{display:none!important}
+main{max-width:1720px!important;padding:22px clamp(12px,2vw,30px) 42px!important}
+.view,.view.active{display:block!important;scroll-margin-top:14px}
+.view+.view{margin-top:16px;padding-top:16px;border-top:1px solid rgba(100,228,242,.14)}
+.top{position:relative}
+@media(max-width:700px){
+ main{padding:14px 10px 28px!important}
+ .mobilehead{display:block}
+ .view+.view{margin-top:12px;padding-top:12px}
+}
+
+/* Decision network: six inputs converge on the existing WHJ signal; display-only. */
+#quantumorb{grid-template-columns:minmax(250px,.72fr) minmax(0,2fr);grid-template-areas:"left core" "bottom bottom"}
+.q-right{display:none!important}
+.q-core{min-height:650px}
+.q-network-stage{position:relative;width:100%;height:510px;min-height:470px;margin:8px 0 12px;isolation:isolate;overflow:hidden;border:1px solid rgba(81,229,242,.13);border-radius:18px;background:radial-gradient(ellipse at 50% 48%,rgba(42,80,132,.22),rgba(5,12,26,.25) 55%,rgba(3,8,18,.65))}
+#q-network{position:absolute;inset:0;width:100%;height:100%;min-height:0;z-index:0;opacity:.65}
+.q-links{position:absolute;inset:0;width:100%;height:100%;z-index:1;overflow:visible}
+.q-module-node{position:absolute;z-index:2;width:174px;min-height:100px;padding:11px 12px 10px 48px;border:1px solid rgba(91,188,224,.42);border-radius:15px;background:linear-gradient(145deg,rgba(14,34,57,.97),rgba(7,16,32,.96));box-shadow:0 9px 28px rgba(0,0,0,.32),inset 0 1px rgba(255,255,255,.06);display:flex;flex-direction:column;gap:4px;direction:ltr;text-align:left}
+.q-node-icon{position:absolute;left:11px;top:13px;width:27px;height:27px;display:grid;place-items:center;border-radius:9px;background:rgba(81,229,242,.12);border:1px solid rgba(81,229,242,.34);color:#7debf4;font-size:16px;box-shadow:0 0 17px rgba(81,229,242,.12)}
+.q-module-node b{font:700 11px ui-monospace,monospace;letter-spacing:.09em;color:#e3f6ff}
+.q-module-node small{font-size:10px;color:#92aac8;direction:rtl;text-align:left}
+.q-module-node em{font-style:normal;font-size:9px;color:#70dce8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.q-node-scanner{left:2%;top:11%}.q-node-guard{left:calc(50% - 87px);top:1%}.q-node-sizer{right:2%;top:11%}
+.q-node-executor{left:2%;bottom:10%}.q-node-logger{left:calc(50% - 87px);bottom:1%}.q-node-equity{right:2%;bottom:10%}
+.q-decision-core{position:absolute;z-index:3;left:50%;top:48%;transform:translate(-50%,-50%);width:220px;min-height:168px;border-radius:28px;border:1px solid rgba(165,139,255,.72);background:radial-gradient(circle at 50% 15%,rgba(92,82,164,.4),rgba(10,22,43,.98) 70%);box-shadow:0 0 0 8px rgba(165,139,255,.045),0 0 42px rgba(112,112,255,.22),inset 0 1px rgba(255,255,255,.1);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px;text-align:center;padding:15px}
+.q-core-orbit{position:absolute;inset:-9px;border:1px dashed rgba(165,139,255,.38);border-radius:34px;pointer-events:none}
+.q-decision-core>small{font:9px ui-monospace,monospace;letter-spacing:.13em;color:#b7a9ff}
+.q-decision-core>b{font:800 19px/1.12 ui-monospace,monospace;letter-spacing:.04em;color:#f2efff}
+.q-decision-core>strong{font:800 13px ui-monospace,monospace;color:#70e8f1;border:1px solid rgba(81,229,242,.28);border-radius:7px;padding:4px 12px;min-width:92px}
+.q-decision-core>span:last-child{font-size:9px;color:#9db4d1}
+.q-decision-output{position:absolute;z-index:4;left:50%;bottom:0;transform:translateX(-50%);width:250px;min-height:58px;border:1px solid rgba(81,229,242,.5);border-radius:13px;background:linear-gradient(90deg,rgba(11,35,54,.98),rgba(25,28,62,.98));display:grid;grid-template-columns:1fr auto;align-items:center;column-gap:9px;padding:7px 13px;box-shadow:0 0 25px rgba(81,229,242,.12);text-align:left}
+.q-decision-output>span{font:8px ui-monospace,monospace;color:#83b4d0;letter-spacing:.12em}
+.q-decision-output>b{grid-column:2;grid-row:1/3;color:#72e8f3;font-size:22px}
+.q-decision-output>strong{font:700 11px ui-monospace,monospace;color:#e4faff}
+.q-decision-output>small{grid-column:1;font-size:8px;color:#77dcb7}
+@media(max-width:980px){#quantumorb{grid-template-columns:1fr;grid-template-areas:"core" "left" "bottom"}.q-core{min-height:640px}}
+@media(max-width:620px){
+ #quantumorb{grid-template-areas:"core" "left" "bottom"}
+ .q-core{min-height:0}
+ .q-network-stage{height:580px;min-height:580px}
+ .q-module-node{width:128px;min-height:86px;padding:9px 7px 8px 36px;border-radius:12px}
+ .q-node-icon{left:7px;top:10px;width:23px;height:23px;font-size:13px}
+ .q-module-node b{font-size:9px;letter-spacing:.03em}
+ .q-module-node small{font-size:8px}
+ .q-module-node em{font-size:8px}
+ .q-node-scanner{left:1%;top:8%}.q-node-guard{left:calc(50% - 64px);top:0}.q-node-sizer{right:1%;top:8%}
+ .q-node-executor{left:1%;bottom:10%}.q-node-logger{left:calc(50% - 64px);bottom:0}.q-node-equity{right:1%;bottom:10%}
+ .q-decision-core{width:166px;min-height:142px;top:49%;padding:10px}
+ .q-decision-core>b{font-size:15px}.q-decision-core>small{font-size:7px}.q-decision-core>span:last-child{font-size:8px}
+ .q-decision-output{width:190px;min-height:52px}
+ .q-decision-output>strong{font-size:9px}.q-decision-output>small{font-size:7px}
+ .q-core-top{flex-wrap:wrap}
+}
 </style>
-</head><body><div class="shell"><aside class="side"><div class="brand"><div class="logo">₿</div><div><b>WHJ BITCOIN</b><small>مركز قيادة التداول الذكي</small></div></div><div class="navlabel">القائمة الرئيسية</div><nav class="nav"><button class="active" data-view="overview"><span class="ico">⌂</span>الرئيسية</button><button data-view="scanner"><span class="ico">⌁</span>ماسح السوق</button><button data-view="strategies"><span class="ico">◈</span>الاستراتيجيات</button><button data-view="trades"><span class="ico">⇄</span>الصفقات</button><button data-view="risk"><span class="ico">⌁</span>المخاطر</button><button data-view="system"><span class="ico">⚙</span>النظام</button><button data-view="agents"><span class="ico">✣</span>مركز الوكلاء</button><button data-view="forward"><span class="ico">◷</span>المراقبة المستقبلية</button><button data-view="mt5"><span class="ico">⌁</span>منصة MT5</button></nav><div class="navlabel agent-nav-label">وحدات التشغيل الست</div><nav class="agent-nav" aria-label="وحدات التشغيل"><button type="button" data-agent-target="0"><span>⌕</span>ماسح السوق</button><button type="button" data-agent-target="1"><span>⚑</span>بوابة التحقق</button><button type="button" data-agent-target="2"><span>◈</span>مدير الحجم</button><button type="button" data-agent-target="3"><span>Ⅱ</span>المحاكي الورقي</button><button type="button" data-agent-target="4"><span>≡</span>سجل القرارات</button><button type="button" data-agent-target="5"><span>◉</span>مراقب المحفظة</button></nav><div class="sidefoot">WHJ Bitcoin Bot 2026<br>مراقبة وتحليل · Paper Trading فقط</div></aside><main>
+<style id="whj-icon-square-modules">
+/* Icon-first square module tiles: visual identity per WHJ function */
+.q-module-node{
+ width:112px;height:112px;min-height:112px;padding:8px 6px;
+ display:flex;flex-direction:column;align-items:center;justify-content:center;
+ gap:4px;text-align:center;direction:ltr;border-radius:17px;
+ background:linear-gradient(145deg,rgba(17,39,64,.98),rgba(7,17,33,.98));
+}
+.q-node-icon{
+ position:static;width:39px;height:39px;flex:0 0 39px;margin:0 0 2px;
+ border-radius:12px;font-size:0;display:grid;place-items:center;
+}
+.q-node-icon svg{width:23px;height:23px;fill:none;stroke:currentColor;
+ stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.q-module-node b{font-size:9px;letter-spacing:.07em;line-height:1.15}
+.q-module-node small{font-size:8px;line-height:1.25;text-align:center;direction:rtl}
+.q-module-node em{font-size:8px;max-width:100%;line-height:1.2}
+.q-node-scanner{left:2%;top:11%}
+.q-node-guard{left:calc(50% - 56px);top:1%}
+.q-node-sizer{right:2%;top:11%}
+.q-node-executor{left:2%;bottom:10%}
+.q-node-logger{left:calc(50% - 56px);bottom:1%}
+.q-node-equity{right:2%;bottom:10%}
+@media(max-width:620px){
+ .q-module-node{width:94px;height:104px;min-height:104px;padding:6px 4px;border-radius:14px}
+ .q-node-icon{width:34px;height:34px;flex-basis:34px;border-radius:10px}
+ .q-node-icon svg{width:21px;height:21px}
+ .q-module-node b{font-size:8px}
+ .q-module-node small,.q-module-node em{font-size:7px}
+ .q-node-guard{left:calc(50% - 47px)}
+ .q-node-logger{left:calc(50% - 47px)}
+}
+</style>
+
+<style id="whj-one-screen-layout">
+/* One-screen dashboard: keep all WHJ command-center information visible without vertical scrolling */
+@media (max-width: 700px) {
+ html,body{height:100%;min-height:100%;overflow:hidden!important}
+ .shell{height:100dvh;min-height:0!important;overflow:hidden}
+ main{height:100dvh;min-height:0;padding:5px 7px 6px!important;overflow:hidden;zoom:.82}
+ .top{padding:3px 2px 6px!important;margin:0 0 5px!important;gap:5px;align-items:center!important;flex-direction:row!important;flex-wrap:nowrap!important}
+ .top h1{font-size:15px!important;margin:2px 0!important}
+ .top .eyebrow{font-size:7px!important}.top .sub{font-size:7px!important}
+ .topright{width:auto!important;max-width:58%;display:flex;flex-direction:row!important;flex-wrap:wrap;justify-content:flex-end;gap:3px!important}
+ .topright>*{font-size:7px!important;padding:5px 6px!important}
+ .banner{margin:3px 0 5px!important;padding:5px 8px!important;min-height:0;flex-direction:row!important;align-items:center!important;gap:5px}
+ .banner b{font-size:8px!important}.banner p{font-size:7px!important;line-height:1.25!important;margin:2px 0 0!important}.banner .status{font-size:7px!important;padding:4px 6px!important}
+ #quantumorb{height:auto;min-height:0;margin:4px 0 0!important;gap:5px!important;grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important;grid-template-areas:"core core" "left right" "bottom bottom"!important;align-content:start}
+ .q-panel{padding:6px!important;border-radius:9px!important}
+ .q-core{min-height:0!important;height:390px;grid-area:core}
+ .q-core-top{gap:4px!important}.q-core-title{font-size:11px!important}.q-core-sub{font-size:6px!important;margin-top:2px!important}.q-kicker{font-size:6px!important}.q-pill{font-size:6px!important;padding:3px 5px!important}
+ .q-network-stage{height:300px!important;min-height:0!important;flex:0 0 300px!important}
+ #q-network{height:300px!important;min-height:0!important}
+ .q-module-node{width:82px!important;height:88px!important;min-height:88px!important;padding:4px 2px!important;gap:2px!important;border-radius:10px!important}
+ .q-node-icon{width:27px!important;height:27px!important;flex-basis:27px!important;border-radius:8px!important}
+ .q-node-icon svg{width:17px!important;height:17px!important}
+ .q-module-node b{font-size:6.5px!important}.q-module-node small,.q-module-node em{font-size:6px!important;line-height:1.1!important}
+ .q-node-scanner{left:1%!important;top:12%!important}.q-node-guard{left:calc(50% - 41px)!important;top:0!important}.q-node-sizer{right:1%!important;top:12%!important}
+ .q-node-executor{left:1%!important;bottom:10%!important}.q-node-logger{left:calc(50% - 41px)!important;bottom:0!important}.q-node-equity{right:1%!important;bottom:10%!important}
+ .q-decision-core{width:128px!important;min-height:104px!important;top:49%!important;padding:6px!important}
+ .q-decision-core>b{font-size:11px!important}.q-decision-core>small{font-size:6px!important}.q-decision-core>span:last-child{font-size:6px!important}
+ .q-decision-output{width:150px!important;min-height:39px!important;padding:4px!important}.q-decision-output>strong{font-size:7px!important}.q-decision-output>small,.q-decision-output>span{font-size:6px!important}
+ .q-core-foot{padding-top:3px!important;gap:3px!important;font-size:6px!important;line-height:1.1!important}
+ .q-panel-head{margin-bottom:3px!important}.q-panel-head b{font-size:7px!important}.q-live{font-size:6px!important}
+ .q-left .q-metric,.q-bottom .q-metric{padding:3px 0!important;gap:3px!important}
+ .q-left .q-metric span,.q-bottom .q-metric span{font-size:7px!important}
+ .q-left .q-metric strong,.q-bottom .q-metric strong{font-size:8px!important}
+ .q-chiprow{gap:2px!important;margin-top:3px!important}.q-chip{font-size:5.5px!important;padding:2px 3px!important}
+ .q-agent{grid-template-columns:15px minmax(0,1fr) auto!important;gap:3px!important;padding:3px 0!important}
+ .q-agent-icon{width:14px!important;height:14px!important;font-size:8px!important;border-radius:4px!important}
+ .q-agent b{font-size:6.5px!important}.q-agent small{font-size:5.5px!important}.q-agent em{font-size:5.5px!important}
+ .q-bottom{grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:4px!important}
+ .q-bottom .q-panel-head{align-items:flex-start!important;flex-direction:column!important;gap:1px!important}
+ .q-stream{max-height:40px!important;overflow:hidden!important}.q-event{font-size:6px!important;padding:2px 0!important}.q-event b{margin-bottom:1px!important}
+}
+@media (max-width:380px){main{zoom:.76}.q-module-node{width:76px!important;height:84px!important;min-height:84px!important}.q-decision-core{width:116px!important}}
+</style>
+
+<style id="whj-neural-tree-pro">
+/* Premium neural architecture: presentation-only override */
+.q-network-stage{
+ position:relative!important;isolation:isolate!important;overflow:hidden!important;
+ border:1px solid rgba(89,177,220,.2)!important;border-radius:22px!important;
+ background:
+  radial-gradient(ellipse at 50% 48%,rgba(86,91,190,.16),transparent 26%),
+  radial-gradient(ellipse at 50% 50%,rgba(33,173,191,.08),transparent 58%),
+  linear-gradient(135deg,rgba(7,18,34,.96),rgba(9,15,33,.96))!important;
+ box-shadow:inset 0 0 45px rgba(42,133,180,.09),0 16px 38px rgba(0,0,0,.22)!important;
+}
+.q-network-stage:before,.q-network-stage:after{content:"";position:absolute;inset:12px;border:1px solid rgba(94,160,211,.09);border-radius:17px;pointer-events:none;z-index:0}
+.q-network-stage:after{inset:24px;border-style:dashed;border-color:rgba(94,160,211,.07);border-radius:13px}
+#q-network{opacity:.32!important;mix-blend-mode:screen}
+.q-links{z-index:1!important;filter:drop-shadow(0 0 5px rgba(76,207,237,.2))}
+.q-flow-path{stroke:#62ddeb!important;stroke-width:2.4!important;stroke-dasharray:5 12!important;animation:qFlow 1.9s linear infinite!important;filter:drop-shadow(0 0 5px rgba(81,229,242,.55))!important}
+.q-flow-path:nth-of-type(2n){animation-duration:2.7s!important}
+.q-branch-path{stroke:rgba(151,139,255,.65)!important;stroke-width:1.7!important;stroke-dasharray:4 7!important}
+.q-output-path{stroke:#b7a1ff!important;stroke-width:3.5!important;filter:drop-shadow(0 0 8px rgba(165,139,255,.8))!important}
+.q-module-node{
+ width:174px!important;min-height:104px!important;padding:12px 12px 10px 49px!important;
+ border:1px solid rgba(96,190,225,.48)!important;border-radius:17px!important;
+ background:linear-gradient(145deg,rgba(20,48,72,.98),rgba(7,17,34,.98))!important;
+ box-shadow:0 10px 28px rgba(0,0,0,.34),inset 0 1px rgba(255,255,255,.09),0 0 18px rgba(67,186,220,.07)!important;
+ backdrop-filter:blur(8px);gap:5px!important
+}
+.q-module-node:before{content:"";position:absolute;inset:4px;border:1px solid rgba(115,187,221,.09);border-radius:12px;pointer-events:none}
+.q-node-icon{left:11px!important;top:13px!important;width:29px!important;height:29px!important;border-radius:10px!important;background:linear-gradient(145deg,rgba(73,205,224,.2),rgba(86,112,194,.12))!important;border-color:rgba(99,215,235,.45)!important;box-shadow:0 0 18px rgba(75,202,230,.16)!important}
+.q-node-icon svg{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.q-module-node b{font-size:11px!important;letter-spacing:.13em!important;color:#effaff!important}
+.q-module-node small{font-size:9px!important;color:#a9bfd4!important}
+.q-module-node em{font-size:8px!important;color:#76dce8!important}
+.q-module-node[data-state="pass"]{border-color:rgba(72,231,179,.82)!important;box-shadow:0 0 0 1px rgba(72,231,179,.15),0 0 26px rgba(72,231,179,.16),inset 0 1px rgba(255,255,255,.08)!important}
+.q-module-node[data-state="unknown"]{border-color:rgba(255,198,111,.75)!important}
+.q-module-node[data-state="blocked"]{border-color:rgba(255,112,139,.9)!important}
+.q-decision-core{
+ width:218px!important;min-height:166px!important;border-radius:30px!important;
+ border:1px solid rgba(178,157,255,.82)!important;
+ background:radial-gradient(circle at 50% 8%,rgba(132,105,225,.34),rgba(13,22,48,.98) 67%)!important;
+ box-shadow:0 0 0 7px rgba(165,139,255,.055),0 0 48px rgba(125,105,255,.28),inset 0 1px rgba(255,255,255,.13)!important;
+}
+.q-core-orbit{border:1px solid rgba(172,153,255,.25)!important;box-shadow:0 0 22px rgba(165,139,255,.12)!important}
+.q-decision-core>b{font-size:17px!important;letter-spacing:.12em!important;text-shadow:0 0 18px rgba(184,167,255,.4)}
+.q-decision-core>strong{border:1px solid rgba(169,151,255,.42)!important;border-radius:99px!important;padding:5px 13px!important;background:rgba(113,93,196,.17)!important}
+.q-decision-output{border:1px solid rgba(172,151,255,.62)!important;border-radius:13px!important;background:linear-gradient(90deg,rgba(49,39,94,.96),rgba(14,25,49,.98))!important;box-shadow:0 0 22px rgba(153,126,255,.16)!important}
+@media(max-width:700px){
+ .q-network-stage{height:300px!important;min-height:300px!important;flex:0 0 300px!important;border-radius:15px!important}
+ .q-network-stage:before{inset:8px}.q-network-stage:after{inset:16px}
+ .q-module-node{width:82px!important;height:88px!important;min-height:88px!important;padding:5px 3px!important;gap:3px!important;border-radius:12px!important;backdrop-filter:blur(5px)}
+ .q-module-node:before{inset:3px;border-radius:9px}
+ .q-node-icon{position:relative!important;left:auto!important;top:auto!important;width:27px!important;height:27px!important;flex:0 0 27px!important;margin:0 auto 1px!important}
+ .q-node-icon svg{width:16px!important;height:16px!important}
+ .q-module-node b{font-size:6.8px!important;letter-spacing:.08em!important;text-align:center}
+ .q-module-node small{font-size:6px!important;line-height:1.15!important;text-align:center!important}
+ .q-module-node em{font-size:5.8px!important;max-width:100%;text-align:center}
+ .q-decision-core{width:128px!important;min-height:106px!important;border-radius:22px!important;padding:7px!important}
+ .q-decision-core>b{font-size:11px!important;letter-spacing:.08em!important}
+ .q-decision-core>small{font-size:5.8px!important}
+ .q-decision-core>span:last-child{font-size:6px!important}
+ .q-decision-output{width:150px!important;min-height:39px!important;border-radius:9px!important}
+}
+@media(prefers-reduced-motion:reduce){.q-flow-path,.q-branch-path,.q-output-path{animation:none!important}}
+</style>
+
+
+<style id="whj-neural-tree-layout-v2">
+/* Real geometry refresh: six distinct input nodes feeding one central decision core. */
+#quantumorb .q-core{min-width:0}
+#quantumorb .q-network-stage{
+ height:560px!important;min-height:560px!important;flex:0 0 560px!important;
+ border:1px solid rgba(88,191,226,.42)!important;border-radius:24px!important;
+ background:
+ radial-gradient(ellipse at 50% 50%,rgba(132,102,255,.2),transparent 23%),
+ radial-gradient(ellipse at 50% 50%,rgba(50,198,208,.11),transparent 48%),
+ linear-gradient(180deg,#071526 0%,#09172b 52%,#071323 100%)!important;
+ box-shadow:inset 0 0 70px rgba(57,160,207,.12),0 18px 42px rgba(0,0,0,.3)!important;
+}
+#quantumorb .q-module-node{
+ width:178px!important;height:104px!important;min-height:104px!important;
+ padding:12px 12px 10px 50px!important;border-radius:18px!important;
+ background:linear-gradient(145deg,rgba(18,47,70,.99),rgba(7,18,34,.99))!important;
+ border:1px solid rgba(95,190,222,.62)!important;
+ box-shadow:0 12px 30px rgba(0,0,0,.38),inset 0 1px rgba(255,255,255,.1),0 0 22px rgba(65,190,222,.12)!important;
+}
+#quantumorb .q-node-scanner{left:4%!important;top:7%!important}
+#quantumorb .q-node-guard{left:calc(50% - 89px)!important;top:2%!important}
+#quantumorb .q-node-sizer{right:4%!important;top:7%!important}
+#quantumorb .q-node-executor{left:4%!important;bottom:18%!important}
+#quantumorb .q-node-logger{left:calc(50% - 89px)!important;bottom:18%!important}
+#quantumorb .q-node-equity{right:4%!important;bottom:18%!important}
+#quantumorb .q-node-scanner{border-top:3px solid #42c9e8!important}
+#quantumorb .q-node-guard{border-top:3px solid #a58bff!important}
+#quantumorb .q-node-sizer{border-top:3px solid #4cdeb1!important}
+#quantumorb .q-node-executor{border-top:3px solid #f0bd68!important}
+#quantumorb .q-node-logger{border-top:3px solid #ed8fc5!important}
+#quantumorb .q-node-equity{border-top:3px solid #7ba8ff!important}
+#quantumorb .q-node-icon{width:31px!important;height:31px!important;border-radius:11px!important}
+#quantumorb .q-decision-core{
+ top:48%!important;width:230px!important;min-height:174px!important;
+ border-radius:32px!important;border:1px solid rgba(183,160,255,.95)!important;
+ background:radial-gradient(circle at 50% 8%,rgba(151,119,255,.4),rgba(13,22,49,.99) 68%)!important;
+ box-shadow:0 0 0 9px rgba(165,139,255,.07),0 0 58px rgba(125,105,255,.38),inset 0 1px rgba(255,255,255,.16)!important;
+}
+#quantumorb .q-core-orbit{inset:-14px!important;border:1px dashed rgba(186,166,255,.55)!important;border-radius:40px!important}
+#quantumorb .q-decision-output{
+ bottom:2%!important;width:270px!important;min-height:56px!important;
+ border:1px solid rgba(118,224,239,.8)!important;border-radius:15px!important;
+ background:linear-gradient(100deg,rgba(17,54,70,.99),rgba(37,32,79,.99))!important;
+ box-shadow:0 0 30px rgba(82,213,231,.2)!important;
+}
+#quantumorb .q-links{z-index:1!important;filter:drop-shadow(0 0 7px rgba(82,220,237,.42))!important}
+#quantumorb .q-flow-path{stroke:#64e5f2!important;stroke-width:3!important;stroke-dasharray:7 13!important;animation:qFlow 1.65s linear infinite!important;filter:drop-shadow(0 0 7px rgba(90,231,244,.75))!important}
+#quantumorb .q-branch-path{stroke:#a58bff!important;stroke-width:2.2!important;stroke-dasharray:5 8!important}
+#quantumorb .q-output-path{stroke:#bba5ff!important;stroke-width:4!important;filter:drop-shadow(0 0 10px rgba(174,149,255,.95))!important}
+@media(max-width:700px){
+ #quantumorb .q-network-stage{height:410px!important;min-height:410px!important;flex:0 0 410px!important;border-radius:16px!important}
+ #quantumorb .q-module-node{width:92px!important;height:70px!important;min-height:70px!important;padding:4px 3px!important;gap:2px!important;border-radius:11px!important}
+ #quantumorb .q-node-scanner{left:2%!important;top:5%!important}
+ #quantumorb .q-node-guard{left:calc(50% - 46px)!important;top:3%!important}
+ #quantumorb .q-node-sizer{right:2%!important;top:5%!important}
+ #quantumorb .q-node-executor{left:2%!important;bottom:19%!important}
+ #quantumorb .q-node-logger{left:calc(50% - 46px)!important;bottom:19%!important}
+ #quantumorb .q-node-equity{right:2%!important;bottom:19%!important}
+ #quantumorb .q-node-icon{position:relative!important;left:auto!important;top:auto!important;width:20px!important;height:20px!important;min-height:20px!important;flex:0 0 20px!important;margin:0 auto!important;border-radius:7px!important}
+ #quantumorb .q-node-icon svg{width:13px!important;height:13px!important}
+ #quantumorb .q-module-node b{font-size:6.5px!important;letter-spacing:.04em!important;text-align:center!important}
+ #quantumorb .q-module-node small{font-size:5.7px!important;line-height:1.05!important;text-align:center!important}
+ #quantumorb .q-module-node em{font-size:5.4px!important;line-height:1!important;text-align:center!important}
+ #quantumorb .q-decision-core{top:49%!important;width:126px!important;min-height:104px!important;padding:6px!important;border-radius:20px!important}
+ #quantumorb .q-core-orbit{inset:-8px!important;border-radius:27px!important}
+ #quantumorb .q-decision-core>b{font-size:10px!important;letter-spacing:.04em!important}
+ #quantumorb .q-decision-core>small{font-size:5.3px!important;letter-spacing:.04em!important}
+ #quantumorb .q-decision-core>strong{font-size:8px!important;padding:3px 8px!important;min-width:70px!important}
+ #quantumorb .q-decision-core>span:last-child{font-size:5.6px!important}
+ #quantumorb .q-decision-output{width:154px!important;min-height:37px!important;bottom:1%!important;padding:3px 7px!important;column-gap:4px!important}
+ #quantumorb .q-decision-output>span{font-size:5px!important}
+ #quantumorb .q-decision-output>b{font-size:14px!important}
+ #quantumorb .q-decision-output>strong{font-size:6.5px!important}
+ #quantumorb .q-decision-output>small{font-size:5px!important}
+}
+@media(max-width:360px){
+ #quantumorb .q-network-stage{height:390px!important;min-height:390px!important;flex-basis:390px!important}
+ #quantumorb .q-module-node{width:84px!important}
+ #quantumorb .q-node-guard,#quantumorb .q-node-logger{left:calc(50% - 42px)!important}
+}
+@media(prefers-reduced-motion:reduce){#quantumorb .q-flow-path,#quantumorb .q-branch-path,#quantumorb .q-output-path{animation:none!important}}
+</style>
+
+<style id="whj-quantumorb-living-motion">
+/* WHJ QUANTUMORB living motion layer — presentation only; no trading logic changes */
+@keyframes whjCorePulse {
+  0%,100% { box-shadow:0 0 0 7px rgba(165,139,255,.055),0 0 34px rgba(125,105,255,.22),inset 0 1px rgba(255,255,255,.13); }
+  50% { box-shadow:0 0 0 11px rgba(165,139,255,.09),0 0 58px rgba(81,229,242,.28),inset 0 1px rgba(255,255,255,.16); }
+}
+@keyframes whjOrbitSpin { to { transform:rotate(360deg); } }
+@keyframes whjModuleBreath {
+  0%,100% { filter:brightness(1); }
+  50% { filter:brightness(1.16); }
+}
+@keyframes whjStatePass {
+  0%,100% { box-shadow:0 0 0 1px rgba(72,231,179,.12),0 0 15px rgba(72,231,179,.10),inset 0 1px rgba(255,255,255,.08); }
+  50% { box-shadow:0 0 0 2px rgba(72,231,179,.22),0 0 30px rgba(72,231,179,.24),inset 0 1px rgba(255,255,255,.12); }
+}
+@keyframes whjStateUnknown {
+  0%,100% { box-shadow:0 0 0 1px rgba(255,198,111,.10),0 0 10px rgba(255,198,111,.07); }
+  50% { box-shadow:0 0 0 2px rgba(255,198,111,.18),0 0 22px rgba(255,198,111,.15); }
+}
+@keyframes whjStateBlocked {
+  0%,100% { box-shadow:0 0 0 1px rgba(255,112,139,.12),0 0 12px rgba(255,112,139,.08); }
+  50% { box-shadow:0 0 0 2px rgba(255,112,139,.25),0 0 25px rgba(255,112,139,.20); }
+}
+@keyframes whjIconGlow {
+  0%,100% { transform:translateY(0) scale(1); filter:drop-shadow(0 0 2px currentColor); }
+  50% { transform:translateY(-2px) scale(1.045); filter:drop-shadow(0 0 8px currentColor); }
+}
+.q-decision-core { animation:whjCorePulse 4.8s ease-in-out infinite; }
+.q-core-orbit { animation:whjOrbitSpin 34s linear infinite; }
+.q-decision-core>strong { transition:color .25s,border-color .25s,background .25s; }
+.q-module-node { transition:filter .25s,border-color .25s,box-shadow .25s; }
+.q-module-node[data-state="pass"] { animation:whjStatePass 3.2s ease-in-out infinite; }
+.q-module-node[data-state="unknown"] { animation:whjStateUnknown 4.2s ease-in-out infinite; }
+.q-module-node[data-state="blocked"] { animation:whjStateBlocked 2.2s ease-in-out infinite; }
+.q-module-node[data-state="pass"] .q-node-icon,
+.q-module-node[data-state="blocked"] .q-node-icon { animation:whjIconGlow 3.1s ease-in-out infinite; }
+.q-module-node:hover { filter:brightness(1.2); }
+.q-decision-output { animation:whjCorePulse 5.6s ease-in-out infinite; }
+.q-flow-path { stroke-dasharray:5 12; }
+@media(max-width:700px) {
+  .q-decision-core { animation-duration:6s; }
+  .q-module-node[data-state="pass"] .q-node-icon,
+  .q-module-node[data-state="blocked"] .q-node-icon { animation-duration:4.2s; }
+}
+@media(prefers-reduced-motion:reduce) {
+  .q-decision-core,.q-core-orbit,.q-module-node,.q-module-node .q-node-icon,.q-decision-output,.q-flow-path { animation:none!important; transition:none!important; }
+}
+</style>
+<style id="whj-quantumorb-visible-motion-v2">
+/* Stronger, unmistakable command-center motion; presentation only. */
+.q-network-stage{border-color:rgba(81,229,242,.38)!important;box-shadow:inset 0 0 55px rgba(31,143,184,.12),0 0 28px rgba(54,188,219,.08)!important}
+.q-links{z-index:2!important;pointer-events:none}
+.q-flow-path{stroke-width:3.6!important;stroke-dasharray:5 15!important;animation:qFlowVisible 1.35s linear infinite!important;filter:drop-shadow(0 0 7px rgba(81,229,242,.9))!important}
+.q-flow-path:nth-of-type(2){animation-duration:1.05s!important}
+.q-flow-path:nth-of-type(3){animation-duration:1.55s!important}
+.q-flow-path:nth-of-type(4){animation-duration:1.2s!important}
+.q-flow-path:nth-of-type(5){animation-duration:1.4s!important}
+.q-flow-path:nth-of-type(6){animation-duration:1.65s!important}
+.q-output-path{stroke-width:4.8!important;stroke-dasharray:7 12!important;animation:qFlowVisible .85s linear infinite!important;filter:drop-shadow(0 0 9px rgba(181,151,255,.95))!important}
+.q-branch-path{stroke-width:1.8!important;stroke-dasharray:4 9!important;animation:qFlowVisible 3.4s linear infinite!important}
+.q-module-node{border-width:1.5px!important;box-shadow:0 0 0 1px rgba(81,229,242,.13),0 8px 28px rgba(0,0,0,.42),0 0 18px rgba(81,229,242,.13)!important;animation:qNodeBreath 3.6s ease-in-out infinite!important}
+.q-node-scanner{animation-delay:0s!important}.q-node-guard{animation-delay:.55s!important}.q-node-sizer{animation-delay:1.1s!important}.q-node-executor{animation-delay:1.65s!important}.q-node-logger{animation-delay:2.2s!important}.q-node-equity{animation-delay:2.75s!important}
+.q-node-icon{box-shadow:0 0 0 4px rgba(81,229,242,.055),0 0 22px rgba(81,229,242,.28)!important;animation:qIconPulse 2.2s ease-in-out infinite!important}
+.q-node-icon svg{filter:drop-shadow(0 0 4px currentColor)}
+.q-decision-core{border-width:2px!important;box-shadow:0 0 0 8px rgba(165,139,255,.08),0 0 0 18px rgba(81,229,242,.045),0 0 52px rgba(112,112,255,.38),inset 0 1px rgba(255,255,255,.14)!important;animation:qCoreBreath 2.8s ease-in-out infinite!important}
+.q-core-orbit{inset:-17px!important;border:1px solid rgba(81,229,242,.5)!important;border-radius:38px!important;box-shadow:0 0 22px rgba(81,229,242,.13)!important;animation:qOrbitTurn 12s linear infinite!important}
+.q-decision-output{border-color:rgba(81,229,242,.8)!important;box-shadow:0 0 0 4px rgba(81,229,242,.06),0 0 28px rgba(81,229,242,.24)!important;animation:qOutputPulse 2s ease-in-out infinite!important}
+.q-decision-output>b{animation:qOutputArrow 1.1s ease-in-out infinite!important}
+@keyframes qFlowVisible{to{stroke-dashoffset:-80}}
+@keyframes qNodeBreath{0%,100%{transform:translateY(0);filter:brightness(1)}50%{transform:translateY(-4px);filter:brightness(1.18)}}
+@keyframes qIconPulse{0%,100%{transform:scale(1);filter:brightness(1)}50%{transform:scale(1.09);filter:brightness(1.35)}}
+@keyframes qCoreBreath{0%,100%{filter:brightness(1)}50%{filter:brightness(1.22)}}
+@keyframes qOrbitTurn{to{transform:rotate(360deg)}}
+@keyframes qOutputPulse{0%,100%{filter:brightness(1)}50%{filter:brightness(1.25)}}
+@keyframes qOutputArrow{0%,100%{transform:translateX(0)}50%{transform:translateX(-5px)}}
+@media(max-width:620px){
+ .q-flow-path{stroke-width:3!important;stroke-dasharray:4 13!important}
+ .q-decision-core{box-shadow:0 0 0 5px rgba(165,139,255,.08),0 0 0 12px rgba(81,229,242,.045),0 0 35px rgba(112,112,255,.3)!important}
+}
+@media(prefers-reduced-motion:reduce){
+ .q-flow-path,.q-output-path,.q-branch-path,.q-module-node,.q-node-icon,.q-decision-core,.q-core-orbit,.q-decision-output,.q-decision-output>b{animation:none!important}
+}
+</style></head><body><div class="shell"><aside class="side"><div class="brand"><div class="logo">₿</div><div><b>WHJ BITCOIN</b><small>مركز قيادة التداول الذكي</small></div></div><div class="navlabel">القائمة الرئيسية</div><nav class="nav"><button class="active" data-view="overview"><span class="ico">⌂</span>الرئيسية</button><button data-view="scanner"><span class="ico">⌁</span>ماسح السوق</button><button data-view="strategies"><span class="ico">◈</span>الاستراتيجيات</button><button data-view="trades"><span class="ico">⇄</span>الصفقات</button><button data-view="risk"><span class="ico">⌁</span>المخاطر</button><button data-view="system"><span class="ico">⚙</span>النظام</button><button data-view="agents"><span class="ico">✣</span>مركز الوكلاء</button><button data-view="forward"><span class="ico">◷</span>المراقبة المستقبلية</button><button data-view="mt5"><span class="ico">⌁</span>منصة MT5</button></nav><div class="navlabel agent-nav-label">وحدات التشغيل الست</div><nav class="agent-nav" aria-label="وحدات التشغيل"><button type="button" data-agent-target="0"><span>⌕</span>ماسح السوق</button><button type="button" data-agent-target="1"><span>⚑</span>بوابة التحقق</button><button type="button" data-agent-target="2"><span>◈</span>مدير الحجم</button><button type="button" data-agent-target="3"><span>Ⅱ</span>المحاكي الورقي</button><button type="button" data-agent-target="4"><span>≡</span>سجل القرارات</button><button type="button" data-agent-target="5"><span>◉</span>مراقب المحفظة</button></nav><div class="sidefoot">WHJ Bitcoin Bot 2026<br>مراقبة وتحليل · Paper Trading فقط</div></aside><main>
 <div class="mobilehead">WHJ BITCOIN · مركز القيادة</div><header class="top"><div><div class="eyebrow">WHJ / COMMAND CENTER</div><h1 id="pageTitle">نظرة عامة</h1><div class="sub">مراقبة أداء البوت وتحليل BTC/USD</div></div><div class="topright"><button class="toolbtn" id="exportJson" type="button">تنزيل التقرير JSON</button><button class="toolbtn" id="exportCsv" type="button">تصدير الصفقات CSV</button><span class="pill"><i class="dot"></i><span id="systemState">جارٍ تحميل البيانات</span></span><button class="refresh" id="refresh">↻ تحديث البيانات</button></div></header>
 <div class="banner"><div><b>وضع الحماية مفعّل — التداول الحقيقي متوقف</b><p>تعرض اللوحة بيانات التحليل والمحاكاة فقط، ولا ترسل أوامر إلى منصات التداول.</p></div><span class="status">● PAPER MODE</span></div>
 
+
+<section id="quantumorb" aria-label="WHJ Quantum command center">
+ <article class="q-panel q-left">
+  <div class="q-panel-head"><b>MARKET INTELLIGENCE / BTC-USD</b><span class="q-live">REPORT LINK</span></div>
+  <div class="q-metric"><span>سعر BTC / USD</span><strong class="cyan" data-mirror="price">—</strong></div>
+  <div class="q-metric"><span>إشارة النموذج</span><strong data-mirror="signal">—</strong></div>
+  <div class="q-metric"><span>حالة الماسح</span><strong data-mirror="scannerStatus">—</strong></div>
+  <div class="q-metric"><span>إغلاق الشمعة</span><strong data-mirror="scannerClose">—</strong></div>
+  <div class="q-metric"><span>مضاعف الحجم</span><strong data-mirror="scannerMultiple">—</strong></div>
+  <div class="q-metric"><span>حجم التداول</span><strong data-mirror="scannerVolume">—</strong></div>
+  <div class="q-chiprow"><span class="q-chip">KRAKEN</span><span class="q-chip">BTC/USD</span><span class="q-chip">CLOSED CANDLES</span></div>
+ </article>
+ <article class="q-panel q-core">
+  <div class="q-core-top"><div><div class="q-kicker">WHJ / QUANTUMORB INSPIRED CORE</div><div class="q-core-title">شبكة ذكاء السوق والعُقد المترابطة</div><div class="q-core-sub">MARKET GRAPH · VISUAL MONITOR · NOT A LIVE ON-CHAIN FEED</div></div><span class="q-pill">PAPER MODE ONLY</span></div>
+  <div class="q-network-stage" aria-label="شبكة وحدات WHJ المتصلة بمحرك القرار">
+   <canvas id="q-network" aria-hidden="true"></canvas>
+   <svg class="q-links" viewBox="0 0 1000 520" preserveAspectRatio="none" aria-hidden="true">
+    <defs><linearGradient id="qLinkGrad" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#51e5f2" stop-opacity=".18"/><stop offset=".52" stop-color="#8b9cff" stop-opacity=".95"/><stop offset="1" stop-color="#51e5f2" stop-opacity=".22"/></linearGradient><marker id="qArrow" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0 0 L6 3 L0 6" fill="none" stroke="#7debf4" stroke-width="1"/></marker></defs>
+    <g fill="none" stroke="url(#qLinkGrad)" stroke-width="2.5" marker-end="url(#qArrow)">
+     <path class="q-flow-path" d="M185 92 C270 92 335 150 420 220"/>
+     <path class="q-flow-path" d="M500 72 C500 125 500 165 500 205"/>
+     <path class="q-flow-path" d="M815 92 C730 92 665 150 580 220"/>
+     <path class="q-flow-path" d="M185 390 C270 390 335 330 420 278"/>
+     <path class="q-flow-path" d="M500 390 C500 350 500 320 500 300"/>
+     <path class="q-flow-path" d="M815 390 C730 390 665 330 580 278"/>
+     <path class="q-branch-path" d="M185 92 Q245 180 330 190 M500 72 L500 175 M815 92 Q755 180 670 190 M185 390 Q245 300 330 290 M500 390 L500 325 M815 390 Q755 300 670 290"/>
+     <path class="q-output-path" d="M500 310 C500 350 500 390 500 455"/>
+    </g>
+    <g fill="#62e8f4"><circle cx="170" cy="105" r="4"/><circle cx="500" cy="65" r="4"/><circle cx="830" cy="105" r="4"/><circle cx="170" cy="385" r="4"/><circle cx="500" cy="435" r="4"/><circle cx="830" cy="385" r="4"/></g>
+   </svg>
+   <div class="q-module-node q-node-scanner"><span class="q-node-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="7.5"/><path d="M10.5 3v7.5L16 5M16 16l5 5M3 10.5h7.5"/></svg></span><b>SCANNER</b><small>اتجاه السوق والزخم</small><em data-mirror="agentScanState">بانتظار البيانات</em></div>
+   <div class="q-module-node q-node-guard"><span class="q-node-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-11V5l-8-3-8 3v6c0 7 8 11 8 11Z"/><path d="m9 12 2 2 4-4"/></svg></span><b>GUARD</b><small>سلامة البيانات والإشارة</small><em data-mirror="agentGuardState">بانتظار الفحص</em></div>
+   <div class="q-module-node q-node-sizer"><span class="q-node-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 19V5M4 19h16M7 15l4-4 3 2 5-7"/><path d="M16 6h3v3"/></svg></span><b>SIZER</b><small>حجم المركز والمخاطرة</small><em data-mirror="agentSizerState">بانتظار الحساب</em></div>
+   <div class="q-module-node q-node-executor"><span class="q-node-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 12h12M13 6l6 6-6 6"/><path d="M4 4v16"/></svg></span><b>EXECUTOR</b><small>محاكاة الصفقات</small><em data-mirror="agentExecState">لا توجد بيانات</em></div>
+   <div class="q-module-node q-node-logger"><span class="q-node-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M8 4h13M8 9h13M8 14h13M8 19h13"/><path d="M3 4h.01M3 9h.01M3 14h.01M3 19h.01"/></svg></span><b>LOGGER</b><small>أسباب القرارات</small><em data-mirror="agentLogState">بانتظار السجل</em></div>
+   <div class="q-module-node q-node-equity"><span class="q-node-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M3 18V5M3 18h18"/><path d="m6 14 4-4 3 3 6-7"/><path d="M15 6h4v4"/></svg></span><b>EQUITY WATCH</b><small>الرصيد والتراجع</small><em data-mirror="agentEquityState">بانتظار الرصيد</em></div>
+   <div class="q-decision-core"><span class="q-core-orbit"></span><small>WHJ · CENTRAL INTELLIGENCE</small><b>DECISION<br>ENGINE</b><strong data-mirror="signalBadge">WAITING</strong><span data-mirror="signalText">بانتظار إشارة النموذج</span></div>
+   <div class="q-decision-output"><span>DECISION OUTPUT</span><b>→</b><strong>PAPER EXECUTOR</strong><small>محاكاة فقط · NO LIVE ORDERS</small></div>
+  </div>
+  <div class="q-core-foot"><span>الحركة المرئية تمثيل بصري للنظام وليست بيانات بلوكتشين مباشرة</span><b id="q-report-state">WAITING FOR REPORT</b><span id="q-clock">--:--:--</span></div>
+ </article>
+ <article class="q-panel q-right">
+  <div class="q-panel-head"><b>MULTI-MODULE CONTROL</b><span class="q-live">LOCAL STATUS</span></div>
+  <div class="q-agent"><span class="q-agent-icon">⌕</span><div><b>SCANNER</b><small>اكتشاف الاتجاه والزخم</small></div><em data-mirror="agentScanState">—</em></div>
+  <div class="q-agent"><span class="q-agent-icon">⚑</span><div><b>GUARD</b><small>سلامة البيانات والإشارة</small></div><em data-mirror="agentGuardState">—</em></div>
+  <div class="q-agent"><span class="q-agent-icon">◈</span><div><b>SIZER</b><small>تخصيص رأس المال الورقي</small></div><em data-mirror="agentSizerState">—</em></div>
+  <div class="q-agent"><span class="q-agent-icon">Ⅱ</span><div><b>EXECUTOR</b><small>محاكاة الصفقات فقط</small></div><em data-mirror="agentExecState">—</em></div>
+  <div class="q-agent"><span class="q-agent-icon">≡</span><div><b>LOGGER</b><small>تسجيل أسباب القرارات</small></div><em data-mirror="agentLogState">—</em></div>
+  <div class="q-agent"><span class="q-agent-icon">◉</span><div><b>EQUITY WATCH</b><small>المحفظة والتراجع</small></div><em data-mirror="agentEquityState">—</em></div>
+  <div class="q-chiprow"><span class="q-chip">6 SYSTEM MODULES</span><span class="q-chip">NO LIVE ORDERS</span></div>
+ </article>
+ <div class="q-bottom">
+  <article class="q-panel"><div class="q-panel-head"><b>PORTFOLIO / PAPER LEDGER</b><span class="q-kicker">SIMULATION</span></div>
+   <div class="q-metric"><span>قيمة المحفظة</span><strong data-mirror="equity">—</strong></div>
+   <div class="q-metric"><span>العائد الافتراضي</span><strong data-mirror="return">—</strong></div>
+   <div class="q-metric"><span>أقصى تراجع</span><strong data-mirror="drawdown">—</strong></div>
+   <div class="q-metric"><span>الصفقات المغلقة</span><strong data-mirror="tradeCountMetric">—</strong></div>
+  </article>
+  <article class="q-panel"><div class="q-panel-head"><b>RISK GUARD / CAPITAL SAFETY</b><span class="q-kicker">PROTECTION</span></div>
+   <div class="q-metric"><span>Win rate</span><strong data-mirror="winrate">—</strong></div>
+   <div class="q-metric"><span>Profit factor</span><strong data-mirror="pf">—</strong></div>
+   <div class="q-metric"><span>الرسوم</span><strong data-mirror="fees">—</strong></div>
+   <div class="q-metric"><span>حالة Monte Carlo</span><strong data-mirror="mcStatus">—</strong></div>
+   <div class="q-metric"><span>إيقاف الحماية</span><strong data-mirror="paused">—</strong></div>
+  </article>
+  <article class="q-panel"><div class="q-panel-head"><b>DECISION TRACE / SYSTEM FEED</b><span class="q-kicker">AUDIT</span></div>
+   <div class="q-stream" id="q-decision-feed"><div class="q-event"><b>بانتظار التقرير</b><span>سيظهر هنا آخر وضع موثق من تقرير WHJ.</span></div></div>
+   <div class="q-chiprow"><span class="q-chip">DAILY GUARD: <span data-mirror="dailyPause">—</span></span><span class="q-chip">LOSS STREAK: <span data-mirror="lossStreak">—</span></span></div>
+  </article>
+ </div>
+</section>
+<section class="view active" id="overview"><div class="grid">
+<article class="card metric"><div class="label">سعر Bitcoin <span>BTC / USD</span></div><div class="value neutral" id="price">—</div><div class="hint" id="updated">بانتظار آخر تقرير</div></article>
+<article class="card metric"><div class="label">قيمة المحفظة الافتراضية <span>USD</span></div><div class="value" id="equity">—</div><div class="hint">القيمة المقدّرة للحساب</div></article>
+<article class="card metric"><div class="label">العائد الافتراضي <span>ROI</span></div><div class="value" id="return">—</div><div class="hint">منذ بداية المحاكاة</div></article>
+<article class="card metric"><div class="label">أقصى تراجع <span>MAX DD</span></div><div class="value" id="drawdown">—</div><div class="hint">مقياس المخاطر التاريخي</div></article>
+<article class="card metric"><div class="label">الصفقات المغلقة</div><div class="value" id="tradeCountMetric">—</div><div class="hint">صفقات المحاكاة</div></article>
+<article class="card metric"><div class="label">نسبة الصفقات الرابحة</div><div class="value" id="winrate">—</div><div class="hint">من الصفقات المغلقة</div></article>
+<article class="card metric"><div class="label">معامل الربحية</div><div class="value" id="pf">—</div><div class="hint">إجمالي الربح إلى الخسارة</div></article>
+<article class="card metric"><div class="label">الرسوم المدفوعة</div><div class="value" id="fees">—</div><div class="hint">رسوم المحاكاة المسجلة</div></article></div>
+<div class="content"><article class="card"><div class="head"><h2>منحنى رأس المال</h2><span>آخر تقرير متاح</span></div><canvas id="equityChart"></canvas></article><article class="card"><div class="head"><h2>إشارة السوق الحالية</h2><span>تحليل فني</span></div><div class="signalbox"><div><b id="signal">—</b><small id="signalText">إشارة النموذج</small></div><span class="sigbadge" id="signalBadge">—</span></div><div class="mini"><span>المتوسط SMA 20</span><b id="sma20">—</b></div><div class="mini"><span>المتوسط SMA 50</span><b id="sma50">—</b></div><div class="mini"><span>الشموع المغلقة</span><b id="candles">—</b></div></article></div>
+<div class="card tablecard"><div class="head"><h2>أداء الحسابات الافتراضية</h2><span>مقارنة الاستراتيجيات</span></div><div class="tablewrap"><table><thead><tr><th>الاستراتيجية</th><th>قيمة الحساب</th><th>العائد</th><th>التراجع</th><th>الصفقات</th><th>الحالة</th></tr></thead><tbody id="portfolioRows"><tr><td colspan="6" class="empty">لا توجد بيانات بعد</td></tr></tbody></table></div></div></section>
 <section class="view" id="agents">
  <div class="scanner-head"><div><div class="eyebrow">WHJ / MULTI-AGENT CONTROL</div><h2>مركز الوكلاء وسير العمل</h2><p>تقسيم واضح لمهام التحليل والتحقق وإدارة المخاطر والتوثيق، مع فصل المراقبة عن التنفيذ.</p></div><div class="scanner-head-tags"><span class="scan-chip muted">6 SYSTEM MODULES</span><span class="scan-chip"><i></i> PAPER ONLY</span></div></div>
  <div class="agent-hero"><div><strong>خط معالجة الصفقة · من الرصد إلى المراجعة</strong><p>كل مرحلة لها مسؤولية محددة. لا تتحول إشارة الماسح وحدها إلى أمر تداول.</p></div><span class="agent-mode">● التنفيذ الحقيقي معطّل</span></div>
@@ -303,17 +861,6 @@ body[data-whj-theme="light"] .agent-nav button:hover,body[data-whj-theme="light"
  </div>
  <div class="agent-note">تنبيه: هذه وحدات وظيفية داخل النظام وليست ستة وكلاء ذكاء اصطناعي مستقلين يعملون في الخلفية. حالة كل منها تصف دورها البرمجي؛ أما النشاط الفعلي فيظهر فقط عند توفر تقرير حديث وبيانات موثقة.</div>
 </section>
-<section class="view active" id="overview"><div class="grid">
-<article class="card metric"><div class="label">سعر Bitcoin <span>BTC / USD</span></div><div class="value neutral" id="price">—</div><div class="hint" id="updated">بانتظار آخر تقرير</div></article>
-<article class="card metric"><div class="label">قيمة المحفظة الافتراضية <span>USD</span></div><div class="value" id="equity">—</div><div class="hint">القيمة المقدّرة للحساب</div></article>
-<article class="card metric"><div class="label">العائد الافتراضي <span>ROI</span></div><div class="value" id="return">—</div><div class="hint">منذ بداية المحاكاة</div></article>
-<article class="card metric"><div class="label">أقصى تراجع <span>MAX DD</span></div><div class="value" id="drawdown">—</div><div class="hint">مقياس المخاطر التاريخي</div></article>
-<article class="card metric"><div class="label">الصفقات المغلقة</div><div class="value" id="tradeCountMetric">—</div><div class="hint">صفقات المحاكاة</div></article>
-<article class="card metric"><div class="label">نسبة الصفقات الرابحة</div><div class="value" id="winrate">—</div><div class="hint">من الصفقات المغلقة</div></article>
-<article class="card metric"><div class="label">معامل الربحية</div><div class="value" id="pf">—</div><div class="hint">إجمالي الربح إلى الخسارة</div></article>
-<article class="card metric"><div class="label">الرسوم المدفوعة</div><div class="value" id="fees">—</div><div class="hint">رسوم المحاكاة المسجلة</div></article></div>
-<div class="content"><article class="card"><div class="head"><h2>منحنى رأس المال</h2><span>آخر تقرير متاح</span></div><canvas id="equityChart"></canvas></article><article class="card"><div class="head"><h2>إشارة السوق الحالية</h2><span>تحليل فني</span></div><div class="signalbox"><div><b id="signal">—</b><small id="signalText">إشارة النموذج</small></div><span class="sigbadge" id="signalBadge">—</span></div><div class="mini"><span>المتوسط SMA 20</span><b id="sma20">—</b></div><div class="mini"><span>المتوسط SMA 50</span><b id="sma50">—</b></div><div class="mini"><span>الشموع المغلقة</span><b id="candles">—</b></div></article></div>
-<div class="card tablecard"><div class="head"><h2>أداء الحسابات الافتراضية</h2><span>مقارنة الاستراتيجيات</span></div><div class="tablewrap"><table><thead><tr><th>الاستراتيجية</th><th>قيمة الحساب</th><th>العائد</th><th>التراجع</th><th>الصفقات</th><th>الحالة</th></tr></thead><tbody id="portfolioRows"><tr><td colspan="6" class="empty">لا توجد بيانات بعد</td></tr></tbody></table></div></div></section>
 <section class="view" id="scanner">
 <div class="scanner-head">
  <div><div class="eyebrow">MARKET INTELLIGENCE / BTC-USD</div><h2>ماسح الاختراق الذكي</h2><p>تحليل الشمعة المغلقة على إطار الساعة — السعر والحجم وجودة البيانات في شاشة واحدة</p></div>
@@ -421,7 +968,7 @@ body[data-whj-theme="light"] .agent-nav button:hover,body[data-whj-theme="light"
 <div class="card" style="margin-bottom:13px"><div class="head"><h2>تحميل تقرير المراقبة</h2><span>JSON · schema v1</span></div><div class="headtools"><input class="filter" style="max-width:360px" id="forwardFile" type="file" accept=".json,application/json" aria-label="تحميل تقرير المراقبة JSON"><button class="toolbtn" id="clearForward" type="button">مسح التقرير</button></div><p class="sub" id="forwardMessage" role="status" style="margin-top:12px">اختر ملف forward_paper_report.json من مخرجات تشغيل المراقبة في GitHub Actions.</p></div>
 
 <div class="card" style="margin:14px 0;border:1px solid var(--line)">
- <div class="head"><div><h2>مراقبة محافظ ADX المستقلة</h2><span>ADX15 / ADX20 · 4h / 6h · أربع محافظ منفصلة</span></div><span class="scan-chip">PAPER ONLY</span></div>
+ <div class="head"><div><h2>مراقبة محافظ ADX المستقلة</h2><span>ADX15 / ADX20 / ADX25 · 4h / 6h · ست محافظ منفصلة</span></div><span class="scan-chip">PAPER ONLY</span></div>
  <div class="headtools"><input class="filter" style="max-width:360px" id="adxForwardFile" type="file" accept=".json,application/json" aria-label="تحميل تقرير محافظ ADX الورقية"><button class="toolbtn" id="clearAdxForward" type="button">مسح تقرير ADX</button></div>
  <p class="sub" id="adxForwardMessage" role="status" style="margin-top:10px">حمّل paper_adx_forward_report.json من Artifact الخاص بتشغيل WHJ Isolated ADX Forward Paper.</p>
  <div class="mini"><span id="adxForwardStatus">بانتظار تقرير ADX</span><b id="adxForwardFreshness">العمر: —</b></div>
@@ -433,6 +980,19 @@ body[data-whj-theme="light"] .agent-nav button:hover,body[data-whj-theme="light"
 </div>
 <div class="banner"><div><b id="forwardStatus">بانتظار التقرير</b><p id="forwardGenerated">لم يتم تحميل تقرير بعد.</p><p id="forwardCycle">بانتظار التقرير.</p>
 <p id="forwardFreshness" class="sub" role="status">عمر التقرير: —</p></div><span class="status">FORWARD PAPER</span></div>
+
+<div class="decision-tools-grid" aria-label="مراجعة أدوات قرار المحاكاة">
+ <article class="card decision-tool scanner-tool"><div class="decision-tool-head"><span class="decision-icon">⌕</span><div><b>SCANNER · رادار السوق</b><small>النتيجة الفنية من الشموع المكتملة</small></div><strong id="decisionScannerStatus">بانتظار التقرير</strong></div>
+  <div class="decision-metrics"><div><small>التوافق</small><b id="decisionScannerScore">—</b></div><div><small>إغلاق BTC</small><b id="decisionScannerClose">—</b></div><div><small>مضاعف الحجم</small><b id="decisionScannerVolume">—</b></div></div><p class="decision-reasons" id="decisionScannerReasons">لا توجد مراجعة ماسح محمّلة.</p>
+ </article>
+ <article class="card decision-tool guard-tool"><div class="decision-tool-head"><span class="decision-icon">⚑</span><div><b>GUARD · درع المخاطر</b><small>حالة الحماية لكل حساب ساعة</small></div><strong id="decisionGuardStatus">بانتظار التقرير</strong></div>
+  <div class="tablewrap"><table><thead><tr><th>الحساب</th><th>الإيقاف الوقائي</th><th>المركز</th><th>الأسباب</th></tr></thead><tbody id="decisionGuardRows"><tr><td colspan="4" class="empty">بانتظار بيانات الحماية</td></tr></tbody></table></div>
+ </article>
+ <article class="card decision-tool sizer-tool"><div class="decision-tool-head"><span class="decision-icon">◈</span><div><b>SIZER · حاسبة الحجم</b><small>حجم افتراضي محسوب بحدود المخاطر</small></div><strong id="decisionSizerStatus">بانتظار التقرير</strong></div>
+  <div class="tablewrap"><table><thead><tr><th>الاستراتيجية</th><th>القيمة الافتراضية</th><th>المخاطرة</th></tr></thead><tbody id="decisionSizerRows"><tr><td colspan="3" class="empty">بانتظار حساب الحجم</td></tr></tbody></table></div>
+ </article>
+</div>
+<p class="sub decision-safety-note">هذه بوابة قرار وحساب حجم للمراجعة فقط. حتى عند ظهور «مؤهل للمراجعة الورقية» لا يتم فتح صفقة أو تعديل دفتر الحساب أو إرسال أي أمر. لا تتوفر بيانات OI مشتقات موثقة ضمن هذا التقرير.</p>
 <div class="grid">
 <article class="card metric"><div class="label">إجمالي رأس المال الافتراضي</div><div class="value" id="forwardInitial">—</div><div class="hint">خمسة حسابات مستقلة</div></article>
 <article class="card metric"><div class="label">القيمة الحالية</div><div class="value" id="forwardEquity">—</div><div class="hint">بعد تكاليف الخروج المقدّرة</div></article>
@@ -575,12 +1135,12 @@ let adxForwardReport=null;
 function validateAdxForwardReport(x){
  const n=v=>typeof v==="number"&&Number.isFinite(v);
  const integer=v=>Number.isInteger(v)&&v>=0;
- const keys={adx15_4h:[15,4],adx20_4h:[20,4],adx15_6h:[15,6],adx20_6h:[20,6]};
+ const keys={adx15_4h:[15,4],adx20_4h:[20,4],adx25_4h:[25,4],adx15_6h:[15,6],adx20_6h:[20,6],adx25_6h:[25,6]};
  if(!x||typeof x!=="object"||Array.isArray(x)||x.schema_version!==1||x.mode!=="ISOLATED_ADX_FORWARD_PAPER_ONLY")throw Error("تقرير ADX غير معروف أو إصدار المخطط غير مدعوم");
  if(x.live_orders_enabled!==false||x.existing_paper_ledgers_touched!==false)throw Error("رفض التقرير: ضمانات العزل والتداول الورقي غير متحققة");
  if(x.data_quality!=="VALIDATED_NO_GAPS_NO_IMPUTED_CANDLES")throw Error("جودة بيانات ADX غير مقبولة");
  if(typeof x.generated_at_utc!=="string"||!Number.isFinite(Date.parse(x.generated_at_utc)))throw Error("وقت إنشاء تقرير ADX غير صالح");
- if(!x.results||typeof x.results!=="object"||Array.isArray(x.results)||Object.keys(x.results).length!==4||!Object.keys(keys).every(k=>Object.prototype.hasOwnProperty.call(x.results,k)))throw Error("يجب أن يحتوي التقرير على المحافظ الأربع فقط");
+ if(!x.results||typeof x.results!=="object"||Array.isArray(x.results)||Object.keys(x.results).length!==6||!Object.keys(keys).every(k=>Object.prototype.hasOwnProperty.call(x.results,k)))throw Error("يجب أن يحتوي التقرير على المحافظ الست فقط");
  for(const [key,config] of Object.entries(keys)){
   const a=x.results[key],threshold=config[0],timeframe=config[1];
   if(!a||typeof a!=="object"||a.mode!=="FORWARD_ONLY_PAPER_NO_LIVE_ORDERS"||a.strategy!=="EMA50_200_ADX14_ENTRY_ONLY"||a.threshold!==threshold||a.timeframe_hours!==timeframe)throw Error("هوية المحفظة غير مطابقة: "+key);
@@ -593,7 +1153,7 @@ function validateAdxForwardReport(x){
  return x;
 }
 function renderAdxForward(x){
- const labels={adx15_4h:"ADX15 · 4h",adx20_4h:"ADX20 · 4h",adx15_6h:"ADX15 · 6h",adx20_6h:"ADX20 · 6h"};
+ const labels={adx15_4h:"ADX15 · 4h",adx20_4h:"ADX20 · 4h",adx25_4h:"ADX25 · 4h",adx15_6h:"ADX15 · 6h",adx20_6h:"ADX20 · 6h",adx25_6h:"ADX25 · 6h"};
  const rows=Object.keys(labels).map(key=>{
   const a=x.results[key],risk=a.risk_pause_reasons.length?a.risk_pause_reasons.join("، "):"لا يوجد";
   const status=a.risk_paused?"متوقف وقائياً":a.assessment==="INSUFFICIENT_FORWARD_SAMPLE"?"العينة غير كافية":"مراجعة مطلوبة";
@@ -605,8 +1165,8 @@ function renderAdxForward(x){
  $("adxForwardQuality").textContent=x.data_quality;
  $("adxForwardFreshness").textContent=!Number.isFinite(age)||age< -5?"توقيت غير صالح":age>180?"قديم جداً · "+fmt(age/60,1)+" ساعة":age>100?"متأخر · "+fmt(age,0)+" دقيقة":"حديث · "+fmt(age,0)+" دقيقة";
  const seeded=Object.values(x.results).filter(a=>a.seeded_without_historical_trades).length;
- $("adxForwardSeed").textContent=seeded===4?"تمت تهيئة المحافظ الأربع دون صفقات تاريخية":seeded>0?seeded+" من 4 محافظ في وضع التهيئة":"دفاتر مهيأة مسبقاً";
- $("adxForwardStatus").textContent="تم التحقق من أربع محافظ ADX مستقلة · تداول ورقي فقط";
+ $("adxForwardSeed").textContent=seeded===6?"تمت تهيئة المحافظ الست دون صفقات تاريخية":seeded>0?seeded+" من 6 محافظ في وضع التهيئة":"دفاتر مهيأة مسبقاً";
+ $("adxForwardStatus").textContent="تم التحقق من ست محافظ ADX مستقلة · تداول ورقي فقط";
 }
 $("adxForwardFile").addEventListener("change",async e=>{
  const file=e.target.files&&e.target.files[0];if(!file)return;
@@ -617,6 +1177,23 @@ $("adxForwardFile").addEventListener("change",async e=>{
 $("clearAdxForward").addEventListener("click",()=>{adxForwardReport=null;$("adxForwardFile").value="";$("adxForwardMessage").textContent="تم مسح تقرير ADX من عرض الصفحة.";["adxForwardGenerated","adxForwardQuality","adxForwardSeed","adxForwardFreshness"].forEach(id=>$(id).textContent="—");$("adxForwardStatus").textContent="بانتظار تقرير ADX";$("adxForwardRows").innerHTML="<tr><td colspan='11' class='empty'>لا يوجد تقرير ADX محمّل</td></tr>";});
 
 let forwardReport=null;
+
+function validateDecisionTools(x){
+ const scanner=x.scanner_review,gates=x.paper_decision_gates;
+ if(scanner===undefined&&gates===undefined)return;
+ if(!scanner||typeof scanner!=="object"||Array.isArray(scanner)||!gates||typeof gates!=="object"||Array.isArray(gates))throw Error("مراجعة SCANNER أو بوابات القرار مفقودة");
+ if(!["PAPER_CANDIDATE","WATCH","NO_SETUP","UNAVAILABLE","DATA_BLOCKED"].includes(scanner.status)||scanner.paper_candidate_only!==true||scanner.live_orders_placed!==false||!Array.isArray(scanner.reasons)||scanner.reasons.some(v=>typeof v!=="string"))throw Error("حالة SCANNER أو ضمانات البحث غير صالحة");
+ if(scanner.status==="PAPER_CANDIDATE"&&(!Number.isInteger(scanner.confluence_score)||scanner.confluence_score!==8||scanner.confluence_total!==8||typeof scanner.current_close!=="number"||!Number.isFinite(scanner.current_close)||scanner.current_close<=0||!scanner.checks||typeof scanner.checks!=="object"))throw Error("بيانات مرشح SCANNER غير مكتملة");
+ const keys=["1h_sma_trend","1h_ema_trend","1h_rsi14_mean_reversion"];
+ for(const key of keys){
+  const gate=gates[key];
+  if(!gate||typeof gate!=="object"||!["BLOCKED","APPROVED_FOR_PAPER_SIMULATION_REVIEW_ONLY"].includes(gate.status)||gate.paper_only!==true||gate.execution_enabled!==false||gate.order_placed!==false||!Array.isArray(gate.reasons)||gate.reasons.some(v=>typeof v!=="string"))throw Error("بوابة GUARD/SIZER غير صالحة للحساب "+key);
+  if(gate.status==="APPROVED_FOR_PAPER_SIMULATION_REVIEW_ONLY"){
+   for(const field of ["reference_price","notional_usd","units","allocation_cap_usd","risk_budget_usd","estimated_stop_risk_usd","stop_level","target_level"])if(typeof gate[field]!=="number"||!Number.isFinite(gate[field])||gate[field]<=0)throw Error("قيمة SIZER غير صالحة: "+field);
+   if(gate.notional_usd>gate.allocation_cap_usd+1e-8||gate.estimated_stop_risk_usd>gate.risk_budget_usd+1e-8)throw Error("حساب SIZER يتجاوز سقف التخصيص أو المخاطرة");
+  }
+ }
+}
 function validateForwardReport(x){
  const n=v=>typeof v==="number"&&Number.isFinite(v);
  const integer=v=>Number.isInteger(v)&&v>=0;
@@ -655,12 +1232,47 @@ function validateForwardReport(x){
  const sleeveStatuses=keys.map(k=>x.sleeves_summary[k].health_assessment.status);
  const expectedStatus=sleeveStatuses.includes("RISK_PAUSED")?"RISK_PAUSED":sleeveStatuses.includes("REVIEW_REQUIRED")?"REVIEW_REQUIRED":"PAPER_MONITORING";
  if(x.status!==expectedStatus)throw Error("حالة المحفظة لا تطابق حالات الاستراتيجيات الخمس");
+ validateDecisionTools(x);
  if(x.cycle_status!==undefined||x.total_processed_new_candles!==undefined){
   if(!["WAITING_FOR_NEW_CLOSED_CANDLES","PROCESSED_NEW_CANDLES"].includes(x.cycle_status)||!integer(x.total_processed_new_candles))throw Error("حالة دورة المراقبة غير صالحة");
   const processed=keys.reduce((sum,k)=>sum+(integer(x.sleeves_summary[k].processed_new_candles)?x.sleeves_summary[k].processed_new_candles:0),0);
   if(processed!==x.total_processed_new_candles||(x.cycle_status==="WAITING_FOR_NEW_CLOSED_CANDLES")!==(processed===0))throw Error("إجمالي الشموع المعالجة لا يطابق حسابات الاستراتيجيات");
  }
  return x;
+}
+
+function renderDecisionTools(x){
+ const scanner=x.scanner_review||{},gates=x.paper_decision_gates||{},keys=["1h_sma_trend","1h_ema_trend","1h_rsi14_mean_reversion"];
+ const labels={"1h_sma_trend":"1h SMA","1h_ema_trend":"1h EMA","1h_rsi14_mean_reversion":"1h RSI14"};
+ const statusLabels={PAPER_CANDIDATE:"مرشح للمراجعة الورقية",WATCH:"مراقبة فقط",NO_SETUP:"لا توجد فرصة",UNAVAILABLE:"غير متاح",DATA_BLOCKED:"محظور بسبب البيانات"};
+ $("decisionScannerStatus").textContent=statusLabels[scanner.status]||"غير متاح";
+ $("decisionScannerScore").textContent=Number.isInteger(scanner.confluence_score)?scanner.confluence_score+" / "+(scanner.confluence_total||8):"—";
+ $("decisionScannerClose").textContent=Number.isFinite(scanner.current_close)?money(scanner.current_close):"—";
+ $("decisionScannerVolume").textContent=Number.isFinite(scanner.volume_ratio)?fmt(scanner.volume_ratio,2)+"×":"—";
+ $("decisionScannerReasons").textContent=Array.isArray(scanner.reasons)&&scanner.reasons.length?scanner.reasons.join(" · "):"لم يقدّم الماسح أسباباً إضافية.";
+ $("decisionScannerStatus").className=scanner.status==="PAPER_CANDIDATE"?"positive":"";
+ const guardRows=keys.map(k=>{
+  const sleeve=x.sleeves&&x.sleeves[k],a=sleeve&&sleeve.account||{},summary=x.sleeves_summary&&x.sleeves_summary[k]||{},reasons=Array.isArray(a.risk_pause_reasons)?a.risk_pause_reasons:(summary.risk_pause_reasons||[]);
+  const flags=[["تراجع",a.paused_for_drawdown],["خسارة يومية",a.daily_loss_paused],["سلسلة خسائر",a.paused_for_loss_streak],["صحة الاستراتيجية",a.paused_for_strategy_health]];
+  const active=flags.filter(v=>v[1]===true).map(v=>v[0]);
+  const guardState=active.length||reasons.length?"متوقف / محظور":a.open_position===true||summary.open_position===true?"مركز مفتوح":"لا يوجد إيقاف";
+  const guardReasons=active.concat(reasons).filter((v,i,all)=>all.indexOf(v)===i);
+  return "<tr><td>"+esc(labels[k])+"</td><td>"+esc(guardState)+"</td><td>"+((a.open_position===true||summary.open_position===true)?"مفتوح":"فارغ")+"</td><td>"+esc(guardReasons.join("، ")||"لا توجد أسباب توقف مسجلة")+"</td></tr>";
+ }).join("");
+ $("decisionGuardRows").innerHTML=guardRows;
+ const guardBlocked=keys.some(k=>{const a=x.sleeves&&x.sleeves[k]&&x.sleeves[k].account||{},s=x.sleeves_summary&&x.sleeves_summary[k]||{};return ["paused_for_drawdown","daily_loss_paused","paused_for_loss_streak","paused_for_strategy_health"].some(flag=>a[flag]===true)||((a.risk_pause_reasons||s.risk_pause_reasons||[]).length>0)});
+ const guardOpen=keys.some(k=>{const a=x.sleeves&&x.sleeves[k]&&x.sleeves[k].account||{},s=x.sleeves_summary&&x.sleeves_summary[k]||{};return a.open_position===true||s.open_position===true});
+ $("decisionGuardStatus").textContent=guardBlocked?"توقف وقائي":guardOpen?"مركز مفتوح":"لا يوجد إيقاف مسجل";
+ $("decisionGuardStatus").className=guardBlocked?"negative":guardOpen?"":"positive";
+ $("decisionSizerRows").innerHTML=keys.map(k=>{
+  const g=gates[k]||{},approved=g.status==="APPROVED_FOR_PAPER_SIMULATION_REVIEW_ONLY";
+  const value=approved?money(g.notional_usd)+" · "+fmt(g.units,8)+" BTC":(Array.isArray(g.reasons)?g.reasons.join("، "):"غير متاح");
+  const risk=approved?"ميزانية "+money(g.risk_budget_usd)+" · مخاطرة الوقف "+money(g.estimated_stop_risk_usd):"لا يُحسب حجم عند الحظر";
+  return "<tr><td>"+esc(labels[k])+"</td><td>"+esc(approved?value:"محظور: "+value)+"</td><td>"+esc(risk)+"</td></tr>";
+ }).join("");
+ const approvedCount=keys.filter(k=>gates[k]&&gates[k].status==="APPROVED_FOR_PAPER_SIMULATION_REVIEW_ONLY").length;
+ $("decisionSizerStatus").textContent=approvedCount+" / 3 مؤهل للمراجعة الورقية فقط";
+ $("decisionSizerStatus").className=approvedCount?"positive":"negative";
 }
 function renderForward(x){
  const f=(id,v)=>$(id).textContent=v;
@@ -674,6 +1286,7 @@ function renderForward(x){
  const sleeveLabels={"1h_sma_trend":"1h · SMA Trend","1h_ema_trend":"1h · EMA Trend","1h_rsi14_mean_reversion":"1h · RSI14 Mean Reversion","4h":"4h · EMA50/200","6h":"6h · EMA50/200"};const sleeveKeys=Object.keys(sleeveLabels);$("forwardRows").innerHTML=sleeveKeys.map(k=>{const a=x.sleeves_summary[k],p=Array.isArray(a.risk_pause_reasons)?a.risk_pause_reasons:[],health=a.health_assessment||{},labels={RISK_PAUSED:"متوقف وقائياً",INSUFFICIENT_FORWARD_SAMPLE:"العينة غير كافية",REVIEW_REQUIRED:"مراجعة مطلوبة",CONTINUE_PAPER_REVIEW:"استمرار ورقي بحذر"},rolling={ROLLING_REVIEW_REQUIRED:"تراجع آخر الصفقات",ROLLING_STABLE:"آخر الصفقات مستقرة",INSUFFICIENT_ROLLING_SAMPLE:"عينة متحركة غير كافية"};const rollingText=rolling[health.rolling_status]||"—";const rollingPnl=typeof health.rolling_net_pnl_usd==="number"&&Number.isFinite(health.rolling_net_pnl_usd)?money(health.rolling_net_pnl_usd):"—";const rollingDd=typeof health.rolling_max_drawdown_pct==="number"&&Number.isFinite(health.rolling_max_drawdown_pct)?pct(health.rolling_max_drawdown_pct):"—";return "<tr><td>"+esc(sleeveLabels[k])+"</td><td>"+esc(money(a.equity_usd))+"</td><td>"+esc(pct(a.return_pct))+"</td><td>"+esc(fmt(a.completed_trades,0))+"</td><td>"+esc(pct(a.win_rate_pct))+"</td><td>"+esc(fmt(a.profit_factor))+"</td><td>"+esc(pct(a.max_drawdown_pct))+"</td><td>"+esc(money(a.exposure_usd))+"<div class='hint'>"+esc(pct(a.exposure_pct_of_equity))+"</div></td><td>"+(a.open_position?"مفتوح":"لا يوجد")+"</td><td>"+(p.length?esc(p.join("، ")):"سليم")+"</td><td>"+esc(labels[health.status]||"غير متوفر")+"<div class=\"hint\">"+esc(rollingText)+" · صافي آخر الصفقات: "+esc(rollingPnl)+" · تراجع آخر الصفقات: "+esc(rollingDd)+"</div></td></tr>"}).join("");
  const r=x.risk_limits||{};f("forwardAllocation",fmt(r.allocation_pct_per_sleeve,0)+"%");f("forwardMaxDD",fmt(r.max_drawdown_pause_pct,0)+"%");f("forwardDaily",fmt(r.daily_loss_pause_pct,0)+"%");f("forwardStreak",fmt(r.consecutive_loss_pause_count,0)+" خسائر");f("forwardQuality",x.data_quality&&x.data_quality.quality||"—");f("forwardCandle",x.latest_hourly_candle_timestamp?new Date(x.latest_hourly_candle_timestamp).toLocaleString("ar-IQ"):"—");
  $("forwardStatus").className=x.status==="RISK_PAUSED"||x.status==="REVIEW_REQUIRED"?"negative":"positive";
+ renderDecisionTools(x);
 }
 $("forwardFile").addEventListener("change",async e=>{
  const file=e.target.files&&e.target.files[0];if(!file)return;
@@ -685,6 +1298,9 @@ function resetForwardView(){
  ["forwardInitial","forwardEquity","forwardReturn","forwardTrades","forwardCash","forwardExposure","forwardOpenPositions","forwardFees","forwardGenerated","forwardFreshness","forwardQuality","forwardCandle","forwardAllocation","forwardMaxDD","forwardDaily","forwardStreak"].forEach(id=>$(id).textContent="—");
  $("forwardStatus").textContent="بانتظار التقرير";$("forwardStatus").className="";
  $("forwardRows").innerHTML="<tr><td colspan='11' class='empty'>لا توجد بيانات صالحة للعرض</td></tr>";
+ ["decisionScannerStatus","decisionScannerScore","decisionScannerClose","decisionScannerVolume","decisionScannerReasons","decisionGuardStatus","decisionSizerStatus"].forEach(id=>$(id).textContent="—");
+ $("decisionGuardRows").innerHTML="<tr><td colspan='4' class='empty'>بانتظار بيانات الحماية</td></tr>";
+ $("decisionSizerRows").innerHTML="<tr><td colspan='3' class='empty'>بانتظار حساب الحجم</td></tr>";
 }
 $("clearForward").addEventListener("click",()=>{forwardReport=null;$("forwardFile").value="";$("forwardMessage").textContent="تم مسح التقرير من عرض الصفحة.";resetForwardView();});
 function filterRows(id,query){const q=String(query||"").trim().toLocaleLowerCase();document.querySelectorAll("#"+id+" tr").forEach(row=>{row.hidden=!!q&&!row.textContent.toLocaleLowerCase().includes(q)})}
@@ -809,6 +1425,37 @@ document.querySelectorAll(".agent-nav button").forEach(b=>b.addEventListener("cl
   if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==="k"){e.preventDefault();openPalette();return}
   if(e.key==="Escape"){overlay.classList.remove("open");alertPanel.classList.remove("open")}
  });
+})();
+
+
+/* Unified QUANTUMORB-inspired display layer. Original WHJ logic remains intact. */
+(()=> {
+ const $q=id=>document.getElementById(id);
+ const mirror=()=>document.querySelectorAll("[data-mirror]").forEach(el=>{const src=document.getElementById(el.dataset.mirror);if(!src){el.textContent="غير متاح";el.dataset.state="unknown";return}el.textContent=(src.textContent||"—").trim()||"غير متاح";const state=["pass","blocked","unknown"].includes(src.dataset.state)?src.dataset.state:"unknown";el.dataset.state=state;el.classList.toggle("pass",state==="pass");el.classList.toggle("blocked",state==="blocked");el.classList.toggle("unknown",state==="unknown")});
+ const feed=()=>{
+  const box=$q("q-decision-feed");if(!box)return;
+  const pairs=[["إشارة السوق", "signal"],["حالة الماسح","scannerStatus"],["حالة التقرير","agentReportState"],["جودة البيانات","agentDataQuality"],["آخر تحديث","agentReportTime"]];
+  box.replaceChildren();
+  pairs.forEach(([label,id])=>{const src=document.getElementById(id);if(!src)return;const row=document.createElement("div");row.className="q-event";const b=document.createElement("b");b.textContent=label;const s=document.createElement("span");s.textContent=(src.textContent||"—").trim()||"—";row.append(b,s);box.append(row)});
+  const st=$q("q-report-state"),reportState=document.getElementById("agentReportState");if(st)st.textContent=reportState?(reportState.textContent||"REPORT LOADED").trim().toUpperCase():"REPORT STATUS";
+ };
+ const canvas=$q("q-network"),ctx=canvas&&canvas.getContext("2d");let w=0,h=0,nodes=[],raf=0;
+ const resize=()=>{if(!canvas||!ctx)return;const r=canvas.getBoundingClientRect(),d=Math.min(devicePixelRatio||1,2);w=Math.max(1,r.width);h=Math.max(220,r.height);canvas.width=Math.round(w*d);canvas.height=Math.round(h*d);ctx.setTransform(d,0,0,d,0,0);nodes=Array.from({length:54},(_,i)=>({x:w*(.08+Math.random()*.84),y:h*(.08+Math.random()*.84),vx:(Math.random()-.5)*.13,vy:(Math.random()-.5)*.13,p:Math.random()*Math.PI*2,r:i%9===0?3:1.3}));};
+ const draw=()=>{
+  if(!ctx)return;ctx.clearRect(0,0,w,h);const cx=w/2,cy=h/2,rad=Math.min(w,h)*.37,t=Date.now()/1000;
+  for(let ring=1;ring<=3;ring++){ctx.beginPath();ctx.arc(cx,cy,rad*ring/3,0,Math.PI*2);ctx.strokeStyle="rgba(91,166,220,.14)";ctx.lineWidth=1;ctx.stroke()}
+  ctx.beginPath();ctx.moveTo(cx,cy-rad*1.1);ctx.lineTo(cx,cy+rad*1.1);ctx.moveTo(cx-rad*1.1,cy);ctx.lineTo(cx+rad*1.1,cy);ctx.strokeStyle="rgba(91,166,220,.1)";ctx.stroke();
+  nodes.forEach((a,i)=>{a.x+=a.vx;a.y+=a.vy;if(a.x<8||a.x>w-8)a.vx*=-1;if(a.y<8||a.y>h-8)a.vy*=-1;
+   for(let j=i+1;j<nodes.length;j++){const b=nodes[j],dx=a.x-b.x,dy=a.y-b.y,d=Math.hypot(dx,dy);if(d<Math.min(105,w*.2)){ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.strokeStyle="rgba(73,190,226,"+(1-d/Math.min(105,w*.2))*.2+")";ctx.lineWidth=.65;ctx.stroke()}}
+   const pulse=.55+.45*Math.sin(t*1.4+a.p);ctx.beginPath();ctx.arc(a.x,a.y,a.r+(i%9===0?pulse*2:0),0,Math.PI*2);ctx.fillStyle=i%9===0?"rgba(165,139,255,"+(.55+pulse*.4)+")":"rgba(81,229,242,"+(.38+pulse*.35)+")";ctx.shadowBlur=i%9===0?12:5;ctx.shadowColor=i%9===0?"#a58bff":"#51e5f2";ctx.fill();ctx.shadowBlur=0;
+  });
+  const sweep=t%8/8*Math.PI*2;ctx.beginPath();ctx.moveTo(cx,cy);ctx.arc(cx,cy,rad,sweep-.18,sweep);ctx.closePath();ctx.fillStyle="rgba(81,229,242,.055)";ctx.fill();
+  ctx.beginPath();ctx.arc(cx,cy,rad*.16,0,Math.PI*2);ctx.fillStyle="rgba(14,37,63,.9)";ctx.fill();ctx.strokeStyle="rgba(81,229,242,.7)";ctx.lineWidth=1.4;ctx.stroke();ctx.fillStyle="#c7f7ff";ctx.font="bold 12px ui-monospace,monospace";ctx.textAlign="center";ctx.fillText("WHJ",cx,cy+4);
+  raf=requestAnimationFrame(draw);
+ };
+ const tick=()=>{mirror();feed();const clock=$q("q-clock");if(clock)clock.textContent=new Date().toLocaleTimeString("en-GB");};
+ window.addEventListener("resize",resize,{passive:true});resize();if(ctx)draw();tick();setInterval(tick,1200);
+ document.addEventListener("visibilitychange",()=>{if(document.hidden){cancelAnimationFrame(raf)}else if(ctx)draw()});
 })();
 
 </script>
