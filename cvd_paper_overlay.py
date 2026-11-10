@@ -71,7 +71,10 @@ def validate_cvd_confirmation(
         return _unavailable("cvd_evidence_stale")
     if not -100 <= delta <= 100 or open_price <= 0 or close_price <= 0:
         return _unavailable("cvd_evidence_out_of_range")
-    candle_end = candle_timestamp + int(evidence.get("interval_seconds", 3600))
+    interval = evidence.get("interval_seconds", 3600)
+    if isinstance(interval, bool) or not isinstance(interval, int) or interval <= 0:
+        return _unavailable("cvd_invalid_candle_interval")
+    candle_end = candle_timestamp + interval
     if candle_end > now:
         return _unavailable("cvd_candle_not_yet_closed")
 
