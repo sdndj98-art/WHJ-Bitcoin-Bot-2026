@@ -1376,6 +1376,7 @@ def summarize_qualification(result, watchlist_limit=5):
         "daily_regime_filter": result.get("extended_lab_strategy_qualification", {}).get("daily_regime_filter", {}),
         "multi_timeframe_ensemble": result.get("extended_lab_strategy_qualification", {}).get("multi_timeframe_ensemble", {}),
         "six_hour_atr_trailing": result.get("extended_lab_strategy_qualification", {}).get("six_hour_atr_trailing", {}),
+        "volume_liquidity_momentum": result.get("extended_lab_strategy_qualification", {}).get("volume_liquidity_momentum", {}),
     }
     counts = {}
     candidates = []
