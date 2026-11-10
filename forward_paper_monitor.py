@@ -362,6 +362,8 @@ def build_qualified_ensemble(sleeves_summary, sleeves):
 
 
 def process_forward_accounts(candles, state_dir=".", now_timestamp=None, cvd_confirmation=None, require_cvd_confirmation=False, cvd_journal_path=None, cvd_checkpoint_path=None):
+    if not isinstance(require_cvd_confirmation, bool):
+        raise ValueError("require_cvd_confirmation must be boolean")
     quality = validate_hourly_feed(candles, now_timestamp)
     scanner_review = _build_scanner_review(candles, quality)
     if require_cvd_confirmation and cvd_confirmation is None:
