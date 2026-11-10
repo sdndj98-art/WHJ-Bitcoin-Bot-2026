@@ -1,9 +1,24 @@
 import unittest
+from unittest.mock import patch
+import subprocess
 
-from whj_bridge_agent import validate_origin_url
+from whj_bridge_agent import git, validate_origin_url
 
 
 class BridgeOriginValidationTests(unittest.TestCase):
+    @patch("whj_bridge_agent.subprocess.run")
+    def test_git_preserves_leading_porcelain_status_columns(self, run):
+        run.return_value = subprocess.CompletedProcess(
+            args=["git", "status", "--porcelain"],
+            returncode=0,
+            stdout=" M forward_paper_monitor.py\\n?? docs/CVD_FLAG_GUARD.md\\n",
+            stderr="",
+        )
+        self.assertEqual(
+            git(["status", "--porcelain"]),
+            " M forward_paper_monitor.py\\n?? docs/CVD_FLAG_GUARD.md",
+        )
+
     def test_accepts_only_exact_https_repository_urls(self):
         for remote in (
             "https://github.com/sdndj98-art/WHJ-Bitcoin-Bot-2026",
