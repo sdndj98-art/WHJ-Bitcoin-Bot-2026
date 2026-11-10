@@ -125,7 +125,7 @@ class TradeEventJournalTests(unittest.TestCase):
                     row = event(10)
                     row[field] = value
                     with open(path, "w", encoding="utf-8") as handle:
-                        handle.write(json.dumps(row) + "\\n")
+                        handle.write(json.dumps(row) + "\n")
                     with self.assertRaises(TradeJournalError):
                         JsonlTradeJournal(path)
 
