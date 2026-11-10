@@ -73,6 +73,10 @@ jobs:
             paper_forward_1h_rsi14_mean_reversion.json
             paper_forward_4h_ema50_200.json
             paper_forward_6h_ema50_200.json
+            research_runs/20261111_atr_forward_validation/paper_state/paper_qualified_1d_sma_trend.json
+            research_runs/20261111_atr_forward_validation/paper_state/paper_qualified_6h_ema50_200_regime.json
+            research_runs/20261111_atr_forward_validation/paper_state/paper_qualified_6h_ema_pullback_trend.json
+            research_runs/20261111_atr_forward_validation/paper_state/paper_qualified_4h_ema20_50_daily_sma200_atr3.json
           key: whj-forward-paper-v1-${{ github.run_id }}-${{ github.run_attempt }}
       - name: Publish concise paper status to workflow summary
         if: success()
@@ -160,7 +164,7 @@ jobs:
               "> Independent $250 ledgers. Historical bars warm indicators only; synthetic bars cannot execute. Paper only, no live orders.",
           ]
           with open(__import__("os").environ["GITHUB_STEP_SUMMARY"], "a", encoding="utf-8") as handle:
-              handle.write("\\n".join(lines) + "\\n")
+              handle.write("\n".join(lines) + "\n")
           PY
       - name: Upload forward paper snapshot
         uses: actions/upload-artifact@v4
