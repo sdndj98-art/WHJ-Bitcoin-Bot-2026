@@ -76,6 +76,61 @@ class AtrTrailingForwardPaperTests(unittest.TestCase):
             self.assertEqual(two["completed_trades"], 0)
             self.assertEqual(two["processed_new_candles"], 2)
 
+    def test_atr_trailing_exit_is_queued_then_filled_on_next_bar(self):
+        four_hour, daily = self.market()
+        with tempfile.TemporaryDirectory() as folder:
+            path = f"{folder}/atr.json"
+            seed_atr_trailing_account(four_hour, daily, path)
+            index = len(four_hour)
+            base = 100.0 + index * 0.1
+            entry_signal_bar = {
+                "timestamp": index * 4 * 3600,
+                "open": base - 0.05, "high": base + 0.5,
+                "low": base - 0.5, "close": base,
+            }
+            first = update_atr_trailing_account(
+                four_hour + [entry_signal_bar], daily, path
+            )
+            self.assertEqual(first["pending_action"], "buy")
+            entry_fill_bar = dict(entry_signal_bar)
+            entry_fill_bar["timestamp"] += 4 * 3600
+            for field in ("open", "high", "low", "close"):
+                entry_fill_bar[field] += 0.1
+            second = update_atr_trailing_account(
+                four_hour + [entry_signal_bar, entry_fill_bar], daily, path
+            )
+            self.assertTrue(second["open_position"])
+            peak_bar = dict(entry_fill_bar)
+            peak_bar["timestamp"] += 4 * 3600
+            peak_bar["open"] += 5.0
+            peak_bar["high"] += 5.5
+            peak_bar["low"] += 4.5
+            peak_bar["close"] += 5.0
+            third = update_atr_trailing_account(
+                four_hour + [entry_signal_bar, entry_fill_bar, peak_bar], daily, path
+            )
+            self.assertTrue(third["open_position"])
+            stop_bar = dict(peak_bar)
+            stop_bar["timestamp"] += 4 * 3600
+            stop_bar["open"] -= 12.0
+            stop_bar["high"] -= 11.5
+            stop_bar["low"] -= 12.5
+            stop_bar["close"] -= 12.0
+            fourth = update_atr_trailing_account(
+                four_hour + [entry_signal_bar, entry_fill_bar, peak_bar, stop_bar],
+                daily, path,
+            )
+            self.assertEqual(fourth["pending_action"], "sell")
+            self.assertTrue(fourth["open_position"])
+            fill_bar = dict(stop_bar)
+            fill_bar["timestamp"] += 4 * 3600
+            fifth = update_atr_trailing_account(
+                four_hour + [entry_signal_bar, entry_fill_bar, peak_bar, stop_bar, fill_bar],
+                daily, path,
+            )
+            self.assertFalse(fifth["open_position"])
+            self.assertEqual(fifth["completed_trades"], 1)
+
     def test_rejects_gap_between_saved_checkpoint_and_new_bar(self):
         four_hour, daily = self.market()
         with tempfile.TemporaryDirectory() as folder:
