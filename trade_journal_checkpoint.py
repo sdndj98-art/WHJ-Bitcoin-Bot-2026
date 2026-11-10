@@ -66,7 +66,7 @@ def inspect_trade_journal(path):
         if event.get("side") not in ("buy", "sell"):
             raise ValueError(f"invalid journal side at line {line_number}")
         source = event.get("source")
-        if source is not None and source not in ("websocket_v2", "rest_trades"):
+        if source is not None and source not in ("websocket_v2", "rest_trades", "unknown_legacy"):
             raise ValueError(f"invalid journal source at line {line_number}")
         last_id = trade_id
         count += 1
