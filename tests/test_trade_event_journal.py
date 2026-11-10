@@ -155,5 +155,28 @@ class TradeEventJournalTests(unittest.TestCase):
             self.assertEqual(restored.last_trade_id, 12)
             self.assertEqual(restored.last_timestamp_ns, 1794281367610212800)
 
+    def test_persists_feed_source_for_websocket_and_rest_trades(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = os.path.join(directory, "trades.jsonl")
+            journal = JsonlTradeJournal(path)
+            ws = event(10)
+            ws["source"] = "websocket_v2"
+            rest = event(11)
+            rest["source"] = "rest_trades"
+            journal.append([ws, rest])
+            with open(path, encoding="utf-8") as handle:
+                rows = [json.loads(line) for line in handle]
+            self.assertEqual([row["source"] for row in rows], ["websocket_v2", "rest_trades"])
+            restored = JsonlTradeJournal(path)
+            self.assertEqual(restored.last_trade_id, 11)
+
+    def test_legacy_event_without_source_remains_readable(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = os.path.join(directory, "trades.jsonl")
+            journal = JsonlTradeJournal(path)
+            journal.append([event(10)])
+            restored = JsonlTradeJournal(path)
+            self.assertEqual(restored.last_trade_id, 10)
+
 if __name__ == "__main__":
     unittest.main()
