@@ -33,7 +33,7 @@ def _fraction(value, name, maximum):
     return result
 
 
-def evaluate_paper_decision(scanner_result, guard_account, sizing=None):
+def evaluate_paper_decision(scanner_result, guard_account, sizing=None, cvd_confirmation=None, require_cvd_confirmation=False):
     """Return a paper-only decision; fail closed on any missing/invalid evidence.
 
     The scanner must supply its complete eight-check candidate and a hypothetical
@@ -42,6 +42,8 @@ def evaluate_paper_decision(scanner_result, guard_account, sizing=None):
     both an allocation ceiling and a maximum equity-risk budget.
     """
     sizing = {} if sizing is None else sizing
+    if not isinstance(require_cvd_confirmation, bool):
+        return {"status": "BLOCKED", "reasons": ["invalid_cvd_requirement_flag"], "paper_only": True, "execution_enabled": False, "order_placed": False}
     if not isinstance(sizing, dict):
         return {"status": "BLOCKED", "reasons": ["invalid_sizing_configuration"],
                 "paper_only": True, "execution_enabled": False, "order_placed": False}
@@ -55,6 +57,15 @@ def evaluate_paper_decision(scanner_result, guard_account, sizing=None):
         return {"status": "BLOCKED", "reasons": reasons, "paper_only": True,
                 "execution_enabled": False, "order_placed": False}
 
+    if require_cvd_confirmation:
+        if not isinstance(cvd_confirmation, dict):
+            reasons.append("required_cvd_confirmation_missing")
+        elif (cvd_confirmation.get("status") != "OK"
+              or cvd_confirmation.get("available") is not True
+              or cvd_confirmation.get("direction") != "BULLISH"
+              or cvd_confirmation.get("research_only") is not True
+              or cvd_confirmation.get("execution_enabled") is not False):
+            reasons.append("required_cvd_confirmation_not_bullish_and_verified")
     if scanner_result.get("status") != "PAPER_CANDIDATE":
         reasons.append("scanner_candidate_not_approved")
     if scanner_result.get("paper_candidate_only") is not True:
@@ -166,6 +177,8 @@ def evaluate_paper_decision(scanner_result, guard_account, sizing=None):
         "research_only": True,
         "execution_enabled": False,
         "order_placed": False,
+        "cvd_confirmation": cvd_confirmation if require_cvd_confirmation else None,
+        "cvd_requirement_enabled": require_cvd_confirmation,
         "limitations": [
             "This is a decision and sizing preview only; it does not call the paper account.",
             "The existing paper-account engine remains responsible for its own entry, exit, fees and risk pauses.",
