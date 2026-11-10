@@ -329,7 +329,7 @@ class HistoricalResearchTests(unittest.TestCase):
         ]
         result = _simulate_equal_weight_multitimeframe(
             [bars], [[True, True, False, False, False]], [1],
-            0, 5 * INTERVAL_MS, 0.0, 0.0,
+            0, 6 * INTERVAL_MS, 0.0, 0.0,
         )
         self.assertEqual(result["closed_trades"], 1)
         self.assertEqual(result["final_equity_usd"], 1041.67)
