@@ -13,6 +13,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from paper_account import seed_forward_paper_account, update_paper_account
+from atr_trailing_paper import seed_atr_trailing_account, update_atr_trailing_account
 from strategy_lab import run_strategy_lab
 
 BASE_URL = "https://api.exchange.coinbase.com/products/BTC-USD/candles"
@@ -2187,13 +2188,41 @@ def run_forward_paper_accounts(candles, state_dir="."):
         ),
         "candidates": qualified_accounts,
         "seed": qualified_seed,
+        "atr3_trailing_candidate": atr_forward,
+        "atr3_trailing_seed": atr_seed,
         "note": (
-            "Three currently qualified candidates are tracked in independent $250 "
-            "forward-only ledgers. Historical candles warm indicators only. The fourth "
-            "qualified ATR-trailing candidate is intentionally excluded until the "
-            "paper engine consumes validated OHLC bars and can reproduce its ATR stop."
+            "Three close-based candidates use independent $250 ledgers. The fourth "
+            "candidate has a separate OHLC-native $250 ledger with Wilder ATR14 and a "
+            "3x ATR trailing stop. All ledgers are forward-only; history warms indicators."
         ),
     }
+    # Dedicated OHLC-native ledger for the fourth qualified ATR-trailing candidate.
+    # Convert Coinbase milliseconds to whole Unix seconds for the standalone adapter.
+    def _atr_rows(rows):
+        return [
+            {
+                "timestamp": int(row["timestamp"] // 1000),
+                "open": float(row["open"]),
+                "high": float(row["high"]),
+                "low": float(row["low"]),
+                "close": float(row["close"]),
+            }
+            for row in rows
+        ]
+
+    atr_four_hour_rows = _atr_rows(four_hour)
+    atr_daily_rows = _atr_rows(daily)
+    atr_state_path = str(directory / "paper_qualified_4h_ema20_50_daily_sma200_atr3.json")
+    atr_seed = seed_atr_trailing_account(
+        atr_four_hour_rows, atr_daily_rows, atr_state_path, initial_cash=250.0
+    )
+    atr_forward = update_atr_trailing_account(
+        atr_four_hour_rows, atr_daily_rows, atr_state_path, initial_cash=250.0,
+        allocation_fraction=0.10, fee_rate=FEE_RATE, slippage_rate=SLIPPAGE_RATE,
+        max_drawdown_fraction=0.10, daily_loss_fraction=0.03,
+        max_consecutive_losses=5,
+    )
+
     forward_four_hour = update_paper_account(
         account_rows(four_hour),
         state_path=str(directory / "paper_forward_4h_ema50_200.json"),
