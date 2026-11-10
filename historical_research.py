@@ -1212,20 +1212,23 @@ def _simulate_long_short(bars, signals, start, end, fee, slippage,
         if peak > 0:
             max_drawdown = max(max_drawdown, (peak - equity) / peak * 100)
 
+    terminal_position_closed = False
     if units:
         last_executable = _last_executable_index(bars, max(start, 1), end)
-        terminal_price = (
-            float(bars[last_executable]["close"])
-            if last_executable is not None
-            else float(bars[end - 1]["close"])
-        )
-        direction = 1 if units > 0 else -1
-        exit_fill = terminal_price * (1 - direction * slippage)
-        exit_fee = abs(units * exit_fill) * fee
-        final_equity = cash + units * exit_fill - exit_fee
-        final_pnl = (exit_fill - entry_price) * units - entry_fee - exit_fee - funding_paid
-        trades.append(final_pnl)
-        fees_paid += exit_fee
+        if last_executable is not None:
+            terminal_price = float(bars[last_executable]["close"])
+            direction = 1 if units > 0 else -1
+            exit_fill = terminal_price * (1 - direction * slippage)
+            exit_fee = abs(units * exit_fill) * fee
+            final_equity = cash + units * exit_fill - exit_fee
+            final_pnl = (exit_fill - entry_price) * units - entry_fee - exit_fee - funding_paid
+            trades.append(final_pnl)
+            fees_paid += exit_fee
+            terminal_position_closed = True
+        else:
+            # No executable terminal bar: retain the position and report only
+            # a mark-to-market estimate, without inventing a liquidation fill.
+            final_equity = cash + units * float(bars[end - 1]["close"])
     else:
         final_equity = cash
 
@@ -1241,7 +1244,7 @@ def _simulate_long_short(bars, signals, start, end, fee, slippage,
         "profit_factor": round(gross_profit / gross_loss, 2) if gross_loss else (None if gross_profit else 0.0),
         "fees_paid_usd": round(fees_paid, 4),
         "funding_paid_usd": round(funding_paid, 4),
-        "open_position": units != 0,
+        "open_position": units != 0 and not terminal_position_closed,
     }
 
 
