@@ -106,3 +106,115 @@ def _unavailable(reason):
         "research_only": True,
         "execution_enabled": False,
     }
+
+def build_latest_cvd_confirmation(
+    candles,
+    journal_path,
+    checkpoint_path,
+    *,
+    now_timestamp,
+    interval_seconds=3600,
+    min_trades=10,
+    max_last_trade_lag_seconds=120.0,
+    min_abs_delta_pct=10.0,
+):
+    """Build a closed-candle confirmation from an integrity-bound JSONL journal.
+
+    Candle input uses forward_paper_monitor's dict schema and millisecond
+    timestamps. Only the latest supplied candle is evaluated. Any checkpoint,
+    journal, alignment, or freshness problem returns UNAVAILABLE.
+    """
+    import hashlib
+    import json
+    from pathlib import Path
+
+    from cvd_candle_research import align_trade_flow_to_candles
+    from trade_journal_checkpoint import (
+        load_continuity_checkpoint,
+        validate_continuity_checkpoint,
+    )
+
+    try:
+        if not isinstance(candles, list) or not candles:
+            return _unavailable("cvd_market_candles_missing")
+        if isinstance(interval_seconds, bool) or not isinstance(interval_seconds, int) or interval_seconds <= 0:
+            return _unavailable("cvd_invalid_candle_interval")
+        candle = candles[-1]
+        if not isinstance(candle, dict):
+            return _unavailable("cvd_market_candle_invalid")
+        timestamp_ms = candle.get("timestamp")
+        if isinstance(timestamp_ms, bool) or not isinstance(timestamp_ms, (int, float)):
+            return _unavailable("cvd_market_candle_timestamp_invalid")
+        if not math.isfinite(timestamp_ms) or not float(timestamp_ms).is_integer():
+            return _unavailable("cvd_market_candle_timestamp_invalid")
+        timestamp = int(timestamp_ms // 1000)
+        now = float(now_timestamp)
+        if timestamp + interval_seconds > now:
+            return _unavailable("cvd_candle_not_yet_closed")
+
+        checkpoint = load_continuity_checkpoint(checkpoint_path)
+        metadata = validate_continuity_checkpoint(
+            checkpoint, journal_path, "BTC/USD",
+            expected_last_trade_id=checkpoint.get("last_trade_id"),
+        )
+        raw = Path(journal_path).read_bytes()
+        if hashlib.sha256(raw).hexdigest() != checkpoint.get("journal_sha256"):
+            return _unavailable("cvd_journal_changed_during_snapshot")
+        if len(raw) != metadata["journal_size_bytes"]:
+            return _unavailable("cvd_journal_size_mismatch")
+
+        trades = []
+        for line in raw.splitlines():
+            event = json.loads(line.decode("utf-8"))
+            if event["trade_id"] > metadata["last_trade_id"]:
+                break
+            event_ts = event.get("timestamp")
+            if isinstance(event_ts, (int, float)) and timestamp <= float(event_ts) < timestamp + interval_seconds:
+                trades.append({
+                    "trade_id": event["trade_id"],
+                    "timestamp": event_ts,
+                    "qty": event["qty"],
+                    "side": event["side"],
+                })
+            elif isinstance(event_ts, str):
+                from cvd_candle_research import _timestamp
+                event_seconds = _timestamp(event_ts)
+                if timestamp <= event_seconds < timestamp + interval_seconds:
+                    trades.append({
+                        "trade_id": event["trade_id"],
+                        "timestamp": event_ts,
+                        "qty": event["qty"],
+                        "side": event["side"],
+                    })
+
+        row = [
+            timestamp, candle["open"], candle["high"], candle["low"],
+            candle["close"], candle.get("close", candle["open"]),
+            candle.get("volume", 0.0), 0,
+        ]
+        aligned = align_trade_flow_to_candles(
+            [row], trades, interval_seconds=interval_seconds,
+            continuity_verified=True, min_trades=min_trades,
+            max_last_trade_lag_seconds=max_last_trade_lag_seconds,
+            min_abs_delta_pct=min_abs_delta_pct,
+        )["bars"][0]
+        evidence = dict(
+            aligned,
+            is_closed=True,
+            open=float(candle["open"]),
+            close=float(candle["close"]),
+            interval_seconds=interval_seconds,
+            status="OK" if aligned["available"] else aligned["status"],
+            available=aligned["available"],
+            continuity_verified=True,
+            research_only=True,
+            execution_enabled=False,
+        )
+        return validate_cvd_confirmation(
+            timestamp, evidence, now_timestamp=now,
+            min_trades=min_trades,
+            max_last_trade_lag_seconds=max_last_trade_lag_seconds,
+            min_abs_delta_pct=min_abs_delta_pct,
+        )
+    except (OSError, ValueError, TypeError, KeyError, json.JSONDecodeError) as exc:
+        return _unavailable("cvd_source_validation_failed:" + type(exc).__name__)
