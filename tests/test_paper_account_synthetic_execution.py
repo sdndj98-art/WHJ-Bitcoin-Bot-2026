@@ -31,20 +31,24 @@ class PaperAccountSyntheticExecutionTests(unittest.TestCase):
             self.assertGreater(opened["btc_units"], 0.0)
             self.assertTrue(opened["open_position"])
 
-            synthetic_risk_exit = [202 * 3600, 0, 0, 0, "250", False]
+            synthetic_risk_exit = [10 * 86400, 0, 0, 0, "250", False]
             held = update_paper_account(
                 [synthetic_risk_exit], state_path=state_path, strategy="sma_trend",
             )
             self.assertTrue(held["open_position"])
             self.assertTrue(held["daily_loss_paused"])
             self.assertEqual(held["completed_trades"], 0)
+            self.assertTrue(held["pending_exit_on_next_executable"])
 
-            real_risk_exit = [203 * 3600, 0, 0, 0, "250", True]
+            # The next real candle is on a new UTC day. The pending risk exit
+            # must survive the daily-loss pause reset and execute only here.
+            real_risk_exit = [11 * 86400, 0, 0, 0, "250", True]
             closed = update_paper_account(
                 [real_risk_exit], state_path=state_path, strategy="sma_trend",
             )
             self.assertFalse(closed["open_position"])
             self.assertEqual(closed["completed_trades"], 1)
+            self.assertFalse(closed["pending_exit_on_next_executable"])
 
     def test_legacy_non_boolean_extra_fields_remain_compatible(self):
         with tempfile.TemporaryDirectory() as folder:
