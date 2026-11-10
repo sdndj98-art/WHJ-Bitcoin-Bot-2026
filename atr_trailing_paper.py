@@ -194,8 +194,8 @@ def update_atr_trailing_account(four_hour_bars, daily_bars, state_path,
     new_bars = [bar for bar in four_hour if bar["timestamp"] > state["last_timestamp"]]
     if not new_bars:
         return _summary(state)
-    if new_bars[0]["timestamp"] <= state["last_timestamp"]:
-        raise ValueError("New candles must follow the saved timestamp")
+    if new_bars[0]["timestamp"] - state["last_timestamp"] != 4 * 3600:
+        raise ValueError("New 4h candles must continue exactly from the saved timestamp")
     for previous, current in zip(new_bars, new_bars[1:]):
         if current["timestamp"] - previous["timestamp"] != 4 * 3600:
             raise ValueError("New 4h candles must be contiguous")
