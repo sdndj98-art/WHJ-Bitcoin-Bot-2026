@@ -67,7 +67,7 @@ class ExpandingERWalkForwardTests(unittest.TestCase):
         self.assertTrue(report["no_same_fold_test_feedback"])
         self.assertEqual(len(report["folds"]), 3)
         for fold in report["folds"]:
-            self.assertLess(fold["training_end_exclusive_utc"], fold["test_start_utc"])
+            self.assertEqual(fold["training_end_exclusive_utc"], fold["test_start_utc"])
             self.assertIn(fold["selected_threshold"], [None, *THRESHOLDS])
             self.assertIn("selected_strategy", fold["test"])
             self.assertIn("baseline_ema50_200", fold["test"])
