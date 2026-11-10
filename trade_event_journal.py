@@ -1,5 +1,6 @@
 """Append-only, bounded JSONL journal for normalized Kraken trade events."""
 import json
+import math
 import os
 
 from kraken_order_flow import _trade_event_timestamp_ns
@@ -57,6 +58,25 @@ class JsonlTradeJournal:
                     raise TradeJournalError("journal contains mixed symbols")
                 self.symbol = symbol
                 timestamp_ns = _trade_event_timestamp_ns(event.get("timestamp"))
+                price = event.get("price")
+                qty = event.get("qty")
+                side = event.get("side")
+                if isinstance(price, bool) or isinstance(qty, bool):
+                    raise TradeJournalError("journal contains a boolean price or quantity")
+                try:
+                    price = float(price)
+                    qty = float(qty)
+                except (TypeError, ValueError, OverflowError) as exc:
+                    raise TradeJournalError("journal contains an invalid price or quantity") from exc
+                if not math.isfinite(price) or price <= 0:
+                    raise TradeJournalError("journal contains an invalid price")
+                if not math.isfinite(qty) or qty <= 0:
+                    raise TradeJournalError("journal contains an invalid quantity")
+                if side not in ("buy", "sell"):
+                    raise TradeJournalError("journal contains an invalid side")
+                source = event.get("source")
+                if source is not None and source not in ("websocket_v2", "rest_trades", "unknown_legacy"):
+                    raise TradeJournalError("journal contains an invalid source")
                 if self.last_trade_id is not None and trade_id != self.last_trade_id + 1:
                     raise TradeJournalError("journal trade IDs are not strictly contiguous")
                 if self.last_timestamp_ns is not None and timestamp_ns < self.last_timestamp_ns:
@@ -78,9 +98,19 @@ class JsonlTradeJournal:
                 raise ValueError("trade_id must be a positive integer")
             trade_id = int(trade_id)
             timestamp_ns = _trade_event_timestamp_ns(event.get("timestamp"))
-            price = float(event.get("price"))
-            qty = float(event.get("qty"))
+            if isinstance(event.get("price"), bool) or isinstance(event.get("qty"), bool):
+                raise ValueError("price and qty must be finite positive numbers")
+            try:
+                price = float(event.get("price"))
+                qty = float(event.get("qty"))
+            except (TypeError, ValueError, OverflowError) as exc:
+                raise ValueError("price and qty must be finite positive numbers") from exc
+            if not math.isfinite(price) or not math.isfinite(qty):
+                raise ValueError("price and qty must be finite positive numbers")
             side = event.get("side")
+            source = event.get("source", "unknown_legacy")
+            if source not in ("websocket_v2", "rest_trades", "unknown_legacy"):
+                raise ValueError("source must identify websocket_v2 or rest_trades")
             symbol = event.get("symbol")
             if not isinstance(symbol, str) or not symbol.strip():
                 raise ValueError("symbol must be a non-empty string")
@@ -92,6 +122,7 @@ class JsonlTradeJournal:
             item = {
                 "trade_id": trade_id, "timestamp": event.get("timestamp"),
                 "price": price, "qty": qty, "side": side, "symbol": symbol,
+                "source": source,
             }
             if trade_id in normalized and normalized[trade_id] != item:
                 raise ValueError("conflicting events share a trade ID")

@@ -56,6 +56,7 @@ def load_normalized_trade_journal(path):
     previous_id = None
     previous_timestamp = -1.0
     symbol = None
+    source_counts = {"websocket_v2": 0, "rest_trades": 0, "unknown_legacy": 0}
 
     with open(path, "r", encoding="utf-8") as handle:
         for line_number, line in enumerate(handle, 1):
@@ -97,6 +98,10 @@ def load_normalized_trade_journal(path):
             side = event.get("side")
             if side not in ("buy", "sell"):
                 raise ValueError(f"invalid side at line {line_number}")
+            source = event.get("source", "unknown_legacy")
+            if source not in ("websocket_v2", "rest_trades", "unknown_legacy"):
+                raise ValueError(f"invalid source at line {line_number}")
+            source_counts[source] += 1
 
             if symbol is None:
                 symbol = current_symbol
@@ -109,6 +114,7 @@ def load_normalized_trade_journal(path):
                 "price": values["price"],
                 "qty": values["qty"],
                 "side": side,
+                "source": source,
             })
             previous_id = trade_id
             previous_timestamp = timestamp
@@ -122,6 +128,7 @@ def load_normalized_trade_journal(path):
         "first_trade_id": trades[0]["trade_id"],
         "last_trade_id": trades[-1]["trade_id"],
         "trade_count": len(trades),
+        "source_counts": source_counts,
         "continuity_from_first_recorded_trade": True,
         "feed_continuity_verified": False,
     }
