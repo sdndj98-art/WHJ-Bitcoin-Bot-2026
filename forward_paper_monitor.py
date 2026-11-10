@@ -375,15 +375,23 @@ def process_forward_accounts(candles, state_dir=".", now_timestamp=None):
 
     # Prepare and validate every timeframe before creating or updating any ledger.
     # Each sleeve needs 200 completed native-timeframe bars for indicator warm-up.
-    bars_by_hours = {
-        1: candles,
-        4: aggregate_candles(candles, 4),
-        6: aggregate_candles(candles, 6),
-    }
+    bars_by_hours = {1: candles}
+    for hours in (4, 6):
+        try:
+            bars_by_hours[hours] = aggregate_candles(candles, hours)
+        except ValueError as exc:
+            expected = f"Not enough complete {hours}-hour bars for strategy comparison"
+            if str(exc) != expected:
+                raise
+            bars_by_hours[hours] = None
+
     insufficient = [
-        f"{hours}h: {len(bars)}/200"
+        (
+            f"{hours}h: fewer than 200 complete bars"
+            if bars is None else f"{hours}h: {len(bars)}/200"
+        )
         for hours, bars in bars_by_hours.items()
-        if len(bars) < 200
+        if bars is None or len(bars) < 200
     ]
     if insufficient:
         raise ValueError(
