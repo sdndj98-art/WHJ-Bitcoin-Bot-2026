@@ -4,7 +4,7 @@ import unittest
 from datetime import datetime, timezone
 from unittest.mock import patch
 
-from historical_research import (INTERVAL_MS, aggregate_candles, load_two_year_candles, run_forward_paper_accounts, run_ohlc_breakout_lab, run_long_short_lab, run_daily_regime_filter_lab, run_multi_timeframe_ensemble_lab, run_six_hour_atr_trailing_lab, _adx_di_series, _atr_series, _regime_switching_atr_signals, _rsi_series, _simulate_equal_weight_multitimeframe, _simulate_ohlc, assess_strategy_qualification, assess_research_lab_qualification, build_qualification_markdown, summarize_qualification, _turtle_signals)
+from historical_research import (INTERVAL_MS, _research_output_paths, aggregate_candles, load_two_year_candles, run_forward_paper_accounts, run_ohlc_breakout_lab, run_long_short_lab, run_daily_regime_filter_lab, run_multi_timeframe_ensemble_lab, run_six_hour_atr_trailing_lab, _adx_di_series, _atr_series, _regime_switching_atr_signals, _rsi_series, _simulate_equal_weight_multitimeframe, _simulate_ohlc, assess_strategy_qualification, assess_research_lab_qualification, build_qualification_markdown, summarize_qualification, _turtle_signals)
 
 
 class HistoricalResearchTests(unittest.TestCase):
@@ -966,6 +966,13 @@ class HistoricalResearchTests(unittest.TestCase):
             summary["diagnostic_watchlist"][0]["group"],
             "volume_liquidity_momentum",
         )
+
+    def test_research_output_and_paper_state_paths_are_isolated(self):
+        output, paper_state = _research_output_paths("tmp/research-run")
+        self.assertEqual(str(output), "tmp/research-run")
+        self.assertEqual(str(paper_state), "tmp/research-run/paper_state")
+        self.assertNotEqual(str(paper_state), ".")
+
 
 if __name__ == "__main__":
     unittest.main()
