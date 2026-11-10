@@ -8,6 +8,7 @@ from pathlib import Path
 
 from historical_research import aggregate_candles, load_two_year_candles
 from paper_account import seed_forward_paper_account, update_paper_account
+from cvd_paper_overlay import build_latest_cvd_confirmation
 
 STATE_FILES = {
     "1h_sma_trend": "paper_forward_1h_sma_trend.json",
@@ -318,8 +319,20 @@ def build_qualified_ensemble(sleeves_summary, sleeves):
     }
 
 
-def process_forward_accounts(candles, state_dir=".", now_timestamp=None):
+def process_forward_accounts(
+    candles, state_dir=".", now_timestamp=None, cvd_confirmation=None,
+    require_cvd_confirmation=False, cvd_journal_path=None,
+    cvd_checkpoint_path=None,
+):
     quality = validate_hourly_feed(candles, now_timestamp)
+    if not isinstance(require_cvd_confirmation, bool):
+        raise ValueError("require_cvd_confirmation must be boolean")
+    if require_cvd_confirmation and cvd_confirmation is None:
+        if cvd_journal_path and cvd_checkpoint_path:
+            cvd_confirmation = build_latest_cvd_confirmation(
+                candles, cvd_journal_path, cvd_checkpoint_path,
+                now_timestamp=now_timestamp,
+            )
     directory = Path(state_dir)
     results = {}
     configurations = (
@@ -375,6 +388,23 @@ def process_forward_accounts(candles, state_dir=".", now_timestamp=None):
             strategy=strategy,
             strategy_health_pause=True,
             strategy_health_drawdown_fraction=0.08,
+            require_entry_confirmation=(require_cvd_confirmation and hours == 1),
+            entry_confirmation_timestamp=(
+                cvd_confirmation.get("candle_timestamp")
+                if isinstance(cvd_confirmation, dict)
+                and isinstance(cvd_confirmation.get("candle_timestamp"), int)
+                and not isinstance(cvd_confirmation.get("candle_timestamp"), bool)
+                else None
+            ),
+            entry_confirmation_available=(
+                isinstance(cvd_confirmation, dict)
+                and cvd_confirmation.get("status") == "OK"
+                and cvd_confirmation.get("available") is True
+                and cvd_confirmation.get("direction") == "BULLISH"
+                and cvd_confirmation.get("continuity_verified") is True
+                and cvd_confirmation.get("research_only") is True
+                and cvd_confirmation.get("execution_enabled") is False
+            ),
         )
         results[sleeve] = {"seed": seed, "account": account}
 
@@ -436,6 +466,8 @@ def process_forward_accounts(candles, state_dir=".", now_timestamp=None):
         "total_processed_new_candles": total_processed_new_candles,
         "market": "BTC/USD",
         "data_quality": quality,
+        "cvd_confirmation": cvd_confirmation,
+        "cvd_requirement_enabled": require_cvd_confirmation,
         "latest_hourly_candle_timestamp": candles[-1]["timestamp"],
         "initial_cash_usd": round(total_initial, 2),
         "equity_after_estimated_exit_costs_usd": round(total_equity, 2),
@@ -495,7 +527,12 @@ def write_report_atomically(report, output_path="forward_paper_report.json"):
 
 def main():
     candles = load_two_year_candles(days=90)
-    report = process_forward_accounts(candles)
+    report = process_forward_accounts(
+        candles,
+        require_cvd_confirmation=True,
+        cvd_journal_path="state/kraken_btc_usd_trades_verified.jsonl",
+        cvd_checkpoint_path="state/kraken_btc_usd_trades_verified.jsonl.checkpoint.json",
+    )
     write_report_atomically(report)
     print(json.dumps(report, indent=2, allow_nan=False))
 
