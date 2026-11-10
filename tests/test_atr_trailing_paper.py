@@ -2,6 +2,8 @@ import tempfile
 import unittest
 
 from atr_trailing_paper import (
+    _daily_regime,
+    _ema,
     seed_atr_trailing_account,
     update_atr_trailing_account,
 )
@@ -69,6 +71,8 @@ class AtrTrailingForwardPaperTests(unittest.TestCase):
                 "close": 100.0 + next_index * 0.1,
             }
             one = update_atr_trailing_account(four_hour + [next_bar], daily, path)
+            self.assertTrue(one["last_daily_regime"], one)
+            self.assertTrue(one["last_setup"], one)
             self.assertEqual(one["last_signal"], "entry_queued")
             self.assertFalse(one["open_position"])
             next_bar2 = dict(next_bar)
