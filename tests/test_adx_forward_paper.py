@@ -350,6 +350,16 @@ class AdxForwardPaperTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, "refusing to reset"):
                 process_native_bars(make_bars(), 20.0, 4, path)
 
+    def test_threshold_25_is_supported_as_an_independent_shadow_candidate(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "adx25_4h.json"
+            result = process_native_bars(make_bars(), 25.0, 4, path)
+            self.assertEqual(result["threshold"], 25.0)
+            self.assertEqual(result["timeframe_hours"], 4)
+            self.assertTrue(result["seeded_without_historical_trades"])
+            self.assertEqual(result["closed_trades"], 0)
+            self.assertTrue(path.exists())
+
     def test_threshold_and_timeframe_are_fixed_to_supported_values(self):
         with tempfile.TemporaryDirectory() as directory:
             with self.assertRaises(ValueError):
