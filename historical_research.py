@@ -2128,7 +2128,15 @@ def run_forward_paper_accounts(candles, state_dir="."):
     }
 
 
-def main():
+def _research_output_paths(output_dir="."):
+    """Keep research artifacts and its optional paper ledgers in one isolated directory."""
+    output_path = Path(output_dir)
+    return output_path, output_path / "paper_state"
+
+
+def main(output_dir="."):
+    output_path, paper_state_dir = _research_output_paths(output_dir)
+    output_path.mkdir(parents=True, exist_ok=True)
     candles = load_two_year_candles()
     prices = [row["close"] for row in candles]
     research = run_strategy_lab(prices, fee=FEE_RATE, slippage=SLIPPAGE_RATE)
@@ -2182,7 +2190,7 @@ def main():
     from strategy_lab import run_volume_liquidity_lab
     volume_liquidity_research = run_volume_liquidity_lab(candles, fee=FEE_RATE, slippage=SLIPPAGE_RATE)
     volume_liquidity_stress = run_volume_liquidity_lab(candles, fee=0.002, slippage=0.001)
-    forward_paper = run_forward_paper_accounts(candles)
+    forward_paper = run_forward_paper_accounts(candles, state_dir=str(paper_state_dir))
     qualification = {}
     for label in ("1h", "4h", "6h", "1d"):
         qualification[label] = {}
@@ -2265,11 +2273,11 @@ def main():
         "volume_liquidity_momentum_stress": volume_liquidity_stress,
         "warning": "Historical results are not forecasts. Strategy selection requires robust out-of-sample performance and forward paper trading. No live orders were placed.",
     }
-    Path("historical_research.json").write_text(
+    (output_path / "historical_research.json").write_text(
         json.dumps(result, indent=2, allow_nan=False) + "\n",
         encoding="utf-8",
     )
-    Path("strategy_qualification_report.md").write_text(
+    (output_path / "strategy_qualification_report.md").write_text(
         build_qualification_markdown(result), encoding="utf-8"
     )
     summary = {
@@ -2327,4 +2335,13 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    import argparse
+    parser = argparse.ArgumentParser(
+        description="Run isolated historical BTC/USD strategy research."
+    )
+    parser.add_argument(
+        "--output-dir", default=".",
+        help="Directory for research reports and separate paper-state ledgers (default: current directory).",
+    )
+    arguments = parser.parse_args()
+    main(output_dir=arguments.output_dir)
