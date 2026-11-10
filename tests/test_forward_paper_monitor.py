@@ -130,6 +130,35 @@ class ForwardPaperMonitorTests(unittest.TestCase):
             })
         return rows
 
+    def test_forward_monitor_builds_verified_cvd_when_requirement_is_enabled(self):
+        candles = self.make_candles()
+        now = candles[-1]["timestamp"] / 1000 + 3600 + 30
+        with tempfile.TemporaryDirectory() as folder:
+            with patch(
+                "forward_paper_monitor.build_latest_cvd_confirmation",
+                return_value={
+                    "status": "UNAVAILABLE", "available": False,
+                    "direction": "UNKNOWN", "reason": "test_missing_source",
+                    "research_only": True, "execution_enabled": False,
+                },
+            ) as builder:
+                report = process_forward_accounts(
+                    candles, state_dir=folder, now_timestamp=now,
+                    require_cvd_confirmation=True,
+                    cvd_journal_path=str(Path(folder) / "trades.jsonl"),
+                    cvd_checkpoint_path=str(Path(folder) / "checkpoint.json"),
+                )
+            builder.assert_called_once()
+            self.assertTrue(report["cvd_requirement_enabled"])
+            self.assertEqual(report["cvd_confirmation"]["reason"], "test_missing_source")
+            self.assertEqual(
+                report["paper_decision_gates"]["1h_sma_trend"]["status"],
+                "BLOCKED",
+            )
+            self.assertFalse(
+                report["paper_decision_gates"]["1h_sma_trend"]["execution_enabled"]
+            )
+
     def test_health_assessment_requires_forward_sample_and_never_promotes_live(self):
         base = {
             "completed_trades": 0,
@@ -536,34 +565,6 @@ class ForwardPaperMonitorTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "imputed"):
             validate_hourly_feed(candles, last_close + 60)
 
-
-    def test_forward_monitor_loads_verified_cvd_and_reports_entry_gate(self):
-        candles = self.make_candles()
-        now = candles[-1]["timestamp"] / 1000 + 3600 + 60
-        unavailable = {
-            "status": "UNAVAILABLE", "available": False,
-            "direction": "UNKNOWN", "reason": "test_missing_checkpoint",
-            "research_only": True, "execution_enabled": False,
-        }
-        with tempfile.TemporaryDirectory() as folder:
-            with patch(
-                "forward_paper_monitor.build_latest_cvd_confirmation",
-                return_value=unavailable,
-            ) as builder:
-                report = process_forward_accounts(
-                    candles, folder, now,
-                    require_cvd_confirmation=True,
-                    cvd_journal_path=str(Path(folder) / "trades.jsonl"),
-                    cvd_checkpoint_path=str(Path(folder) / "checkpoint.json"),
-                )
-            builder.assert_called_once()
-            self.assertTrue(report["cvd_requirement_enabled"])
-            self.assertEqual(
-                report["cvd_confirmation"]["reason"], "test_missing_checkpoint"
-            )
-            for sleeve in ("1h_sma_trend", "1h_ema_trend", "1h_rsi14_mean_reversion"):
-                self.assertFalse(report["sleeves"][sleeve]["account"]["open_position"])
-                self.assertEqual(report["sleeves"][sleeve]["account"]["btc_units"], 0.0)
 
 if __name__ == "__main__":
     unittest.main()

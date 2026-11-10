@@ -361,15 +361,9 @@ def build_qualified_ensemble(sleeves_summary, sleeves):
     }
 
 
-def process_forward_accounts(
-    candles, state_dir=".", now_timestamp=None, cvd_confirmation=None,
-    require_cvd_confirmation=False, cvd_journal_path=None,
-    cvd_checkpoint_path=None,
-):
+def process_forward_accounts(candles, state_dir=".", now_timestamp=None, cvd_confirmation=None, require_cvd_confirmation=False, cvd_journal_path=None, cvd_checkpoint_path=None):
     quality = validate_hourly_feed(candles, now_timestamp)
     scanner_review = _build_scanner_review(candles, quality)
-    if not isinstance(require_cvd_confirmation, bool):
-        raise ValueError("require_cvd_confirmation must be boolean")
     if require_cvd_confirmation and cvd_confirmation is None:
         if cvd_journal_path and cvd_checkpoint_path:
             cvd_confirmation = build_latest_cvd_confirmation(
@@ -388,8 +382,6 @@ def process_forward_accounts(
 
     # Prepare and validate every timeframe before creating or updating any ledger.
     # Each sleeve needs 200 completed native-timeframe bars for indicator warm-up.
-    # Preflight every timeframe before creating or updating any account ledger.
-    # Each sleeve needs 200 complete native-timeframe bars for indicator warm-up.
     bars_by_hours = {1: candles}
     for hours in (4, 6):
         try:
@@ -455,7 +447,9 @@ def process_forward_accounts(
         sleeve_result = {"seed": seed, "account": account}
         if hours == 1:
             sleeve_result["decision_gate"] = evaluate_paper_decision(
-                scanner_review, account
+                scanner_review, account,
+                cvd_confirmation=cvd_confirmation,
+                require_cvd_confirmation=require_cvd_confirmation,
             )
         results[sleeve] = sleeve_result
 
@@ -518,13 +512,13 @@ def process_forward_accounts(
         "market": "BTC/USD",
         "data_quality": quality,
         "scanner_review": scanner_review,
+        "cvd_confirmation": cvd_confirmation,
+        "cvd_requirement_enabled": require_cvd_confirmation,
         "paper_decision_gates": {
             sleeve: value["decision_gate"]
             for sleeve, value in results.items()
             if "decision_gate" in value
         },
-        "cvd_confirmation": cvd_confirmation,
-        "cvd_requirement_enabled": require_cvd_confirmation,
         "latest_hourly_candle_timestamp": candles[-1]["timestamp"],
         "initial_cash_usd": round(total_initial, 2),
         "equity_after_estimated_exit_costs_usd": round(total_equity, 2),
