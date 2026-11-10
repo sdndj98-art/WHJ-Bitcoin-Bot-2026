@@ -437,6 +437,39 @@ main{max-width:1720px!important;padding:22px clamp(12px,2vw,30px) 42px!important
  .q-core-top{flex-wrap:wrap}
 }
 </style>
+<style id="whj-icon-square-modules">
+/* Icon-first square module tiles: visual identity per WHJ function */
+.q-module-node{
+ width:112px;height:112px;min-height:112px;padding:8px 6px;
+ display:flex;flex-direction:column;align-items:center;justify-content:center;
+ gap:4px;text-align:center;direction:ltr;border-radius:17px;
+ background:linear-gradient(145deg,rgba(17,39,64,.98),rgba(7,17,33,.98));
+}
+.q-node-icon{
+ position:static;width:39px;height:39px;flex:0 0 39px;margin:0 0 2px;
+ border-radius:12px;font-size:0;display:grid;place-items:center;
+}
+.q-node-icon svg{width:23px;height:23px;fill:none;stroke:currentColor;
+ stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.q-module-node b{font-size:9px;letter-spacing:.07em;line-height:1.15}
+.q-module-node small{font-size:8px;line-height:1.25;text-align:center;direction:rtl}
+.q-module-node em{font-size:8px;max-width:100%;line-height:1.2}
+.q-node-scanner{left:2%;top:11%}
+.q-node-guard{left:calc(50% - 56px);top:1%}
+.q-node-sizer{right:2%;top:11%}
+.q-node-executor{left:2%;bottom:10%}
+.q-node-logger{left:calc(50% - 56px);bottom:1%}
+.q-node-equity{right:2%;bottom:10%}
+@media(max-width:620px){
+ .q-module-node{width:94px;height:104px;min-height:104px;padding:6px 4px;border-radius:14px}
+ .q-node-icon{width:34px;height:34px;flex-basis:34px;border-radius:10px}
+ .q-node-icon svg{width:21px;height:21px}
+ .q-module-node b{font-size:8px}
+ .q-module-node small,.q-module-node em{font-size:7px}
+ .q-node-guard{left:calc(50% - 47px)}
+ .q-node-logger{left:calc(50% - 47px)}
+}
+</style>
 </head><body><div class="shell"><aside class="side"><div class="brand"><div class="logo">₿</div><div><b>WHJ BITCOIN</b><small>مركز قيادة التداول الذكي</small></div></div><div class="navlabel">القائمة الرئيسية</div><nav class="nav"><button class="active" data-view="overview"><span class="ico">⌂</span>الرئيسية</button><button data-view="scanner"><span class="ico">⌁</span>ماسح السوق</button><button data-view="strategies"><span class="ico">◈</span>الاستراتيجيات</button><button data-view="trades"><span class="ico">⇄</span>الصفقات</button><button data-view="risk"><span class="ico">⌁</span>المخاطر</button><button data-view="system"><span class="ico">⚙</span>النظام</button><button data-view="agents"><span class="ico">✣</span>مركز الوكلاء</button><button data-view="forward"><span class="ico">◷</span>المراقبة المستقبلية</button><button data-view="mt5"><span class="ico">⌁</span>منصة MT5</button></nav><div class="navlabel agent-nav-label">وحدات التشغيل الست</div><nav class="agent-nav" aria-label="وحدات التشغيل"><button type="button" data-agent-target="0"><span>⌕</span>ماسح السوق</button><button type="button" data-agent-target="1"><span>⚑</span>بوابة التحقق</button><button type="button" data-agent-target="2"><span>◈</span>مدير الحجم</button><button type="button" data-agent-target="3"><span>Ⅱ</span>المحاكي الورقي</button><button type="button" data-agent-target="4"><span>≡</span>سجل القرارات</button><button type="button" data-agent-target="5"><span>◉</span>مراقب المحفظة</button></nav><div class="sidefoot">WHJ Bitcoin Bot 2026<br>مراقبة وتحليل · Paper Trading فقط</div></aside><main>
 <div class="mobilehead">WHJ BITCOIN · مركز القيادة</div><header class="top"><div><div class="eyebrow">WHJ / COMMAND CENTER</div><h1 id="pageTitle">نظرة عامة</h1><div class="sub">مراقبة أداء البوت وتحليل BTC/USD</div></div><div class="topright"><button class="toolbtn" id="exportJson" type="button">تنزيل التقرير JSON</button><button class="toolbtn" id="exportCsv" type="button">تصدير الصفقات CSV</button><span class="pill"><i class="dot"></i><span id="systemState">جارٍ تحميل البيانات</span></span><button class="refresh" id="refresh">↻ تحديث البيانات</button></div></header>
 <div class="banner"><div><b>وضع الحماية مفعّل — التداول الحقيقي متوقف</b><p>تعرض اللوحة بيانات التحليل والمحاكاة فقط، ولا ترسل أوامر إلى منصات التداول.</p></div><span class="status">● PAPER MODE</span></div>
@@ -471,12 +504,12 @@ main{max-width:1720px!important;padding:22px clamp(12px,2vw,30px) 42px!important
     </g>
     <g fill="#62e8f4"><circle cx="170" cy="105" r="4"/><circle cx="500" cy="65" r="4"/><circle cx="830" cy="105" r="4"/><circle cx="170" cy="385" r="4"/><circle cx="500" cy="435" r="4"/><circle cx="830" cy="385" r="4"/></g>
    </svg>
-   <div class="q-module-node q-node-scanner"><span class="q-node-icon">⌕</span><b>SCANNER</b><small>اتجاه السوق والزخم</small><em data-mirror="agentScanState">بانتظار البيانات</em></div>
-   <div class="q-module-node q-node-guard"><span class="q-node-icon">⚑</span><b>GUARD</b><small>سلامة البيانات والإشارة</small><em data-mirror="agentGuardState">بانتظار الفحص</em></div>
-   <div class="q-module-node q-node-sizer"><span class="q-node-icon">◈</span><b>SIZER</b><small>حجم المركز والمخاطرة</small><em data-mirror="agentSizerState">بانتظار الحساب</em></div>
-   <div class="q-module-node q-node-executor"><span class="q-node-icon">Ⅱ</span><b>EXECUTOR</b><small>محاكاة الصفقات</small><em data-mirror="agentExecState">لا توجد بيانات</em></div>
-   <div class="q-module-node q-node-logger"><span class="q-node-icon">≡</span><b>LOGGER</b><small>أسباب القرارات</small><em data-mirror="agentLogState">بانتظار السجل</em></div>
-   <div class="q-module-node q-node-equity"><span class="q-node-icon">◉</span><b>EQUITY WATCH</b><small>الرصيد والتراجع</small><em data-mirror="agentEquityState">بانتظار الرصيد</em></div>
+   <div class="q-module-node q-node-scanner"><span class="q-node-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="7.5"/><path d="M10.5 3v7.5L16 5M16 16l5 5M3 10.5h7.5"/></svg></span><b>SCANNER</b><small>اتجاه السوق والزخم</small><em data-mirror="agentScanState">بانتظار البيانات</em></div>
+   <div class="q-module-node q-node-guard"><span class="q-node-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-11V5l-8-3-8 3v6c0 7 8 11 8 11Z"/><path d="m9 12 2 2 4-4"/></svg></span><b>GUARD</b><small>سلامة البيانات والإشارة</small><em data-mirror="agentGuardState">بانتظار الفحص</em></div>
+   <div class="q-module-node q-node-sizer"><span class="q-node-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 19V5M4 19h16M7 15l4-4 3 2 5-7"/><path d="M16 6h3v3"/></svg></span><b>SIZER</b><small>حجم المركز والمخاطرة</small><em data-mirror="agentSizerState">بانتظار الحساب</em></div>
+   <div class="q-module-node q-node-executor"><span class="q-node-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 12h12M13 6l6 6-6 6"/><path d="M4 4v16"/></svg></span><b>EXECUTOR</b><small>محاكاة الصفقات</small><em data-mirror="agentExecState">لا توجد بيانات</em></div>
+   <div class="q-module-node q-node-logger"><span class="q-node-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M8 4h13M8 9h13M8 14h13M8 19h13"/><path d="M3 4h.01M3 9h.01M3 14h.01M3 19h.01"/></svg></span><b>LOGGER</b><small>أسباب القرارات</small><em data-mirror="agentLogState">بانتظار السجل</em></div>
+   <div class="q-module-node q-node-equity"><span class="q-node-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M3 18V5M3 18h18"/><path d="m6 14 4-4 3 3 6-7"/><path d="M15 6h4v4"/></svg></span><b>EQUITY WATCH</b><small>الرصيد والتراجع</small><em data-mirror="agentEquityState">بانتظار الرصيد</em></div>
    <div class="q-decision-core"><span class="q-core-orbit"></span><small>WHJ · CENTRAL INTELLIGENCE</small><b>DECISION<br>ENGINE</b><strong data-mirror="signalBadge">WAITING</strong><span data-mirror="signalText">بانتظار إشارة النموذج</span></div>
    <div class="q-decision-output"><span>DECISION OUTPUT</span><b>→</b><strong>PAPER EXECUTOR</strong><small>محاكاة فقط · NO LIVE ORDERS</small></div>
   </div>
