@@ -11,12 +11,12 @@ class BridgeOriginValidationTests(unittest.TestCase):
         run.return_value = subprocess.CompletedProcess(
             args=["git", "status", "--porcelain"],
             returncode=0,
-            stdout=" M forward_paper_monitor.py\\n?? docs/CVD_FLAG_GUARD.md\\n",
+            stdout=" M forward_paper_monitor.py\n?? docs/CVD_FLAG_GUARD.md\n",
             stderr="",
         )
         self.assertEqual(
             git(["status", "--porcelain"]),
-            " M forward_paper_monitor.py\\n?? docs/CVD_FLAG_GUARD.md",
+            " M forward_paper_monitor.py\n?? docs/CVD_FLAG_GUARD.md",
         )
 
     def test_accepts_only_exact_https_repository_urls(self):
