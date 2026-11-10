@@ -967,7 +967,12 @@ class HistoricalResearchTests(unittest.TestCase):
             "volume_liquidity_momentum",
         )
 
-    def test_research_output_and_paper_state_paths_are_isolated(self):
+    def test_default_research_run_preserves_legacy_paper_state_location(self):
+        output, paper_state = _research_output_paths()
+        self.assertEqual(str(output), ".")
+        self.assertEqual(str(paper_state), ".")
+
+    def test_explicit_research_output_and_paper_state_paths_are_isolated(self):
         output, paper_state = _research_output_paths("tmp/research-run")
         self.assertEqual(str(output), "tmp/research-run")
         self.assertEqual(str(paper_state), "tmp/research-run/paper_state")
