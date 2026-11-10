@@ -4,7 +4,7 @@ import unittest
 from datetime import datetime, timezone
 from unittest.mock import patch
 
-from historical_research import (INTERVAL_MS, _blocked_execution_indices, _research_output_paths, aggregate_candles, load_two_year_candles, run_forward_paper_accounts, run_ohlc_breakout_lab, run_long_short_lab, run_daily_regime_filter_lab, run_multi_timeframe_ensemble_lab, run_six_hour_atr_trailing_lab, _adx_di_series, _atr_series, _regime_switching_atr_signals, _rsi_series, _simulate_equal_weight_multitimeframe, _simulate_long_short, _simulate_ohlc, assess_strategy_qualification, assess_research_lab_qualification, build_qualification_markdown, summarize_qualification, _turtle_signals)
+from historical_research import (INTERVAL_MS, _blocked_execution_indices, _paper_account_rows, _research_output_paths, aggregate_candles, load_two_year_candles, run_forward_paper_accounts, run_ohlc_breakout_lab, run_long_short_lab, run_daily_regime_filter_lab, run_multi_timeframe_ensemble_lab, run_six_hour_atr_trailing_lab, _adx_di_series, _atr_series, _regime_switching_atr_signals, _rsi_series, _simulate_equal_weight_multitimeframe, _simulate_long_short, _simulate_ohlc, assess_strategy_qualification, assess_research_lab_qualification, build_qualification_markdown, summarize_qualification, _turtle_signals)
 from strategy_lab import _simulate, run_strategy_lab
 
 
@@ -347,6 +347,15 @@ class HistoricalResearchTests(unittest.TestCase):
         benchmark = result["strategies"]["buy_and_hold_25pct"]["out_of_sample"]
         self.assertEqual(benchmark["entry_index"], 351)
         self.assertEqual(benchmark["exit_index"], 498)
+
+    def test_paper_account_rows_preserve_synthetic_execution_flag(self):
+        bars = [
+            {"timestamp": 0, "close": 100.0, "imputed": False},
+            {"timestamp": INTERVAL_MS, "close": 100.0, "imputed": True},
+        ]
+        rows = _paper_account_rows(bars)
+        self.assertEqual(rows[0][5], True)
+        self.assertEqual(rows[1][5], False)
 
     def test_forward_paper_accounts_persist_and_are_idempotent(self):
         import tempfile
