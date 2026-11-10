@@ -59,6 +59,19 @@ class VolumeLiquidityStrategyTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "strictly increasing"):
             _volume_liquidity_signals(bars)
 
+    def test_rejects_non_integer_and_non_numeric_timestamps(self):
+        for value in (True, 36000.5, float("nan"), float("inf"), "36000"):
+            with self.subTest(timestamp=value):
+                bars = synthetic_bars()
+                bars[10]["timestamp"] = value
+                with self.assertRaisesRegex(ValueError, "timestamp must be a finite integer"):
+                    _volume_liquidity_signals(bars)
+
+    def test_rejects_irregular_timestamp_spacing(self):
+        bars = synthetic_bars()
+        bars[300]["timestamp"] += 1
+        with self.assertRaisesRegex(ValueError, "evenly spaced"):
+            _volume_liquidity_signals(bars)
     def test_rejects_nonfinite_volume(self):
         bars = synthetic_bars()
         bars[300]["volume"] = float("nan")
