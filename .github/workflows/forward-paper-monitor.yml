@@ -5,7 +5,7 @@ on:
   schedule:
     - cron: "17 * * * *"
   push:
-    branches: [main, research/regime-aware-consensus-ensemble, strategy/qualified-forward-monitor-20261111]
+    branches: [main, research/regime-aware-consensus-ensemble, strategy/qualified-forward-paper-20261111, strategy/qualified-forward-monitor-20261111]
     paths:
       - "forward_paper_monitor.py"
       - "qualified_forward_paper_monitor.py"
