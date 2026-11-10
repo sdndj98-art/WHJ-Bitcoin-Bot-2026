@@ -2057,6 +2057,17 @@ def assess_research_lab_qualification(research, stress_research):
     return results
 
 
+def _paper_account_rows(bars):
+    """Preserve synthetic-bar execution eligibility when adapting research candles."""
+    return [
+        [
+            int(row["timestamp"] // 1000), 0, 0, 0, str(row["close"]),
+            not bool(row.get("imputed", False)),
+        ]
+        for row in bars
+    ]
+
+
 def run_forward_paper_accounts(candles, state_dir="."):
     """Maintain independent 1d and 4h paper accounts across daily workflow runs."""
     directory = Path(state_dir)
@@ -2064,8 +2075,7 @@ def run_forward_paper_accounts(candles, state_dir="."):
     four_hour = aggregate_candles(candles, 4)
     six_hour = aggregate_candles(candles, 6)
 
-    def account_rows(bars):
-        return [[int(row["timestamp"] // 1000), 0, 0, 0, str(row["close"])] for row in bars]
+    account_rows = _paper_account_rows
 
     daily_result = update_paper_account(
         account_rows(daily),
