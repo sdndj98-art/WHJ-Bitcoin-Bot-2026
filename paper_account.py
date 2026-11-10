@@ -354,9 +354,9 @@ def update_paper_account(candles, state_path="paper_account_state.json",
             close = _number(float(row[4]), "candle close", 0)
         except (TypeError, ValueError, OverflowError) as exc:
             raise ValueError("Candle timestamp and close must be numeric") from exc
-        executable = row[5] if len(row) > 5 else True
-        if not isinstance(executable, bool):
-            raise ValueError("Candle executable flag must be boolean")
+        # A boolean sixth field is the optional execution-eligibility flag.
+        # Older callers may append non-boolean metadata, which remains ignored.
+        executable = row[5] if len(row) > 5 and isinstance(row[5], bool) else True
         normalized.append((timestamp, close, executable))
     if not normalized:
         raise ValueError("No closed candles were supplied")
