@@ -103,5 +103,45 @@ class TradeEventJournalTests(unittest.TestCase):
             self.assertFalse(os.path.exists(path))
 
 
+    def test_restore_rejects_invalid_trade_payload_fields(self):
+        invalid_cases = (
+            ("price", 0),
+            ("price", -1),
+            ("price", float("nan")),
+            ("price", float("inf")),
+            ("price", True),
+            ("qty", 0),
+            ("qty", -1),
+            ("qty", float("nan")),
+            ("qty", float("inf")),
+            ("qty", True),
+            ("side", "hold"),
+            ("side", "BUY"),
+        )
+        for field, value in invalid_cases:
+            with self.subTest(field=field, value=value):
+                with tempfile.TemporaryDirectory() as directory:
+                    path = os.path.join(directory, "trades.jsonl")
+                    row = event(10)
+                    row[field] = value
+                    with open(path, "w", encoding="utf-8") as handle:
+                        handle.write(json.dumps(row) + "\\n")
+                    with self.assertRaises(TradeJournalError):
+                        JsonlTradeJournal(path)
+
+    def test_append_rejects_boolean_and_non_finite_price_or_qty(self):
+        with tempfile.TemporaryDirectory() as directory:
+            journal = JsonlTradeJournal(os.path.join(directory, "trades.jsonl"))
+            for field, value in (
+                ("price", True), ("price", float("nan")),
+                ("qty", False), ("qty", float("inf")),
+            ):
+                row = event(10)
+                row[field] = value
+                with self.subTest(field=field, value=value):
+                    with self.assertRaises(ValueError):
+                        journal.append([row])
+            self.assertIsNone(journal.last_trade_id)
+
 if __name__ == "__main__":
     unittest.main()
