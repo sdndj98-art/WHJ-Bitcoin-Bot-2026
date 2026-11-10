@@ -567,6 +567,16 @@ class ForwardPaperMonitorTests(unittest.TestCase):
 
 
 
+    def test_invalid_cvd_requirement_flag_is_rejected_before_account_state_changes(self):
+        candles = self.make_candles()
+        now = candles[-1]["timestamp"] / 1000 + 3600 + 30
+        with tempfile.TemporaryDirectory() as folder:
+            with self.assertRaisesRegex(ValueError, "require_cvd_confirmation must be boolean"):
+                process_forward_accounts(
+                    candles, folder, now, require_cvd_confirmation="yes"
+                )
+            self.assertEqual(list(Path(folder).iterdir()), [])
+
     def test_forward_monitor_loads_verified_cvd_and_reports_entry_gate(self):
         candles = self.make_candles()
         now = candles[-1]["timestamp"] / 1000 + 3600 + 60
