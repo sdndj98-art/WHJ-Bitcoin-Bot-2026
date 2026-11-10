@@ -579,6 +579,90 @@ main{max-width:1720px!important;padding:22px clamp(12px,2vw,30px) 42px!important
 @media(prefers-reduced-motion:reduce){.q-flow-path,.q-branch-path,.q-output-path{animation:none!important}}
 </style>
 
+
+<style id="whj-neural-tree-layout-v2">
+/* Real geometry refresh: six distinct input nodes feeding one central decision core. */
+#quantumorb .q-core{min-width:0}
+#quantumorb .q-network-stage{
+ height:560px!important;min-height:560px!important;flex:0 0 560px!important;
+ border:1px solid rgba(88,191,226,.42)!important;border-radius:24px!important;
+ background:
+ radial-gradient(ellipse at 50% 50%,rgba(132,102,255,.2),transparent 23%),
+ radial-gradient(ellipse at 50% 50%,rgba(50,198,208,.11),transparent 48%),
+ linear-gradient(180deg,#071526 0%,#09172b 52%,#071323 100%)!important;
+ box-shadow:inset 0 0 70px rgba(57,160,207,.12),0 18px 42px rgba(0,0,0,.3)!important;
+}
+#quantumorb .q-module-node{
+ width:178px!important;height:104px!important;min-height:104px!important;
+ padding:12px 12px 10px 50px!important;border-radius:18px!important;
+ background:linear-gradient(145deg,rgba(18,47,70,.99),rgba(7,18,34,.99))!important;
+ border:1px solid rgba(95,190,222,.62)!important;
+ box-shadow:0 12px 30px rgba(0,0,0,.38),inset 0 1px rgba(255,255,255,.1),0 0 22px rgba(65,190,222,.12)!important;
+}
+#quantumorb .q-node-scanner{left:4%!important;top:7%!important}
+#quantumorb .q-node-guard{left:calc(50% - 89px)!important;top:2%!important}
+#quantumorb .q-node-sizer{right:4%!important;top:7%!important}
+#quantumorb .q-node-executor{left:4%!important;bottom:18%!important}
+#quantumorb .q-node-logger{left:calc(50% - 89px)!important;bottom:18%!important}
+#quantumorb .q-node-equity{right:4%!important;bottom:18%!important}
+#quantumorb .q-node-scanner{border-top:3px solid #42c9e8!important}
+#quantumorb .q-node-guard{border-top:3px solid #a58bff!important}
+#quantumorb .q-node-sizer{border-top:3px solid #4cdeb1!important}
+#quantumorb .q-node-executor{border-top:3px solid #f0bd68!important}
+#quantumorb .q-node-logger{border-top:3px solid #ed8fc5!important}
+#quantumorb .q-node-equity{border-top:3px solid #7ba8ff!important}
+#quantumorb .q-node-icon{width:31px!important;height:31px!important;border-radius:11px!important}
+#quantumorb .q-decision-core{
+ top:48%!important;width:230px!important;min-height:174px!important;
+ border-radius:32px!important;border:1px solid rgba(183,160,255,.95)!important;
+ background:radial-gradient(circle at 50% 8%,rgba(151,119,255,.4),rgba(13,22,49,.99) 68%)!important;
+ box-shadow:0 0 0 9px rgba(165,139,255,.07),0 0 58px rgba(125,105,255,.38),inset 0 1px rgba(255,255,255,.16)!important;
+}
+#quantumorb .q-core-orbit{inset:-14px!important;border:1px dashed rgba(186,166,255,.55)!important;border-radius:40px!important}
+#quantumorb .q-decision-output{
+ bottom:2%!important;width:270px!important;min-height:56px!important;
+ border:1px solid rgba(118,224,239,.8)!important;border-radius:15px!important;
+ background:linear-gradient(100deg,rgba(17,54,70,.99),rgba(37,32,79,.99))!important;
+ box-shadow:0 0 30px rgba(82,213,231,.2)!important;
+}
+#quantumorb .q-links{z-index:1!important;filter:drop-shadow(0 0 7px rgba(82,220,237,.42))!important}
+#quantumorb .q-flow-path{stroke:#64e5f2!important;stroke-width:3!important;stroke-dasharray:7 13!important;animation:qFlow 1.65s linear infinite!important;filter:drop-shadow(0 0 7px rgba(90,231,244,.75))!important}
+#quantumorb .q-branch-path{stroke:#a58bff!important;stroke-width:2.2!important;stroke-dasharray:5 8!important}
+#quantumorb .q-output-path{stroke:#bba5ff!important;stroke-width:4!important;filter:drop-shadow(0 0 10px rgba(174,149,255,.95))!important}
+@media(max-width:700px){
+ #quantumorb .q-network-stage{height:410px!important;min-height:410px!important;flex:0 0 410px!important;border-radius:16px!important}
+ #quantumorb .q-module-node{width:92px!important;height:70px!important;min-height:70px!important;padding:4px 3px!important;gap:2px!important;border-radius:11px!important}
+ #quantumorb .q-node-scanner{left:2%!important;top:5%!important}
+ #quantumorb .q-node-guard{left:calc(50% - 46px)!important;top:3%!important}
+ #quantumorb .q-node-sizer{right:2%!important;top:5%!important}
+ #quantumorb .q-node-executor{left:2%!important;bottom:19%!important}
+ #quantumorb .q-node-logger{left:calc(50% - 46px)!important;bottom:19%!important}
+ #quantumorb .q-node-equity{right:2%!important;bottom:19%!important}
+ #quantumorb .q-node-icon{position:relative!important;left:auto!important;top:auto!important;width:20px!important;height:20px!important;min-height:20px!important;flex:0 0 20px!important;margin:0 auto!important;border-radius:7px!important}
+ #quantumorb .q-node-icon svg{width:13px!important;height:13px!important}
+ #quantumorb .q-module-node b{font-size:6.5px!important;letter-spacing:.04em!important;text-align:center!important}
+ #quantumorb .q-module-node small{font-size:5.7px!important;line-height:1.05!important;text-align:center!important}
+ #quantumorb .q-module-node em{font-size:5.4px!important;line-height:1!important;text-align:center!important}
+ #quantumorb .q-decision-core{top:49%!important;width:126px!important;min-height:104px!important;padding:6px!important;border-radius:20px!important}
+ #quantumorb .q-core-orbit{inset:-8px!important;border-radius:27px!important}
+ #quantumorb .q-decision-core>b{font-size:10px!important;letter-spacing:.04em!important}
+ #quantumorb .q-decision-core>small{font-size:5.3px!important;letter-spacing:.04em!important}
+ #quantumorb .q-decision-core>strong{font-size:8px!important;padding:3px 8px!important;min-width:70px!important}
+ #quantumorb .q-decision-core>span:last-child{font-size:5.6px!important}
+ #quantumorb .q-decision-output{width:154px!important;min-height:37px!important;bottom:1%!important;padding:3px 7px!important;column-gap:4px!important}
+ #quantumorb .q-decision-output>span{font-size:5px!important}
+ #quantumorb .q-decision-output>b{font-size:14px!important}
+ #quantumorb .q-decision-output>strong{font-size:6.5px!important}
+ #quantumorb .q-decision-output>small{font-size:5px!important}
+}
+@media(max-width:360px){
+ #quantumorb .q-network-stage{height:390px!important;min-height:390px!important;flex-basis:390px!important}
+ #quantumorb .q-module-node{width:84px!important}
+ #quantumorb .q-node-guard,#quantumorb .q-node-logger{left:calc(50% - 42px)!important}
+}
+@media(prefers-reduced-motion:reduce){#quantumorb .q-flow-path,#quantumorb .q-branch-path,#quantumorb .q-output-path{animation:none!important}}
+</style>
+
 </head><body><div class="shell"><aside class="side"><div class="brand"><div class="logo">₿</div><div><b>WHJ BITCOIN</b><small>مركز قيادة التداول الذكي</small></div></div><div class="navlabel">القائمة الرئيسية</div><nav class="nav"><button class="active" data-view="overview"><span class="ico">⌂</span>الرئيسية</button><button data-view="scanner"><span class="ico">⌁</span>ماسح السوق</button><button data-view="strategies"><span class="ico">◈</span>الاستراتيجيات</button><button data-view="trades"><span class="ico">⇄</span>الصفقات</button><button data-view="risk"><span class="ico">⌁</span>المخاطر</button><button data-view="system"><span class="ico">⚙</span>النظام</button><button data-view="agents"><span class="ico">✣</span>مركز الوكلاء</button><button data-view="forward"><span class="ico">◷</span>المراقبة المستقبلية</button><button data-view="mt5"><span class="ico">⌁</span>منصة MT5</button></nav><div class="navlabel agent-nav-label">وحدات التشغيل الست</div><nav class="agent-nav" aria-label="وحدات التشغيل"><button type="button" data-agent-target="0"><span>⌕</span>ماسح السوق</button><button type="button" data-agent-target="1"><span>⚑</span>بوابة التحقق</button><button type="button" data-agent-target="2"><span>◈</span>مدير الحجم</button><button type="button" data-agent-target="3"><span>Ⅱ</span>المحاكي الورقي</button><button type="button" data-agent-target="4"><span>≡</span>سجل القرارات</button><button type="button" data-agent-target="5"><span>◉</span>مراقب المحفظة</button></nav><div class="sidefoot">WHJ Bitcoin Bot 2026<br>مراقبة وتحليل · Paper Trading فقط</div></aside><main>
 <div class="mobilehead">WHJ BITCOIN · مركز القيادة</div><header class="top"><div><div class="eyebrow">WHJ / COMMAND CENTER</div><h1 id="pageTitle">نظرة عامة</h1><div class="sub">مراقبة أداء البوت وتحليل BTC/USD</div></div><div class="topright"><button class="toolbtn" id="exportJson" type="button">تنزيل التقرير JSON</button><button class="toolbtn" id="exportCsv" type="button">تصدير الصفقات CSV</button><span class="pill"><i class="dot"></i><span id="systemState">جارٍ تحميل البيانات</span></span><button class="refresh" id="refresh">↻ تحديث البيانات</button></div></header>
 <div class="banner"><div><b>وضع الحماية مفعّل — التداول الحقيقي متوقف</b><p>تعرض اللوحة بيانات التحليل والمحاكاة فقط، ولا ترسل أوامر إلى منصات التداول.</p></div><span class="status">● PAPER MODE</span></div>
@@ -601,15 +685,15 @@ main{max-width:1720px!important;padding:22px clamp(12px,2vw,30px) 42px!important
    <canvas id="q-network" aria-hidden="true"></canvas>
    <svg class="q-links" viewBox="0 0 1000 520" preserveAspectRatio="none" aria-hidden="true">
     <defs><linearGradient id="qLinkGrad" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#51e5f2" stop-opacity=".18"/><stop offset=".52" stop-color="#8b9cff" stop-opacity=".95"/><stop offset="1" stop-color="#51e5f2" stop-opacity=".22"/></linearGradient><marker id="qArrow" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0 0 L6 3 L0 6" fill="none" stroke="#7debf4" stroke-width="1"/></marker></defs>
-    <g fill="none" stroke="url(#qLinkGrad)" stroke-width="2" marker-end="url(#qArrow)">
-     <path class="q-flow-path" d="M170 105 C245 105 286 142 330 178 S395 220 425 235"/>
-     <path class="q-flow-path" d="M500 65 C500 112 500 145 500 185"/>
-     <path class="q-flow-path" d="M830 105 C755 105 714 142 670 178 S605 220 575 235"/>
-     <path class="q-flow-path" d="M170 385 C245 385 286 348 330 312 S395 280 425 265"/>
-     <path class="q-flow-path" d="M500 435 C500 388 500 355 500 305"/>
-     <path class="q-flow-path" d="M830 385 C755 385 714 348 670 312 S605 280 575 265"/>
-     <path class="q-branch-path" d="M330 178 Q375 178 405 210 M670 178 Q625 178 595 210 M330 312 Q375 312 405 290 M670 312 Q625 312 595 290"/>
-     <path class="q-output-path" d="M500 310 C500 355 500 410 500 466"/>
+    <g fill="none" stroke="url(#qLinkGrad)" stroke-width="2.5" marker-end="url(#qArrow)">
+     <path class="q-flow-path" d="M185 92 C270 92 335 150 420 220"/>
+     <path class="q-flow-path" d="M500 72 C500 125 500 165 500 205"/>
+     <path class="q-flow-path" d="M815 92 C730 92 665 150 580 220"/>
+     <path class="q-flow-path" d="M185 390 C270 390 335 330 420 278"/>
+     <path class="q-flow-path" d="M500 390 C500 350 500 320 500 300"/>
+     <path class="q-flow-path" d="M815 390 C730 390 665 330 580 278"/>
+     <path class="q-branch-path" d="M185 92 Q245 180 330 190 M500 72 L500 175 M815 92 Q755 180 670 190 M185 390 Q245 300 330 290 M500 390 L500 325 M815 390 Q755 300 670 290"/>
+     <path class="q-output-path" d="M500 310 C500 350 500 390 500 455"/>
     </g>
     <g fill="#62e8f4"><circle cx="170" cy="105" r="4"/><circle cx="500" cy="65" r="4"/><circle cx="830" cy="105" r="4"/><circle cx="170" cy="385" r="4"/><circle cx="500" cy="435" r="4"/><circle cx="830" cy="385" r="4"/></g>
    </svg>
