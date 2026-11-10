@@ -741,8 +741,8 @@ def run_volume_liquidity_lab(bars, fee=0.001, slippage=0.0005):
                 "end_index_exclusive": end,
                 "metrics": _simulate(prices, signals, start, end, fee, slippage, blocked_execution_indices),
             })
-    full_metrics = _simulate(prices, signals, 1, len(prices), fee, slippage)
-    oos_metrics = _simulate(prices, signals, split, len(prices), fee, slippage)
+    full_metrics = _simulate(prices, signals, 1, len(prices), fee, slippage, blocked_execution_indices)
+    oos_metrics = _simulate(prices, signals, split, len(prices), fee, slippage, blocked_execution_indices)
     active_scores = [scores[i] for i in range(split, len(scores)) if signals[i]]
     benchmark_signals = [True] * len(prices)
     benchmark_windows = [
