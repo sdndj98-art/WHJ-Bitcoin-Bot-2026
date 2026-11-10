@@ -426,6 +426,23 @@ def process_forward_accounts(candles, state_dir=".", now_timestamp=None, cvd_con
             strategy=strategy,
             strategy_health_pause=True,
             strategy_health_drawdown_fraction=0.08,
+            require_entry_confirmation=(require_cvd_confirmation and hours == 1),
+            entry_confirmation_timestamp=(
+                cvd_confirmation.get("candle_timestamp")
+                if isinstance(cvd_confirmation, dict)
+                and isinstance(cvd_confirmation.get("candle_timestamp"), int)
+                and not isinstance(cvd_confirmation.get("candle_timestamp"), bool)
+                else None
+            ),
+            entry_confirmation_available=(
+                isinstance(cvd_confirmation, dict)
+                and cvd_confirmation.get("status") == "OK"
+                and cvd_confirmation.get("available") is True
+                and cvd_confirmation.get("direction") == "BULLISH"
+                and cvd_confirmation.get("continuity_verified") is True
+                and cvd_confirmation.get("research_only") is True
+                and cvd_confirmation.get("execution_enabled") is False
+            ),
         )
         sleeve_result = {"seed": seed, "account": account}
         if hours == 1:
