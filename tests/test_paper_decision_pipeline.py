@@ -121,5 +121,46 @@ class PaperDecisionPipelineTests(unittest.TestCase):
         self.assertTrue(result["research_only"])
 
 
+    def test_required_cvd_gate_accepts_only_verified_bullish_confirmation(self):
+        evidence = {
+            "status": "OK", "available": True, "direction": "BULLISH",
+            "research_only": True, "execution_enabled": False,
+        }
+        result = evaluate_paper_decision(
+            self.scanner, self.account, cvd_confirmation=evidence,
+            require_cvd_confirmation=True,
+        )
+        self.assertEqual(result["status"], "APPROVED_FOR_PAPER_SIMULATION_REVIEW_ONLY")
+        self.assertTrue(result["cvd_requirement_enabled"])
+        self.assertFalse(result["execution_enabled"])
+        self.assertFalse(result["order_placed"])
+
+    def test_required_cvd_gate_fails_closed_when_missing_or_unavailable(self):
+        for evidence in (None, {
+            "status": "UNAVAILABLE", "available": False, "direction": "UNKNOWN",
+            "research_only": True, "execution_enabled": False,
+        }, {
+            "status": "OK", "available": True, "direction": "BEARISH",
+            "research_only": True, "execution_enabled": False,
+        }, {
+            "status": "OK", "available": True, "direction": "BULLISH",
+            "research_only": True, "execution_enabled": True,
+        }):
+            with self.subTest(evidence=evidence):
+                result = evaluate_paper_decision(
+                    self.scanner, self.account, cvd_confirmation=evidence,
+                    require_cvd_confirmation=True,
+                )
+                self.assertEqual(result["status"], "BLOCKED")
+                self.assertFalse(result["execution_enabled"])
+                self.assertFalse(result["order_placed"])
+
+    def test_cvd_gate_is_opt_in_and_preserves_legacy_behavior(self):
+        result = evaluate_paper_decision(self.scanner, self.account)
+        self.assertEqual(result["status"], "APPROVED_FOR_PAPER_SIMULATION_REVIEW_ONLY")
+        self.assertFalse(result["cvd_requirement_enabled"])
+        self.assertIsNone(result["cvd_confirmation"])
+
+
 if __name__ == "__main__":
     unittest.main()
