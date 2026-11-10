@@ -46,13 +46,13 @@ class PaperAccountSyntheticExecutionTests(unittest.TestCase):
             self.assertFalse(closed["open_position"])
             self.assertEqual(closed["completed_trades"], 1)
 
-    def test_executable_flag_must_be_boolean(self):
+    def test_legacy_non_boolean_extra_fields_remain_compatible(self):
         with tempfile.TemporaryDirectory() as folder:
-            with self.assertRaises(ValueError):
-                update_paper_account(
-                    [[3600, 0, 0, 0, "100", "false"]],
-                    state_path=f"{folder}/paper.json",
-                )
+            result = update_paper_account(
+                [[3600, 0, 0, 0, "100", "legacy-metadata"]],
+                state_path=f"{folder}/paper.json",
+            )
+            self.assertEqual(result["processed_new_candles"], 1)
 
 
 if __name__ == "__main__":
