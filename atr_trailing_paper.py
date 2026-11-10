@@ -36,7 +36,10 @@ def _bars(rows, name):
         timestamp = _finite(row.get("timestamp"), f"{name} timestamp", 0)
         if not timestamp.is_integer():
             raise ValueError("timestamps must be whole seconds")
-        bar = {"timestamp": int(timestamp)}
+        eligible = row.get("execution_eligible", True)
+        if not isinstance(eligible, bool):
+            raise ValueError("execution_eligible must be boolean")
+        bar = {"timestamp": int(timestamp), "execution_eligible": eligible}
         for field in ("open", "high", "low", "close"):
             bar[field] = _finite(row.get(field), f"{name} {field}", 0)
             if bar[field] <= 0:
@@ -210,6 +213,20 @@ def update_atr_trailing_account(four_hour_bars, daily_bars, state_path,
         if bucket != state["daily_bucket"]:
             state["daily_bucket"] = bucket
             state["daily_start_equity"] = state["equity"]
+
+        # Synthetic aggregate bars may update indicators/mark-to-market but
+        # cannot execute or create new strategy actions. Keep queued orders pending.
+        if not bar["execution_eligible"]:
+            state["equity"] = state["cash"] + state["quantity"] * close
+            state["peak_equity"] = max(state["peak_equity"], state["equity"])
+            if state["peak_equity"] > 0:
+                drawdown = (state["peak_equity"] - state["equity"]) / state["peak_equity"]
+                state["max_drawdown_pct"] = max(state["max_drawdown_pct"], drawdown * 100.0)
+            state["previous_close"] = close
+            state["last_timestamp"] = bar["timestamp"]
+            state["processed_new_candles"] += 1
+            state["last_signal"] = "blocked_synthetic_bar"
+            continue
 
         # Execute only the prior bar's signal at this bar's close.
         action = state["pending_action"]
