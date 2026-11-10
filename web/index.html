@@ -886,7 +886,7 @@ main{max-width:1720px!important;padding:22px clamp(12px,2vw,30px) 42px!important
 <div class="card" style="margin-bottom:13px"><div class="head"><h2>تحميل تقرير المراقبة</h2><span>JSON · schema v1</span></div><div class="headtools"><input class="filter" style="max-width:360px" id="forwardFile" type="file" accept=".json,application/json" aria-label="تحميل تقرير المراقبة JSON"><button class="toolbtn" id="clearForward" type="button">مسح التقرير</button></div><p class="sub" id="forwardMessage" role="status" style="margin-top:12px">اختر ملف forward_paper_report.json من مخرجات تشغيل المراقبة في GitHub Actions.</p></div>
 
 <div class="card" style="margin:14px 0;border:1px solid var(--line)">
- <div class="head"><div><h2>مراقبة محافظ ADX المستقلة</h2><span>ADX15 / ADX20 · 4h / 6h · أربع محافظ منفصلة</span></div><span class="scan-chip">PAPER ONLY</span></div>
+ <div class="head"><div><h2>مراقبة محافظ ADX المستقلة</h2><span>ADX15 / ADX20 / ADX25 · 4h / 6h · ست محافظ منفصلة</span></div><span class="scan-chip">PAPER ONLY</span></div>
  <div class="headtools"><input class="filter" style="max-width:360px" id="adxForwardFile" type="file" accept=".json,application/json" aria-label="تحميل تقرير محافظ ADX الورقية"><button class="toolbtn" id="clearAdxForward" type="button">مسح تقرير ADX</button></div>
  <p class="sub" id="adxForwardMessage" role="status" style="margin-top:10px">حمّل paper_adx_forward_report.json من Artifact الخاص بتشغيل WHJ Isolated ADX Forward Paper.</p>
  <div class="mini"><span id="adxForwardStatus">بانتظار تقرير ADX</span><b id="adxForwardFreshness">العمر: —</b></div>
@@ -1053,12 +1053,12 @@ let adxForwardReport=null;
 function validateAdxForwardReport(x){
  const n=v=>typeof v==="number"&&Number.isFinite(v);
  const integer=v=>Number.isInteger(v)&&v>=0;
- const keys={adx15_4h:[15,4],adx20_4h:[20,4],adx15_6h:[15,6],adx20_6h:[20,6]};
+ const keys={adx15_4h:[15,4],adx20_4h:[20,4],adx25_4h:[25,4],adx15_6h:[15,6],adx20_6h:[20,6],adx25_6h:[25,6]};
  if(!x||typeof x!=="object"||Array.isArray(x)||x.schema_version!==1||x.mode!=="ISOLATED_ADX_FORWARD_PAPER_ONLY")throw Error("تقرير ADX غير معروف أو إصدار المخطط غير مدعوم");
  if(x.live_orders_enabled!==false||x.existing_paper_ledgers_touched!==false)throw Error("رفض التقرير: ضمانات العزل والتداول الورقي غير متحققة");
  if(x.data_quality!=="VALIDATED_NO_GAPS_NO_IMPUTED_CANDLES")throw Error("جودة بيانات ADX غير مقبولة");
  if(typeof x.generated_at_utc!=="string"||!Number.isFinite(Date.parse(x.generated_at_utc)))throw Error("وقت إنشاء تقرير ADX غير صالح");
- if(!x.results||typeof x.results!=="object"||Array.isArray(x.results)||Object.keys(x.results).length!==4||!Object.keys(keys).every(k=>Object.prototype.hasOwnProperty.call(x.results,k)))throw Error("يجب أن يحتوي التقرير على المحافظ الأربع فقط");
+ if(!x.results||typeof x.results!=="object"||Array.isArray(x.results)||Object.keys(x.results).length!==6||!Object.keys(keys).every(k=>Object.prototype.hasOwnProperty.call(x.results,k)))throw Error("يجب أن يحتوي التقرير على المحافظ الست فقط");
  for(const [key,config] of Object.entries(keys)){
   const a=x.results[key],threshold=config[0],timeframe=config[1];
   if(!a||typeof a!=="object"||a.mode!=="FORWARD_ONLY_PAPER_NO_LIVE_ORDERS"||a.strategy!=="EMA50_200_ADX14_ENTRY_ONLY"||a.threshold!==threshold||a.timeframe_hours!==timeframe)throw Error("هوية المحفظة غير مطابقة: "+key);
@@ -1071,7 +1071,7 @@ function validateAdxForwardReport(x){
  return x;
 }
 function renderAdxForward(x){
- const labels={adx15_4h:"ADX15 · 4h",adx20_4h:"ADX20 · 4h",adx15_6h:"ADX15 · 6h",adx20_6h:"ADX20 · 6h"};
+ const labels={adx15_4h:"ADX15 · 4h",adx20_4h:"ADX20 · 4h",adx25_4h:"ADX25 · 4h",adx15_6h:"ADX15 · 6h",adx20_6h:"ADX20 · 6h",adx25_6h:"ADX25 · 6h"};
  const rows=Object.keys(labels).map(key=>{
   const a=x.results[key],risk=a.risk_pause_reasons.length?a.risk_pause_reasons.join("، "):"لا يوجد";
   const status=a.risk_paused?"متوقف وقائياً":a.assessment==="INSUFFICIENT_FORWARD_SAMPLE"?"العينة غير كافية":"مراجعة مطلوبة";
@@ -1083,8 +1083,8 @@ function renderAdxForward(x){
  $("adxForwardQuality").textContent=x.data_quality;
  $("adxForwardFreshness").textContent=!Number.isFinite(age)||age< -5?"توقيت غير صالح":age>180?"قديم جداً · "+fmt(age/60,1)+" ساعة":age>100?"متأخر · "+fmt(age,0)+" دقيقة":"حديث · "+fmt(age,0)+" دقيقة";
  const seeded=Object.values(x.results).filter(a=>a.seeded_without_historical_trades).length;
- $("adxForwardSeed").textContent=seeded===4?"تمت تهيئة المحافظ الأربع دون صفقات تاريخية":seeded>0?seeded+" من 4 محافظ في وضع التهيئة":"دفاتر مهيأة مسبقاً";
- $("adxForwardStatus").textContent="تم التحقق من أربع محافظ ADX مستقلة · تداول ورقي فقط";
+ $("adxForwardSeed").textContent=seeded===6?"تمت تهيئة المحافظ الست دون صفقات تاريخية":seeded>0?seeded+" من 6 محافظ في وضع التهيئة":"دفاتر مهيأة مسبقاً";
+ $("adxForwardStatus").textContent="تم التحقق من ست محافظ ADX مستقلة · تداول ورقي فقط";
 }
 $("adxForwardFile").addEventListener("change",async e=>{
  const file=e.target.files&&e.target.files[0];if(!file)return;

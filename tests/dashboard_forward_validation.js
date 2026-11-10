@@ -210,12 +210,12 @@ assert.match(html, /whjToast/, "Dashboard must expose accessible status notifica
 console.log("Dashboard forward-report and premium UX tests passed.");
 
 
-// Isolated ADX forward report validation: four exact sleeves, no live orders, and no historical trades.
+// Isolated ADX forward report validation: six exact sleeves, no live orders, and no historical trades.
 const adxMatch = html.match(/function validateAdxForwardReport\(x\)\{[\s\S]*?\n\}\nfunction renderAdxForward\(/);
 assert.ok(adxMatch, "Could not locate isolated ADX report validator");
 const adxValidatorSource = adxMatch[0].replace(/\nfunction renderAdxForward\($/, "");
 const validateAdx = vm.runInNewContext(`${adxValidatorSource}; validateAdxForwardReport`);
-const adxKeys = { adx15_4h:[15,4], adx20_4h:[20,4], adx15_6h:[15,6], adx20_6h:[20,6] };
+const adxKeys = { adx15_4h:[15,4], adx20_4h:[20,4], adx25_4h:[25,4], adx15_6h:[15,6], adx20_6h:[20,6], adx25_6h:[25,6] };
 const adxReport = {
   schema_version:1, mode:"ISOLATED_ADX_FORWARD_PAPER_ONLY",
   generated_at_utc:"2026-11-09T00:00:00Z", live_orders_enabled:false,
@@ -236,7 +236,7 @@ assert.equal(validateAdx(adxReport), adxReport);
 const adxBadLive = structuredClone(adxReport); adxBadLive.live_orders_enabled=true;
 assert.throws(()=>validateAdx(adxBadLive),/ضمانات العزل/);
 const adxMissingSleeve = structuredClone(adxReport); delete adxMissingSleeve.results.adx20_6h;
-assert.throws(()=>validateAdx(adxMissingSleeve),/المحافظ الأربع فقط/);
+assert.throws(()=>validateAdx(adxMissingSleeve),/المحافظ الست فقط/);
 const adxBadIdentity = structuredClone(adxReport); adxBadIdentity.results.adx15_4h.threshold=20;
 assert.throws(()=>validateAdx(adxBadIdentity),/هوية المحفظة/);
 const adxBadReturn = structuredClone(adxReport); adxBadReturn.results.adx15_4h.return_pct=2;
@@ -256,6 +256,6 @@ const adxRender=vm.runInNewContext(`${adxRendererSource}; renderAdxForward`,{
   esc:(v)=>String(v??"")
 });
 adxRender(adxReport);
-assert.equal((adxGet("adxForwardRows").innerHTML.match(/<tr>/g)||[]).length,4);
+assert.equal((adxGet("adxForwardRows").innerHTML.match(/<tr>/g)||[]).length,6);
 assert.match(adxGet("adxForwardRows").innerHTML,/ADX15 · 4h/);
-assert.match(adxGet("adxForwardSeed").textContent,/تهيئة المحافظ الأربع/);
+assert.match(adxGet("adxForwardSeed").textContent,/تهيئة المحافظ الست/);
