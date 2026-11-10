@@ -128,6 +128,10 @@ def seed_atr_trailing_account(four_hour_bars, daily_bars, state_path, initial_ca
     daily = _bars(daily_bars, "daily")
     if len(four_hour) < 201 or len(daily) < 200:
         raise ValueError("Need at least 201 four-hour and 200 daily bars to seed")
+    if any(b["timestamp"] - a["timestamp"] != 4 * 3600 for a, b in zip(four_hour, four_hour[1:])):
+        raise ValueError("Historical 4h candles must be contiguous")
+    if any(b["timestamp"] - a["timestamp"] != 86400 for a, b in zip(daily, daily[1:])):
+        raise ValueError("Historical daily candles must be contiguous")
     existing = _load(state_path, initial_cash)
     if existing is not None:
         return {"created": False, "last_timestamp": existing["last_timestamp"]}
