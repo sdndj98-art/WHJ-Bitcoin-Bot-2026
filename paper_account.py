@@ -354,7 +354,10 @@ def update_paper_account(candles, state_path="paper_account_state.json",
             close = _number(float(row[4]), "candle close", 0)
         except (TypeError, ValueError, OverflowError) as exc:
             raise ValueError("Candle timestamp and close must be numeric") from exc
-        normalized.append((timestamp, close))
+        executable = row[5] if len(row) > 5 else True
+        if not isinstance(executable, bool):
+            raise ValueError("Candle executable flag must be boolean")
+        normalized.append((timestamp, close, executable))
     if not normalized:
         raise ValueError("No closed candles were supplied")
     timestamps = [row[0] for row in normalized]
@@ -385,7 +388,7 @@ def update_paper_account(candles, state_path="paper_account_state.json",
     ):
         state["paused_for_strategy_health"] = True
         state_changed = True
-    for timestamp, close in normalized:
+    for timestamp, close, executable in normalized:
         last = state.get("last_timestamp")
         if last is not None and timestamp <= int(last):
             continue
@@ -508,7 +511,7 @@ def update_paper_account(candles, state_path="paper_account_state.json",
             entry_permitted = (
                 not require_entry_confirmation or confirmation_matches
             )
-            if want_long and state["btc"] == 0 and not paused and entry_permitted:
+            if executable and want_long and state["btc"] == 0 and not paused and entry_permitted:
                 equity = state["cash"]
                 allocation = min(state["cash"], equity * allocation_fraction)
                 if allocation > 0:
@@ -521,7 +524,7 @@ def update_paper_account(candles, state_path="paper_account_state.json",
                     state["fees_paid"] += fee
                     if strategy in ("bollinger_mean_reversion", "rsi14_mean_reversion"):
                         state["holding_bars"] = 0
-            elif (want_flat or daily_loss_hit or state.get("paused_for_drawdown", False) or state.get("paused_for_loss_streak", False) or state.get("paused_for_strategy_health", False) or state.get("daily_loss_paused", False)) and state["btc"] > 0:
+            elif executable and (want_flat or daily_loss_hit or state.get("paused_for_drawdown", False) or state.get("paused_for_loss_streak", False) or state.get("paused_for_strategy_health", False) or state.get("daily_loss_paused", False)) and state["btc"] > 0:
                 fill = close * (1 - slippage_rate)
                 gross = state["btc"] * fill
                 fee = gross * fee_rate
