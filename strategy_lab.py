@@ -591,6 +591,9 @@ def _volume_liquidity_signals(bars):
         values = (op, high, low, close, volume)
         if any(not math.isfinite(value) for value in values):
             raise ValueError("OHLCV values must be finite")
+        imputed = row.get("imputed", False)
+        if not isinstance(imputed, bool):
+            raise ValueError("OHLCV imputed flag must be boolean")
         if timestamp < 0 or min(op, high, low, close) <= 0 or volume < 0:
             raise ValueError("OHLCV bar contains invalid timestamp, price or volume")
         if high < max(op, close, low) or low > min(op, close, high):
@@ -598,6 +601,7 @@ def _volume_liquidity_signals(bars):
         normalized.append({
             "timestamp": timestamp, "open": op, "high": high,
             "low": low, "close": close, "volume": volume,
+            "imputed": imputed,
         })
     if any(b["timestamp"] <= a["timestamp"] for a, b in zip(normalized, normalized[1:])):
         raise ValueError("OHLCV timestamps must be strictly increasing")
@@ -629,6 +633,16 @@ def _volume_liquidity_signals(bars):
     for i, row in enumerate(normalized):
         if i < 200:
             diagnostics.append({})
+            continue
+        # A synthetic forward-filled candle can distort EMA, volume baselines,
+        # CMF and VWAP. Keep the strategy flat until its full 200-bar context
+        # contains observed exchange candles only.
+        if any(item["imputed"] for item in normalized[i - 199:i + 1]):
+            in_position = False
+            diagnostics.append({
+                "data_quality_blocked": True,
+                "reason": "imputed_candle_in_200_bar_indicator_context",
+            })
             continue
         prior_volumes = volumes[i - 20:i]
         average_volume = sum(prior_volumes) / 20
