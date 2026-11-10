@@ -64,6 +64,13 @@ class CvdPaperOverlayTests(unittest.TestCase):
             "cvd_candle_not_yet_closed",
         )
 
+    def test_invalid_candle_interval_fails_closed(self):
+        for interval in (0, -1, True, 3600.5, "3600"):
+            with self.subTest(interval=interval):
+                result = self.assess(dict(self.evidence, interval_seconds=interval))
+                self.assertFalse(result["available"])
+                self.assertEqual(result["reason"], "cvd_invalid_candle_interval")
+
     def test_non_finite_values_fail_closed(self):
         self.assertFalse(
             self.assess(dict(self.evidence, delta_pct=float("nan")))["available"]
