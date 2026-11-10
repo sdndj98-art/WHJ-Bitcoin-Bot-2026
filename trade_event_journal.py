@@ -75,7 +75,7 @@ class JsonlTradeJournal:
                 if side not in ("buy", "sell"):
                     raise TradeJournalError("journal contains an invalid side")
                 source = event.get("source")
-                if source is not None and source not in ("websocket_v2", "rest_trades"):
+                if source is not None and source not in ("websocket_v2", "rest_trades", "unknown_legacy"):
                     raise TradeJournalError("journal contains an invalid source")
                 if self.last_trade_id is not None and trade_id != self.last_trade_id + 1:
                     raise TradeJournalError("journal trade IDs are not strictly contiguous")
