@@ -105,8 +105,8 @@ def safe_path(raw: str) -> Path:
     parent = target.parent.resolve()
     if parent != ROOT and ROOT not in parent.parents:
         raise ValueError("path escapes project root")
-    for part in rel.parts[:-1]:
-        probe = ROOT.joinpath(*rel.parts[:rel.parts.index(part) + 1])
+    for index in range(1, len(rel.parts)):
+        probe = ROOT.joinpath(*rel.parts[:index])
         if probe.is_symlink():
             raise ValueError("symlink directories are not allowed")
     if target.exists() and target.is_symlink():
@@ -213,10 +213,9 @@ def execute(task: dict) -> dict:
                 continue
             safe_path(path)
             paths.append(path)
-        if not paths:
-            return {"message": "no changes to commit"}
-        git(["add", "--", *paths])
-        git(["commit", "-m", str(task.get("message") or "WHJ bridge: verified development change")[:120]], timeout=120)
+        if paths:
+            git(["add", "--", *paths])
+            git(["commit", "-m", str(task.get("message") or "WHJ bridge: verified development change")[:120]], timeout=120)
         helper = CONFIG / "git-askpass"
         helper.write_text(
             "#!/data/data/com.termux/files/usr/bin/python\n"
@@ -285,7 +284,7 @@ def poll_once() -> int:
     page = 1
     comments = []
     while page <= 5:
-        batch = api("GET", f"/repos/{REPO}/issues/{ISSUE}/comments?per_page=100&page={page}")
+        batch = api("GET", f"/repos/{REPO}/issues/{ISSUE}/comments?per_page=100&page={page}", authenticated=True)
         comments.extend(batch)
         if len(batch) < 100:
             break
