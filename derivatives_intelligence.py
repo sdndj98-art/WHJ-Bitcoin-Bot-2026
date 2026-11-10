@@ -66,8 +66,11 @@ def classify_derivatives_flow(
         ("max_timestamp_skew_seconds", max_timestamp_skew_seconds),
         ("min_abs_change_pct", min_abs_change_pct),
     ):
-        if isinstance(value, bool) or not isinstance(value, (int, float)) or not math.isfinite(value) or value < 0:
-            raise ValueError("{} must be a finite non-negative number".format(name))
+        invalid_bound = value <= 0 if name == "min_abs_change_pct" else value < 0
+        if (isinstance(value, bool) or not isinstance(value, (int, float))
+                or not math.isfinite(value) or invalid_bound):
+            qualifier = "positive" if name == "min_abs_change_pct" else "non-negative"
+            raise ValueError("{} must be a finite {}".format(name, qualifier))
 
     if not isinstance(price_snapshot, dict) or not isinstance(open_interest_snapshot, dict):
         return _blocked("Price and open-interest snapshots are both required")
