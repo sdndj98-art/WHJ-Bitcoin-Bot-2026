@@ -10,7 +10,7 @@ from historical_research import aggregate_candles
 from ema_adx_lab import _build_sleeve_signals
 
 TIMEFRAMES = (4, 6)
-THRESHOLDS = (15.0, 20.0)
+THRESHOLDS = (15.0, 20.0, 25.0)
 INITIAL_CASH_PER_SLEEVE = 500.0
 FEE_RATE = 0.001
 SLIPPAGE_RATE = 0.0005
