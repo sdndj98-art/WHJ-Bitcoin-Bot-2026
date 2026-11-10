@@ -187,6 +187,14 @@ def aggregate_candles(candles, hours):
     return aggregated
 
 
+def _blocked_execution_indices(bars):
+    """Return indices of synthetic bars that may inform indicators but cannot fill."""
+    return {
+        index for index, row in enumerate(bars)
+        if row.get("imputed", False)
+    }
+
+
 def _turtle_signals(bars, entry_period, exit_period, regime_period=None, atr_stop_multiple=None):
     """Create close-confirmed Donchian signals with an optional ATR trailing exit.
 
@@ -2143,7 +2151,11 @@ def main(output_dir="."):
     output_path.mkdir(parents=True, exist_ok=True)
     candles = load_two_year_candles()
     prices = [row["close"] for row in candles]
-    research = run_strategy_lab(prices, fee=FEE_RATE, slippage=SLIPPAGE_RATE)
+    hourly_blocked = _blocked_execution_indices(candles)
+    research = run_strategy_lab(
+        prices, fee=FEE_RATE, slippage=SLIPPAGE_RATE,
+        blocked_execution_indices=hourly_blocked,
+    )
     timeframe_research = {}
     for label, hours in (("1h", 1), ("4h", 4), ("6h", 6), ("1d", 24)):
         bars = candles if hours == 1 else aggregate_candles(candles, hours)
@@ -2151,11 +2163,13 @@ def main(output_dir="."):
             "bar_count": len(bars),
             "first_bar_utc": datetime.fromtimestamp(bars[0]["timestamp"] / 1000, timezone.utc).isoformat(),
             "last_bar_utc": datetime.fromtimestamp(bars[-1]["timestamp"] / 1000, timezone.utc).isoformat(),
-            "imputed_bar_count": sum(1 for bar in bars if bar.get("imputed", False)),
+            "imputed_bar_count": len(_blocked_execution_indices(bars)),
+            "blocked_execution_bar_count": len(_blocked_execution_indices(bars)),
             "research": run_strategy_lab(
                 [bar["close"] for bar in bars],
                 fee=FEE_RATE,
                 slippage=SLIPPAGE_RATE,
+                blocked_execution_indices=_blocked_execution_indices(bars),
             ),
         }
     # Apply the same elevated-cost assumptions to every tested timeframe,
@@ -2165,6 +2179,7 @@ def main(output_dir="."):
             prices,
             fee=0.002,
             slippage=0.001,
+            blocked_execution_indices=hourly_blocked,
         )
     }
     for label in ("4h", "6h", "1d"):
@@ -2174,6 +2189,7 @@ def main(output_dir="."):
             [bar["close"] for bar in aggregated],
             fee=0.002,
             slippage=0.001,
+            blocked_execution_indices=_blocked_execution_indices(aggregated),
         )
 
     daily_bars = aggregate_candles(candles, 24)
@@ -2245,6 +2261,7 @@ def main(output_dir="."):
         "data_quality": {
             "hourly_intervals_contiguous_after_repair": True,
             "imputed_missing_hour_count": candles[0].get("_imputed_hour_count", 0),
+            "blocked_hourly_execution_bar_count": len(hourly_blocked),
             "imputation_method": "Forward-filled prior close with zero volume for gaps of at most six hours; larger gaps are rejected.",
             "ohlcv_validated": True,
         },
