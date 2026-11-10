@@ -9,8 +9,6 @@ on:
 
 permissions:
   contents: read
-  pages: write
-  id-token: write
 
 concurrency:
   group: whj-bitcoin-analysis
@@ -20,9 +18,6 @@ jobs:
   bitcoin-analysis:
     runs-on: ubuntu-latest
     timeout-minutes: 5
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - name: Checkout project
         uses: actions/checkout@v4
@@ -57,21 +52,8 @@ jobs:
           cp web/index.html site/index.html
           cp report.json site/report.json
 
-      - name: Configure GitHub Pages
-        if: github.ref == 'refs/heads/main'
-        id: pages
-        uses: actions/configure-pages@v5
-
-      - name: Upload dashboard website
-        if: github.ref == 'refs/heads/main' && steps.pages.outcome == 'success'
-        uses: actions/upload-pages-artifact@v3
-        with:
-          path: site
-
-      - name: Deploy dashboard website
-        if: github.ref == 'refs/heads/main' && steps.pages.outcome == 'success'
-        id: deployment
-        uses: actions/deploy-pages@v4
+      # Dashboard files remain available as workflow artifacts; automatic Pages
+      # publication is intentionally paused until the dashboard is requested.
 
       - name: Save persistent paper account state
         if: success() && hashFiles('paper_account_state_*.json') != ''
