@@ -12,6 +12,7 @@ import sys
 import time
 import urllib.error
 import urllib.request
+from urllib.parse import urlsplit
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent
@@ -61,6 +62,28 @@ def token() -> str:
     if len(value) < 20:
         raise RuntimeError("GitHub token file is empty or invalid")
     return value
+
+
+def validate_origin_url(remote: str) -> bool:
+    """Accept only the exact HTTPS GitHub repository URL used by this bridge."""
+    if not isinstance(remote, str) or not remote:
+        return False
+    try:
+        parsed = urlsplit(remote)
+        port = parsed.port
+    except ValueError:
+        return False
+    if (
+        parsed.scheme != "https"
+        or parsed.hostname != "github.com"
+        or parsed.username is not None
+        or parsed.password is not None
+        or port is not None
+        or parsed.query
+        or parsed.fragment
+    ):
+        return False
+    return parsed.path in ("/" + REPO, "/" + REPO + ".git")
 
 
 def api(method: str, path: str, payload: dict | None = None, authenticated: bool = False):
@@ -230,8 +253,8 @@ def execute(task: dict) -> dict:
         env = os.environ.copy()
         env.update({"GIT_ASKPASS": str(helper), "GIT_TERMINAL_PROMPT": "0", "GCM_INTERACTIVE": "Never"})
         remote = git(["remote", "get-url", "origin"]).strip()
-        if not remote.startswith("https://github.com/" + REPO):
-            raise RuntimeError("origin must be HTTPS URL for the configured repository")
+        if not validate_origin_url(remote):
+            raise RuntimeError("origin must be the exact HTTPS URL for the configured GitHub repository")
         pushed = git(["push", "-u", "origin", BRANCH], timeout=180, env=env)
         return {"commit": git(["log", "-1", "--oneline"]), "push": pushed, "branch": BRANCH}
     raise ValueError("operation not allowed")
