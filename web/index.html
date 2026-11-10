@@ -711,7 +711,41 @@ main{max-width:1720px!important;padding:22px clamp(12px,2vw,30px) 42px!important
   .q-decision-core,.q-core-orbit,.q-module-node,.q-module-node .q-node-icon,.q-decision-output,.q-flow-path { animation:none!important; transition:none!important; }
 }
 </style>
-</head><body><div class="shell"><aside class="side"><div class="brand"><div class="logo">₿</div><div><b>WHJ BITCOIN</b><small>مركز قيادة التداول الذكي</small></div></div><div class="navlabel">القائمة الرئيسية</div><nav class="nav"><button class="active" data-view="overview"><span class="ico">⌂</span>الرئيسية</button><button data-view="scanner"><span class="ico">⌁</span>ماسح السوق</button><button data-view="strategies"><span class="ico">◈</span>الاستراتيجيات</button><button data-view="trades"><span class="ico">⇄</span>الصفقات</button><button data-view="risk"><span class="ico">⌁</span>المخاطر</button><button data-view="system"><span class="ico">⚙</span>النظام</button><button data-view="agents"><span class="ico">✣</span>مركز الوكلاء</button><button data-view="forward"><span class="ico">◷</span>المراقبة المستقبلية</button><button data-view="mt5"><span class="ico">⌁</span>منصة MT5</button></nav><div class="navlabel agent-nav-label">وحدات التشغيل الست</div><nav class="agent-nav" aria-label="وحدات التشغيل"><button type="button" data-agent-target="0"><span>⌕</span>ماسح السوق</button><button type="button" data-agent-target="1"><span>⚑</span>بوابة التحقق</button><button type="button" data-agent-target="2"><span>◈</span>مدير الحجم</button><button type="button" data-agent-target="3"><span>Ⅱ</span>المحاكي الورقي</button><button type="button" data-agent-target="4"><span>≡</span>سجل القرارات</button><button type="button" data-agent-target="5"><span>◉</span>مراقب المحفظة</button></nav><div class="sidefoot">WHJ Bitcoin Bot 2026<br>مراقبة وتحليل · Paper Trading فقط</div></aside><main>
+<style id="whj-quantumorb-visible-motion-v2">
+/* Stronger, unmistakable command-center motion; presentation only. */
+.q-network-stage{border-color:rgba(81,229,242,.38)!important;box-shadow:inset 0 0 55px rgba(31,143,184,.12),0 0 28px rgba(54,188,219,.08)!important}
+.q-links{z-index:2!important;pointer-events:none}
+.q-flow-path{stroke-width:3.6!important;stroke-dasharray:5 15!important;animation:qFlowVisible 1.35s linear infinite!important;filter:drop-shadow(0 0 7px rgba(81,229,242,.9))!important}
+.q-flow-path:nth-of-type(2){animation-duration:1.05s!important}
+.q-flow-path:nth-of-type(3){animation-duration:1.55s!important}
+.q-flow-path:nth-of-type(4){animation-duration:1.2s!important}
+.q-flow-path:nth-of-type(5){animation-duration:1.4s!important}
+.q-flow-path:nth-of-type(6){animation-duration:1.65s!important}
+.q-output-path{stroke-width:4.8!important;stroke-dasharray:7 12!important;animation:qFlowVisible .85s linear infinite!important;filter:drop-shadow(0 0 9px rgba(181,151,255,.95))!important}
+.q-branch-path{stroke-width:1.8!important;stroke-dasharray:4 9!important;animation:qFlowVisible 3.4s linear infinite!important}
+.q-module-node{border-width:1.5px!important;box-shadow:0 0 0 1px rgba(81,229,242,.13),0 8px 28px rgba(0,0,0,.42),0 0 18px rgba(81,229,242,.13)!important;animation:qNodeBreath 3.6s ease-in-out infinite!important}
+.q-node-scanner{animation-delay:0s!important}.q-node-guard{animation-delay:.55s!important}.q-node-sizer{animation-delay:1.1s!important}.q-node-executor{animation-delay:1.65s!important}.q-node-logger{animation-delay:2.2s!important}.q-node-equity{animation-delay:2.75s!important}
+.q-node-icon{box-shadow:0 0 0 4px rgba(81,229,242,.055),0 0 22px rgba(81,229,242,.28)!important;animation:qIconPulse 2.2s ease-in-out infinite!important}
+.q-node-icon svg{filter:drop-shadow(0 0 4px currentColor)}
+.q-decision-core{border-width:2px!important;box-shadow:0 0 0 8px rgba(165,139,255,.08),0 0 0 18px rgba(81,229,242,.045),0 0 52px rgba(112,112,255,.38),inset 0 1px rgba(255,255,255,.14)!important;animation:qCoreBreath 2.8s ease-in-out infinite!important}
+.q-core-orbit{inset:-17px!important;border:1px solid rgba(81,229,242,.5)!important;border-radius:38px!important;box-shadow:0 0 22px rgba(81,229,242,.13)!important;animation:qOrbitTurn 12s linear infinite!important}
+.q-decision-output{border-color:rgba(81,229,242,.8)!important;box-shadow:0 0 0 4px rgba(81,229,242,.06),0 0 28px rgba(81,229,242,.24)!important;animation:qOutputPulse 2s ease-in-out infinite!important}
+.q-decision-output>b{animation:qOutputArrow 1.1s ease-in-out infinite!important}
+@keyframes qFlowVisible{to{stroke-dashoffset:-80}}
+@keyframes qNodeBreath{0%,100%{transform:translateY(0);filter:brightness(1)}50%{transform:translateY(-4px);filter:brightness(1.18)}}
+@keyframes qIconPulse{0%,100%{transform:scale(1);filter:brightness(1)}50%{transform:scale(1.09);filter:brightness(1.35)}}
+@keyframes qCoreBreath{0%,100%{filter:brightness(1)}50%{filter:brightness(1.22)}}
+@keyframes qOrbitTurn{to{transform:rotate(360deg)}}
+@keyframes qOutputPulse{0%,100%{filter:brightness(1)}50%{filter:brightness(1.25)}}
+@keyframes qOutputArrow{0%,100%{transform:translateX(0)}50%{transform:translateX(-5px)}}
+@media(max-width:620px){
+ .q-flow-path{stroke-width:3!important;stroke-dasharray:4 13!important}
+ .q-decision-core{box-shadow:0 0 0 5px rgba(165,139,255,.08),0 0 0 12px rgba(81,229,242,.045),0 0 35px rgba(112,112,255,.3)!important}
+}
+@media(prefers-reduced-motion:reduce){
+ .q-flow-path,.q-output-path,.q-branch-path,.q-module-node,.q-node-icon,.q-decision-core,.q-core-orbit,.q-decision-output,.q-decision-output>b{animation:none!important}
+}
+</style></head><body><div class="shell"><aside class="side"><div class="brand"><div class="logo">₿</div><div><b>WHJ BITCOIN</b><small>مركز قيادة التداول الذكي</small></div></div><div class="navlabel">القائمة الرئيسية</div><nav class="nav"><button class="active" data-view="overview"><span class="ico">⌂</span>الرئيسية</button><button data-view="scanner"><span class="ico">⌁</span>ماسح السوق</button><button data-view="strategies"><span class="ico">◈</span>الاستراتيجيات</button><button data-view="trades"><span class="ico">⇄</span>الصفقات</button><button data-view="risk"><span class="ico">⌁</span>المخاطر</button><button data-view="system"><span class="ico">⚙</span>النظام</button><button data-view="agents"><span class="ico">✣</span>مركز الوكلاء</button><button data-view="forward"><span class="ico">◷</span>المراقبة المستقبلية</button><button data-view="mt5"><span class="ico">⌁</span>منصة MT5</button></nav><div class="navlabel agent-nav-label">وحدات التشغيل الست</div><nav class="agent-nav" aria-label="وحدات التشغيل"><button type="button" data-agent-target="0"><span>⌕</span>ماسح السوق</button><button type="button" data-agent-target="1"><span>⚑</span>بوابة التحقق</button><button type="button" data-agent-target="2"><span>◈</span>مدير الحجم</button><button type="button" data-agent-target="3"><span>Ⅱ</span>المحاكي الورقي</button><button type="button" data-agent-target="4"><span>≡</span>سجل القرارات</button><button type="button" data-agent-target="5"><span>◉</span>مراقب المحفظة</button></nav><div class="sidefoot">WHJ Bitcoin Bot 2026<br>مراقبة وتحليل · Paper Trading فقط</div></aside><main>
 <div class="mobilehead">WHJ BITCOIN · مركز القيادة</div><header class="top"><div><div class="eyebrow">WHJ / COMMAND CENTER</div><h1 id="pageTitle">نظرة عامة</h1><div class="sub">مراقبة أداء البوت وتحليل BTC/USD</div></div><div class="topright"><button class="toolbtn" id="exportJson" type="button">تنزيل التقرير JSON</button><button class="toolbtn" id="exportCsv" type="button">تصدير الصفقات CSV</button><span class="pill"><i class="dot"></i><span id="systemState">جارٍ تحميل البيانات</span></span><button class="refresh" id="refresh">↻ تحديث البيانات</button></div></header>
 <div class="banner"><div><b>وضع الحماية مفعّل — التداول الحقيقي متوقف</b><p>تعرض اللوحة بيانات التحليل والمحاكاة فقط، ولا ترسل أوامر إلى منصات التداول.</p></div><span class="status">● PAPER MODE</span></div>
 
