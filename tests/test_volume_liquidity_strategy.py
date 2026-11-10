@@ -87,6 +87,13 @@ class VolumeLiquidityStrategyTests(unittest.TestCase):
         bars[300]["timestamp"] += 1
         with self.assertRaisesRegex(ValueError, "evenly spaced"):
             _volume_liquidity_signals(bars)
+    def test_simulator_skips_fills_on_imputed_execution_bars(self):
+        prices = [100.0, 100.0, 110.0, 110.0]
+        signals = [True, True, True, False]
+        blocked = _simulate(prices, signals, 1, 4, blocked_execution_indices={1})
+        immediate = _simulate(prices, signals, 1, 4)
+        self.assertTrue(blocked["open_position"])
+        self.assertGreater(blocked["final_equity_usd"], immediate["final_equity_usd"])
     def test_imputed_candles_block_signals_until_200_bar_context_clears(self):
         bars = synthetic_bars()
         bars[300]["imputed"] = True
