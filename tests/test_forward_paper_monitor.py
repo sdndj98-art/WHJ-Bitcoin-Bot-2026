@@ -460,6 +460,24 @@ class ForwardPaperMonitorTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "align to UTC hour boundaries"):
             validate_hourly_feed(candles, now)
 
+    def test_minimum_24_hour_feed_accepts_contiguous_candles(self):
+        candles = self.make_candles(24)
+        now = candles[-1]["timestamp"] / 1000 + 3600 + 60
+        quality = validate_hourly_feed(candles, now)
+        self.assertEqual(quality["quality"], "HEALTHY")
+        self.assertEqual(quality["total_hourly_candles"], 24)
+        self.assertEqual(quality["imputed_hourly_candles"], 0)
+
+    def test_insufficient_multitimeframe_warmup_fails_before_any_ledger_is_created(self):
+        candles = self.make_candles(24 * 50 - 1)
+        now = candles[-1]["timestamp"] / 1000 + 3600 + 60
+        with tempfile.TemporaryDirectory() as folder:
+            with self.assertRaisesRegex(
+                ValueError, "Insufficient completed candles.*no paper account state was changed"
+            ):
+                process_forward_accounts(candles, folder, now)
+            self.assertEqual(list(Path(folder).iterdir()), [])
+
     def test_recent_hourly_gap_is_rejected(self):
         candles = self.make_candles(48)
         candles[-1]["timestamp"] += 3_600_000
