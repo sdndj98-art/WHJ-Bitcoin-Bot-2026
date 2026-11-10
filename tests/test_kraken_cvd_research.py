@@ -264,5 +264,24 @@ class KrakenCvdResearchTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "timestamp moved backwards"):
             inspect_trade_journal(self.path)
 
+    def test_reports_feed_source_counts_without_claiming_unknown_legacy_origin(self):
+        rows = [
+            self.event(100, 10),
+            self.event(101, 20),
+            self.event(102, 30),
+        ]
+        rows[0]["source"] = "websocket_v2"
+        rows[1]["source"] = "rest_trades"
+        self.write_events(rows)
+        result = load_normalized_trade_journal(self.path)
+        self.assertEqual(
+            result["source_counts"],
+            {"websocket_v2": 1, "rest_trades": 1, "unknown_legacy": 1},
+        )
+        self.assertEqual(
+            [row["source"] for row in result["trades"]],
+            ["websocket_v2", "rest_trades", "unknown_legacy"],
+        )
+
 if __name__ == "__main__":
     unittest.main()
