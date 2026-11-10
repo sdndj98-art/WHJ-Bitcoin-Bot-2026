@@ -660,6 +660,7 @@ def normalize_kraken_ws_v2_trade_message(message, expected_symbol=None):
             "qty": row.get("qty"),
             "side": row.get("side"),
             "timestamp": row.get("timestamp"),
+            "source": "websocket_v2",
         })
     return events
 
@@ -684,6 +685,7 @@ def normalize_kraken_rest_trade_rows(rows, symbol):
             "qty": row[1],
             "side": "buy" if side == "b" else "sell",
             "timestamp": row[2],
+            "source": "rest_trades",
         })
     return events
 
