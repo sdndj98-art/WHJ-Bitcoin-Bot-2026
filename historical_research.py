@@ -2092,7 +2092,7 @@ def _paper_account_rows(bars):
 
 
 def run_forward_paper_accounts(candles, state_dir="."):
-    """Maintain independent 1d and 4h paper accounts across daily workflow runs."""
+    """Maintain legacy diagnostics and isolated forward-only qualified candidate ledgers."""
     directory = Path(state_dir)
     daily = aggregate_candles(candles, 24)
     four_hour = aggregate_candles(candles, 4)
