@@ -2,6 +2,8 @@ import tempfile
 import unittest
 
 from historical_research import run_forward_paper_accounts
+from paper_account import seed_forward_paper_account, update_paper_account
+from strategy_lab import _signals
 
 
 class QualifiedForwardPaperCandidateTests(unittest.TestCase):
@@ -38,6 +40,33 @@ class QualifiedForwardPaperCandidateTests(unittest.TestCase):
                 self.assertEqual(account["completed_trades"], 0)
                 self.assertEqual(account["return_pct"], 0.0)
                 self.assertEqual(account["processed_new_candles"], 0)
+
+    def test_ema_pullback_forward_entry_matches_fixed_research_signal(self):
+        prices = [100.0 + index * 0.5 for index in range(220)]
+        self.assertTrue(_signals(prices)["ema_pullback_trend"][-1])
+        candles = [
+            [index * 6 * 3600, 0, 0, 0, str(price)]
+            for index, price in enumerate(prices)
+        ]
+        with tempfile.TemporaryDirectory() as folder:
+            path = f"{folder}/ema_pullback.json"
+            seed = seed_forward_paper_account(
+                candles, state_path=path, initial_cash=250.0,
+                strategy="ema_pullback_trend",
+            )
+            self.assertTrue(seed["created"])
+            seeded = update_paper_account(
+                candles, state_path=path, initial_cash=250.0,
+                strategy="ema_pullback_trend",
+            )
+            self.assertEqual(seeded["completed_trades"], 0)
+            next_bar = [[len(prices) * 6 * 3600, 0, 0, 0, str(prices[-1] + 0.5)]]
+            updated = update_paper_account(
+                next_bar, state_path=path, initial_cash=250.0,
+                strategy="ema_pullback_trend",
+            )
+            self.assertTrue(updated["open_position"])
+            self.assertEqual(updated["completed_trades"], 0)
 
     def test_qualified_candidate_ledgers_are_idempotent_on_repeated_history(self):
         with tempfile.TemporaryDirectory() as folder:
