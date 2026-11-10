@@ -89,11 +89,14 @@ class VolumeLiquidityStrategyTests(unittest.TestCase):
             _volume_liquidity_signals(bars)
     def test_simulator_skips_fills_on_imputed_execution_bars(self):
         prices = [100.0, 100.0, 110.0, 110.0]
-        signals = [True, True, True, False]
+        signals = [True, False, False, False]
         blocked = _simulate(prices, signals, 1, 4, blocked_execution_indices={1})
         immediate = _simulate(prices, signals, 1, 4)
-        self.assertTrue(blocked["open_position"])
-        self.assertGreater(blocked["final_equity_usd"], immediate["final_equity_usd"])
+        self.assertFalse(blocked["open_position"])
+        self.assertEqual(blocked["closed_trades"], 0)
+        self.assertEqual(blocked["final_equity_usd"], 1000.0)
+        self.assertEqual(immediate["closed_trades"], 1)
+        self.assertGreater(immediate["final_equity_usd"], 1000.0)
     def test_imputed_candles_block_signals_until_200_bar_context_clears(self):
         bars = synthetic_bars()
         bars[300]["imputed"] = True
