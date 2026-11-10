@@ -1,0 +1,44 @@
+name: WHJ ER Adaptive Walk-Forward Research
+
+on:
+  push:
+    branches: [feature/er-adaptive-walk-forward-20261110]
+    paths:
+      - "ema_er_walk_forward.py"
+      - "tests/test_ema_er_walk_forward.py"
+      - ".github/workflows/er-adaptive-walk-forward.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: whj-er-adaptive-walk-forward
+  cancel-in-progress: false
+
+jobs:
+  research:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - name: Checkout research branch
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Run complete repository test suite
+        run: python -m unittest discover -s tests -v
+
+      - name: Run expanding-window ER research
+        run: python ema_er_walk_forward.py
+
+      - name: Upload walk-forward report
+        uses: actions/upload-artifact@v4
+        with:
+          name: whj-er-adaptive-walk-forward-${{ github.run_number }}
+          path: ema_er_walk_forward_report.json
+          if-no-files-found: error
+          retention-days: 30
