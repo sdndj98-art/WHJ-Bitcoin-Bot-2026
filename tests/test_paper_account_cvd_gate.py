@@ -49,6 +49,29 @@ class PaperAccountCvdEntryGateTests(unittest.TestCase):
         self.assertTrue(result["open_position"])
         self.assertGreater(result["btc_units"], 0.0)
 
+    def test_invalid_entry_confirmation_inputs_are_rejected(self):
+        with tempfile.TemporaryDirectory() as folder:
+            history = [
+                [index * 3600, 0, 0, 0, 100.0 + index]
+                for index in range(200)
+            ]
+            state_path = Path(folder) / "paper.json"
+            seed_forward_paper_account(
+                history, str(state_path), initial_cash=1000.0, strategy="sma_trend"
+            )
+            candles = history + [[200 * 3600, 0, 0, 0, 300.0]]
+            with self.assertRaises(ValueError):
+                update_paper_account(
+                    candles, state_path=str(state_path), initial_cash=1000.0,
+                    strategy="sma_trend", require_entry_confirmation="yes",
+                )
+            with self.assertRaises(ValueError):
+                update_paper_account(
+                    candles, state_path=str(state_path), initial_cash=1000.0,
+                    strategy="sma_trend", require_entry_confirmation=True,
+                    entry_confirmation_timestamp=True,
+                )
+
     def test_legacy_strategy_behavior_is_unchanged_when_gate_is_disabled(self):
         result = self.run_one(required=False)
         self.assertTrue(result["open_position"])
