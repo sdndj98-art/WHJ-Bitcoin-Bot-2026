@@ -47,6 +47,14 @@ class AtrTrailingForwardPaperTests(unittest.TestCase):
             self.assertEqual(again["processed_new_candles"], 0)
             self.assertEqual(again["completed_trades"], 0)
 
+    def test_fixture_has_bullish_prior_daily_regime_and_ema_alignment(self):
+        four_hour, daily = self.market()
+        timestamp = len(four_hour) * 4 * 3600
+        closes = [bar["close"] for bar in four_hour]
+        self.assertTrue(_daily_regime(daily, timestamp))
+        self.assertGreater(_ema(closes, 20), _ema(closes, 50))
+        self.assertGreater(closes[-1], _ema(closes, 50))
+
     def test_entry_signal_fills_only_at_following_completed_bar_close(self):
         four_hour, daily = self.market()
         with tempfile.TemporaryDirectory() as folder:
