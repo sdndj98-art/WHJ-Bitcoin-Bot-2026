@@ -111,7 +111,8 @@ def git(args: list[str], timeout: int = 30, env: dict | None = None) -> str:
     output = (p.stdout or "") + (p.stderr or "")
     if p.returncode:
         raise RuntimeError("git failed: " + redact(output))
-    return redact(output.strip())
+    # Preserve leading porcelain status columns; strip only trailing newlines.
+    return redact(output.rstrip("\\n"))
 
 
 def safe_path(raw: str) -> Path:
