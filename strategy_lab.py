@@ -715,12 +715,14 @@ def _volume_liquidity_signals(bars):
 
 def run_volume_liquidity_lab(bars, fee=0.001, slippage=0.0005):
     """Evaluate the fixed OHLCV confluence strategy on chronological holdout windows."""
-    if len(bars) < 300:
+    if not isinstance(bars, list) or len(bars) < 300:
         raise ValueError("At least 300 OHLCV bars are required for holdout testing")
-    if not 0 <= fee < 1 or not 0 <= slippage < 1:
-        raise ValueError("Fee and slippage must be between 0 and 1")
-    prices = [float(row["close"]) for row in bars]
+    for name, value in (("fee", fee), ("slippage", slippage)):
+        if (isinstance(value, bool) or not isinstance(value, (int, float))
+                or not math.isfinite(value) or not 0 <= value < 1):
+            raise ValueError(name + " must be a finite number between 0 and 1")
     signals, scores, diagnostics = _volume_liquidity_signals(bars)
+    prices = [float(row["close"]) for row in bars]
     split = int(len(bars) * 0.7)
     edges = [split + ((len(bars) - split) * k) // 3 for k in range(4)]
     windows = []
