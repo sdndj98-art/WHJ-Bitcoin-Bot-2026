@@ -74,6 +74,9 @@ class JsonlTradeJournal:
                     raise TradeJournalError("journal contains an invalid quantity")
                 if side not in ("buy", "sell"):
                     raise TradeJournalError("journal contains an invalid side")
+                source = event.get("source")
+                if source is not None and source not in ("websocket_v2", "rest_trades"):
+                    raise TradeJournalError("journal contains an invalid source")
                 if self.last_trade_id is not None and trade_id != self.last_trade_id + 1:
                     raise TradeJournalError("journal trade IDs are not strictly contiguous")
                 if self.last_timestamp_ns is not None and timestamp_ns < self.last_timestamp_ns:
@@ -105,6 +108,9 @@ class JsonlTradeJournal:
             if not math.isfinite(price) or not math.isfinite(qty):
                 raise ValueError("price and qty must be finite positive numbers")
             side = event.get("side")
+            source = event.get("source", "unknown_legacy")
+            if source not in ("websocket_v2", "rest_trades", "unknown_legacy"):
+                raise ValueError("source must identify websocket_v2 or rest_trades")
             symbol = event.get("symbol")
             if not isinstance(symbol, str) or not symbol.strip():
                 raise ValueError("symbol must be a non-empty string")
@@ -116,6 +122,7 @@ class JsonlTradeJournal:
             item = {
                 "trade_id": trade_id, "timestamp": event.get("timestamp"),
                 "price": price, "qty": qty, "side": side, "symbol": symbol,
+                "source": source,
             }
             if trade_id in normalized and normalized[trade_id] != item:
                 raise ValueError("conflicting events share a trade ID")
