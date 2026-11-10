@@ -63,6 +63,7 @@ def evaluate_paper_decision(scanner_result, guard_account, sizing=None, cvd_conf
         elif (cvd_confirmation.get("status") != "OK"
               or cvd_confirmation.get("available") is not True
               or cvd_confirmation.get("direction") != "BULLISH"
+              or cvd_confirmation.get("continuity_verified") is not True
               or cvd_confirmation.get("research_only") is not True
               or cvd_confirmation.get("execution_enabled") is not False):
             reasons.append("required_cvd_confirmation_not_bullish_and_verified")

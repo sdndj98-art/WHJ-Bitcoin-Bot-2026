@@ -124,6 +124,7 @@ class PaperDecisionPipelineTests(unittest.TestCase):
     def test_required_cvd_gate_accepts_only_verified_bullish_confirmation(self):
         evidence = {
             "status": "OK", "available": True, "direction": "BULLISH",
+            "continuity_verified": True,
             "research_only": True, "execution_enabled": False,
         }
         result = evaluate_paper_decision(
@@ -144,6 +145,11 @@ class PaperDecisionPipelineTests(unittest.TestCase):
             "research_only": True, "execution_enabled": False,
         }, {
             "status": "OK", "available": True, "direction": "BULLISH",
+            "continuity_verified": False,
+            "research_only": True, "execution_enabled": False,
+        }, {
+            "status": "OK", "available": True, "direction": "BULLISH",
+            "continuity_verified": True,
             "research_only": True, "execution_enabled": True,
         }):
             with self.subTest(evidence=evidence):
