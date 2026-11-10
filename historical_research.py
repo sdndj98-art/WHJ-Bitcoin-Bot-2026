@@ -2121,6 +2121,56 @@ def run_forward_paper_accounts(candles, state_dir="."):
         state_path=str(directory / "paper_forward_6h_ema50_200.json"),
         initial_cash=500.0,
     )
+    # Three separately seeded ledgers track the currently qualified candidates.
+    # Each starts with $250; history warms indicators only and creates no trades.
+    qualified_specs = (
+        ("1d_sma_trend", daily, "sma_trend"),
+        ("6h_ema50_200_regime", six_hour, "ema50_200_regime"),
+        ("6h_ema_pullback_trend", six_hour, "ema_pullback_trend"),
+    )
+    qualified_seed = {}
+    qualified_accounts = {}
+    for candidate_name, candidate_bars, candidate_strategy in qualified_specs:
+        candidate_path = directory / f"paper_qualified_{candidate_name}.json"
+        qualified_seed[candidate_name] = seed_forward_paper_account(
+            account_rows(candidate_bars),
+            state_path=str(candidate_path),
+            initial_cash=250.0,
+            strategy=candidate_strategy,
+        )
+        qualified_accounts[candidate_name] = update_paper_account(
+            account_rows(candidate_bars),
+            state_path=str(candidate_path),
+            initial_cash=250.0,
+            allocation_fraction=0.10,
+            max_drawdown_fraction=0.10,
+            daily_loss_fraction=0.03,
+            max_consecutive_losses=5,
+            strategy=candidate_strategy,
+        )
+    qualified_forward_portfolio = {
+        "mode": "QUALIFIED_CANDIDATES_FORWARD_ONLY_PAPER",
+        "initial_cash_usd": 750.0,
+        "equity_after_estimated_exit_costs_usd": round(sum(
+            account["equity_after_estimated_exit_costs_usd"]
+            for account in qualified_accounts.values()
+        ), 2),
+        "return_pct": round((
+            sum(account["equity_after_estimated_exit_costs_usd"]
+                for account in qualified_accounts.values()) / 750.0 - 1.0
+        ) * 100.0, 2),
+        "completed_trades": sum(
+            account["completed_trades"] for account in qualified_accounts.values()
+        ),
+        "candidates": qualified_accounts,
+        "seed": qualified_seed,
+        "note": (
+            "Three currently qualified candidates are tracked in independent $250 "
+            "forward-only ledgers. Historical candles warm indicators only. The fourth "
+            "qualified ATR-trailing candidate is intentionally excluded until the "
+            "paper engine consumes validated OHLC bars and can reproduce its ATR stop."
+        ),
+    }
     forward_four_hour = update_paper_account(
         account_rows(four_hour),
         state_path=str(directory / "paper_forward_4h_ema50_200.json"),
@@ -2210,7 +2260,8 @@ def run_forward_paper_accounts(candles, state_dir="."):
         "six_hour_rsi14_mean_reversion": six_hour_rsi_result,
         "ema50_200_4h_6h_50_50_portfolio": ensemble_portfolio,
         "forward_only_ema50_200_4h_6h_50_50_portfolio": forward_portfolio,
-        "note": "Legacy diagnostic ledgers backfill history; the separate forward_only ledger starts at the latest completed bar and processes only future completed candles. No real orders are sent.",
+        "forward_only_qualified_candidates": qualified_forward_portfolio,
+        "note": "Legacy diagnostic ledgers backfill history; separate forward_only ledgers start at the latest completed bar and process only future completed candles. No real orders are sent.",
     }
 
 
