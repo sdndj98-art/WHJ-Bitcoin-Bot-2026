@@ -244,5 +244,25 @@ class KrakenCvdResearchTests(unittest.TestCase):
         self.assertEqual(before, after)
 
 
+    def test_checkpoint_inspector_rejects_invalid_trade_payload(self):
+        from trade_journal_checkpoint import inspect_trade_journal
+        for field, value in (
+            ("price", 0), ("price", float("nan")), ("price", True),
+            ("qty", -1), ("qty", float("inf")), ("qty", False),
+            ("side", "hold"),
+        ):
+            with self.subTest(field=field, value=value):
+                row = self.event(100, 10)
+                row[field] = value
+                self.write_events([row])
+                with self.assertRaises(ValueError):
+                    inspect_trade_journal(self.path)
+
+    def test_checkpoint_inspector_rejects_backward_timestamp(self):
+        from trade_journal_checkpoint import inspect_trade_journal
+        self.write_events([self.event(100, 20), self.event(101, 10)])
+        with self.assertRaisesRegex(ValueError, "timestamp moved backwards"):
+            inspect_trade_journal(self.path)
+
 if __name__ == "__main__":
     unittest.main()
