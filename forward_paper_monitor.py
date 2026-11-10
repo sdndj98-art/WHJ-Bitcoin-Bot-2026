@@ -10,6 +10,7 @@ from historical_research import aggregate_candles, load_two_year_candles
 from market_scanner import scan_btc_market
 from paper_account import seed_forward_paper_account, update_paper_account
 from paper_decision_pipeline import evaluate_paper_decision
+from cvd_paper_overlay import build_latest_cvd_confirmation
 
 STATE_FILES = {
     "1h_sma_trend": "paper_forward_1h_sma_trend.json",
@@ -360,9 +361,15 @@ def build_qualified_ensemble(sleeves_summary, sleeves):
     }
 
 
-def process_forward_accounts(candles, state_dir=".", now_timestamp=None, cvd_confirmation=None, require_cvd_confirmation=False):
+def process_forward_accounts(candles, state_dir=".", now_timestamp=None, cvd_confirmation=None, require_cvd_confirmation=False, cvd_journal_path=None, cvd_checkpoint_path=None):
     quality = validate_hourly_feed(candles, now_timestamp)
     scanner_review = _build_scanner_review(candles, quality)
+    if require_cvd_confirmation and cvd_confirmation is None:
+        if cvd_journal_path and cvd_checkpoint_path:
+            cvd_confirmation = build_latest_cvd_confirmation(
+                candles, cvd_journal_path, cvd_checkpoint_path,
+                now_timestamp=now_timestamp,
+            )
     directory = Path(state_dir)
     results = {}
     configurations = (
