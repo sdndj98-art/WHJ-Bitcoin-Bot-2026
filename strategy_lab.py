@@ -571,8 +571,16 @@ def _volume_liquidity_signals(bars):
     for row in bars:
         if not isinstance(row, dict):
             raise ValueError("Each OHLCV bar must be a dictionary")
+        raw_timestamp = row.get("timestamp")
+        if (
+            isinstance(raw_timestamp, bool)
+            or not isinstance(raw_timestamp, (int, float))
+            or (isinstance(raw_timestamp, float)
+                and (not math.isfinite(raw_timestamp) or not raw_timestamp.is_integer()))
+        ):
+            raise ValueError("OHLCV timestamp must be a finite integer")
         try:
-            timestamp = int(row["timestamp"])
+            timestamp = int(raw_timestamp)
             op = float(row["open"])
             high = float(row["high"])
             low = float(row["low"])
@@ -593,6 +601,12 @@ def _volume_liquidity_signals(bars):
         })
     if any(b["timestamp"] <= a["timestamp"] for a, b in zip(normalized, normalized[1:])):
         raise ValueError("OHLCV timestamps must be strictly increasing")
+    timestamp_deltas = [
+        b["timestamp"] - a["timestamp"]
+        for a, b in zip(normalized, normalized[1:])
+    ]
+    if timestamp_deltas and any(delta != timestamp_deltas[0] for delta in timestamp_deltas[1:]):
+        raise ValueError("OHLCV timestamps must be evenly spaced")
 
     closes = [row["close"] for row in normalized]
     highs = [row["high"] for row in normalized]
