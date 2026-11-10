@@ -1683,10 +1683,21 @@ def build_qualification_markdown(result):
                 f"{account.get('completed_trades', 0)} forward closed trades; "
                 f"drawdown {account.get('max_drawdown_pct', 0):.2f}%; status {status}."
             )
-        lines.extend([
-            "- The fourth qualified ATR-trailing candidate is not yet tracked here: the current paper adapter supplies close-only bars, so it cannot safely reproduce an OHLC-based ATR trailing stop.",
-            "",
-        ])
+        atr_account = qualified_forward.get("atr3_trailing_candidate", {})
+        if atr_account:
+            atr_status = (
+                "PAUSED — " + str(atr_account.get("pause_reason"))
+                if atr_account.get("paused") else "active"
+            )
+            lines.extend([
+                "- **4h EMA20/EMA50 + prior-day SMA200 + 3x ATR14 trail:** "
+                f"equity ${atr_account.get('equity_usd', 0):,.2f}; "
+                f"{atr_account.get('completed_trades', 0)} forward closed trades; "
+                f"drawdown {atr_account.get('max_drawdown_pct', 0):.2f}%; "
+                f"status {atr_status}.",
+                "- ATR candidate uses validated OHLC bars, Wilder ATR14, and next-bar-close fills; it has its own isolated $250 ledger.",
+                "",
+            ])
 
     # Diagnostic shortlist only: rank by the weaker of base/stress benchmark edges.
     # This is deliberately not a promotion gate and never changes qualification.
@@ -2535,6 +2546,7 @@ def main(output_dir="."):
                 for name, account in forward_paper["forward_only_qualified_candidates"]["candidates"].items()
             },
         },
+        "atr3_trailing_candidate": forward_paper["forward_only_qualified_candidates"]["atr3_trailing_candidate"],
         "strategies": {
             name: {
                 "oos_return_pct": metrics["out_of_sample"]["return_pct"],
