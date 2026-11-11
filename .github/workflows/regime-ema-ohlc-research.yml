@@ -62,6 +62,7 @@ jobs:
               "source": "Coinbase public BTC-USD hourly spot candles",
               "dataset_sha256": dataset_hash,
               "candle_count": n,
+              "imputed_hour_count": int(candles[0].get("_imputed_hour_count", 0)),
               "first_timestamp_utc": datetime.fromtimestamp(candles[0]["timestamp"] / 1000, timezone.utc).isoformat(),
               "last_timestamp_utc": datetime.fromtimestamp(candles[-1]["timestamp"] / 1000, timezone.utc).isoformat(),
               "protocol": {
@@ -85,6 +86,7 @@ jobs:
               f"- Generated UTC: {report['generated_at_utc']}",
               f"- Dataset SHA-256: `{dataset_hash}`",
               f"- BTC-USD hourly candles: {n}",
+              f"- Explicitly imputed flat hours: {int(candles[0].get('_imputed_hour_count', 0))}",
               "- Status: RESEARCH ONLY — NO CANDIDATE PROMOTED", "",
               "| Fold | Costs | Candidate | Return | Max OHLC DD | Closed trades | PF | Matched 25% buy/hold | Cash |",
               "|---:|---|---|---:|---:|---:|---:|---:|---:|",
