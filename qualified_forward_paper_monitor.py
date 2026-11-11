@@ -203,9 +203,9 @@ def process_qualified_forward_candidates(
         raise ValueError("Feed is older than saved ATR checkpoint; refusing rollback")
     # Validate every ATR field read later before the first of the four ledgers
     # is updated. This prevents a corrupt ATR counter from causing a partial cycle.
+    atr_processed_before = _existing_processed_count(atr_path)
     if atr_path.exists():
         _load_atr_state(atr_path, 250.0)
-    atr_processed_before = _existing_processed_count(atr_path)
 
     results = {}
     for name, config in CANDIDATES.items():
