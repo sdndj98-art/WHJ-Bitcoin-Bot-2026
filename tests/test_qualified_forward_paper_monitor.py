@@ -129,7 +129,10 @@ class QualifiedForwardPaperMonitorTests(unittest.TestCase):
                 process_qualified_forward_candidates(
                     candles, folder, self.now_for(candles)
                 )
-            self.assertEqual(list(Path(folder).iterdir()), [])
+            self.assertEqual(
+                {path.name for path in Path(folder).iterdir()},
+                {".qualified_forward_paper_monitor.lock"},
+            )
 
     def test_corrupt_atr_counter_fails_before_any_qualified_ledger_is_created(self):
         candles = self.candles()
