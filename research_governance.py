@@ -56,8 +56,8 @@ def canonical_manifest_json(manifest):
 
 
 def _validated_return_series(return_series):
-    if not isinstance(return_series, dict) or len(return_series) < 2:
-        raise ValueError("At least two named trial return series are required")
+    if not isinstance(return_series, dict) or not return_series:
+        raise ValueError("At least one named return series is required")
     validated = {}
     expected_length = None
     for name, values in return_series.items():
@@ -105,6 +105,8 @@ def cscv_probability_of_backtest_overfitting(return_series, partitions=8):
     that selected trial among all trials on the complementary OOS blocks.
     """
     trials = _validated_return_series(return_series)
+    if len(trials) < 2:
+        raise ValueError("CSCV/PBO requires at least two named trial return series")
     if isinstance(partitions, bool) or not isinstance(partitions, int) or partitions < 4 or partitions % 2:
         raise ValueError("partitions must be an even integer >= 4")
     length = len(next(iter(trials.values())))
