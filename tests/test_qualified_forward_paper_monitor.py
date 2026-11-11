@@ -130,6 +130,26 @@ class QualifiedForwardPaperMonitorTests(unittest.TestCase):
                 )
             self.assertEqual(list(Path(folder).iterdir()), [])
 
+    def test_corrupt_atr_counter_fails_before_any_qualified_ledger_is_created(self):
+        candles = self.candles()
+        with tempfile.TemporaryDirectory() as folder:
+            atr_path = Path(folder) / ATR_FILE
+            atr_path.write_text(json.dumps({
+                "strategy": "ema20_50_daily_sma200_atr3_trailing",
+                "last_timestamp": int(candles[-1]["timestamp"] / 1000),
+                "processed_new_candles": "not-an-integer",
+            }), encoding="utf-8")
+            with self.assertRaisesRegex(ValueError, "processing counter is invalid"):
+                process_qualified_forward_candidates(
+                    candles, folder, self.now_for(candles)
+                )
+            for config in CANDIDATES.values():
+                self.assertFalse((Path(folder) / config["file"]).exists())
+            self.assertEqual(
+                json.loads(atr_path.read_text(encoding="utf-8"))["processed_new_candles"],
+                "not-an-integer",
+            )
+
     def test_existing_corrupt_ledger_is_never_silently_reseeded(self):
         candles = self.candles()
         with tempfile.TemporaryDirectory() as folder:
