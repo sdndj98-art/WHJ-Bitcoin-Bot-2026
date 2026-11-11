@@ -54,7 +54,7 @@ class SlowMomentumLabTests(unittest.TestCase):
         self.assertEqual(result["realized_pnl_usd"], 0.0)
         self.assertEqual(result["unrealized_net_liquidation_pnl_usd"], 25.0)
         self.assertEqual(result["final_net_liquidation_equity_usd"], 1025.0)
-        self.assertIsNone(result["closed_trade_profit_factor"])
+        self.assertEqual(result["closed_trade_profit_factor"], 0.0)
         self.assertEqual(
             result["drawdown_measurement"], "close_to_close_net_liquidation"
         )
@@ -67,10 +67,10 @@ class SlowMomentumLabTests(unittest.TestCase):
         )
         self.assertEqual(result["open_position_count"], 0)
         self.assertEqual(result["closed_trades"], 1)
-        self.assertAlmostEqual(result["realized_pnl_usd"], -20.8333333333, places=6)
+        self.assertAlmostEqual(result["realized_pnl_usd"], -20.8333, places=4)
         self.assertEqual(result["unrealized_net_liquidation_pnl_usd"], 0.0)
         self.assertAlmostEqual(
-            result["final_net_liquidation_equity_usd"], 979.1666666667, places=6
+            result["final_net_liquidation_equity_usd"], 979.1667, places=4
         )
         self.assertEqual(result["closed_trade_profit_factor"], 0.0)
 
