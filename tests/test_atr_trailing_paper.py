@@ -135,10 +135,20 @@ class AtrTrailingForwardPaperTests(unittest.TestCase):
             )
             self.assertEqual(fourth["pending_action"], "sell")
             self.assertTrue(fourth["open_position"])
-            fill_bar = dict(stop_bar)
+            synthetic = dict(stop_bar)
+            synthetic["timestamp"] += 4 * 3600
+            synthetic["execution_eligible"] = False
+            blocked = update_atr_trailing_account(
+                four_hour + [entry_signal_bar, entry_fill_bar, peak_bar, stop_bar, synthetic],
+                daily, path,
+            )
+            self.assertEqual(blocked["pending_action"], "sell")
+            self.assertTrue(blocked["open_position"])
+            fill_bar = dict(synthetic)
             fill_bar["timestamp"] += 4 * 3600
+            fill_bar["execution_eligible"] = True
             fifth = update_atr_trailing_account(
-                four_hour + [entry_signal_bar, entry_fill_bar, peak_bar, stop_bar, fill_bar],
+                four_hour + [entry_signal_bar, entry_fill_bar, peak_bar, stop_bar, synthetic, fill_bar],
                 daily, path,
             )
             self.assertFalse(fifth["open_position"])
