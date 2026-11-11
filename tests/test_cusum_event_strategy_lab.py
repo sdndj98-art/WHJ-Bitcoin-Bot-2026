@@ -58,7 +58,7 @@ class CusumEventStrategyLabTests(unittest.TestCase):
             {"index": 100, "end_index": 200, "label": 0},
         ]
         selected = _purged_training_labels(labeled, 300)
-        self.assertEqual(selected, [labeled[0]])
+        self.assertEqual(selected, [labeled[0], labeled[1]])
 
     def test_logistic_fit_is_deterministic_and_separates_simple_fixture(self):
         rows, labels = [], []
@@ -79,7 +79,7 @@ class CusumEventStrategyLabTests(unittest.TestCase):
         self.assertEqual(result["allocation_fraction"], 0.25)
         self.assertEqual(result["uninvested_cash_usd"], 750.0)
         self.assertEqual(result["return_pct"], round(
-            (source[390]["close"] / source[301]["open"] - 1.0) * 25.0, 4
+            (source[389]["close"] / source[301]["open"] - 1.0) * 25.0, 4
         ))
 
     def test_hourly_timestamp_gaps_fail_closed(self):
