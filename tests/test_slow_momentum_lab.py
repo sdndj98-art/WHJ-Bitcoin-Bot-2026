@@ -2,6 +2,7 @@ import math
 import unittest
 
 from slow_momentum_lab import (
+    _simulate,
     evaluate_slow_momentum,
     momentum_signals,
 )
@@ -41,6 +42,50 @@ class SlowMomentumLabTests(unittest.TestCase):
         self.assertIn("84", result["cost_stress"]["3x"]["candidates"])
         self.assertIn("out_of_sample", result["cost_stress"]["2x"]["matched_buy_and_hold"])
         self.assertEqual(len(result["cost_stress"]["3x"]["matched_buy_and_hold"]["walk_forward_windows"]), 3)
+
+    def test_open_position_reports_unrealized_net_liquidation_pnl_separately(self):
+        result = _simulate(
+            [100.0, 100.0, 120.0, 132.0],
+            [False, True, True, True],
+            1, 4, 0.0, 0.0,
+        )
+        self.assertEqual(result["open_position_count"], 1)
+        self.assertEqual(result["closed_trades"], 0)
+        self.assertEqual(result["realized_pnl_usd"], 0.0)
+        self.assertEqual(result["unrealized_net_liquidation_pnl_usd"], 25.0)
+        self.assertEqual(result["final_net_liquidation_equity_usd"], 1025.0)
+        self.assertIsNone(result["closed_trade_profit_factor"])
+        self.assertEqual(
+            result["drawdown_measurement"], "close_to_close_net_liquidation"
+        )
+
+    def test_closed_trade_pnl_is_realized_and_open_pnl_is_zero(self):
+        result = _simulate(
+            [100.0, 100.0, 120.0, 110.0],
+            [False, True, False, False],
+            1, 4, 0.0, 0.0,
+        )
+        self.assertEqual(result["open_position_count"], 0)
+        self.assertEqual(result["closed_trades"], 1)
+        self.assertAlmostEqual(result["realized_pnl_usd"], -20.8333333333, places=6)
+        self.assertEqual(result["unrealized_net_liquidation_pnl_usd"], 0.0)
+        self.assertAlmostEqual(
+            result["final_net_liquidation_equity_usd"], 979.1666666667, places=6
+        )
+        self.assertEqual(result["closed_trade_profit_factor"], 0.0)
+
+    def test_close_drawdown_field_is_explicit_and_legacy_alias_matches(self):
+        result = _simulate(
+            [100.0, 100.0, 120.0, 90.0],
+            [False, True, True, True],
+            1, 4, 0.0, 0.0,
+        )
+        self.assertEqual(
+            result["max_close_to_close_drawdown_pct"], result["max_drawdown_pct"]
+        )
+        self.assertEqual(
+            result["drawdown_measurement"], "close_to_close_net_liquidation"
+        )
 
     def test_validation_rejects_bad_prices_and_parameters(self):
         with self.assertRaises(ValueError):
