@@ -1,0 +1,54 @@
+import math
+import unittest
+
+from slow_momentum_lab import (
+    evaluate_slow_momentum,
+    momentum_signals,
+)
+
+
+class SlowMomentumLabTests(unittest.TestCase):
+    def test_signal_uses_only_lookback_close_and_is_long_cash(self):
+        closes = [100.0, 101.0, 99.0, 102.0, 103.0]
+        self.assertEqual(
+            momentum_signals(closes, 2),
+            [False, False, False, True, True],
+        )
+
+    def test_signal_is_causal_under_truncated_history(self):
+        closes = [100.0 + i * 0.1 + math.sin(i / 5) for i in range(220)]
+        full = momentum_signals(closes, 56)
+        for end in (57, 80, 120, 180, 220):
+            truncated = momentum_signals(closes[:end], 56)
+            self.assertEqual(full[:end], truncated)
+
+    def test_future_prices_do_not_change_past_signals(self):
+        closes = [100.0 + i * 0.2 for i in range(220)]
+        original = momentum_signals(closes, 84)
+        changed = closes[:150] + [value * 4 for value in closes[150:]]
+        altered = momentum_signals(changed, 84)
+        self.assertEqual(original[:150], altered[:150])
+
+    def test_evaluation_reports_all_horizons_and_three_oos_windows(self):
+        closes = [100.0 * math.exp(0.001 * i + 0.08 * math.sin(i / 17)) for i in range(500)]
+        result = evaluate_slow_momentum(closes)
+        self.assertEqual(set(result["candidates"]), {"56", "84", "112"})
+        for candidate in result["candidates"].values():
+            self.assertEqual(len(candidate["walk_forward_windows"]), 3)
+        self.assertEqual(len(result["buy_and_hold_25pct"]["walk_forward_windows"]), 3)
+        self.assertFalse(result["execution_enabled"])
+        self.assertIn("84", result["two_x_cost_stress"]["candidates"])
+
+    def test_validation_rejects_bad_prices_and_parameters(self):
+        with self.assertRaises(ValueError):
+            evaluate_slow_momentum([100.0] * 159)
+        with self.assertRaises(ValueError):
+            evaluate_slow_momentum([100.0] * 200 + [float("nan")])
+        with self.assertRaises(ValueError):
+            momentum_signals([100.0, 101.0], True)
+        with self.assertRaises(ValueError):
+            evaluate_slow_momentum([100.0 + i for i in range(200)], lookbacks=(0,))
+
+
+if __name__ == "__main__":
+    unittest.main()
