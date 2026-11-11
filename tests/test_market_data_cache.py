@@ -34,7 +34,7 @@ class MarketDataCacheTests(unittest.TestCase):
         while timestamp <= end_ms:
             price = 40000.0 + timestamp / INTERVAL_MS % 1000
             rows.append([
-                timestamp // 1000, price - 1, price + 2,
+                timestamp, price - 1, price + 2,
                 price, price + 1, 3.0,
             ])
             timestamp += INTERVAL_MS
@@ -102,7 +102,7 @@ class MarketDataCacheTests(unittest.TestCase):
             broken = self.as_coinbase_rows(start, next_cutoff)
             # Remove seven genuinely new hours; they are not present in the old cache.
             broken = [row for row in broken if not (
-                cutoff <= row[0] * 1000 <= cutoff + 6 * INTERVAL_MS
+                cutoff <= row[0] <= cutoff + 6 * INTERVAL_MS
             )]
             with patch("market_data_cache.fetch_page", return_value=broken):
                 with self.assertRaisesRegex(ValueError, "six-hour repair limit"):
