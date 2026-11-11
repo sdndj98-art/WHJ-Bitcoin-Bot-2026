@@ -1,6 +1,7 @@
 import json
 import tempfile
 import unittest
+from unittest import mock
 from pathlib import Path
 
 from qualified_forward_paper_monitor import (
@@ -190,6 +191,69 @@ class QualifiedForwardPaperMonitorTests(unittest.TestCase):
                     candles, folder, self.now_for(candles)
                 )
             self.assertEqual(path.read_text(encoding="utf-8"), "{broken")
+
+
+    def test_mid_cycle_failure_leaves_all_four_real_ledgers_unchanged(self):
+        from qualified_forward_paper_monitor import (
+            update_paper_account as real_update_paper_account,
+            update_atr_trailing_account as real_update_atr_trailing_account,
+        )
+
+        initial = self.candles()
+        extended = initial + self.candles(days=1)
+        for index, row in enumerate(extended[len(initial):]):
+            row["timestamp"] = initial[-1]["timestamp"] + (index + 1) * 3_600_000
+
+        ledger_names = [config["file"] for config in CANDIDATES.values()] + [ATR_FILE]
+        for failure_index in (2, 3):
+            with self.subTest(failure_index=failure_index), tempfile.TemporaryDirectory() as folder:
+                process_qualified_forward_candidates(
+                    initial, folder, self.now_for(initial)
+                )
+                before = {
+                    name: (Path(folder) / name).read_bytes()
+                    for name in ledger_names
+                }
+                calls = {"count": 0}
+
+                def fail_during_candidate_update(*args, **kwargs):
+                    calls["count"] += 1
+                    if calls["count"] == failure_index:
+                        raise RuntimeError("injected candidate update failure")
+                    return real_update_paper_account(*args, **kwargs)
+
+                with mock.patch(
+                    "qualified_forward_paper_monitor.update_paper_account",
+                    side_effect=fail_during_candidate_update,
+                ):
+                    with self.assertRaisesRegex(RuntimeError, "injected candidate"):
+                        process_qualified_forward_candidates(
+                            extended, folder, self.now_for(extended)
+                        )
+
+                self.assertEqual(calls["count"], failure_index)
+                for name in ledger_names:
+                    self.assertEqual((Path(folder) / name).read_bytes(), before[name])
+
+        with tempfile.TemporaryDirectory() as folder:
+            process_qualified_forward_candidates(
+                initial, folder, self.now_for(initial)
+            )
+            before = {
+                name: (Path(folder) / name).read_bytes()
+                for name in ledger_names
+            }
+            with mock.patch(
+                "qualified_forward_paper_monitor.update_atr_trailing_account",
+                side_effect=RuntimeError("injected ATR update failure"),
+            ):
+                with self.assertRaisesRegex(RuntimeError, "injected ATR"):
+                    process_qualified_forward_candidates(
+                        extended, folder, self.now_for(extended)
+                    )
+            for name in ledger_names:
+                self.assertEqual((Path(folder) / name).read_bytes(), before[name])
+
 
 
 if __name__ == "__main__":
