@@ -5,8 +5,11 @@ No exchange credentials, order endpoints, or live execution are used.
 """
 from __future__ import annotations
 
+import base64
 import json
 import math
+import os
+import shutil
 import sys
 import tempfile
 from datetime import datetime, timezone
@@ -149,12 +152,119 @@ def _write_json_atomically(payload, path):
         raise
 
 
+
+_TRANSACTION_FILE = ".qualified_forward_paper_transaction.json"
+
+
+def _restore_transaction(directory, journal):
+    """Restore the pre-publication bytes recorded in a pending transaction."""
+    root = Path(directory)
+    backups = journal.get("backups")
+    expected = {config["file"] for config in CANDIDATES.values()} | {ATR_FILE}
+    if not isinstance(backups, dict) or set(backups) != expected:
+        raise ValueError("Qualified-ledger recovery journal is invalid; manual recovery required")
+    for filename in sorted(expected):
+        item = backups[filename]
+        target = root / filename
+        if not isinstance(item, dict) or not isinstance(item.get("existed"), bool):
+            raise ValueError("Qualified-ledger recovery entry is invalid; manual recovery required")
+        if item["existed"]:
+            encoded = item.get("content_b64")
+            if not isinstance(encoded, str):
+                raise ValueError("Qualified-ledger backup is missing; manual recovery required")
+            try:
+                payload = base64.b64decode(encoded, validate=True)
+            except Exception as exc:
+                raise ValueError("Qualified-ledger backup is corrupt; manual recovery required") from exc
+            temporary = None
+            try:
+                with tempfile.NamedTemporaryFile(
+                    mode="wb", dir=str(root), prefix=f".{filename}.",
+                    suffix=".restore", delete=False
+                ) as handle:
+                    temporary = Path(handle.name)
+                    handle.write(payload)
+                    handle.flush()
+                    os.fsync(handle.fileno())
+                os.replace(temporary, target)
+            except Exception:
+                if temporary is not None:
+                    temporary.unlink(missing_ok=True)
+                raise
+        else:
+            target.unlink(missing_ok=True)
+    (root / _TRANSACTION_FILE).unlink(missing_ok=True)
+
+
+def _recover_qualified_transaction(directory):
+    """Roll back an interrupted multi-ledger publication before processing another cycle."""
+    root = Path(directory)
+    journal_path = root / _TRANSACTION_FILE
+    if not journal_path.exists():
+        return
+    try:
+        journal = json.loads(journal_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        raise ValueError("Qualified-ledger recovery journal is unreadable; refusing to advance") from exc
+    if not isinstance(journal, dict) or journal.get("version") != 1:
+        raise ValueError("Qualified-ledger recovery journal version is invalid; manual recovery required")
+    _restore_transaction(root, journal)
+
+
+def _publish_qualified_ledgers(directory, staged_paths):
+    """Publish four staged ledgers with a durable rollback journal for crash recovery."""
+    root = Path(directory)
+    filenames = {config["file"] for config in CANDIDATES.values()} | {ATR_FILE}
+    if set(staged_paths) != filenames:
+        raise ValueError("Qualified-ledger staged file set is incomplete")
+    backups = {}
+    for filename in sorted(filenames):
+        target = root / filename
+        if target.exists():
+            backups[filename] = {
+                "existed": True,
+                "content_b64": base64.b64encode(target.read_bytes()).decode("ascii"),
+            }
+        else:
+            backups[filename] = {"existed": False}
+        staged = Path(staged_paths[filename])
+        if not staged.is_file():
+            raise ValueError(f"Staged qualified ledger is missing: {filename}")
+        # Parse staged JSON before making the recovery journal or touching live files.
+        json.loads(staged.read_text(encoding="utf-8"))
+    journal = {"version": 1, "backups": backups}
+    journal_path = root / _TRANSACTION_FILE
+    _write_json_atomically(journal, journal_path)
+    try:
+        for filename in sorted(filenames):
+            os.replace(staged_paths[filename], root / filename)
+        # Ensure directory entries are flushed before removing the recovery journal.
+        directory_fd = os.open(root, os.O_RDONLY)
+        try:
+            os.fsync(directory_fd)
+        finally:
+            os.close(directory_fd)
+        journal_path.unlink()
+        directory_fd = os.open(root, os.O_RDONLY)
+        try:
+            os.fsync(directory_fd)
+        finally:
+            os.close(directory_fd)
+    except Exception:
+        # Immediate rollback for ordinary exceptions. If rollback itself fails,
+        # leave the journal so the next invocation refuses to proceed until recovery.
+        _restore_transaction(root, journal)
+        raise
+
+
 def process_qualified_forward_candidates(
     candles, state_dir=DEFAULT_STATE_DIR, now_timestamp=None
 ):
     """Update all four qualified ledgers once, using completed native-timeframe bars."""
     quality = validate_hourly_feed(candles, now_timestamp)
     directory = Path(state_dir)
+    directory.mkdir(parents=True, exist_ok=True)
+    _recover_qualified_transaction(directory)
 
     # Preflight every required timeframe before mutating any account.
     try:
@@ -207,150 +317,164 @@ def process_qualified_forward_candidates(
     if atr_path.exists():
         _load_atr_state(atr_path, 250.0)
 
-    results = {}
-    for name, config in CANDIDATES.items():
-        native = bars[config["hours"]]
-        rows = _account_rows(native)
-        path = directory / config["file"]
-        seed = seed_forward_paper_account(
-            rows,
-            state_path=str(path),
-            initial_cash=config["initial_cash"],
-            strategy=config["strategy"],
+    # All account helpers write only into this same-filesystem staging directory.
+    # Real ledgers remain byte-for-byte untouched until the report is complete.
+    with tempfile.TemporaryDirectory(prefix=".qualified-stage-", dir=str(directory)) as stage_folder:
+        stage_dir = Path(stage_folder)
+        staged_paths = {}
+        for config in CANDIDATES.values():
+            source = directory / config["file"]
+            if source.exists():
+                shutil.copy2(source, stage_dir / config["file"])
+        if atr_path.exists():
+            shutil.copy2(atr_path, stage_dir / ATR_FILE)
+
+        results = {}
+            for name, config in CANDIDATES.items():
+            native = bars[config["hours"]]
+            rows = _account_rows(native)
+            path = stage_dir / config["file"]
+            seed = seed_forward_paper_account(
+                rows,
+                state_path=str(path),
+                initial_cash=config["initial_cash"],
+                strategy=config["strategy"],
+            )
+            account = update_paper_account(
+                rows,
+                state_path=str(path),
+                initial_cash=config["initial_cash"],
+                allocation_fraction=0.10,
+                max_drawdown_fraction=0.10,
+                daily_loss_fraction=0.03,
+                max_consecutive_losses=5,
+                strategy=config["strategy"],
+                strategy_health_pause=True,
+                strategy_health_drawdown_fraction=0.08,
+            )
+            results[name] = {
+                "seed": seed,
+                "account": account,
+                "native_timeframe_hours": config["hours"],
+                "last_processed_timestamp": account["last_processed_timestamp"],
+            }
+    
+        four_hour = bars[4]
+        daily = bars[24]
+        atr_seed = seed_atr_trailing_account(
+            four_hour,
+            daily,
+            str(stage_dir / ATR_FILE),
+            initial_cash=250.0,
         )
-        account = update_paper_account(
-            rows,
-            state_path=str(path),
-            initial_cash=config["initial_cash"],
+        atr_account = update_atr_trailing_account(
+            four_hour,
+            daily,
+            str(atr_path),
+            initial_cash=250.0,
             allocation_fraction=0.10,
             max_drawdown_fraction=0.10,
             daily_loss_fraction=0.03,
             max_consecutive_losses=5,
-            strategy=config["strategy"],
-            strategy_health_pause=True,
-            strategy_health_drawdown_fraction=0.08,
         )
-        results[name] = {
-            "seed": seed,
-            "account": account,
-            "native_timeframe_hours": config["hours"],
-            "last_processed_timestamp": account["last_processed_timestamp"],
+        results["4h_ema20_50_daily_sma200_atr3"] = {
+            "seed": atr_seed,
+            "account": atr_account,
+            "native_timeframe_hours": 4,
+            "last_processed_timestamp": atr_account["last_timestamp"],
+            "processed_this_cycle": max(
+                0, int(atr_account["processed_new_candles"]) - atr_processed_before
+            ),
         }
-
-    four_hour = bars[4]
-    daily = bars[24]
-    atr_seed = seed_atr_trailing_account(
-        four_hour,
-        daily,
-        str(atr_path),
-        initial_cash=250.0,
-    )
-    atr_account = update_atr_trailing_account(
-        four_hour,
-        daily,
-        str(atr_path),
-        initial_cash=250.0,
-        allocation_fraction=0.10,
-        max_drawdown_fraction=0.10,
-        daily_loss_fraction=0.03,
-        max_consecutive_losses=5,
-    )
-    results["4h_ema20_50_daily_sma200_atr3"] = {
-        "seed": atr_seed,
-        "account": atr_account,
-        "native_timeframe_hours": 4,
-        "last_processed_timestamp": atr_account["last_timestamp"],
-        "processed_this_cycle": max(
-            0, int(atr_account["processed_new_candles"]) - atr_processed_before
-        ),
-    }
-
-    for name, item in results.items():
-        if "processed_this_cycle" not in item:
-            item["processed_this_cycle"] = int(
-                item["account"]["processed_new_candles"]
-            )
-
-    processed = sum(int(item["processed_this_cycle"]) for item in results.values())
-    paused = any(
-        bool(item["account"].get("paused"))
-        or bool(item["account"].get("risk_pause_reasons"))
-        for item in results.values()
-    )
-    summary = {}
-    for name, item in results.items():
-        account = item["account"]
-        if "risk_pause_reasons" in account:
-            equity = float(account["equity_after_estimated_exit_costs_usd"])
-            initial = float(account["initial_cash_usd"])
-            trades = int(account["completed_trades"])
-            fees = float(account["fees_paid_usd"])
-            drawdown = float(account["max_drawdown_pct"])
-            open_position = bool(account["open_position"])
-            cash = float(account["cash_usd"])
-            risk_pauses = list(account["risk_pause_reasons"])
-            processed_count = int(item["processed_this_cycle"])
-            last_timestamp = account["last_processed_timestamp"]
-        else:
-            equity = float(account["equity_usd"])
-            initial = float(account["initial_cash_usd"])
-            trades = int(account["completed_trades"])
-            fees = float(account["fees_paid_usd"])
-            drawdown = float(account["max_drawdown_pct"])
-            open_position = bool(account["open_position"])
-            cash = float(account["cash_usd"])
-            risk_pauses = [account["pause_reason"]] if account["paused"] else []
-            processed_count = int(item["processed_this_cycle"])
-            last_timestamp = account["last_timestamp"]
-        summary[name] = {
-            "timeframe_hours": item["native_timeframe_hours"],
-            "initial_cash_usd": round(initial, 2),
-            "equity_usd": round(equity, 4),
-            "return_pct": round((equity / initial - 1.0) * 100.0, 4),
-            "cash_usd": round(cash, 4),
-            "completed_trades": trades,
-            "fees_paid_usd": round(fees, 4),
-            "max_drawdown_pct": round(drawdown, 4),
-            "open_position": open_position,
-            "processed_new_candles": processed_count,
-            "last_processed_timestamp": last_timestamp,
-            "risk_pause_reasons": risk_pauses,
-            "mode": account.get("mode", "FORWARD_ONLY_PAPER"),
+    
+        for name, item in results.items():
+            if "processed_this_cycle" not in item:
+                item["processed_this_cycle"] = int(
+                    item["account"]["processed_new_candles"]
+                )
+    
+        processed = sum(int(item["processed_this_cycle"]) for item in results.values())
+        paused = any(
+            bool(item["account"].get("paused"))
+            or bool(item["account"].get("risk_pause_reasons"))
+            for item in results.values()
+        )
+        summary = {}
+        for name, item in results.items():
+            account = item["account"]
+            if "risk_pause_reasons" in account:
+                equity = float(account["equity_after_estimated_exit_costs_usd"])
+                initial = float(account["initial_cash_usd"])
+                trades = int(account["completed_trades"])
+                fees = float(account["fees_paid_usd"])
+                drawdown = float(account["max_drawdown_pct"])
+                open_position = bool(account["open_position"])
+                cash = float(account["cash_usd"])
+                risk_pauses = list(account["risk_pause_reasons"])
+                processed_count = int(item["processed_this_cycle"])
+                last_timestamp = account["last_processed_timestamp"]
+            else:
+                equity = float(account["equity_usd"])
+                initial = float(account["initial_cash_usd"])
+                trades = int(account["completed_trades"])
+                fees = float(account["fees_paid_usd"])
+                drawdown = float(account["max_drawdown_pct"])
+                open_position = bool(account["open_position"])
+                cash = float(account["cash_usd"])
+                risk_pauses = [account["pause_reason"]] if account["paused"] else []
+                processed_count = int(item["processed_this_cycle"])
+                last_timestamp = account["last_timestamp"]
+            summary[name] = {
+                "timeframe_hours": item["native_timeframe_hours"],
+                "initial_cash_usd": round(initial, 2),
+                "equity_usd": round(equity, 4),
+                "return_pct": round((equity / initial - 1.0) * 100.0, 4),
+                "cash_usd": round(cash, 4),
+                "completed_trades": trades,
+                "fees_paid_usd": round(fees, 4),
+                "max_drawdown_pct": round(drawdown, 4),
+                "open_position": open_position,
+                "processed_new_candles": processed_count,
+                "last_processed_timestamp": last_timestamp,
+                "risk_pause_reasons": risk_pauses,
+                "mode": account.get("mode", "FORWARD_ONLY_PAPER"),
+            }
+    
+        report = {
+            "schema_version": 1,
+            "generated_at_utc": datetime.now(timezone.utc).isoformat(),
+            "mode": "FOUR_QUALIFIED_CANDIDATES_FORWARD_ONLY_PAPER",
+            "status": "RISK_PAUSED" if paused else "PAPER_MONITORING",
+            "cycle_status": (
+                "PROCESSED_NEW_CANDLES"
+                if processed else "WAITING_FOR_NEW_CLOSED_CANDLES"
+            ),
+            "total_processed_new_candles": processed,
+            "market": "BTC/USD",
+            "data_quality": quality,
+            "initial_cash_usd": round(sum(x["initial_cash_usd"] for x in summary.values()), 2),
+            "equity_usd": round(sum(x["equity_usd"] for x in summary.values()), 4),
+            "return_pct": round(
+                (
+                    sum(x["equity_usd"] for x in summary.values())
+                    / sum(x["initial_cash_usd"] for x in summary.values())
+                    - 1.0
+                ) * 100.0,
+                4,
+            ),
+            "completed_trades": sum(x["completed_trades"] for x in summary.values()),
+            "fees_paid_usd": round(sum(x["fees_paid_usd"] for x in summary.values()), 4),
+            "candidates": summary,
+            "live_trading_eligible": False,
+            "warning": (
+                "Paper simulation only. Historical bars warm indicators and never "
+                "create trades or PnL. Only newer completed native-timeframe bars "
+                "are processed; synthetic aggregate bars cannot execute."
+            ),
         }
-
-    report = {
-        "schema_version": 1,
-        "generated_at_utc": datetime.now(timezone.utc).isoformat(),
-        "mode": "FOUR_QUALIFIED_CANDIDATES_FORWARD_ONLY_PAPER",
-        "status": "RISK_PAUSED" if paused else "PAPER_MONITORING",
-        "cycle_status": (
-            "PROCESSED_NEW_CANDLES"
-            if processed else "WAITING_FOR_NEW_CLOSED_CANDLES"
-        ),
-        "total_processed_new_candles": processed,
-        "market": "BTC/USD",
-        "data_quality": quality,
-        "initial_cash_usd": round(sum(x["initial_cash_usd"] for x in summary.values()), 2),
-        "equity_usd": round(sum(x["equity_usd"] for x in summary.values()), 4),
-        "return_pct": round(
-            (
-                sum(x["equity_usd"] for x in summary.values())
-                / sum(x["initial_cash_usd"] for x in summary.values())
-                - 1.0
-            ) * 100.0,
-            4,
-        ),
-        "completed_trades": sum(x["completed_trades"] for x in summary.values()),
-        "fees_paid_usd": round(sum(x["fees_paid_usd"] for x in summary.values()), 4),
-        "candidates": summary,
-        "live_trading_eligible": False,
-        "warning": (
-            "Paper simulation only. Historical bars warm indicators and never "
-            "create trades or PnL. Only newer completed native-timeframe bars "
-            "are processed; synthetic aggregate bars cannot execute."
-        ),
-    }
-    return report
+        staged_paths = {filename: stage_dir / filename for filename in ({config["file"] for config in CANDIDATES.values()} | {ATR_FILE})}
+        _publish_qualified_ledgers(directory, staged_paths)
+        return report
 
 
 def main():
