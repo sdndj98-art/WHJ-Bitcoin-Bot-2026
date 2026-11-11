@@ -49,6 +49,17 @@ class SlowMomentumLabTests(unittest.TestCase):
         self.assertIn("84", result["cost_stress"]["3x"]["candidates"])
         self.assertIn("out_of_sample", result["cost_stress"]["2x"]["matched_buy_and_hold"])
         self.assertEqual(len(result["cost_stress"]["3x"]["matched_buy_and_hold"]["walk_forward_windows"]), 3)
+        for scenario in ("2x", "3x"):
+            stress_candidate = result["cost_stress"][scenario]["candidates"]["84"]
+            self.assertEqual(len(stress_candidate["oos_subperiods"]), 3)
+            for subperiod in stress_candidate["oos_subperiods"]:
+                self.assertIn("excess_return_pct_points", subperiod)
+            self.assertIn(
+                "excess_return_vs_buy_and_hold_pct_points", stress_candidate
+            )
+        self.assertEqual(
+            len(result["cost_stress"]["2x"]["matched_buy_and_hold"]["oos_subperiods"]), 3
+        )
 
     def test_open_position_reports_unrealized_net_liquidation_pnl_separately(self):
         result = _simulate(
