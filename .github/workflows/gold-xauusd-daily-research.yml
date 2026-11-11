@@ -78,7 +78,7 @@ jobs:
                   "risk": "25% maximum allocation; 2% stop; 4% target; no leverage",
                   "benchmark": "matched 25% buy-and-hold with 75% cash plus all-cash baseline",
                   "costs_per_side": costs,
-                  "limitations": "Yahoo GC=F is a reference spot-price series, not broker bid/ask execution. Fixed fee/slippage are proxies; spread, swap/financing, broker markup, market impact, and holiday/session differences are not modelled.",
+                  "limitations": "Yahoo GC=F is a continuous COMEX gold-futures reference series, not spot XAU/USD or broker bid/ask execution. Futures contract rolls and broker-specific pricing can differ. Fixed fee/slippage are proxies; spread, swap/financing, broker markup, market impact, and holiday/session differences are not modelled.",
               },
               "folds": folds,
               "promotion_status": "NO_CANDIDATE_PROMOTED",
