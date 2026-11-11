@@ -1,3 +1,4 @@
+import json
 import tempfile
 import unittest
 
@@ -194,3 +195,79 @@ class AtrTrailingForwardPaperTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class AtrPaperStateValidationTests(unittest.TestCase):
+    def _write_state(self, folder, value):
+        from pathlib import Path
+        path = Path(folder) / "atr-state.json"
+        path.write_text(json.dumps(value), encoding="utf-8")
+        return path
+
+    @staticmethod
+    def _valid_state():
+        return {
+            "strategy": "ema20_50_daily_sma200_atr3_trailing",
+            "initial_cash": 250.0, "cash": 250.0, "quantity": 0.0,
+            "equity": 250.0, "peak_equity": 250.0,
+            "max_drawdown_pct": 0.0, "ema20": 100.0, "ema50": 99.0,
+            "atr14": 1.0, "previous_close": 101.0,
+            "position_peak": None, "pending_action": None,
+            "last_timestamp": 1000, "forward_seed_timestamp": 1000,
+            "daily_bucket": "1970-01-01", "daily_start_equity": 250.0,
+            "completed_trades": 0, "wins": 0, "losses": 0,
+            "consecutive_losses": 0, "fees_paid": 0.0, "trades": [],
+            "paused": False, "pause_reason": None,
+            "processed_new_candles": 0, "last_signal": "seeded_no_trade",
+            "last_daily_regime": None, "last_setup": None,
+        }
+
+    def test_non_object_json_state_is_rejected_without_attribute_error(self):
+        from atr_trailing_paper import _load
+        for value in (None, [], "bad", 7):
+            with self.subTest(value=value), tempfile.TemporaryDirectory() as folder:
+                path = self._write_state(folder, value)
+                with self.assertRaisesRegex(ValueError, "state"):
+                    _load(path, 250.0)
+
+    def test_missing_required_field_is_rejected(self):
+        from atr_trailing_paper import _load
+        state = self._valid_state()
+        del state["cash"]
+        with tempfile.TemporaryDirectory() as folder:
+            with self.assertRaisesRegex(ValueError, "state"):
+                _load(self._write_state(folder, state), 250.0)
+
+    def test_non_finite_and_negative_account_values_are_rejected(self):
+        from atr_trailing_paper import _load
+        for key, value in (("cash", float("nan")), ("quantity", -1.0),
+                           ("equity", float("inf")), ("fees_paid", -0.1)):
+            with self.subTest(key=key), tempfile.TemporaryDirectory() as folder:
+                state = self._valid_state()
+                state[key] = value
+                with self.assertRaisesRegex(ValueError, "state"):
+                    _load(self._write_state(folder, state), 250.0)
+
+    def test_invalid_pending_action_and_boolean_numeric_are_rejected(self):
+        from atr_trailing_paper import _load
+        for key, value in (("pending_action", "short"), ("cash", True)):
+            with self.subTest(key=key), tempfile.TemporaryDirectory() as folder:
+                state = self._valid_state()
+                state[key] = value
+                with self.assertRaisesRegex(ValueError, "state"):
+                    _load(self._write_state(folder, state), 250.0)
+
+    def test_open_position_must_match_trade_ledger(self):
+        from atr_trailing_paper import _load
+        state = self._valid_state()
+        state["quantity"] = 0.5
+        with tempfile.TemporaryDirectory() as folder:
+            with self.assertRaisesRegex(ValueError, "state"):
+                _load(self._write_state(folder, state), 250.0)
+
+    def test_valid_seed_state_loads(self):
+        from atr_trailing_paper import _load
+        state = self._valid_state()
+        with tempfile.TemporaryDirectory() as folder:
+            loaded = _load(self._write_state(folder, state), 250.0)
+            self.assertEqual(loaded, state)
