@@ -37,7 +37,10 @@ class SlowMomentumLabTests(unittest.TestCase):
             self.assertEqual(len(candidate["walk_forward_windows"]), 3)
         self.assertEqual(len(result["buy_and_hold_25pct"]["walk_forward_windows"]), 3)
         self.assertFalse(result["execution_enabled"])
-        self.assertIn("84", result["two_x_cost_stress"]["candidates"])
+        self.assertIn("84", result["cost_stress"]["2x"]["candidates"])
+        self.assertIn("84", result["cost_stress"]["3x"]["candidates"])
+        self.assertIn("out_of_sample", result["cost_stress"]["2x"]["matched_buy_and_hold"])
+        self.assertEqual(len(result["cost_stress"]["3x"]["matched_buy_and_hold"]["walk_forward_windows"]), 3)
 
     def test_validation_rejects_bad_prices_and_parameters(self):
         with self.assertRaises(ValueError):
