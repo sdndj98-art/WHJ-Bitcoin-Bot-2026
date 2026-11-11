@@ -2315,7 +2315,10 @@ def main():
                 "window_returns_pct": [
                     item["metrics"]["return_pct"] for item in metrics["walk_forward_windows"]
                 ],
-                "two_x_cost_return_pct": slow_time_series_momentum_research["two_x_cost_stress"]["candidates"][horizon]["return_pct"],
+                "two_x_cost_return_pct": slow_time_series_momentum_research["cost_stress"]["2x"]["candidates"][horizon]["out_of_sample"]["return_pct"],
+                "three_x_cost_return_pct": slow_time_series_momentum_research["cost_stress"]["3x"]["candidates"][horizon]["out_of_sample"]["return_pct"],
+                "two_x_cost_benchmark_return_pct": slow_time_series_momentum_research["cost_stress"]["2x"]["matched_buy_and_hold"]["out_of_sample"]["return_pct"],
+                "three_x_cost_benchmark_return_pct": slow_time_series_momentum_research["cost_stress"]["3x"]["matched_buy_and_hold"]["out_of_sample"]["return_pct"],
             }
             for horizon, metrics in slow_time_series_momentum_research["candidates"].items()
         },
