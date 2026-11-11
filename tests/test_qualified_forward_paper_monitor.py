@@ -152,6 +152,34 @@ class QualifiedForwardPaperMonitorTests(unittest.TestCase):
                 "not-an-integer",
             )
 
+    def test_corrupt_later_candidate_is_rejected_before_any_ledger_is_advanced(self):
+        candles = self.candles()
+        with tempfile.TemporaryDirectory() as folder:
+            # A syntactically valid but incomplete fourth candidate must be
+            # detected before the earlier candidate ledgers are seeded/updated.
+            path = Path(folder) / CANDIDATES["6h_ema_pullback_trend"]["file"]
+            path.write_text(json.dumps({
+                "version": 1,
+                "strategy": "ema_pullback_trend",
+                "initial_cash": 250.0,
+                "cash": 250.0,
+                "btc": 0.0,
+                "entry_cost": 0.0,
+                "recent_closes": [],
+                "peak_equity": 250.0,
+                "trades": [],
+                "fees_paid": 0.0,
+            }), encoding="utf-8")
+            with self.assertRaisesRegex(ValueError, "incomplete"):
+                process_qualified_forward_candidates(
+                    candles, folder, self.now_for(candles)
+                )
+            for name, config in CANDIDATES.items():
+                candidate_path = Path(folder) / config["file"]
+                if name != "6h_ema_pullback_trend":
+                    self.assertFalse(candidate_path.exists())
+            self.assertEqual(json.loads(path.read_text(encoding="utf-8"))["cash"], 250.0)
+
     def test_existing_corrupt_ledger_is_never_silently_reseeded(self):
         candles = self.candles()
         with tempfile.TemporaryDirectory() as folder:
