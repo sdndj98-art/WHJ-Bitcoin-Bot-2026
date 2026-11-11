@@ -72,7 +72,7 @@ class MarketDataCacheTests(unittest.TestCase):
                 second = update_market_data_cache(path, now=second_now, bootstrap_days=45)
             fetch.assert_called_once_with(expected_start, second_cutoff)
             self.assertEqual(second[-1]["timestamp"], second_cutoff - INTERVAL_MS)
-            self.assertEqual(len(second), len(first) + 4)
+            self.assertEqual(len(second), len(first))  # rolling 45-day window replaces four oldest hours
             self.assertEqual(len({row["timestamp"] for row in second}), len(second))
             self.assertEqual(json.loads(path.read_text())["candle_count"], len(second))
 
@@ -88,23 +88,25 @@ class MarketDataCacheTests(unittest.TestCase):
             self.assertEqual(path.read_text(encoding="utf-8"), "{broken")
 
     def test_large_gap_is_rejected_without_overwriting_cache(self):
-        now = datetime(2026, 11, 11, 12, 0, tzinfo=timezone.utc)
-        cutoff = int(now.timestamp() * 1000)
+        first_now = datetime(2026, 11, 11, 12, 0, tzinfo=timezone.utc)
+        next_now = datetime(2026, 11, 11, 22, 0, tzinfo=timezone.utc)
+        cutoff = int(first_now.timestamp() * 1000)
+        next_cutoff = int(next_now.timestamp() * 1000)
         initial = self.make_candles(1100, cutoff - INTERVAL_MS)
         with tempfile.TemporaryDirectory() as folder:
             path = Path(folder) / "cache.json"
             with patch("market_data_cache.load_two_year_candles", return_value=initial):
-                update_market_data_cache(path, now=now, bootstrap_days=45)
+                update_market_data_cache(path, now=first_now, bootstrap_days=45)
             before = path.read_bytes()
             start = initial[-1]["timestamp"] - DEFAULT_OVERLAP_HOURS * INTERVAL_MS
-            broken = self.as_coinbase_rows(start, cutoff)
-            # Remove seven consecutive hours from the overlap/new tail.
+            broken = self.as_coinbase_rows(start, next_cutoff)
+            # Remove seven genuinely new hours; they are not present in the old cache.
             broken = [row for row in broken if not (
-                cutoff - 5 * INTERVAL_MS <= row[0] * 1000 <= cutoff - INTERVAL_MS
+                cutoff <= row[0] * 1000 <= cutoff + 6 * INTERVAL_MS
             )]
             with patch("market_data_cache.fetch_page", return_value=broken):
                 with self.assertRaisesRegex(ValueError, "six-hour repair limit"):
-                    update_market_data_cache(path, now=now, bootstrap_days=45)
+                    update_market_data_cache(path, now=next_now, bootstrap_days=45)
             self.assertEqual(path.read_bytes(), before)
 
 
