@@ -232,10 +232,14 @@ def evaluate_cost_stress(closes, fee, slippage, lookbacks, multiplier=2.0):
                 closes, signals, split, len(closes), stressed_fee, stressed_slippage
             ),
             "walk_forward_windows": [
-                _simulate(
-                    closes, signals, edges[k], edges[k + 1],
-                    stressed_fee, stressed_slippage
-                )
+                {
+                    "start_index": edges[k],
+                    "end_index_exclusive": edges[k + 1],
+                    "metrics": _simulate(
+                        closes, signals, edges[k], edges[k + 1],
+                        stressed_fee, stressed_slippage
+                    ),
+                }
                 for k in range(3)
             ],
         }
