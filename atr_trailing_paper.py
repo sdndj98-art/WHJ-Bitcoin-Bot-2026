@@ -89,6 +89,13 @@ def _daily_regime(daily, four_hour_timestamp):
     return daily[index]["close"] > average
 
 
+def _equity_after_estimated_exit_costs(state, price, fee_rate, slippage_rate):
+    """Mark an open position at net liquidation value after estimated exit costs."""
+    liquidation = float(state["quantity"]) * float(price) * (1.0 - slippage_rate)
+    liquidation -= liquidation * fee_rate
+    return float(state["cash"]) + liquidation
+
+
 def _load(path, initial_cash):
     target = Path(path)
     if not target.exists():
@@ -97,10 +104,105 @@ def _load(path, initial_cash):
         state = json.loads(target.read_text(encoding="utf-8"))
     except (OSError, json.JSONDecodeError) as exc:
         raise ValueError("ATR paper state is unreadable; refusing to reset it") from exc
+    if not isinstance(state, dict):
+        raise ValueError("ATR paper state must be a JSON object")
     if state.get("strategy") != "ema20_50_daily_sma200_atr3_trailing":
         raise ValueError("ATR paper state strategy mismatch")
-    if float(state.get("initial_cash", -1)) != float(initial_cash):
-        raise ValueError("ATR paper initial cash mismatch")
+
+    required = (
+        "initial_cash", "cash", "quantity", "equity", "peak_equity",
+        "max_drawdown_pct", "ema20", "ema50", "atr14", "previous_close",
+        "position_peak", "pending_action", "last_timestamp",
+        "forward_seed_timestamp", "daily_bucket", "daily_start_equity",
+        "completed_trades", "wins", "losses", "consecutive_losses",
+        "fees_paid", "trades", "paused", "pause_reason",
+        "processed_new_candles", "last_signal", "last_daily_regime",
+        "last_setup",
+    )
+    if any(key not in state for key in required):
+        raise ValueError("ATR paper state is missing required fields")
+
+    try:
+        expected_cash = _finite(initial_cash, "initial_cash", 0)
+        stored_initial = _finite(state["initial_cash"], "state initial_cash", 0)
+        if stored_initial != expected_cash or expected_cash <= 0:
+            raise ValueError("ATR paper initial cash mismatch")
+
+        for key in ("cash", "quantity", "equity", "peak_equity",
+                    "max_drawdown_pct", "daily_start_equity", "fees_paid"):
+            _finite(state[key], f"state {key}", 0)
+        for key in ("ema20", "ema50", "atr14", "previous_close"):
+            _finite(state[key], f"state {key}", 0.000000001)
+        if state["daily_start_equity"] <= 0 or state["peak_equity"] <= 0:
+            raise ValueError("invalid positive equity checkpoint")
+        if state["max_drawdown_pct"] > 100:
+            raise ValueError("invalid maximum drawdown")
+        for key in ("last_timestamp", "forward_seed_timestamp"):
+            number = _finite(state[key], f"state {key}", 0)
+            if not number.is_integer():
+                raise ValueError(f"state {key} must be whole seconds")
+        for key in ("completed_trades", "wins", "losses",
+                    "consecutive_losses", "processed_new_candles"):
+            value = state[key]
+            if isinstance(value, bool) or not isinstance(value, int) or value < 0:
+                raise ValueError(f"state {key} must be a non-negative integer")
+        if state["wins"] + state["losses"] != state["completed_trades"]:
+            raise ValueError("inconsistent completed trade counters")
+        if state["forward_seed_timestamp"] > state["last_timestamp"]:
+            raise ValueError("forward seed timestamp is after last timestamp")
+        if not isinstance(state["daily_bucket"], str) or not state["daily_bucket"]:
+            raise ValueError("invalid daily bucket")
+        datetime.fromisoformat(state["daily_bucket"])
+        if state["pending_action"] not in (None, "buy", "sell"):
+            raise ValueError("invalid pending action")
+        if not isinstance(state["paused"], bool):
+            raise ValueError("invalid paused flag")
+        if state["pause_reason"] is not None and not isinstance(state["pause_reason"], str):
+            raise ValueError("invalid pause reason")
+        if not isinstance(state["last_signal"], str):
+            raise ValueError("invalid last signal")
+        for key in ("last_daily_regime", "last_setup"):
+            if state[key] is not None and not isinstance(state[key], bool):
+                raise ValueError(f"invalid {key} flag")
+        if state["position_peak"] is not None:
+            _finite(state["position_peak"], "state position_peak", 0.000000001)
+        if not isinstance(state["trades"], list):
+            raise ValueError("state trades must be a list")
+        for trade in state["trades"]:
+            if not isinstance(trade, dict):
+                raise ValueError("invalid trade record")
+            for key in ("entry_timestamp", "entry_price", "quantity", "entry_fee"):
+                if key not in trade:
+                    raise ValueError("incomplete trade record")
+            for key in ("entry_price", "quantity", "entry_fee"):
+                _finite(trade[key], f"trade {key}", 0)
+            entry_time = _finite(trade["entry_timestamp"], "trade entry_timestamp", 0)
+            if not entry_time.is_integer() or trade["entry_price"] <= 0 or trade["quantity"] <= 0:
+                raise ValueError("invalid trade entry")
+            exit_fields = ("exit_timestamp", "exit_price", "exit_fee", "pnl_usd")
+            if any(key in trade for key in exit_fields) and not all(key in trade for key in exit_fields):
+                raise ValueError("incomplete trade exit")
+            if all(key in trade for key in exit_fields):
+                exit_time = _finite(trade["exit_timestamp"], "trade exit_timestamp", 0)
+                _finite(trade["exit_price"], "trade exit_price", 0.000000001)
+                _finite(trade["exit_fee"], "trade exit_fee", 0)
+                _finite(trade["pnl_usd"], "trade pnl_usd")
+                if not exit_time.is_integer() or exit_time < entry_time:
+                    raise ValueError("invalid trade exit timestamp")
+        open_trades = [trade for trade in state["trades"] if "exit_timestamp" not in trade]
+        if len(open_trades) > 1:
+            raise ValueError("multiple open trades in single-position account")
+        if state["quantity"] > 0:
+            if len(open_trades) != 1 or not math.isclose(
+                state["quantity"], float(open_trades[0]["quantity"]), rel_tol=1e-9, abs_tol=1e-12
+            ):
+                raise ValueError("open position does not match trade ledger")
+        elif open_trades:
+            raise ValueError("open trade exists without account quantity")
+    except (TypeError, ValueError, OverflowError) as exc:
+        if isinstance(exc, ValueError) and str(exc).startswith("ATR paper"):
+            raise
+        raise ValueError("ATR paper state validation failed") from exc
     return state
 
 
@@ -151,6 +253,7 @@ def seed_atr_trailing_account(four_hour_bars, daily_bars, state_path, initial_ca
         "previous_close": last["close"],
         "position_peak": None,
         "pending_action": None,
+        "pending_action_reason": None,
         "last_timestamp": last["timestamp"],
         "forward_seed_timestamp": last["timestamp"],
         "daily_bucket": datetime.fromtimestamp(last["timestamp"], timezone.utc).date().isoformat(),
@@ -199,10 +302,10 @@ def update_atr_trailing_account(four_hour_bars, daily_bars, state_path,
     if len(four_hour) < 1 or len(daily) < 200:
         raise ValueError("Insufficient OHLC data for ATR strategy update")
     if four_hour[-1]["timestamp"] <= state["last_timestamp"]:
-        return _summary(state)
+        return _summary(state, fee_rate, slippage_rate)
     new_bars = [bar for bar in four_hour if bar["timestamp"] > state["last_timestamp"]]
     if not new_bars:
-        return _summary(state)
+        return _summary(state, fee_rate, slippage_rate)
     if new_bars[0]["timestamp"] - state["last_timestamp"] != 4 * 3600:
         raise ValueError("New 4h candles must continue exactly from the saved timestamp")
     for previous, current in zip(new_bars, new_bars[1:]):
@@ -221,13 +324,55 @@ def update_atr_trailing_account(four_hour_bars, daily_bars, state_path,
             state["daily_start_equity"] = state["equity"]
 
         # Synthetic aggregate bars may update indicators/mark-to-market but
-        # cannot execute or create new strategy actions. Keep queued orders pending.
+        # cannot execute. Cancel any queued action so a stale signal cannot fill
+        # later on an unrelated executable candle.
         if not bar["execution_eligible"]:
-            state["equity"] = state["cash"] + state["quantity"] * close
+            # Synthetic bars cannot fill orders, but their mark-to-market value
+            # must still trigger risk guards. Otherwise a loss breach that
+            # recovers before the next executable bar could go unnoticed.
+            state["equity"] = _equity_after_estimated_exit_costs(
+                state, close, fee_rate, slippage_rate
+            )
             state["peak_equity"] = max(state["peak_equity"], state["equity"])
-            if state["peak_equity"] > 0:
-                drawdown = (state["peak_equity"] - state["equity"]) / state["peak_equity"]
-                state["max_drawdown_pct"] = max(state["max_drawdown_pct"], drawdown * 100.0)
+            drawdown = (
+                (state["peak_equity"] - state["equity"]) / state["peak_equity"]
+                if state["peak_equity"] > 0 else 0.0
+            )
+            state["max_drawdown_pct"] = max(
+                state["max_drawdown_pct"], drawdown * 100.0
+            )
+            daily_loss = (
+                (state["daily_start_equity"] - state["equity"])
+                / state["daily_start_equity"]
+                if state["daily_start_equity"] > 0 else 0.0
+            )
+            if drawdown >= max_drawdown_fraction:
+                state["paused"], state["pause_reason"] = True, "maximum_drawdown"
+            elif daily_loss >= daily_loss_fraction:
+                state["paused"], state["pause_reason"] = True, "daily_loss_limit"
+            elif state["consecutive_losses"] >= max_consecutive_losses:
+                state["paused"], state["pause_reason"] = True, "consecutive_loss_limit"
+            # A queued entry or ordinary regime exit can become stale. Keep only
+            # forced risk exits pending; synthetic bars never execute them.
+            if state["quantity"] > 0:
+                state["position_peak"] = max(state["position_peak"] or close, close)
+                trailing_stop = state["position_peak"] - 3.0 * state["atr14"]
+                if state["paused"]:
+                    state["pending_action"] = "sell"
+                    state["pending_action_reason"] = "risk_pause"
+                elif close < trailing_stop:
+                    state["pending_action"] = "sell"
+                    state["pending_action_reason"] = "atr_trailing_stop"
+                elif state.get("pending_action_reason") not in (
+                    "atr_trailing_stop", "risk_pause"
+                ):
+                    state["pending_action"] = None
+                    state["pending_action_reason"] = None
+            elif state.get("pending_action") == "buy" or state.get("pending_action_reason") not in (
+                "atr_trailing_stop", "risk_pause"
+            ):
+                state["pending_action"] = None
+                state["pending_action_reason"] = None
             state["previous_close"] = close
             state["last_timestamp"] = bar["timestamp"]
             state["processed_new_candles"] += 1
@@ -235,7 +380,9 @@ def update_atr_trailing_account(four_hour_bars, daily_bars, state_path,
             continue
 
         # Apply risk guards to the current mark before allowing a queued entry.
-        pre_equity = state["cash"] + state["quantity"] * close
+        pre_equity = _equity_after_estimated_exit_costs(
+            state, close, fee_rate, slippage_rate
+        )
         state["peak_equity"] = max(state["peak_equity"], pre_equity)
         pre_drawdown = (
             (state["peak_equity"] - pre_equity) / state["peak_equity"]
@@ -285,7 +432,10 @@ def update_atr_trailing_account(four_hour_bars, daily_bars, state_path,
             state["position_peak"] = None
 
         state["pending_action"] = None
-        state["equity"] = state["cash"] + state["quantity"] * close
+        state["pending_action_reason"] = None
+        state["equity"] = _equity_after_estimated_exit_costs(
+            state, close, fee_rate, slippage_rate
+        )
         state["peak_equity"] = max(state["peak_equity"], state["equity"])
         drawdown = (state["peak_equity"] - state["equity"]) / state["peak_equity"]
         state["max_drawdown_pct"] = max(state["max_drawdown_pct"], drawdown * 100.0)
@@ -306,11 +456,17 @@ def update_atr_trailing_account(four_hour_bars, daily_bars, state_path,
             trailing_stop = state["position_peak"] - 3.0 * state["atr14"]
             if state["paused"] or not regime or close < trailing_stop:
                 state["pending_action"] = "sell"
+                state["pending_action_reason"] = (
+                    "risk_pause" if state["paused"]
+                    else "atr_trailing_stop" if close < trailing_stop
+                    else "daily_regime_exit"
+                )
                 state["last_signal"] = "exit_queued"
             else:
                 state["last_signal"] = "hold"
         elif setup and not state["paused"]:
             state["pending_action"] = "buy"
+            state["pending_action_reason"] = "entry_setup"
             state["last_signal"] = "entry_queued"
         else:
             state["last_signal"] = "paused" if state["paused"] else "flat"
@@ -318,17 +474,20 @@ def update_atr_trailing_account(four_hour_bars, daily_bars, state_path,
         state["last_timestamp"] = bar["timestamp"]
         state["processed_new_candles"] += 1
     _save(state_path, state)
-    return _summary(state)
+    return _summary(state, fee_rate, slippage_rate)
 
 
-def _summary(state):
-    equity = float(state["cash"]) + float(state["quantity"]) * float(state["previous_close"])
+def _summary(state, fee_rate, slippage_rate):
+    equity = _equity_after_estimated_exit_costs(
+        state, state["previous_close"], fee_rate, slippage_rate
+    )
     return {
         "strategy": state["strategy"],
         "mode": "FORWARD_ONLY_PAPER",
         "initial_cash_usd": state["initial_cash"],
         "cash_usd": round(state["cash"], 4),
         "equity_usd": round(equity, 4),
+        "equity_after_estimated_exit_costs_usd": round(equity, 4),
         "return_pct": round((equity / state["initial_cash"] - 1.0) * 100.0, 4),
         "completed_trades": state["completed_trades"],
         "wins": state["wins"],

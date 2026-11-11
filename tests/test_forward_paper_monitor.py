@@ -1,15 +1,27 @@
 import json
+import forward_paper_monitor
 import tempfile
 import unittest
 from unittest.mock import patch
 from datetime import datetime, timezone
 from pathlib import Path
 
-from forward_paper_monitor import (assess_sleeve_health, build_qualified_ensemble, process_forward_accounts, validate_hourly_feed, write_report_atomically)
+from forward_paper_monitor import (assess_sleeve_health, build_qualified_ensemble, process_forward_accounts, validate_hourly_feed, write_report_atomically, _account_rows)
 from paper_account import seed_forward_paper_account, update_paper_account
 
 
 class ForwardPaperMonitorTests(unittest.TestCase):
+
+    def test_account_rows_preserve_synthetic_candle_execution_block(self):
+        bars = [
+            {"timestamp": 1_700_000_000_000, "close": 100.0, "imputed": True},
+            {"timestamp": 1_700_003_600_000, "close": 101.0, "imputed": False},
+            {"timestamp": 1_700_007_200_000, "close": 102.0},
+        ]
+        rows = _account_rows(bars)
+        self.assertEqual([row[5] for row in rows], [False, True, True])
+        self.assertEqual([row[4] for row in rows], ["100.0", "101.0", "102.0"])
+
 
     def test_qualified_ensemble_combines_only_equal_weight_4h_and_6h_sleeves(self):
         summary = {}
@@ -555,6 +567,23 @@ class ForwardPaperMonitorTests(unittest.TestCase):
         candles = self.make_candles(48)
         with self.assertRaisesRegex(ValueError, "Current timestamp must be finite"):
             validate_hourly_feed(candles, float("nan"))
+
+    def test_main_uses_documented_kraken_cvd_journal_and_checkpoint_paths(self):
+        with patch("forward_paper_monitor.load_two_year_candles", return_value=[{"timestamp": 1}]):
+            with patch("forward_paper_monitor.process_forward_accounts", return_value={"status": "PAPER_MONITORING"}) as processor:
+                with patch("forward_paper_monitor.write_report_atomically"):
+                    with patch("builtins.print"):
+                        forward_paper_monitor.main()
+        kwargs = processor.call_args.kwargs
+        self.assertEqual(
+            kwargs["cvd_journal_path"],
+            "state/kraken_btc_usd_trades.jsonl",
+        )
+        self.assertEqual(
+            kwargs["cvd_checkpoint_path"],
+            "state/kraken_btc_usd_trades.jsonl.checkpoint.json",
+        )
+        self.assertTrue(kwargs["require_cvd_confirmation"])
 
     def test_stale_or_imputed_feed_is_rejected(self):
         candles = self.make_candles(48)

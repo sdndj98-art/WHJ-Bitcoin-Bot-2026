@@ -254,7 +254,14 @@ def assess_sleeve_health(account, min_closed_trades=30, review_drawdown_pct=8.0)
 
 
 def _account_rows(bars):
-    return [[int(row["timestamp"] // 1000), 0, 0, 0, str(row["close"])] for row in bars]
+    """Preserve synthetic-bar execution blocks when adapting OHLCV to paper rows."""
+    return [
+        [
+            int(row["timestamp"] // 1000), 0, 0, 0, str(row["close"]),
+            not bool(row.get("imputed", False)),
+        ]
+        for row in bars
+    ]
 
 
 
@@ -580,11 +587,12 @@ def write_report_atomically(report, output_path="forward_paper_report.json"):
 
 def main():
     candles = load_two_year_candles(days=90)
+    cvd_journal_path = "state/kraken_btc_usd_trades.jsonl"
     report = process_forward_accounts(
         candles,
         require_cvd_confirmation=True,
-        cvd_journal_path="state/kraken_btc_usd_trades_verified.jsonl",
-        cvd_checkpoint_path="state/kraken_btc_usd_trades_verified.jsonl.checkpoint.json",
+        cvd_journal_path=cvd_journal_path,
+        cvd_checkpoint_path=cvd_journal_path + ".checkpoint.json",
     )
     write_report_atomically(report)
     print(json.dumps(report, indent=2, allow_nan=False))

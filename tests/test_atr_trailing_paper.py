@@ -1,3 +1,4 @@
+import json
 import tempfile
 import unittest
 
@@ -48,6 +49,52 @@ class AtrTrailingForwardPaperTests(unittest.TestCase):
             again = update_atr_trailing_account(four_hour, daily, path)
             self.assertEqual(again["processed_new_candles"], 0)
             self.assertEqual(again["completed_trades"], 0)
+
+    def test_open_position_equity_includes_estimated_exit_fee_and_slippage(self):
+        four_hour, daily = self.market()
+        fee_rate = 0.002
+        slippage_rate = 0.001
+        with tempfile.TemporaryDirectory() as folder:
+            path = f"{folder}/atr.json"
+            seed_atr_trailing_account(four_hour, daily, path)
+            index = len(four_hour)
+            close = 100.0 + index * 0.1
+            signal = {
+                "timestamp": index * 4 * 3600,
+                "open": close - 0.05, "high": close + 0.5,
+                "low": close - 0.5, "close": close,
+            }
+            fill = dict(signal)
+            fill["timestamp"] += 4 * 3600
+            fill["open"] += 0.1
+            fill["high"] += 0.1
+            fill["low"] += 0.1
+            fill["close"] += 0.1
+            opened = update_atr_trailing_account(
+                four_hour + [signal, fill], daily, path,
+                fee_rate=fee_rate, slippage_rate=slippage_rate,
+            )
+            self.assertTrue(opened["open_position"])
+            with open(path, encoding="utf-8") as handle:
+                state = json.load(handle)
+            raw_equity = state["cash"] + state["quantity"] * state["previous_close"]
+            expected = round(
+                state["cash"]
+                + state["quantity"] * state["previous_close"]
+                * (1.0 - slippage_rate) * (1.0 - fee_rate),
+                4,
+            )
+            # The public summary reports equity to four decimal places.
+            self.assertAlmostEqual(opened["equity_usd"], expected, places=8)
+            self.assertAlmostEqual(
+                opened["equity_after_estimated_exit_costs_usd"], expected, places=8
+            )
+            self.assertLess(opened["equity_usd"], raw_equity)
+            repeated = update_atr_trailing_account(
+                four_hour + [signal, fill], daily, path,
+                fee_rate=fee_rate, slippage_rate=slippage_rate,
+            )
+            self.assertAlmostEqual(repeated["equity_usd"], expected, places=8)
 
     def test_fixture_has_bullish_prior_daily_regime_and_ema_alignment(self):
         four_hour, daily = self.market()
@@ -134,10 +181,20 @@ class AtrTrailingForwardPaperTests(unittest.TestCase):
             )
             self.assertEqual(fourth["pending_action"], "sell")
             self.assertTrue(fourth["open_position"])
-            fill_bar = dict(stop_bar)
+            synthetic = dict(stop_bar)
+            synthetic["timestamp"] += 4 * 3600
+            synthetic["execution_eligible"] = False
+            blocked = update_atr_trailing_account(
+                four_hour + [entry_signal_bar, entry_fill_bar, peak_bar, stop_bar, synthetic],
+                daily, path,
+            )
+            self.assertEqual(blocked["pending_action"], "sell")
+            self.assertTrue(blocked["open_position"])
+            fill_bar = dict(synthetic)
             fill_bar["timestamp"] += 4 * 3600
+            fill_bar["execution_eligible"] = True
             fifth = update_atr_trailing_account(
-                four_hour + [entry_signal_bar, entry_fill_bar, peak_bar, stop_bar, fill_bar],
+                four_hour + [entry_signal_bar, entry_fill_bar, peak_bar, stop_bar, synthetic, fill_bar],
                 daily, path,
             )
             self.assertFalse(fifth["open_position"])
@@ -156,7 +213,16 @@ class AtrTrailingForwardPaperTests(unittest.TestCase):
                 "low": price - 0.5, "close": price,
                 "execution_eligible": False,
             }
-            blocked = update_atr_trailing_account(four_hour + [synthetic], daily, path)
+            signal_bar = dict(synthetic)
+            signal_bar["execution_eligible"] = True
+            queued = update_atr_trailing_account(
+                four_hour + [signal_bar], daily, path
+            )
+            self.assertEqual(queued["pending_action"], "buy")
+            synthetic["timestamp"] += 4 * 3600
+            blocked = update_atr_trailing_account(
+                four_hour + [signal_bar, synthetic], daily, path
+            )
             self.assertEqual(blocked["last_signal"], "blocked_synthetic_bar")
             self.assertIsNone(blocked["pending_action"])
             self.assertFalse(blocked["open_position"])
@@ -166,10 +232,97 @@ class AtrTrailingForwardPaperTests(unittest.TestCase):
             for field in ("open", "high", "low", "close"):
                 real[field] += 0.1
             allowed = update_atr_trailing_account(
-                four_hour + [synthetic, real], daily, path
+                four_hour + [signal_bar, synthetic, real], daily, path
             )
-            self.assertEqual(allowed["last_signal"], "entry_queued")
+            self.assertFalse(allowed["open_position"])
+            self.assertEqual(allowed["completed_trades"], 0)
             self.assertEqual(allowed["pending_action"], "buy")
+
+    def test_synthetic_mark_triggers_risk_pause_without_filling_until_real_bar(self):
+        four_hour, daily = self.market()
+        with tempfile.TemporaryDirectory() as folder:
+            path = f"{folder}/atr.json"
+            seed_atr_trailing_account(four_hour, daily, path)
+            index = len(four_hour)
+            base = 100.0 + index * 0.1
+            signal = {
+                "timestamp": index * 4 * 3600,
+                "open": base - 0.05, "high": base + 0.5,
+                "low": base - 0.5, "close": base,
+            }
+            update_atr_trailing_account(four_hour + [signal], daily, path)
+            fill = dict(signal)
+            fill["timestamp"] += 4 * 3600
+            for field in ("open", "high", "low", "close"):
+                fill[field] += 0.1
+            entered = update_atr_trailing_account(
+                four_hour + [signal, fill], daily, path
+            )
+            self.assertTrue(entered["open_position"])
+
+            synthetic = dict(fill)
+            synthetic["timestamp"] += 4 * 3600
+            synthetic["execution_eligible"] = False
+            for field in ("open", "high", "low", "close"):
+                synthetic[field] *= 0.60
+            breached = update_atr_trailing_account(
+                four_hour + [signal, fill, synthetic], daily, path
+            )
+            self.assertTrue(breached["paused"])
+            self.assertEqual(breached["pause_reason"], "daily_loss_limit")
+            self.assertEqual(breached["pending_action"], "sell")
+            self.assertTrue(breached["open_position"])
+
+            recovered = dict(fill)
+            recovered["timestamp"] = synthetic["timestamp"] + 4 * 3600
+            closed = update_atr_trailing_account(
+                four_hour + [signal, fill, synthetic, recovered], daily, path
+            )
+            self.assertFalse(closed["open_position"])
+            self.assertEqual(closed["completed_trades"], 1)
+            self.assertTrue(closed["paused"])
+
+    def test_synthetic_bar_detects_atr_stop_breach_without_executing(self):
+        four_hour, daily = self.market()
+        with tempfile.TemporaryDirectory() as folder:
+            path = f"{folder}/atr.json"
+            seed_atr_trailing_account(four_hour, daily, path)
+            index = len(four_hour)
+            base = 100.0 + index * 0.1
+            signal = {
+                "timestamp": index * 4 * 3600,
+                "open": base - 0.05, "high": base + 0.5,
+                "low": base - 0.5, "close": base,
+            }
+            update_atr_trailing_account(four_hour + [signal], daily, path)
+            fill = dict(signal)
+            fill["timestamp"] += 4 * 3600
+            for field in ("open", "high", "low", "close"):
+                fill[field] += 0.1
+            entered = update_atr_trailing_account(
+                four_hour + [signal, fill], daily, path
+            )
+            self.assertTrue(entered["open_position"])
+
+            synthetic = dict(fill)
+            synthetic["timestamp"] += 4 * 3600
+            synthetic["execution_eligible"] = False
+            for field in ("open", "high", "low", "close"):
+                synthetic[field] *= 0.97
+            stopped = update_atr_trailing_account(
+                four_hour + [signal, fill, synthetic], daily, path
+            )
+            self.assertEqual(stopped["pending_action"], "sell")
+            self.assertFalse(stopped["paused"])
+            self.assertTrue(stopped["open_position"])
+
+            recovered = dict(fill)
+            recovered["timestamp"] = synthetic["timestamp"] + 4 * 3600
+            closed = update_atr_trailing_account(
+                four_hour + [signal, fill, synthetic, recovered], daily, path
+            )
+            self.assertFalse(closed["open_position"])
+            self.assertEqual(closed["completed_trades"], 1)
 
     def test_rejects_gap_between_saved_checkpoint_and_new_bar(self):
         four_hour, daily = self.market()
@@ -194,3 +347,79 @@ class AtrTrailingForwardPaperTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class AtrPaperStateValidationTests(unittest.TestCase):
+    def _write_state(self, folder, value):
+        from pathlib import Path
+        path = Path(folder) / "atr-state.json"
+        path.write_text(json.dumps(value), encoding="utf-8")
+        return path
+
+    @staticmethod
+    def _valid_state():
+        return {
+            "strategy": "ema20_50_daily_sma200_atr3_trailing",
+            "initial_cash": 250.0, "cash": 250.0, "quantity": 0.0,
+            "equity": 250.0, "peak_equity": 250.0,
+            "max_drawdown_pct": 0.0, "ema20": 100.0, "ema50": 99.0,
+            "atr14": 1.0, "previous_close": 101.0,
+            "position_peak": None, "pending_action": None,
+            "last_timestamp": 1000, "forward_seed_timestamp": 1000,
+            "daily_bucket": "1970-01-01", "daily_start_equity": 250.0,
+            "completed_trades": 0, "wins": 0, "losses": 0,
+            "consecutive_losses": 0, "fees_paid": 0.0, "trades": [],
+            "paused": False, "pause_reason": None,
+            "processed_new_candles": 0, "last_signal": "seeded_no_trade",
+            "last_daily_regime": None, "last_setup": None,
+        }
+
+    def test_non_object_json_state_is_rejected_without_attribute_error(self):
+        from atr_trailing_paper import _load
+        for value in (None, [], "bad", 7):
+            with self.subTest(value=value), tempfile.TemporaryDirectory() as folder:
+                path = self._write_state(folder, value)
+                with self.assertRaisesRegex(ValueError, "state"):
+                    _load(path, 250.0)
+
+    def test_missing_required_field_is_rejected(self):
+        from atr_trailing_paper import _load
+        state = self._valid_state()
+        del state["cash"]
+        with tempfile.TemporaryDirectory() as folder:
+            with self.assertRaisesRegex(ValueError, "state"):
+                _load(self._write_state(folder, state), 250.0)
+
+    def test_non_finite_and_negative_account_values_are_rejected(self):
+        from atr_trailing_paper import _load
+        for key, value in (("cash", float("nan")), ("quantity", -1.0),
+                           ("equity", float("inf")), ("fees_paid", -0.1)):
+            with self.subTest(key=key), tempfile.TemporaryDirectory() as folder:
+                state = self._valid_state()
+                state[key] = value
+                with self.assertRaisesRegex(ValueError, "state"):
+                    _load(self._write_state(folder, state), 250.0)
+
+    def test_invalid_pending_action_and_boolean_numeric_are_rejected(self):
+        from atr_trailing_paper import _load
+        for key, value in (("pending_action", "short"), ("cash", True)):
+            with self.subTest(key=key), tempfile.TemporaryDirectory() as folder:
+                state = self._valid_state()
+                state[key] = value
+                with self.assertRaisesRegex(ValueError, "state"):
+                    _load(self._write_state(folder, state), 250.0)
+
+    def test_open_position_must_match_trade_ledger(self):
+        from atr_trailing_paper import _load
+        state = self._valid_state()
+        state["quantity"] = 0.5
+        with tempfile.TemporaryDirectory() as folder:
+            with self.assertRaisesRegex(ValueError, "state"):
+                _load(self._write_state(folder, state), 250.0)
+
+    def test_valid_seed_state_loads(self):
+        from atr_trailing_paper import _load
+        state = self._valid_state()
+        with tempfile.TemporaryDirectory() as folder:
+            loaded = _load(self._write_state(folder, state), 250.0)
+            self.assertEqual(loaded, state)
