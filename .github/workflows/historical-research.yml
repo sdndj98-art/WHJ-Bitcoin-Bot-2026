@@ -5,7 +5,7 @@ on:
   schedule:
     - cron: "37 6 * * *"
   push:
-    branches: [main, build/bitcoin-satoshi-bot, research/cost-sensitivity, research/regime-aware-consensus-ensemble, research/6h-ema-atr-trailing-20261108, research/adx-threshold-sensitivity-20261108, research/volume-liquidity-momentum-confluence-20261108]
+    branches: [main, build/bitcoin-satoshi-bot, research/cost-sensitivity, research/regime-aware-consensus-ensemble, research/6h-ema-atr-trailing-20261108, research/adx-threshold-sensitivity-20261108, research/volume-liquidity-momentum-confluence-20261108, strategy/qualified-forward-monitor-20261111]
     paths:
       - "historical_research.py"
       - "strategy_lab.py"
