@@ -2,6 +2,7 @@ import math
 import unittest
 
 from slow_momentum_lab import (
+    _attach_matched_benchmark,
     _simulate,
     evaluate_slow_momentum,
     momentum_signals,
@@ -35,7 +36,13 @@ class SlowMomentumLabTests(unittest.TestCase):
         result = evaluate_slow_momentum(closes)
         self.assertEqual(set(result["candidates"]), {"56", "84", "112"})
         for candidate in result["candidates"].values():
+            self.assertEqual(len(candidate["oos_subperiods"]), 3)
             self.assertEqual(len(candidate["walk_forward_windows"]), 3)
+            self.assertIn("excess_return_vs_buy_and_hold_pct_points", candidate)
+            for subperiod in candidate["oos_subperiods"]:
+                self.assertIn("matched_benchmark_return_pct", subperiod)
+                self.assertIn("excess_return_pct_points", subperiod)
+        self.assertEqual(len(result["buy_and_hold_25pct"]["oos_subperiods"]), 3)
         self.assertEqual(len(result["buy_and_hold_25pct"]["walk_forward_windows"]), 3)
         self.assertFalse(result["execution_enabled"])
         self.assertIn("84", result["cost_stress"]["2x"]["candidates"])
@@ -86,6 +93,14 @@ class SlowMomentumLabTests(unittest.TestCase):
         self.assertEqual(
             result["drawdown_measurement"], "close_to_close_net_liquidation"
         )
+
+    def test_matched_benchmark_rejects_misaligned_windows(self):
+        candidate = [{"start_index": 10, "end_index_exclusive": 20,
+                      "metrics": {"return_pct": 2.0}}]
+        benchmark = [{"start_index": 11, "end_index_exclusive": 20,
+                      "return_pct": 1.0}]
+        with self.assertRaises(ValueError):
+            _attach_matched_benchmark(candidate, benchmark)
 
     def test_validation_rejects_bad_prices_and_parameters(self):
         with self.assertRaises(ValueError):
