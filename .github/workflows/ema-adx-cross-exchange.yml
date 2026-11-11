@@ -14,10 +14,11 @@ on:
 permissions:
   contents: read
 
+# Give each validation attempt its own concurrency group. The previous ref-wide
+# group accumulated multiple pending PR runs with no jobs being scheduled.
 concurrency:
-  group: whj-ema-adx-cross-exchange-${{ github.ref }}
+  group: whj-ema-adx-cross-exchange-${{ github.run_id }}
   cancel-in-progress: false
-  queue: max
 
 jobs:
   independent-bitstamp-validation:
