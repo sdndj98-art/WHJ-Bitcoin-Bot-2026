@@ -99,6 +99,24 @@ def _existing_timestamp(path, strategy):
     return int(timestamp)
 
 
+def _existing_processed_count(path):
+    """Validate the ATR ledger's cumulative counter before any account is mutated."""
+    if not path.exists():
+        return 0
+    try:
+        state = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        raise ValueError(
+            f"Existing ATR ledger is unreadable; refusing to update any qualified ledger: {path}"
+        ) from exc
+    value = state.get("processed_new_candles") if isinstance(state, dict) else None
+    if isinstance(value, bool) or not isinstance(value, int) or value < 0:
+        raise ValueError(
+            f"Existing ATR ledger processing counter is invalid; refusing partial update: {path}"
+        )
+    return value
+
+
 def _write_json_atomically(payload, path):
     target = Path(path)
     target.parent.mkdir(parents=True, exist_ok=True)
@@ -174,6 +192,9 @@ def process_qualified_forward_candidates(
     )
     if atr_last is not None and bars[4][-1]["timestamp"] < atr_last:
         raise ValueError("Feed is older than saved ATR checkpoint; refusing rollback")
+    # Validate every ATR field read later before the first of the four ledgers
+    # is updated. This prevents a corrupt ATR counter from causing a partial cycle.
+    atr_processed_before = _existing_processed_count(atr_path)
 
     results = {}
     for name, config in CANDIDATES.items():
@@ -207,15 +228,6 @@ def process_qualified_forward_candidates(
 
     four_hour = bars[4]
     daily = bars[24]
-    atr_processed_before = 0
-    if atr_path.exists():
-        try:
-            atr_state_before = json.loads(atr_path.read_text(encoding="utf-8"))
-            atr_processed_before = int(atr_state_before.get("processed_new_candles", 0))
-        except (OSError, json.JSONDecodeError, TypeError, ValueError) as exc:
-            raise ValueError(
-                "Existing ATR ledger processing counter is unreadable; refusing update"
-            ) from exc
     atr_seed = seed_atr_trailing_account(
         four_hour,
         daily,
