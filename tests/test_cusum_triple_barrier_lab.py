@@ -49,8 +49,12 @@ class CusumTripleBarrierLabTests(unittest.TestCase):
     def test_invalid_inputs_fail_closed(self):
         with self.assertRaises(ValueError):
             cusum_event_indices([100.0] * 10, volatility_lookback=20)
+        self.assertEqual(
+            triple_barrier_labels([100.0, 101.0, 102.0], [0], [None, None, None]),
+            [],
+        )
         with self.assertRaises(ValueError):
-            triple_barrier_labels([100.0, 101.0, 102.0], [0], [None, None, None])
+            triple_barrier_labels([100.0, 101.0, 102.0], [0], [None, None])
         with self.assertRaises(ValueError):
             purged_past_event_indices([], 10, embargo_bars=-1)
 
