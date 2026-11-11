@@ -280,7 +280,7 @@ def process_qualified_forward_candidates(
     summary = {}
     for name, item in results.items():
         account = item["account"]
-        if "equity_after_estimated_exit_costs_usd" in account:
+        if "risk_pause_reasons" in account:
             equity = float(account["equity_after_estimated_exit_costs_usd"])
             initial = float(account["initial_cash_usd"])
             trades = int(account["completed_trades"])
