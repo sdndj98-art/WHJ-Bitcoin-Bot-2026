@@ -94,7 +94,7 @@ def main():
             print("AUDIT ERROR: read-only audit utility is missing")
             return 2
         command = [sys.executable, str(audit_script)]
-        state_override = os.environ.get("WHJ_AUDIT_STATE_DIR")
+        state_override = __import__("os").environ.get("WHJ_AUDIT_STATE_DIR")
         if state_override:
             command.extend(["--state-dir", state_override])
         try:
