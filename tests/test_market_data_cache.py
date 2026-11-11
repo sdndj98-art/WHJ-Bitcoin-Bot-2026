@@ -29,13 +29,14 @@ class MarketDataCacheTests(unittest.TestCase):
 
     @staticmethod
     def as_coinbase_rows(start_ms, end_ms):
+        """Return fetch_page's normalized [time, open, high, low, close, volume] rows."""
         rows = []
         timestamp = start_ms
         while timestamp <= end_ms:
             price = 40000.0 + timestamp / INTERVAL_MS % 1000
             rows.append([
-                timestamp, price - 1, price + 2,
-                price, price + 1, 3.0,
+                timestamp, price, price + 2, price - 1,
+                price + 1, 3.0,
             ])
             timestamp += INTERVAL_MS
         return rows
