@@ -6,6 +6,7 @@ No exchange credentials, order endpoints, or live execution are used.
 from __future__ import annotations
 
 import base64
+import fcntl
 import json
 import math
 import os
@@ -264,7 +265,7 @@ def _publish_qualified_ledgers(directory, staged_paths):
         raise
 
 
-def process_qualified_forward_candidates(
+def _process_qualified_forward_candidates_unlocked(
     candles, state_dir=DEFAULT_STATE_DIR, now_timestamp=None
 ):
     """Update all four qualified ledgers once, using completed native-timeframe bars."""
@@ -482,6 +483,30 @@ def process_qualified_forward_candidates(
         staged_paths = {filename: stage_dir / filename for filename in ({config["file"] for config in CANDIDATES.values()} | {ATR_FILE})}
         _publish_qualified_ledgers(directory, staged_paths)
         return report
+
+
+
+def process_qualified_forward_candidates(
+    candles, state_dir=DEFAULT_STATE_DIR, now_timestamp=None
+):
+    """Serialize monitor cycles; OS releases the advisory lock after a crash."""
+    directory = Path(state_dir)
+    directory.mkdir(parents=True, exist_ok=True)
+    lock_path = directory / ".qualified_forward_paper_monitor.lock"
+    with lock_path.open("a+", encoding="utf-8") as lock_file:
+        try:
+            fcntl.flock(lock_file.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
+        except BlockingIOError as exc:
+            raise RuntimeError(
+                "Another qualified forward monitor cycle is already running"
+            ) from exc
+        try:
+            return _process_qualified_forward_candidates_unlocked(
+                candles, state_dir=directory, now_timestamp=now_timestamp
+            )
+        finally:
+            fcntl.flock(lock_file.fileno(), fcntl.LOCK_UN)
+
 
 
 def main():
