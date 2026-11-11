@@ -347,5 +347,44 @@ class QualifiedForwardPaperMonitorTests(unittest.TestCase):
 
 
 
+    def test_concurrent_monitor_cycle_is_rejected_before_state_processing(self):
+        import qualified_forward_paper_monitor as monitor
+
+        with tempfile.TemporaryDirectory() as folder:
+            with mock.patch(
+                "qualified_forward_paper_monitor.fcntl.flock",
+                side_effect=BlockingIOError,
+            ), mock.patch.object(
+                monitor,
+                "_process_qualified_forward_candidates_unlocked",
+            ) as process:
+                with self.assertRaisesRegex(RuntimeError, "already running"):
+                    process_qualified_forward_candidates([], folder)
+                process.assert_not_called()
+
+    def test_monitor_lock_is_released_after_processing_exception(self):
+        import qualified_forward_paper_monitor as monitor
+
+        with tempfile.TemporaryDirectory() as folder:
+            candles = []
+            with mock.patch.object(
+                monitor,
+                "_process_qualified_forward_candidates_unlocked",
+                side_effect=ValueError("test failure"),
+            ):
+                with self.assertRaisesRegex(ValueError, "test failure"):
+                    process_qualified_forward_candidates(candles, folder)
+
+            # A second cycle can acquire the same lock after the first unwinds.
+            with mock.patch.object(
+                monitor,
+                "_process_qualified_forward_candidates_unlocked",
+                return_value={"ok": True},
+            ):
+                result = process_qualified_forward_candidates(candles, folder)
+            self.assertEqual(result, {"ok": True})
+
+
+
 if __name__ == "__main__":
     unittest.main()
