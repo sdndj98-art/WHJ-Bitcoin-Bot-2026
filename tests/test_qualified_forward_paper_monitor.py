@@ -299,5 +299,53 @@ class QualifiedForwardPaperMonitorTests(unittest.TestCase):
 
 
 
+    def test_transaction_journal_is_fsynced_before_any_ledger_replace(self):
+        import qualified_forward_paper_monitor as monitor
+
+        names = [config["file"] for config in CANDIDATES.values()] + [ATR_FILE]
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            with tempfile.TemporaryDirectory(dir=folder) as stage_folder:
+                staged = {}
+                for index, name in enumerate(names):
+                    path = Path(stage_folder) / name
+                    path.write_text(json.dumps({"staged": index}), encoding="utf-8")
+                    staged[name] = path
+
+                events = []
+                real_replace = monitor.os.replace
+                real_fsync_directory = monitor._fsync_directory
+
+                def observe_replace(source, destination):
+                    events.append(("replace", Path(destination).name))
+                    return real_replace(source, destination)
+
+                def observe_fsync(directory):
+                    events.append(("fsync_directory", (Path(directory) / monitor._TRANSACTION_FILE).exists()))
+                    return real_fsync_directory(directory)
+
+                with mock.patch(
+                    "qualified_forward_paper_monitor.os.replace",
+                    side_effect=observe_replace,
+                ), mock.patch(
+                    "qualified_forward_paper_monitor._fsync_directory",
+                    side_effect=observe_fsync,
+                ):
+                    monitor._publish_qualified_ledgers(root, staged)
+
+                first_ledger_replace = next(
+                    index for index, event in enumerate(events)
+                    if event[0] == "replace" and event[1] in names
+                )
+                journal_fsyncs = [
+                    index for index, event in enumerate(events)
+                    if event == ("fsync_directory", True)
+                ]
+                self.assertTrue(journal_fsyncs)
+                self.assertLess(journal_fsyncs[0], first_ledger_replace)
+                self.assertFalse((root / monitor._TRANSACTION_FILE).exists())
+
+
+
 if __name__ == "__main__":
     unittest.main()
