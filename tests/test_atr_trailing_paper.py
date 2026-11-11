@@ -192,6 +192,50 @@ class AtrTrailingForwardPaperTests(unittest.TestCase):
             self.assertEqual(allowed["completed_trades"], 0)
             self.assertEqual(allowed["pending_action"], "buy")
 
+    def test_synthetic_mark_triggers_risk_pause_without_filling_until_real_bar(self):
+        four_hour, daily = self.market()
+        with tempfile.TemporaryDirectory() as folder:
+            path = f"{folder}/atr.json"
+            seed_atr_trailing_account(four_hour, daily, path)
+            index = len(four_hour)
+            base = 100.0 + index * 0.1
+            signal = {
+                "timestamp": index * 4 * 3600,
+                "open": base - 0.05, "high": base + 0.5,
+                "low": base - 0.5, "close": base,
+            }
+            update_atr_trailing_account(four_hour + [signal], daily, path)
+            fill = dict(signal)
+            fill["timestamp"] += 4 * 3600
+            for field in ("open", "high", "low", "close"):
+                fill[field] += 0.1
+            entered = update_atr_trailing_account(
+                four_hour + [signal, fill], daily, path
+            )
+            self.assertTrue(entered["open_position"])
+
+            synthetic = dict(fill)
+            synthetic["timestamp"] += 4 * 3600
+            synthetic["execution_eligible"] = False
+            for field in ("open", "high", "low", "close"):
+                synthetic[field] *= 0.60
+            breached = update_atr_trailing_account(
+                four_hour + [signal, fill, synthetic], daily, path
+            )
+            self.assertTrue(breached["paused"])
+            self.assertEqual(breached["pause_reason"], "daily_loss_limit")
+            self.assertEqual(breached["pending_action"], "sell")
+            self.assertTrue(breached["open_position"])
+
+            recovered = dict(fill)
+            recovered["timestamp"] = synthetic["timestamp"] + 4 * 3600
+            closed = update_atr_trailing_account(
+                four_hour + [signal, fill, synthetic, recovered], daily, path
+            )
+            self.assertFalse(closed["open_position"])
+            self.assertEqual(closed["completed_trades"], 1)
+            self.assertTrue(closed["paused"])
+
     def test_rejects_gap_between_saved_checkpoint_and_new_bar(self):
         four_hour, daily = self.market()
         with tempfile.TemporaryDirectory() as folder:
