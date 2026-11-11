@@ -6,6 +6,7 @@ from slow_momentum_lab import (
     _simulate,
     evaluate_slow_momentum,
     momentum_signals,
+    periodic_net_returns,
 )
 
 
@@ -60,6 +61,24 @@ class SlowMomentumLabTests(unittest.TestCase):
         self.assertEqual(
             len(result["cost_stress"]["2x"]["matched_buy_and_hold"]["oos_subperiods"]), 3
         )
+
+    def test_periodic_returns_follow_next_close_execution_and_include_costs(self):
+        closes = [100.0, 100.0, 120.0, 110.0]
+        signals = [False, True, False, False]
+        returns = periodic_net_returns(
+            closes, signals, 1, 4, fee=0.0, slippage=0.0
+        )
+        self.assertEqual(len(returns), 3)
+        self.assertEqual(returns[0], 0.0)
+        self.assertEqual(returns[1], 0.0)
+        self.assertLess(returns[2], 0.0)
+
+    def test_periodic_returns_are_zero_when_flat_and_validate_alignment(self):
+        closes = [100.0] * 12
+        returns = periodic_net_returns(closes, [False] * 12, 2, 12)
+        self.assertEqual(returns, [0.0] * 10)
+        with self.assertRaises(ValueError):
+            periodic_net_returns(closes, [False] * 11, 2, 12)
 
     def test_open_position_reports_unrealized_net_liquidation_pnl_separately(self):
         result = _simulate(
