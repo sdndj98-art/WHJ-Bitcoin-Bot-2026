@@ -1,6 +1,6 @@
-"""Public XAU/USD daily OHLC research data from Yahoo Finance chart API.
+"""Public COMEX gold futures daily OHLC research data from Yahoo Finance chart API.
 
-This is a spot-price reference series, not a broker execution feed. It does not
+GC=F is Yahoo's continuous COMEX gold futures reference, not spot COMEX gold or a broker execution feed. It does not
 provide executable bid/ask, CFD financing, commissions, or futures-roll data.
 """
 import json
@@ -11,7 +11,7 @@ import urllib.parse
 import urllib.request
 from datetime import datetime, timezone
 
-BASE_URL = "https://query1.finance.yahoo.com/v8/finance/chart/XAUUSD%3DX"
+BASE_URL = "https://query1.finance.yahoo.com/v8/finance/chart/GC%3DF"
 USER_AGENT = "WHJ-Multi-Asset-Research/1.0"
 
 
@@ -23,14 +23,14 @@ def parse_yahoo_chart(payload):
         raise RuntimeError("Yahoo chart API error: " + str(chart["error"]))
     results = chart.get("result") or []
     if not results:
-        raise ValueError("Yahoo returned no XAU/USD chart result")
+        raise ValueError("Yahoo returned no GC=F chart result")
     result = results[0]
     timestamps = result.get("timestamp") or []
     indicators = result.get("indicators") or {}
     quote = (indicators.get("quote") or [{}])[0]
     arrays = [quote.get(k) or [] for k in ("open", "high", "low", "close", "volume")]
     if not timestamps or any(len(values) != len(timestamps) for values in arrays):
-        raise ValueError("Yahoo XAU/USD OHLC arrays are missing or misaligned")
+        raise ValueError("Yahoo GC=F OHLC arrays are missing or misaligned")
     rows, seen = [], set()
     for i, stamp in enumerate(timestamps):
         values = [arrays[j][i] for j in range(4)]
@@ -42,7 +42,7 @@ def parse_yahoo_chart(payload):
             raise ValueError("Impossible XAU/USD OHLC relationship")
         timestamp_ms = int(stamp) * 1000
         if timestamp_ms in seen:
-            raise ValueError("Duplicate XAU/USD daily timestamp")
+            raise ValueError("Duplicate GC=F daily timestamp")
         seen.add(timestamp_ms)
         volume = arrays[4][i]
         rows.append({
@@ -52,7 +52,7 @@ def parse_yahoo_chart(payload):
         })
     rows.sort(key=lambda x: x["timestamp"])
     if len(rows) < 1000:
-        raise ValueError("Fewer than 1,000 valid closed XAU/USD daily candles")
+        raise ValueError("Fewer than 1,000 valid closed GC=F daily candles")
     # Yahoo's final daily candle may still be forming. Exclude it conservatively.
     rows = rows[:-1]
     if len(rows) < 999:
@@ -78,4 +78,4 @@ def load_xauusd_daily(period="10y", retries=4):
             last_error = exc
             if attempt + 1 < retries:
                 time.sleep(min(2 ** attempt, 8))
-    raise RuntimeError("Unable to download Yahoo XAU/USD daily candles: " + str(last_error))
+    raise RuntimeError("Unable to download Yahoo GC=F daily candles: " + str(last_error))
