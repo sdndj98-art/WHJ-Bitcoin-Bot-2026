@@ -39,7 +39,7 @@ def parse_yahoo_chart(payload):
             continue
         o, h, l, c = map(float, values)
         if h < max(o, l, c) or l > min(o, h, c):
-            raise ValueError("Impossible XAU/USD OHLC relationship")
+            raise ValueError("Impossible gold OHLC relationship")
         timestamp_ms = int(stamp) * 1000
         if timestamp_ms in seen:
             raise ValueError("Duplicate GC=F daily timestamp")
@@ -56,13 +56,13 @@ def parse_yahoo_chart(payload):
     # Yahoo's final daily candle may still be forming. Exclude it conservatively.
     rows = rows[:-1]
     if len(rows) < 999:
-        raise ValueError("Insufficient XAU/USD daily history after dropping final candle")
+        raise ValueError("Insufficient gold daily history after dropping final candle")
     return rows
 
 
-def load_xauusd_daily(period="10y", retries=4):
+def load_gold_daily(period="10y", retries=4):
     if period not in ("5y", "10y"):
-        raise ValueError("Supported XAU/USD daily history periods are 5y or 10y")
+        raise ValueError("Supported gold daily history periods are 5y or 10y")
     params = urllib.parse.urlencode({"range": period, "interval": "1d", "events": "history"})
     request = urllib.request.Request(
         BASE_URL + "?" + params,
