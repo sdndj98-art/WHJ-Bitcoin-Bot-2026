@@ -37,7 +37,12 @@ jobs:
           from datetime import datetime, timezone
           from pathlib import Path
           from historical_research import aggregate_candles, load_two_year_candles
-          from research_governance import build_trial_manifest, cscv_probability_of_backtest_overfitting
+          from research_governance import (
+              build_trial_manifest,
+              cscv_probability_of_backtest_overfitting,
+              moving_block_bootstrap_return_ci,
+              trade_concentration_diagnostic,
+          )
           from slow_momentum_lab import evaluate_slow_momentum, momentum_signals, periodic_net_returns
 
           # Read-only market-data loader and isolated evaluator only.
@@ -85,6 +90,20 @@ jobs:
               )
               for lookback in report["candidates"]
           }
+          # Quantify uncertainty and winner concentration on OOS-only data.
+          # The bootstrap is conditional on a fixed 7-day block length and is
+          # a fragility diagnostic, not a probability of future profitability.
+          for key, candidate in report["candidates"].items():
+              oos_metrics = candidate["out_of_sample"]
+              closed_pnls = oos_metrics.pop("closed_trade_pnls_usd", [])
+              oos_metrics["trade_concentration_diagnostic"] = trade_concentration_diagnostic(closed_pnls)
+              oos_metrics["moving_block_bootstrap_return_ci"] = moving_block_bootstrap_return_ci(
+                  periodic_returns[key],
+                  block_length=min(7, len(periodic_returns[key])),
+                  bootstrap_samples=2000,
+                  seed=20261112 + int(key),
+              )
+
           return_count = len(next(iter(periodic_returns.values())))
           pbo_partitions = next((count for count in (8, 6, 4) if return_count % count == 0), None)
           if pbo_partitions is not None:
@@ -128,14 +147,19 @@ jobs:
               f"- CSCV/PBO estimate: {pbo_estimate}",
               "- Research-only; no paper ledgers accessed or changed; no live orders.", "",
               "## Normal-cost out-of-sample results", "",
-              "| Lookback | Return | PF | Max DD | Trades | OOS windows |",
-              "|---:|---:|---:|---:|---:|---|",
+              "| Lookback | Return | 95% block-bootstrap CI | PF | Max DD | Trades | Top-1 winner share | OOS windows |",
+              "|---:|---:|---:|---:|---:|---:|---:|---|",
           ]
           for key, candidate in report["candidates"].items():
               m = candidate["out_of_sample"]
               windows = ", ".join(f"{w['metrics']['return_pct']:.2f}%" for w in candidate["walk_forward_windows"])
               pf = m["profit_factor"] if m["profit_factor"] is not None else "—"
-              lines.append(f"| {key} days | {m['return_pct']:.2f}% | {pf} | {m['max_drawdown_pct']:.2f}% | {m['closed_trades']} | {windows} |")
+              ci = m["moving_block_bootstrap_return_ci"]
+              concentration = m["trade_concentration_diagnostic"]
+              ci_text = f"[{ci['lower_return_pct']:.2f}%, {ci['upper_return_pct']:.2f}%]"
+              top1 = concentration["top_1_winner_share_pct"]
+              top1_text = f"{top1:.1f}%" if top1 is not None else "n/a"
+              lines.append(f"| {key} days | {m['return_pct']:.2f}% | {ci_text} | {pf} | {m['max_drawdown_pct']:.2f}% | {m['closed_trades']} | {top1_text} | {windows} |")
           bh = report["buy_and_hold_25pct"]["out_of_sample"]
           lines += ["", f"Matched 25% buy-and-hold OOS return: **{bh['return_pct']:.2f}%**", "", "## Cost stress", ""]
           for level, scenario in report["cost_stress"].items():
