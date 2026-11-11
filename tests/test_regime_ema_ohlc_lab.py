@@ -42,6 +42,8 @@ class RegimeEmaOhlcLabTests(unittest.TestCase):
         self.assertIn("ema50_200_atr90_past180", result)
         self.assertIn("buy_and_hold", result)
         self.assertIn("cash", result)
+        self.assertEqual(result["buy_and_hold"]["allocation_fraction"], 0.25)
+        self.assertEqual(result["buy_and_hold"]["uninvested_cash_usd"], 750.0)
         for name in ("ema50_200", "ema50_200_atr90_past180"):
             self.assertIn("max_intrabar_ohlc_envelope_drawdown_pct", result[name])
             self.assertFalse(result[name]["execution_enabled"])
