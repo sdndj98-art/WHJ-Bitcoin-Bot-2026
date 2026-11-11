@@ -246,6 +246,7 @@ def seed_atr_trailing_account(four_hour_bars, daily_bars, state_path, initial_ca
         "previous_close": last["close"],
         "position_peak": None,
         "pending_action": None,
+        "pending_action_reason": None,
         "last_timestamp": last["timestamp"],
         "forward_seed_timestamp": last["timestamp"],
         "daily_bucket": datetime.fromtimestamp(last["timestamp"], timezone.utc).date().isoformat(),
@@ -319,7 +320,13 @@ def update_atr_trailing_account(four_hour_bars, daily_bars, state_path,
         # cannot execute. Cancel any queued action so a stale signal cannot fill
         # later on an unrelated executable candle.
         if not bar["execution_eligible"]:
-            state["pending_action"] = None
+            # A queued entry or ordinary regime exit can become stale. Keep only
+            # forced risk exits (ATR stop / persistent risk pause) pending.
+            if state.get("pending_action") == "buy" or state.get("pending_action_reason") not in (
+                "atr_trailing_stop", "risk_pause"
+            ):
+                state["pending_action"] = None
+                state["pending_action_reason"] = None
             state["equity"] = state["cash"] + state["quantity"] * close
             state["peak_equity"] = max(state["peak_equity"], state["equity"])
             if state["peak_equity"] > 0:
@@ -382,6 +389,7 @@ def update_atr_trailing_account(four_hour_bars, daily_bars, state_path,
             state["position_peak"] = None
 
         state["pending_action"] = None
+        state["pending_action_reason"] = None
         state["equity"] = state["cash"] + state["quantity"] * close
         state["peak_equity"] = max(state["peak_equity"], state["equity"])
         drawdown = (state["peak_equity"] - state["equity"]) / state["peak_equity"]
@@ -403,11 +411,17 @@ def update_atr_trailing_account(four_hour_bars, daily_bars, state_path,
             trailing_stop = state["position_peak"] - 3.0 * state["atr14"]
             if state["paused"] or not regime or close < trailing_stop:
                 state["pending_action"] = "sell"
+                state["pending_action_reason"] = (
+                    "risk_pause" if state["paused"]
+                    else "atr_trailing_stop" if close < trailing_stop
+                    else "daily_regime_exit"
+                )
                 state["last_signal"] = "exit_queued"
             else:
                 state["last_signal"] = "hold"
         elif setup and not state["paused"]:
             state["pending_action"] = "buy"
+            state["pending_action_reason"] = "entry_setup"
             state["last_signal"] = "entry_queued"
         else:
             state["last_signal"] = "paused" if state["paused"] else "flat"
