@@ -132,7 +132,7 @@ def _write_cache(path, candles, fetched_at):
         ) as handle:
             temporary = Path(handle.name)
             json.dump(payload, handle, indent=2, sort_keys=True, allow_nan=False)
-            handle.write("\\n")
+            handle.write("\n")
             handle.flush()
             os.fsync(handle.fileno())
         os.replace(temporary, target)
