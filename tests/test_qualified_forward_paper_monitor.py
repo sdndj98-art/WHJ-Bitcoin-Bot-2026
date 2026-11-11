@@ -162,6 +162,7 @@ class QualifiedForwardPaperMonitorTests(unittest.TestCase):
                 "version": 1,
                 "strategy": "ema_pullback_trend",
                 "initial_cash": 250.0,
+                "last_timestamp": int(candles[-1]["timestamp"] // 1000 // 21600 * 21600),
                 "btc": 0.0,
                 "entry_cost": 0.0,
                 "recent_closes": [],
