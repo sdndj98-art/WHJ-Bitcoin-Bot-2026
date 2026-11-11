@@ -71,7 +71,7 @@ jobs:
                   "execution": "next-bar open; stop gaps fill at open; same-bar stop/target collisions stop-first",
                   "risk": "25% max allocation; fixed 2% stop and 4% target; no leverage",
                   "costs": "fee and slippage per side at 1x, 2x, and 3x",
-                  "benchmarks": "cash and fully invested buy-and-hold with matched OOS boundaries and costs",
+                  "benchmarks": "cash and 25%-allocated buy-and-hold with 75% held as cash; matched OOS boundaries and costs",
                   "limitations": "fixed percentage costs do not model spread, depth, market impact, latency, or partial fills; OHLC envelope is not tick-level reconstruction",
               },
               "folds": folds,
@@ -86,7 +86,7 @@ jobs:
               f"- Dataset SHA-256: `{dataset_hash}`",
               f"- BTC-USD hourly candles: {n}",
               "- Status: RESEARCH ONLY — NO CANDIDATE PROMOTED", "",
-              "| Fold | Costs | Candidate | Return | Max OHLC DD | Closed trades | PF | Buy/hold | Cash |",
+              "| Fold | Costs | Candidate | Return | Max OHLC DD | Closed trades | PF | Matched 25% buy/hold | Cash |",
               "|---:|---|---|---:|---:|---:|---:|---:|---:|",
           ]
           for fold in folds:
@@ -98,7 +98,7 @@ jobs:
                       lines.append(f"| {fold['fold']} | {level} | {name} | {r['return_pct']:.4f}% | {r['max_intrabar_ohlc_envelope_drawdown_pct']:.4f}% | {r['closed_trades']} | {pf if pf is not None else '—'} | {bh:.4f}% | 0.0000% |")
           lines += [
               "",
-              "> The volatility filter is a single predeclared rule, not a parameter sweep. Results are historical evidence only; three folds do not establish future profitability. No strategy is promoted. This job does not access paper ledgers or trading pathways.",
+              "> Buy-and-hold uses the same 25% initial capital allocation as the strategy, with 75% retained as cash. The volatility filter is a single predeclared rule, not a parameter sweep. Results are historical evidence only; three folds do not establish future profitability. No strategy is promoted. This job does not access paper ledgers or trading pathways.",
           ]
           Path("regime_ema_ohlc_report.md").write_text("\n".join(lines) + "\n", encoding="utf-8")
           PY
