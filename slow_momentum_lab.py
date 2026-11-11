@@ -106,6 +106,7 @@ def _simulate(closes, signals, start, end, fee, slippage):
         "max_drawdown_pct": close_to_close_drawdown,
         "drawdown_measurement": "close_to_close_net_liquidation",
         "closed_trades": len(closed),
+        "closed_trade_pnls_usd": [round(pnl, 8) for pnl in closed],
         "win_rate_pct": round(wins / len(closed) * 100.0, 4) if closed else 0.0,
         "closed_trade_profit_factor": closed_trade_profit_factor,
         # Compatibility alias; PF intentionally describes completed trades only.
