@@ -316,8 +316,10 @@ def update_atr_trailing_account(four_hour_bars, daily_bars, state_path,
             state["daily_start_equity"] = state["equity"]
 
         # Synthetic aggregate bars may update indicators/mark-to-market but
-        # cannot execute or create new strategy actions. Keep queued orders pending.
+        # cannot execute. Cancel any queued action so a stale signal cannot fill
+        # later on an unrelated executable candle.
         if not bar["execution_eligible"]:
+            state["pending_action"] = None
             state["equity"] = state["cash"] + state["quantity"] * close
             state["peak_equity"] = max(state["peak_equity"], state["equity"])
             if state["peak_equity"] > 0:
