@@ -117,6 +117,22 @@ def _simulate(closes, signals, start, end, fee, slippage):
     }
 
 
+def _attach_matched_benchmark(candidate_metrics, benchmark_metrics):
+    """Attach excess returns only after verifying identical evaluation boundaries."""
+    if len(candidate_metrics) != len(benchmark_metrics):
+        raise ValueError("Candidate and benchmark window counts do not match")
+    for candidate, benchmark in zip(candidate_metrics, benchmark_metrics):
+        if (candidate.get("start_index") != benchmark.get("start_index")
+                or candidate.get("end_index_exclusive") != benchmark.get("end_index_exclusive")):
+            raise ValueError("Candidate and benchmark windows are not aligned")
+        candidate["matched_benchmark_return_pct"] = benchmark["return_pct"]
+        candidate["excess_return_pct_points"] = round(
+            candidate["metrics"]["return_pct"] - benchmark["return_pct"], 4
+        ) if "metrics" in candidate else round(
+            candidate["return_pct"] - benchmark["return_pct"], 4
+        )
+
+
 def evaluate_slow_momentum(closes, fee=0.001, slippage=0.0005,
                            lookbacks=DEFAULT_LOOKBACKS):
     """Evaluate fixed 8/12/16-week candidates on chronological holdout windows.
@@ -146,6 +162,8 @@ def evaluate_slow_momentum(closes, fee=0.001, slippage=0.0005,
             "lookback_days": lookback,
             "in_sample": _simulate(prices, signals, 1, split, fee, slippage),
             "out_of_sample": _simulate(prices, signals, split, len(prices), fee, slippage),
+            "oos_subperiods": windows,
+            # Deprecated compatibility alias; these are fixed OOS slices, not walk-forward retraining.
             "walk_forward_windows": windows,
         }
 
@@ -164,6 +182,13 @@ def evaluate_slow_momentum(closes, fee=0.001, slippage=0.0005,
             "final_equity_usd": round(equity, 4),
         })
 
+    for candidate in results.values():
+        _attach_matched_benchmark(candidate["oos_subperiods"], benchmark[1:])
+        candidate["matched_buy_and_hold_return_pct"] = benchmark[0]["return_pct"]
+        candidate["excess_return_vs_buy_and_hold_pct_points"] = round(
+            candidate["out_of_sample"]["return_pct"] - benchmark[0]["return_pct"], 4
+        )
+
     stress = {
         "2x": evaluate_cost_stress(prices, fee, slippage, lookbacks, multiplier=2.0),
         "3x": evaluate_cost_stress(prices, fee, slippage, lookbacks, multiplier=3.0),
@@ -179,6 +204,8 @@ def evaluate_slow_momentum(closes, fee=0.001, slippage=0.0005,
         "costs": {"fee_per_side": fee, "slippage_per_side": slippage},
         "buy_and_hold_25pct": {
             "out_of_sample": benchmark[0],
+            "oos_subperiods": benchmark[1:],
+            # Deprecated compatibility alias; these are fixed chronological slices.
             "walk_forward_windows": benchmark[1:],
         },
         "candidates": results,
@@ -224,6 +251,27 @@ def evaluate_cost_stress(closes, fee, slippage, lookbacks, multiplier=2.0):
             "return_pct": round((equity / INITIAL_EQUITY - 1.0) * 100.0, 4),
             "final_equity_usd": round(equity, 4),
         }
+
+    stress_benchmark_windows = [
+        buy_and_hold(edges[k], edges[k + 1]) for k in range(3)
+    ]
+    for candidate in result.values():
+        _attach_matched_benchmark(
+            candidate["walk_forward_windows"],
+            [
+                {"start_index": edges[k], "end_index_exclusive": edges[k + 1],
+                 "return_pct": stress_benchmark_windows[k]["return_pct"]}
+                for k in range(3)
+            ],
+        )
+        candidate["oos_subperiods"] = candidate["walk_forward_windows"]
+        candidate["matched_buy_and_hold_return_pct"] = buy_and_hold(
+            split, len(closes)
+        )["return_pct"]
+        candidate["excess_return_vs_buy_and_hold_pct_points"] = round(
+            candidate["out_of_sample"]["return_pct"]
+            - candidate["matched_buy_and_hold_return_pct"], 4
+        )
 
     return {
         "multiplier": multiplier,
