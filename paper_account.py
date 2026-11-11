@@ -62,6 +62,7 @@ def _new_state(initial_cash, strategy="sma_trend"):
         "recent_closes": [],
         "ema50_state": None,
         "ema200_state": None,
+        "ema200_trend_state": None,
         "holding_bars": 0,
         "peak_equity": float(initial_cash),
         "max_drawdown_pct": 0.0,
@@ -158,7 +159,7 @@ def _load_state(path, initial_cash, strategy="sma_trend"):
             or trade["timestamp"] < 0
         ):
             raise ValueError("Saved trade timestamp is invalid")
-    for key in ("ema50_state", "ema200_state"):
+    for key in ("ema50_state", "ema200_state", "ema200_trend_state"):
         if state.get(key) is not None:
             if _number(state[key], key, 0) <= 0:
                 raise ValueError("Saved EMA state must be positive when initialized")
@@ -202,7 +203,7 @@ def seed_forward_paper_account(
     """
     supported = (
         "sma_trend", "ema_trend", "rsi_momentum", "sma200_regime",
-        "ema50_200_regime", "bollinger_mean_reversion", "rsi14_mean_reversion",
+        "ema50_200_regime", "ema_pullback_trend", "bollinger_mean_reversion", "rsi14_mean_reversion",
     )
     if strategy not in supported:
         raise ValueError("Unsupported forward paper strategy")
@@ -241,6 +242,10 @@ def seed_forward_paper_account(
     if strategy == "ema50_200_regime":
         state["ema50_state"] = _ema_last(closes, 50)
         state["ema200_state"] = _ema_last(closes, 200)
+    elif strategy == "ema_pullback_trend":
+        state["ema50_state"] = _ema_last(closes, 20)
+        state["ema200_state"] = _ema_last(closes, 50)
+        state["ema200_trend_state"] = _ema_last(closes, 200)
     state["last_timestamp"] = timestamps[-1]
     state["forward_seed_timestamp"] = timestamps[-1]
     state["daily_bucket"] = datetime.fromtimestamp(
@@ -341,7 +346,7 @@ def update_paper_account(candles, state_path="paper_account_state.json",
     strategy_health_drawdown_fraction = _number(
         strategy_health_drawdown_fraction, "strategy_health_drawdown_fraction", 0.001, 1
     )
-    if strategy not in ("sma_trend", "ema_trend", "rsi_momentum", "sma200_regime", "ema50_200_regime", "bollinger_mean_reversion", "rsi14_mean_reversion"):
+    if strategy not in ("sma_trend", "ema_trend", "rsi_momentum", "sma200_regime", "ema50_200_regime", "ema_pullback_trend", "bollinger_mean_reversion", "rsi14_mean_reversion"):
         raise ValueError("Unknown paper strategy")
 
     normalized = []
@@ -398,7 +403,7 @@ def update_paper_account(candles, state_path="paper_account_state.json",
             continue
 
         history = [float(x) for x in state["recent_closes"]]
-        required_history = 200 if strategy in ("sma200_regime", "ema50_200_regime", "bollinger_mean_reversion", "rsi14_mean_reversion") else 50
+        required_history = 200 if strategy in ("sma200_regime", "ema50_200_regime", "ema_pullback_trend", "bollinger_mean_reversion", "rsi14_mean_reversion") else 50
         if len(history) >= required_history:
             prior_close = history[-1]
             if strategy == "rsi14_mean_reversion":
@@ -430,6 +435,23 @@ def update_paper_account(candles, state_path="paper_account_state.json",
                         or int(state.get("holding_bars", 0)) >= 10
                     )
                     want_long = not want_flat
+            elif strategy == "ema_pullback_trend":
+                fast = state.get("ema50_state")
+                medium = state.get("ema200_state")
+                slow = state.get("ema200_trend_state")
+                if fast is None:
+                    fast = _ema_last(history, 20)
+                if medium is None:
+                    medium = _ema_last(history, 50)
+                if slow is None:
+                    slow = _ema_last(history, 200)
+                state["ema50_state"] = fast
+                state["ema200_state"] = medium
+                state["ema200_trend_state"] = slow
+                # Match the fixed research rule: price > EMA200, EMA20 > EMA50,
+                # and price > EMA20; exit below EMA50 or EMA200.
+                want_long = prior_close > slow and fast > medium and prior_close > fast
+                want_flat = prior_close < medium or prior_close < slow
             elif strategy == "ema50_200_regime":
                 fast = state.get("ema50_state")
                 slow = state.get("ema200_state")
@@ -507,14 +529,17 @@ def update_paper_account(candles, state_path="paper_account_state.json",
                 or state.get("paused_for_loss_streak", False)
                 or state.get("paused_for_strategy_health", False)
             )
-            exit_required = (
-                want_flat or daily_loss_hit
+            # Persist only forced risk exits across non-executable bars.
+            # A normal strategy exit is recalculated on the next executable bar;
+            # otherwise a stale SELL signal could survive a synthetic rebound.
+            risk_exit_required = (
+                daily_loss_hit
                 or state.get("paused_for_drawdown", False)
                 or state.get("paused_for_loss_streak", False)
                 or state.get("paused_for_strategy_health", False)
                 or state.get("daily_loss_paused", False)
             )
-            if state["btc"] > 0 and exit_required:
+            if state["btc"] > 0 and risk_exit_required:
                 state["pending_exit_on_next_executable"] = True
             elif state["btc"] <= 0:
                 state["pending_exit_on_next_executable"] = False
@@ -539,7 +564,9 @@ def update_paper_account(candles, state_path="paper_account_state.json",
                     state["fees_paid"] += fee
                     if strategy in ("bollinger_mean_reversion", "rsi14_mean_reversion"):
                         state["holding_bars"] = 0
-            elif executable and state["pending_exit_on_next_executable"] and state["btc"] > 0:
+            elif executable and (
+                state["pending_exit_on_next_executable"] or want_flat
+            ) and state["btc"] > 0:
                 fill = close * (1 - slippage_rate)
                 gross = state["btc"] * fill
                 fee = gross * fee_rate
@@ -572,6 +599,11 @@ def update_paper_account(candles, state_path="paper_account_state.json",
             prior_ema200 = state.get("ema200_state")
             state["ema50_state"] = close if prior_ema50 is None else alpha50 * close + (1 - alpha50) * prior_ema50
             state["ema200_state"] = close if prior_ema200 is None else alpha200 * close + (1 - alpha200) * prior_ema200
+        elif strategy == "ema_pullback_trend":
+            for key, period in (("ema50_state", 20), ("ema200_state", 50), ("ema200_trend_state", 200)):
+                alpha = 2.0 / (period + 1.0)
+                previous = state.get(key)
+                state[key] = close if previous is None else alpha * close + (1 - alpha) * previous
         state["last_timestamp"] = timestamp
         processed += 1
 

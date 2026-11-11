@@ -13,6 +13,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from paper_account import seed_forward_paper_account, update_paper_account
+from atr_trailing_paper import seed_atr_trailing_account, update_atr_trailing_account
 from strategy_lab import run_strategy_lab
 
 BASE_URL = "https://api.exchange.coinbase.com/products/BTC-USD/candles"
@@ -1664,6 +1665,40 @@ def build_qualification_markdown(result):
             "",
         ])
 
+    qualified_forward = paper_accounts.get("forward_only_qualified_candidates", {})
+    qualified_candidates = qualified_forward.get("candidates", {})
+    if qualified_candidates:
+        lines.extend([
+            "## Forward-only paper review of qualified candidates",
+            "",
+            "Each candidate has an independent $250 ledger seeded at the latest completed native-timeframe bar. Historical candles initialize indicators only and contribute zero trades or PnL. These ledgers are not live-trading approvals.",
+            "",
+        ])
+        for candidate_name, account in qualified_candidates.items():
+            pauses = account.get("risk_pause_reasons", [])
+            status = "PAUSED — " + ", ".join(pauses) if pauses else "active"
+            lines.append(
+                f"- **{candidate_name}:** equity "
+                f"${account.get('equity_after_estimated_exit_costs_usd', 0):,.2f}; "
+                f"{account.get('completed_trades', 0)} forward closed trades; "
+                f"drawdown {account.get('max_drawdown_pct', 0):.2f}%; status {status}."
+            )
+        atr_account = qualified_forward.get("atr3_trailing_candidate", {})
+        if atr_account:
+            atr_status = (
+                "PAUSED — " + str(atr_account.get("pause_reason"))
+                if atr_account.get("paused") else "active"
+            )
+            lines.extend([
+                "- **4h EMA20/EMA50 + prior-day SMA200 + 3x ATR14 trail:** "
+                f"equity ${atr_account.get('equity_usd', 0):,.2f}; "
+                f"{atr_account.get('completed_trades', 0)} forward closed trades; "
+                f"drawdown {atr_account.get('max_drawdown_pct', 0):.2f}%; "
+                f"status {atr_status}.",
+                "- ATR candidate uses validated OHLC bars, Wilder ATR14, and next-bar-close fills; it has its own isolated $250 ledger.",
+                "",
+            ])
+
     # Diagnostic shortlist only: rank by the weaker of base/stress benchmark edges.
     # This is deliberately not a promotion gate and never changes qualification.
     watchlist = []
@@ -2069,7 +2104,7 @@ def _paper_account_rows(bars):
 
 
 def run_forward_paper_accounts(candles, state_dir="."):
-    """Maintain independent 1d and 4h paper accounts across daily workflow runs."""
+    """Maintain legacy diagnostics and isolated forward-only qualified candidate ledgers."""
     directory = Path(state_dir)
     daily = aggregate_candles(candles, 24)
     four_hour = aggregate_candles(candles, 4)
@@ -2121,6 +2156,85 @@ def run_forward_paper_accounts(candles, state_dir="."):
         state_path=str(directory / "paper_forward_6h_ema50_200.json"),
         initial_cash=500.0,
     )
+    # Three separately seeded ledgers track the currently qualified candidates.
+    # Each starts with $250; history warms indicators only and creates no trades.
+    qualified_specs = (
+        ("1d_sma_trend", daily, "sma_trend"),
+        ("6h_ema50_200_regime", six_hour, "ema50_200_regime"),
+        ("6h_ema_pullback_trend", six_hour, "ema_pullback_trend"),
+    )
+    qualified_seed = {}
+    qualified_accounts = {}
+    for candidate_name, candidate_bars, candidate_strategy in qualified_specs:
+        candidate_path = directory / f"paper_qualified_{candidate_name}.json"
+        qualified_seed[candidate_name] = seed_forward_paper_account(
+            account_rows(candidate_bars),
+            state_path=str(candidate_path),
+            initial_cash=250.0,
+            strategy=candidate_strategy,
+        )
+        qualified_accounts[candidate_name] = update_paper_account(
+            account_rows(candidate_bars),
+            state_path=str(candidate_path),
+            initial_cash=250.0,
+            allocation_fraction=0.10,
+            max_drawdown_fraction=0.10,
+            daily_loss_fraction=0.03,
+            max_consecutive_losses=5,
+            strategy=candidate_strategy,
+        )
+    # Dedicated OHLC-native ledger for the fourth qualified ATR-trailing candidate.
+    # Convert Coinbase milliseconds to whole Unix seconds for the standalone adapter.
+    def _atr_rows(rows):
+        return [
+            {
+                "timestamp": int(row["timestamp"] // 1000),
+                "open": float(row["open"]),
+                "high": float(row["high"]),
+                "low": float(row["low"]),
+                "close": float(row["close"]),
+                "execution_eligible": not bool(row.get("imputed", False)),
+            }
+            for row in rows
+        ]
+
+    atr_four_hour_rows = _atr_rows(four_hour)
+    atr_daily_rows = _atr_rows(daily)
+    atr_state_path = str(directory / "paper_qualified_4h_ema20_50_daily_sma200_atr3.json")
+    atr_seed = seed_atr_trailing_account(
+        atr_four_hour_rows, atr_daily_rows, atr_state_path, initial_cash=250.0
+    )
+    atr_forward = update_atr_trailing_account(
+        atr_four_hour_rows, atr_daily_rows, atr_state_path, initial_cash=250.0,
+        allocation_fraction=0.10, fee_rate=FEE_RATE, slippage_rate=SLIPPAGE_RATE,
+        max_drawdown_fraction=0.10, daily_loss_fraction=0.03,
+        max_consecutive_losses=5,
+    )
+
+    qualified_forward_portfolio = {
+        "mode": "QUALIFIED_CANDIDATES_FORWARD_ONLY_PAPER",
+        "initial_cash_usd": 750.0,
+        "equity_after_estimated_exit_costs_usd": round(sum(
+            account["equity_after_estimated_exit_costs_usd"]
+            for account in qualified_accounts.values()
+        ), 2),
+        "return_pct": round((
+            sum(account["equity_after_estimated_exit_costs_usd"]
+                for account in qualified_accounts.values()) / 750.0 - 1.0
+        ) * 100.0, 2),
+        "completed_trades": sum(
+            account["completed_trades"] for account in qualified_accounts.values()
+        ),
+        "candidates": qualified_accounts,
+        "seed": qualified_seed,
+        "atr3_trailing_candidate": atr_forward,
+        "atr3_trailing_seed": atr_seed,
+        "note": (
+            "Three close-based candidates use independent $250 ledgers. The fourth "
+            "candidate has a separate OHLC-native $250 ledger with Wilder ATR14 and a "
+            "3x ATR trailing stop. All ledgers are forward-only; history warms indicators."
+        ),
+    }
     forward_four_hour = update_paper_account(
         account_rows(four_hour),
         state_path=str(directory / "paper_forward_4h_ema50_200.json"),
@@ -2210,7 +2324,8 @@ def run_forward_paper_accounts(candles, state_dir="."):
         "six_hour_rsi14_mean_reversion": six_hour_rsi_result,
         "ema50_200_4h_6h_50_50_portfolio": ensemble_portfolio,
         "forward_only_ema50_200_4h_6h_50_50_portfolio": forward_portfolio,
-        "note": "Legacy diagnostic ledgers backfill history; the separate forward_only ledger starts at the latest completed bar and processes only future completed candles. No real orders are sent.",
+        "forward_only_qualified_candidates": qualified_forward_portfolio,
+        "note": "Legacy diagnostic ledgers backfill history; separate forward_only ledgers start at the latest completed bar and process only future completed candles. No real orders are sent.",
     }
 
 
@@ -2416,6 +2531,23 @@ def main(output_dir="."):
                 for timeframe in ("4h", "6h")
             },
         },
+        "forward_only_qualified_candidates": {
+            "initial_cash_usd": forward_paper["forward_only_qualified_candidates"]["initial_cash_usd"],
+            "equity_usd": forward_paper["forward_only_qualified_candidates"]["equity_after_estimated_exit_costs_usd"],
+            "return_pct": forward_paper["forward_only_qualified_candidates"]["return_pct"],
+            "completed_trades": forward_paper["forward_only_qualified_candidates"]["completed_trades"],
+            "candidates": {
+                name: {
+                    "equity_usd": account["equity_after_estimated_exit_costs_usd"],
+                    "return_pct": account["return_pct"],
+                    "completed_trades": account["completed_trades"],
+                    "max_drawdown_pct": account["max_drawdown_pct"],
+                    "risk_pause_reasons": account["risk_pause_reasons"],
+                }
+                for name, account in forward_paper["forward_only_qualified_candidates"]["candidates"].items()
+            },
+        },
+        "atr3_trailing_candidate": forward_paper["forward_only_qualified_candidates"]["atr3_trailing_candidate"],
         "strategies": {
             name: {
                 "oos_return_pct": metrics["out_of_sample"]["return_pct"],
