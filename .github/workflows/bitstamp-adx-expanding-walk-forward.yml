@@ -1,0 +1,54 @@
+name: WHJ Bitstamp ADX Expanding Walk-Forward Validation
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "adx_walk_forward.py"
+      - "adx_cross_exchange_walk_forward.py"
+      - "ema_adx_cross_exchange_lab.py"
+      - "ema_adx_lab.py"
+      - "historical_research.py"
+      - "tests/test_adx_walk_forward.py"
+      - "tests/test_ema_adx_cross_exchange_lab.py"
+      - ".github/workflows/bitstamp-adx-expanding-walk-forward.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# Unique per run: do not let queued PR runs block independent validation.
+concurrency:
+  group: whj-bitstamp-adx-expanding-walk-forward-${{ github.run_id }}
+  cancel-in-progress: false
+
+jobs:
+  independent-bitstamp-walk-forward:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Checkout research branch
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Test expanding-window threshold selection
+        run: python -m unittest discover -s tests -p 'test_adx_walk_forward.py' -v
+
+      - name: Test Bitstamp data validation and pagination
+        run: python -m unittest discover -s tests -p 'test_ema_adx_cross_exchange_lab.py' -v
+
+      - name: Run independent Bitstamp expanding-window walk-forward
+        timeout-minutes: 25
+        run: python adx_cross_exchange_walk_forward.py
+
+      - name: Upload independent walk-forward report
+        uses: actions/upload-artifact@v4
+        with:
+          name: whj-bitstamp-adx-expanding-walk-forward-${{ github.run_number }}
+          path: adx_bitstamp_walk_forward_report.json
+          if-no-files-found: error
+          retention-days: 30
