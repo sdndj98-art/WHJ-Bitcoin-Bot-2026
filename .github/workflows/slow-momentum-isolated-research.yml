@@ -1,0 +1,91 @@
+name: WHJ Isolated Slow Momentum Historical Research
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [research/global-evidence-strategy-lab-20261112]
+    paths:
+      - "slow_momentum_lab.py"
+      - "historical_research.py"
+      - ".github/workflows/slow-momentum-isolated-research.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: whj-isolated-slow-momentum-research
+  cancel-in-progress: false
+
+jobs:
+  isolated-slow-momentum:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Evaluate isolated daily-close momentum
+        run: |
+          python - <<'PY'
+          import json
+          from datetime import datetime, timezone
+          from pathlib import Path
+          from historical_research import aggregate_candles, load_two_year_candles
+          from slow_momentum_lab import evaluate_slow_momentum
+
+          # Read-only market-data loader and isolated evaluator only.
+          # No paper account functions, monitors, caches, or order pathways.
+          hourly = load_two_year_candles(days=1500)
+          daily = aggregate_candles(hourly, 24)
+          closes = [float(row["close"]) for row in daily]
+          report = evaluate_slow_momentum(closes)
+          report.update({
+              "generated_at_utc": datetime.now(timezone.utc).isoformat(),
+              "source": "Coinbase public BTC-USD hourly candles aggregated to complete UTC daily bars",
+              "hourly_candle_count": len(hourly),
+              "daily_candle_count": len(daily),
+              "daily_start_utc": datetime.fromtimestamp(daily[0]["timestamp"] / 1000, timezone.utc).isoformat(),
+              "daily_end_utc": datetime.fromtimestamp(daily[-1]["timestamp"] / 1000, timezone.utc).isoformat(),
+              "imputed_hourly_candles": sum(bool(row.get("imputed")) for row in hourly),
+              "live_orders": False,
+              "paper_ledgers_read_or_written": False,
+          })
+          Path("slow_momentum_historical_report.json").write_text(json.dumps(report, indent=2, sort_keys=True), encoding="utf-8")
+          lines = [
+              "# WHJ isolated slow-momentum historical research", "",
+              f"- Generated UTC: {report['generated_at_utc']}",
+              f"- Daily observations: {len(daily)}",
+              f"- Date range: {report['daily_start_utc']} to {report['daily_end_utc']}",
+              f"- Imputed hourly candles: {report['imputed_hourly_candles']}",
+              "- Research-only; no paper ledgers accessed or changed; no live orders.", "",
+              "## Normal-cost out-of-sample results", "",
+              "| Lookback | Return | PF | Max DD | Trades | OOS windows |",
+              "|---:|---:|---:|---:|---:|---|",
+          ]
+          for key, candidate in report["candidates"].items():
+              m = candidate["out_of_sample"]
+              windows = ", ".join(f"{w['metrics']['return_pct']:.2f}%" for w in candidate["walk_forward_windows"])
+              pf = m["profit_factor"] if m["profit_factor"] is not None else "—"
+              lines.append(f"| {key} days | {m['return_pct']:.2f}% | {pf} | {m['max_drawdown_pct']:.2f}% | {m['closed_trades']} | {windows} |")
+          bh = report["buy_and_hold_25pct"]["out_of_sample"]
+          lines += ["", f"Matched 25% buy-and-hold OOS return: **{bh['return_pct']:.2f}%**", "", "## Cost stress", ""]
+          for level, scenario in report["cost_stress"].items():
+              lines.append(f"### {level} costs")
+              for key, candidate in scenario["candidates"].items():
+                  m = candidate["out_of_sample"]
+                  lines.append(f"- {key} days: {m['return_pct']:.2f}% return, {m['closed_trades']} trades")
+              lines.append(f"- Matched buy-and-hold: {scenario['matched_buy_and_hold']['out_of_sample']['return_pct']:.2f}%")
+              lines.append("")
+          lines.append("> No winning parameter is selected. Three chronological windows and higher-cost cases expose instability; this is not a live-trading recommendation.")
+          Path("slow_momentum_historical_report.md").write_text("\n".join(lines) + "\n", encoding="utf-8")
+          PY
+      - name: Upload isolated report
+        uses: actions/upload-artifact@v4
+        with:
+          name: whj-isolated-slow-momentum-${{ github.run_number }}
+          path: |
+            slow_momentum_historical_report.json
+            slow_momentum_historical_report.md
+          if-no-files-found: error
+          retention-days: 30
