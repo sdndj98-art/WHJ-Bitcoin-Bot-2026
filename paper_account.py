@@ -507,17 +507,14 @@ def update_paper_account(candles, state_path="paper_account_state.json",
                 or state.get("paused_for_loss_streak", False)
                 or state.get("paused_for_strategy_health", False)
             )
-            # Persist only forced risk exits across non-executable bars.
-            # A normal strategy exit is recalculated on the next executable bar;
-            # otherwise a stale SELL signal could survive a synthetic rebound.
-            risk_exit_required = (
-                daily_loss_hit
+            exit_required = (
+                want_flat or daily_loss_hit
                 or state.get("paused_for_drawdown", False)
                 or state.get("paused_for_loss_streak", False)
                 or state.get("paused_for_strategy_health", False)
                 or state.get("daily_loss_paused", False)
             )
-            if state["btc"] > 0 and risk_exit_required:
+            if state["btc"] > 0 and exit_required:
                 state["pending_exit_on_next_executable"] = True
             elif state["btc"] <= 0:
                 state["pending_exit_on_next_executable"] = False
@@ -542,9 +539,7 @@ def update_paper_account(candles, state_path="paper_account_state.json",
                     state["fees_paid"] += fee
                     if strategy in ("bollinger_mean_reversion", "rsi14_mean_reversion"):
                         state["holding_bars"] = 0
-            elif executable and (
-                state["pending_exit_on_next_executable"] or want_flat
-            ) and state["btc"] > 0:
+            elif executable and state["pending_exit_on_next_executable"] and state["btc"] > 0:
                 fill = close * (1 - slippage_rate)
                 gross = state["btc"] * fill
                 fee = gross * fee_rate
