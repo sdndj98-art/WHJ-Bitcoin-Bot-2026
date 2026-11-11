@@ -162,7 +162,6 @@ class QualifiedForwardPaperMonitorTests(unittest.TestCase):
                 "version": 1,
                 "strategy": "ema_pullback_trend",
                 "initial_cash": 250.0,
-                "cash": 250.0,
                 "btc": 0.0,
                 "entry_cost": 0.0,
                 "recent_closes": [],
@@ -178,7 +177,7 @@ class QualifiedForwardPaperMonitorTests(unittest.TestCase):
                 candidate_path = Path(folder) / config["file"]
                 if name != "6h_ema_pullback_trend":
                     self.assertFalse(candidate_path.exists())
-            self.assertEqual(json.loads(path.read_text(encoding="utf-8"))["cash"], 250.0)
+            self.assertNotIn("cash", json.loads(path.read_text(encoding="utf-8")))
 
     def test_existing_corrupt_ledger_is_never_silently_reseeded(self):
         candles = self.candles()
