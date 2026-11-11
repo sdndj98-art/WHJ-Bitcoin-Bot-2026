@@ -187,6 +187,14 @@ def aggregate_candles(candles, hours):
     return aggregated
 
 
+def _blocked_execution_indices(bars):
+    """Return indices of synthetic bars that may inform indicators but cannot fill."""
+    return {
+        index for index, row in enumerate(bars)
+        if row.get("imputed", False)
+    }
+
+
 def _turtle_signals(bars, entry_period, exit_period, regime_period=None, atr_stop_multiple=None):
     """Create close-confirmed Donchian signals with an optional ATR trailing exit.
 
@@ -240,6 +248,24 @@ def _turtle_signals(bars, entry_period, exit_period, regime_period=None, atr_sto
     return signals
 
 
+def _first_executable_index(bars, start, end):
+    """Return the first real bar index in [start, end), or None."""
+    return next(
+        (index for index in range(max(0, start), min(len(bars), end))
+         if not bars[index].get("imputed", False)),
+        None,
+    )
+
+
+def _last_executable_index(bars, start, end):
+    """Return the last real bar index in [start, end), or None."""
+    return next(
+        (index for index in range(min(len(bars), end) - 1, max(0, start) - 1, -1)
+         if not bars[index].get("imputed", False)),
+        None,
+    )
+
+
 def _simulate_ohlc(bars, signals, start, end, fee, slippage):
     cash = 1000.0
     units = 0.0
@@ -248,23 +274,26 @@ def _simulate_ohlc(bars, signals, start, end, fee, slippage):
     peak = cash
     max_drawdown = 0.0
     for i in range(max(start, 1), end):
-        want_long = signals[i - 1]
         price = float(bars[i]["close"])
-        if want_long and units == 0:
-            allocation = cash * 0.25
-            fill = price * (1 + slippage)
-            fee_paid = allocation * fee
-            units = (allocation - fee_paid) / fill
-            cash -= allocation
-            entry_cost = allocation
-        elif not want_long and units > 0:
-            fill = price * (1 - slippage)
-            proceeds = units * fill
-            proceeds -= proceeds * fee
-            trades.append(proceeds - entry_cost)
-            cash += proceeds
-            units = 0.0
-            entry_cost = 0.0
+        # Synthetic candles can update mark-to-market continuity, but cannot
+        # open or close a simulated position.
+        if not bars[i].get("imputed", False):
+            want_long = signals[i - 1]
+            if want_long and units == 0:
+                allocation = cash * 0.25
+                fill = price * (1 + slippage)
+                fee_paid = allocation * fee
+                units = (allocation - fee_paid) / fill
+                cash -= allocation
+                entry_cost = allocation
+            elif not want_long and units > 0:
+                fill = price * (1 - slippage)
+                proceeds = units * fill
+                proceeds -= proceeds * fee
+                trades.append(proceeds - entry_cost)
+                cash += proceeds
+                units = 0.0
+                entry_cost = 0.0
         # Drawdown uses estimated net liquidation value, including exit costs.
         if units > 0:
             liquidation = units * price * (1 - slippage)
@@ -277,7 +306,13 @@ def _simulate_ohlc(bars, signals, start, end, fee, slippage):
             max_drawdown = max(max_drawdown, (peak - equity) / peak * 100)
 
     if units > 0:
-        exit_value = units * float(bars[end - 1]["close"]) * (1 - slippage)
+        last_executable = _last_executable_index(bars, max(start, 1), end)
+        terminal_price = (
+            float(bars[last_executable]["close"])
+            if last_executable is not None
+            else float(bars[end - 1]["close"])
+        )
+        exit_value = units * terminal_price * (1 - slippage)
         exit_value -= exit_value * fee
         final_equity = cash + exit_value
     else:
@@ -294,7 +329,6 @@ def _simulate_ohlc(bars, signals, start, end, fee, slippage):
         "profit_factor": round(gross_profit / gross_loss, 2) if gross_loss else (None if gross_profit else 0.0),
         "open_position": units > 0,
     }
-
 
 def _simulate_equal_weight_multitimeframe(
     bar_sets, signal_sets, bar_hours, start_time_ms, end_time_ms, fee, slippage
@@ -331,22 +365,23 @@ def _simulate_equal_weight_multitimeframe(
         trades = []
         for index in range(max(start_index, 1), end_index):
             price = float(bars[index]["close"])
-            want_long = bool(signals[index - 1])
-            if want_long and units == 0:
-                allocation = cash * 0.25
-                fill = price * (1 + slippage)
-                fee_paid = allocation * fee
-                units = (allocation - fee_paid) / fill
-                cash -= allocation
-                entry_cost = allocation
-            elif not want_long and units > 0:
-                fill = price * (1 - slippage)
-                proceeds = units * fill
-                proceeds -= proceeds * fee
-                trades.append(proceeds - entry_cost)
-                cash += proceeds
-                units = 0.0
-                entry_cost = 0.0
+            if not bars[index].get("imputed", False):
+                want_long = bool(signals[index - 1])
+                if want_long and units == 0:
+                    allocation = cash * 0.25
+                    fill = price * (1 + slippage)
+                    fee_paid = allocation * fee
+                    units = (allocation - fee_paid) / fill
+                    cash -= allocation
+                    entry_cost = allocation
+                elif not want_long and units > 0:
+                    fill = price * (1 - slippage)
+                    proceeds = units * fill
+                    proceeds -= proceeds * fee
+                    trades.append(proceeds - entry_cost)
+                    cash += proceeds
+                    units = 0.0
+                    entry_cost = 0.0
 
             if units > 0:
                 liquidation = units * price * (1 - slippage)
@@ -357,7 +392,13 @@ def _simulate_equal_weight_multitimeframe(
             curve_events.append((close_times[index], sleeve_index, equity))
 
         if units > 0:
-            exit_value = units * float(bars[end_index - 1]["close"]) * (1 - slippage)
+            last_executable = _last_executable_index(bars, max(start_index, 1), end_index)
+            terminal_price = (
+                float(bars[last_executable]["close"])
+                if last_executable is not None
+                else float(bars[end_index - 1]["close"])
+            )
+            exit_value = units * terminal_price * (1 - slippage)
             exit_value -= exit_value * fee
             final_equity = cash + exit_value
         else:
@@ -464,19 +505,31 @@ def run_ohlc_breakout_lab(bars, fee=FEE_RATE, slippage=SLIPPAGE_RATE):
             "worst_window_return_pct": min(returns) if returns else None,
         }
 
+    benchmark_entry_index = _first_executable_index(bars, split, len(bars))
+    benchmark_exit_index = (
+        _last_executable_index(bars, benchmark_entry_index, len(bars))
+        if benchmark_entry_index is not None else None
+    )
     benchmark_cash = 750.0
-    benchmark_units = (250.0 * (1 - fee)) / (float(bars[split]["close"]) * (1 + slippage))
+    benchmark_units = 0.0
     peak = 1000.0
     max_drawdown = 0.0
-    for row in bars[split:]:
-        liquidation = benchmark_units * float(row["close"]) * (1 - slippage)
-        liquidation -= liquidation * fee
-        equity = benchmark_cash + liquidation
-        peak = max(peak, equity)
-        max_drawdown = max(max_drawdown, (peak - equity) / peak * 100)
-    exit_value = benchmark_units * float(bars[-1]["close"]) * (1 - slippage)
-    exit_value -= exit_value * fee
-    benchmark_equity = benchmark_cash + exit_value
+    if benchmark_entry_index is not None and benchmark_exit_index is not None:
+        benchmark_units = (250.0 * (1 - fee)) / (
+            float(bars[benchmark_entry_index]["close"]) * (1 + slippage)
+        )
+        for row in bars[benchmark_entry_index:]:
+            liquidation = benchmark_units * float(row["close"]) * (1 - slippage)
+            liquidation -= liquidation * fee
+            equity = benchmark_cash + liquidation
+            peak = max(peak, equity)
+            max_drawdown = max(max_drawdown, (peak - equity) / peak * 100)
+        exit_value = benchmark_units * float(bars[benchmark_exit_index]["close"]) * (1 - slippage)
+        exit_value -= exit_value * fee
+        benchmark_equity = benchmark_cash + exit_value
+    else:
+        benchmark_cash = 1000.0
+        benchmark_equity = 1000.0
     results["buy_and_hold_25pct"] = {
         "out_of_sample": {
             "return_pct": round((benchmark_equity / 1000 - 1) * 100, 2),
@@ -488,6 +541,8 @@ def run_ohlc_breakout_lab(bars, fee=FEE_RATE, slippage=SLIPPAGE_RATE):
             "open_position": False,
             "fees_and_slippage_included": True,
             "allocation_fraction": 0.25,
+            "entry_index": benchmark_entry_index,
+            "exit_index": benchmark_exit_index,
         }
     }
     # Cost sensitivity reruns the identical fixed signals at progressively
@@ -500,15 +555,21 @@ def run_ohlc_breakout_lab(bars, fee=FEE_RATE, slippage=SLIPPAGE_RATE):
             raise ValueError("Cost sensitivity multiplier produces invalid execution costs")
         benchmark_allocation = 250.0
         benchmark_cash_scenario = 750.0
-        benchmark_units_scenario = (
-            benchmark_allocation * (1 - scenario_fee)
-            / (float(bars[split]["close"]) * (1 + scenario_slippage))
-        )
-        benchmark_exit = benchmark_units_scenario * float(bars[-1]["close"]) * (1 - scenario_slippage)
-        benchmark_exit -= benchmark_exit * scenario_fee
-        benchmark_return = round(
-            ((benchmark_cash_scenario + benchmark_exit) / 1000.0 - 1) * 100, 2
-        )
+        if benchmark_entry_index is not None and benchmark_exit_index is not None:
+            benchmark_units_scenario = (
+                benchmark_allocation * (1 - scenario_fee)
+                / (float(bars[benchmark_entry_index]["close"]) * (1 + scenario_slippage))
+            )
+            benchmark_exit = (
+                benchmark_units_scenario * float(bars[benchmark_exit_index]["close"])
+                * (1 - scenario_slippage)
+            )
+            benchmark_exit -= benchmark_exit * scenario_fee
+            benchmark_return = round(
+                ((benchmark_cash_scenario + benchmark_exit) / 1000.0 - 1) * 100, 2
+            )
+        else:
+            benchmark_return = 0.0
         scenario_strategies = {}
         for name, (entry, exit_period, regime, atr_multiple) in strategies.items():
             signals = _turtle_signals(bars, entry, exit_period, regime, atr_multiple)
@@ -532,7 +593,7 @@ def run_ohlc_breakout_lab(bars, fee=FEE_RATE, slippage=SLIPPAGE_RATE):
         "mode": "OHLC_DONCHIAN_CHRONOLOGICAL_HOLDOUT",
         "sample_count": len(bars),
         "split_index": split,
-        "execution": "Prior completed candle breakout signal; next close fill; 25% allocation; fees and slippage included.",
+        "execution": "Prior completed candle breakout signal; next executable close fill; imputed synthetic bars are blocked from entry and exit fills; 25% allocation; fees and slippage included.",
         "note": "Donchian channel bounds use prior highs/lows only; SMA200 regime uses completed daily closes.",
         "cost_sensitivity": cost_sensitivity,
         "cost_sensitivity_note": "Fixed signals are replayed without retuning at 1x, 1.5x, 2x, and 3x the supplied fee/slippage assumptions; benchmark edge is relative to matched 25% buy-and-hold under identical costs.",
@@ -1103,8 +1164,14 @@ def _simulate_long_short(bars, signals, start, end, fee, slippage,
 
     for i in range(max(start, 1), end):
         price = float(bars[i]["close"])
-        target = int(signals[i - 1])
         current = 1 if units > 0 else (-1 if units < 0 else 0)
+
+        # Preserve mark-to-market and elapsed funding on synthetic bars, but
+        # never change exposure there.
+        if not bars[i].get("imputed", False):
+            target = int(signals[i - 1])
+        else:
+            target = current
 
         if target != current:
             if units:
@@ -1145,14 +1212,23 @@ def _simulate_long_short(bars, signals, start, end, fee, slippage,
         if peak > 0:
             max_drawdown = max(max_drawdown, (peak - equity) / peak * 100)
 
+    terminal_position_closed = False
     if units:
-        direction = 1 if units > 0 else -1
-        exit_fill = float(bars[end - 1]["close"]) * (1 - direction * slippage)
-        exit_fee = abs(units * exit_fill) * fee
-        final_equity = cash + units * exit_fill - exit_fee
-        final_pnl = (exit_fill - entry_price) * units - entry_fee - exit_fee - funding_paid
-        trades.append(final_pnl)
-        fees_paid += exit_fee
+        last_executable = _last_executable_index(bars, max(start, 1), end)
+        if last_executable is not None:
+            terminal_price = float(bars[last_executable]["close"])
+            direction = 1 if units > 0 else -1
+            exit_fill = terminal_price * (1 - direction * slippage)
+            exit_fee = abs(units * exit_fill) * fee
+            final_equity = cash + units * exit_fill - exit_fee
+            final_pnl = (exit_fill - entry_price) * units - entry_fee - exit_fee - funding_paid
+            trades.append(final_pnl)
+            fees_paid += exit_fee
+            terminal_position_closed = True
+        else:
+            # No executable terminal bar: retain the position and report only
+            # a mark-to-market estimate, without inventing a liquidation fill.
+            final_equity = cash + units * float(bars[end - 1]["close"])
     else:
         final_equity = cash
 
@@ -1168,7 +1244,7 @@ def _simulate_long_short(bars, signals, start, end, fee, slippage,
         "profit_factor": round(gross_profit / gross_loss, 2) if gross_loss else (None if gross_profit else 0.0),
         "fees_paid_usd": round(fees_paid, 4),
         "funding_paid_usd": round(funding_paid, 4),
-        "open_position": False,
+        "open_position": units != 0 and not terminal_position_closed,
     }
 
 
@@ -1981,6 +2057,17 @@ def assess_research_lab_qualification(research, stress_research):
     return results
 
 
+def _paper_account_rows(bars):
+    """Preserve synthetic-bar execution eligibility when adapting research candles."""
+    return [
+        [
+            int(row["timestamp"] // 1000), 0, 0, 0, str(row["close"]),
+            not bool(row.get("imputed", False)),
+        ]
+        for row in bars
+    ]
+
+
 def run_forward_paper_accounts(candles, state_dir="."):
     """Maintain independent 1d and 4h paper accounts across daily workflow runs."""
     directory = Path(state_dir)
@@ -1988,8 +2075,7 @@ def run_forward_paper_accounts(candles, state_dir="."):
     four_hour = aggregate_candles(candles, 4)
     six_hour = aggregate_candles(candles, 6)
 
-    def account_rows(bars):
-        return [[int(row["timestamp"] // 1000), 0, 0, 0, str(row["close"])] for row in bars]
+    account_rows = _paper_account_rows
 
     daily_result = update_paper_account(
         account_rows(daily),
@@ -2128,10 +2214,26 @@ def run_forward_paper_accounts(candles, state_dir="."):
     }
 
 
-def main():
+def _research_output_paths(output_dir="."):
+    """Keep explicit research runs isolated without moving legacy workflow ledgers."""
+    output_path = Path(output_dir)
+    # Scheduled workflows historically keep their persistent paper ledgers in
+    # the repository working directory. Preserve that default; only manual runs
+    # that opt into a dedicated output directory get a separate paper_state dir.
+    paper_state_dir = Path(".") if output_path == Path(".") else output_path / "paper_state"
+    return output_path, paper_state_dir
+
+
+def main(output_dir="."):
+    output_path, paper_state_dir = _research_output_paths(output_dir)
+    output_path.mkdir(parents=True, exist_ok=True)
     candles = load_two_year_candles()
     prices = [row["close"] for row in candles]
-    research = run_strategy_lab(prices, fee=FEE_RATE, slippage=SLIPPAGE_RATE)
+    hourly_blocked = _blocked_execution_indices(candles)
+    research = run_strategy_lab(
+        prices, fee=FEE_RATE, slippage=SLIPPAGE_RATE,
+        blocked_execution_indices=hourly_blocked,
+    )
     timeframe_research = {}
     for label, hours in (("1h", 1), ("4h", 4), ("6h", 6), ("1d", 24)):
         bars = candles if hours == 1 else aggregate_candles(candles, hours)
@@ -2139,11 +2241,13 @@ def main():
             "bar_count": len(bars),
             "first_bar_utc": datetime.fromtimestamp(bars[0]["timestamp"] / 1000, timezone.utc).isoformat(),
             "last_bar_utc": datetime.fromtimestamp(bars[-1]["timestamp"] / 1000, timezone.utc).isoformat(),
-            "imputed_bar_count": sum(1 for bar in bars if bar.get("imputed", False)),
+            "imputed_bar_count": len(_blocked_execution_indices(bars)),
+            "blocked_execution_bar_count": len(_blocked_execution_indices(bars)),
             "research": run_strategy_lab(
                 [bar["close"] for bar in bars],
                 fee=FEE_RATE,
                 slippage=SLIPPAGE_RATE,
+                blocked_execution_indices=_blocked_execution_indices(bars),
             ),
         }
     # Apply the same elevated-cost assumptions to every tested timeframe,
@@ -2153,6 +2257,7 @@ def main():
             prices,
             fee=0.002,
             slippage=0.001,
+            blocked_execution_indices=hourly_blocked,
         )
     }
     for label in ("4h", "6h", "1d"):
@@ -2162,6 +2267,7 @@ def main():
             [bar["close"] for bar in aggregated],
             fee=0.002,
             slippage=0.001,
+            blocked_execution_indices=_blocked_execution_indices(aggregated),
         )
 
     daily_bars = aggregate_candles(candles, 24)
@@ -2182,7 +2288,7 @@ def main():
     from strategy_lab import run_volume_liquidity_lab
     volume_liquidity_research = run_volume_liquidity_lab(candles, fee=FEE_RATE, slippage=SLIPPAGE_RATE)
     volume_liquidity_stress = run_volume_liquidity_lab(candles, fee=0.002, slippage=0.001)
-    forward_paper = run_forward_paper_accounts(candles)
+    forward_paper = run_forward_paper_accounts(candles, state_dir=str(paper_state_dir))
     qualification = {}
     for label in ("1h", "4h", "6h", "1d"):
         qualification[label] = {}
@@ -2233,6 +2339,7 @@ def main():
         "data_quality": {
             "hourly_intervals_contiguous_after_repair": True,
             "imputed_missing_hour_count": candles[0].get("_imputed_hour_count", 0),
+            "blocked_hourly_execution_bar_count": len(hourly_blocked),
             "imputation_method": "Forward-filled prior close with zero volume for gaps of at most six hours; larger gaps are rejected.",
             "ohlcv_validated": True,
         },
@@ -2265,11 +2372,11 @@ def main():
         "volume_liquidity_momentum_stress": volume_liquidity_stress,
         "warning": "Historical results are not forecasts. Strategy selection requires robust out-of-sample performance and forward paper trading. No live orders were placed.",
     }
-    Path("historical_research.json").write_text(
+    (output_path / "historical_research.json").write_text(
         json.dumps(result, indent=2, allow_nan=False) + "\n",
         encoding="utf-8",
     )
-    Path("strategy_qualification_report.md").write_text(
+    (output_path / "strategy_qualification_report.md").write_text(
         build_qualification_markdown(result), encoding="utf-8"
     )
     summary = {
@@ -2327,4 +2434,13 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    import argparse
+    parser = argparse.ArgumentParser(
+        description="Run isolated historical BTC/USD strategy research."
+    )
+    parser.add_argument(
+        "--output-dir", default=".",
+        help="Directory for research reports and separate paper-state ledgers (default: current directory).",
+    )
+    arguments = parser.parse_args()
+    main(output_dir=arguments.output_dir)

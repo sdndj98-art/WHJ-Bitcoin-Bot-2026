@@ -4,7 +4,8 @@ import unittest
 from datetime import datetime, timezone
 from unittest.mock import patch
 
-from historical_research import (INTERVAL_MS, aggregate_candles, load_two_year_candles, run_forward_paper_accounts, run_ohlc_breakout_lab, run_long_short_lab, run_daily_regime_filter_lab, run_multi_timeframe_ensemble_lab, run_six_hour_atr_trailing_lab, _adx_di_series, _atr_series, _regime_switching_atr_signals, _rsi_series, _simulate_equal_weight_multitimeframe, _simulate_ohlc, assess_strategy_qualification, assess_research_lab_qualification, build_qualification_markdown, summarize_qualification, _turtle_signals)
+from historical_research import (INTERVAL_MS, _blocked_execution_indices, _paper_account_rows, _research_output_paths, aggregate_candles, load_two_year_candles, run_forward_paper_accounts, run_ohlc_breakout_lab, run_long_short_lab, run_daily_regime_filter_lab, run_multi_timeframe_ensemble_lab, run_six_hour_atr_trailing_lab, _adx_di_series, _atr_series, _regime_switching_atr_signals, _rsi_series, _simulate_equal_weight_multitimeframe, _simulate_long_short, _simulate_ohlc, assess_strategy_qualification, assess_research_lab_qualification, build_qualification_markdown, summarize_qualification, _turtle_signals)
+from strategy_lab import _simulate, run_strategy_lab
 
 
 class HistoricalResearchTests(unittest.TestCase):
@@ -234,7 +235,127 @@ class HistoricalResearchTests(unittest.TestCase):
         self.assertEqual(four_hour[0]["close"], candles[3]["close"])
         self.assertEqual(four_hour[0]["high"], candles[3]["high"])
         self.assertTrue(four_hour[2]["imputed"])
+        self.assertTrue(daily[0]["imputed"])
+        self.assertEqual(_blocked_execution_indices(four_hour), {2})
+        self.assertEqual(_blocked_execution_indices(daily), {0})
         self.assertEqual(daily[0]["volume"], 24.0)
+
+    def test_synthetic_execution_bars_are_blocked_for_entry_and_exit(self):
+        prices = [100.0, 105.0, 120.0, 130.0, 140.0]
+        signals = [True, True, False, False, False]
+        metrics = _simulate(
+            prices, signals, 1, len(prices), fee=0.0, slippage=0.0,
+            blocked_execution_indices={1, 3},
+        )
+        # Entry waits from blocked index 1 to executable index 2; exit waits
+        # from blocked index 3 to executable index 4.
+        self.assertEqual(metrics["closed_trades"], 1)
+        self.assertEqual(metrics["final_equity_usd"], 1041.67)
+        self.assertFalse(metrics["open_position"])
+
+    def test_terminal_valuation_does_not_assume_fill_on_imputed_last_bar(self):
+        prices = [100.0, 100.0, 120.0, 130.0]
+        signals = [True, True, True, True]
+        metrics = _simulate(
+            prices, signals, 1, len(prices), fee=0.0, slippage=0.0,
+            blocked_execution_indices={3},
+        )
+        self.assertTrue(metrics["open_position"])
+        # The last executable close is 120, not the synthetic terminal close 130.
+        self.assertEqual(metrics["final_equity_usd"], 1050.0)
+
+    def test_strategy_lab_passes_blocked_indices_to_every_simulation_window(self):
+        prices = [100.0 + index for index in range(300)]
+        blocked = {220, 260}
+        stub_metrics = {
+            "return_pct": 0.1,
+            "final_equity_usd": 1001.0,
+            "max_drawdown_pct": 0.0,
+            "closed_trades": 1,
+            "win_rate_pct": 100.0,
+            "profit_factor": None,
+            "open_position": False,
+        }
+        with patch("strategy_lab._simulate", return_value=stub_metrics) as simulator:
+            result = run_strategy_lab(
+                prices, blocked_execution_indices=blocked
+            )
+        self.assertGreater(simulator.call_count, 10)
+        self.assertTrue(all(call.args[6] == blocked for call in simulator.call_args_list))
+        self.assertEqual(result["blocked_execution_bar_count"], len(blocked))
+
+    def test_strategy_lab_rejects_invalid_blocked_execution_indices(self):
+        prices = [100.0 + index for index in range(300)]
+        for invalid in ({True}, {-1}, {300}, {1.5}):
+            with self.subTest(invalid=invalid):
+                with self.assertRaises(ValueError):
+                    run_strategy_lab(prices, blocked_execution_indices=invalid)
+
+    def test_ohlc_simulator_blocks_synthetic_entry_and_exit_fills(self):
+        bars = [
+            {"close": price, "imputed": index in {1, 3}}
+            for index, price in enumerate((100.0, 105.0, 120.0, 130.0, 140.0))
+        ]
+        signals = [True, True, False, False, False]
+        metrics = _simulate_ohlc(bars, signals, 1, len(bars), 0.0, 0.0)
+        self.assertEqual(metrics["closed_trades"], 1)
+        self.assertEqual(metrics["final_equity_usd"], 1041.67)
+        self.assertFalse(metrics["open_position"])
+
+    def test_ohlc_terminal_valuation_uses_last_executable_bar(self):
+        bars = [
+            {"close": price, "imputed": index == 3}
+            for index, price in enumerate((100.0, 100.0, 120.0, 130.0))
+        ]
+        metrics = _simulate_ohlc(bars, [True] * 4, 1, len(bars), 0.0, 0.0)
+        self.assertTrue(metrics["open_position"])
+        self.assertEqual(metrics["final_equity_usd"], 1050.0)
+
+    def test_long_short_simulator_blocks_synthetic_reversals(self):
+        bars = [
+            {"close": price, "imputed": index in {1, 3}}
+            for index, price in enumerate((100.0, 105.0, 120.0, 130.0, 140.0))
+        ]
+        metrics = _simulate_long_short(
+            bars, [1, 1, -1, -1, -1], 1, len(bars), 0.0, 0.0, 0.0
+        )
+        self.assertEqual(metrics["closed_trades"], 2)
+        self.assertFalse(metrics["open_position"])
+
+    def test_equal_weight_simulator_blocks_synthetic_fills(self):
+        bars = [
+            {"timestamp": index * INTERVAL_MS, "close": price, "imputed": index in {1, 3}}
+            for index, price in enumerate((100.0, 105.0, 120.0, 130.0, 140.0))
+        ]
+        result = _simulate_equal_weight_multitimeframe(
+            [bars], [[True, True, False, False, False]], [1],
+            0, 6 * INTERVAL_MS, 0.0, 0.0,
+        )
+        self.assertEqual(result["closed_trades"], 1)
+        self.assertEqual(result["final_equity_usd"], 1041.67)
+
+    def test_ohlc_buy_and_hold_benchmark_skips_synthetic_entry_and_exit(self):
+        bars = []
+        for index in range(500):
+            bars.append({
+                "timestamp": index * 86400000,
+                "open": 100.0, "high": 101.0, "low": 99.0,
+                "close": 100.0, "volume": 1.0,
+                "imputed": index in {350, 499},
+            })
+        result = run_ohlc_breakout_lab(bars)
+        benchmark = result["strategies"]["buy_and_hold_25pct"]["out_of_sample"]
+        self.assertEqual(benchmark["entry_index"], 351)
+        self.assertEqual(benchmark["exit_index"], 498)
+
+    def test_paper_account_rows_preserve_synthetic_execution_flag(self):
+        bars = [
+            {"timestamp": 0, "close": 100.0, "imputed": False},
+            {"timestamp": INTERVAL_MS, "close": 100.0, "imputed": True},
+        ]
+        rows = _paper_account_rows(bars)
+        self.assertEqual(rows[0][5], True)
+        self.assertEqual(rows[1][5], False)
 
     def test_forward_paper_accounts_persist_and_are_idempotent(self):
         import tempfile
@@ -966,6 +1087,18 @@ class HistoricalResearchTests(unittest.TestCase):
             summary["diagnostic_watchlist"][0]["group"],
             "volume_liquidity_momentum",
         )
+
+    def test_default_research_run_preserves_legacy_paper_state_location(self):
+        output, paper_state = _research_output_paths()
+        self.assertEqual(str(output), ".")
+        self.assertEqual(str(paper_state), ".")
+
+    def test_explicit_research_output_and_paper_state_paths_are_isolated(self):
+        output, paper_state = _research_output_paths("tmp/research-run")
+        self.assertEqual(str(output), "tmp/research-run")
+        self.assertEqual(str(paper_state), "tmp/research-run/paper_state")
+        self.assertNotEqual(str(paper_state), ".")
+
 
 if __name__ == "__main__":
     unittest.main()
