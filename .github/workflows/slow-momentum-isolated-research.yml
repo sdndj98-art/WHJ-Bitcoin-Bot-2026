@@ -112,6 +112,11 @@ jobs:
               "paper_ledgers_read_or_written": False,
           })
           Path("slow_momentum_historical_report.json").write_text(json.dumps(report, indent=2, sort_keys=True), encoding="utf-8")
+          pbo_result = report["trial_governance"].get("cscv_pbo")
+          pbo_estimate = (
+              pbo_result.get("pbo_estimate", "not computed")
+              if isinstance(pbo_result, dict) else "not computed"
+          )
           lines = [
               "# WHJ isolated slow-momentum historical research", "",
               f"- Generated UTC: {report['generated_at_utc']}",
@@ -120,7 +125,7 @@ jobs:
               f"- Imputed hourly candles: {report['imputed_hourly_candles']}",
               f"- Declared candidate trials: {report['trial_governance']['trial_count']}",
               f"- CSCV/PBO status: {report['trial_governance']['pbo_status']}",
-              f"- CSCV/PBO estimate: {report['trial_governance'].get('cscv_pbo', {}).get('pbo_estimate', 'not computed')}",
+              f"- CSCV/PBO estimate: {pbo_estimate}",
               "- Research-only; no paper ledgers accessed or changed; no live orders.", "",
               "## Normal-cost out-of-sample results", "",
               "| Lookback | Return | PF | Max DD | Trades | OOS windows |",
