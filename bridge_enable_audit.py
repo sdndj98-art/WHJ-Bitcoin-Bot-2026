@@ -7,6 +7,7 @@ import re
 import shutil
 import subprocess
 import sys
+import tempfile
 import urllib.request
 from datetime import datetime
 from pathlib import Path
@@ -22,13 +23,16 @@ AUDIT_URL = (
     "d0253c1cc5c2edb2b06fa1588391ae1a063d29c7/paper_ledger_audit.py"
 )
 
+
 def fail(message):
     raise SystemExit("STOP: " + message)
+
 
 def atomic_write(path: Path, content: str):
     temp = path.with_suffix(path.suffix + ".whj-tmp")
     temp.write_text(content, encoding="utf-8")
     os.replace(temp, path)
+
 
 def main():
     if not REPO.is_dir() or not (REPO / ".git").exists():
@@ -55,7 +59,7 @@ def main():
             audit_text = response.read().decode("utf-8")
     except Exception as exc:
         fail(f"Could not retrieve the pinned audit utility: {exc}")
-    required = ('READ_ONLY_PAPER_LEDGER_AUDIT', 'files_modified', 'live_orders_placed', 'def build_audit')
+    required = ("READ_ONLY_PAPER_LEDGER_AUDIT", "files_modified", "live_orders_placed", "def build_audit")
     if not all(marker in audit_text for marker in required):
         fail("Downloaded audit utility failed content validation.")
     if AUDIT.exists() and AUDIT.read_text(encoding="utf-8") != audit_text:
@@ -70,7 +74,9 @@ def main():
     audit_created = not AUDIT.exists()
 
     try:
-        patched_bridge = allowed_pattern.sub(r'\1{"status", "compile", "tests", "audit"}', bridge_text, count=1)
+        patched_bridge = allowed_pattern.sub(
+            r'\1{"status", "compile", "tests", "audit"}', bridge_text, count=1
+        )
         renamed_assist, count = re.subn(
             r"(?m)^def main\(\):\s*$",
             "def _whj_main_before_audit():",
@@ -79,6 +85,7 @@ def main():
         )
         if count != 1:
             fail("Could not safely prepare assistant dispatcher.")
+
         wrapper = '''
 def main():
     if len(sys.argv) == 2 and sys.argv[1] == "audit":
@@ -86,16 +93,20 @@ def main():
         if not audit_script.is_file():
             print("AUDIT ERROR: read-only audit utility is missing")
             return 2
+        command = [sys.executable, str(audit_script)]
+        state_override = os.environ.get("WHJ_AUDIT_STATE_DIR")
+        if state_override:
+            command.extend(["--state-dir", state_override])
         try:
             result = subprocess.run(
-                [sys.executable, str(audit_script)],
+                command,
                 cwd=REPO,
                 text=True,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.STDOUT,
                 timeout=120,
             )
-            print(result.stdout, end="" if result.stdout.endswith("\\n") else "\\n")
+            print(result.stdout)
             return result.returncode
         except subprocess.TimeoutExpired:
             print("AUDIT ERROR: timed out after 120 seconds")
@@ -121,27 +132,36 @@ def main():
         )
         if checks.returncode:
             fail("Python compile check failed: " + checks.stdout)
-        smoke = subprocess.run(
-            [sys.executable, str(ASSIST), "audit"],
-            cwd=REPO,
-            text=True,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT,
-            timeout=120,
-        )
+
+        with tempfile.TemporaryDirectory(prefix="whj-audit-smoke-", dir=str(BACKUPS)) as smoke_dir:
+            env = os.environ.copy()
+            env["WHJ_AUDIT_STATE_DIR"] = smoke_dir
+            smoke = subprocess.run(
+                [sys.executable, str(ASSIST), "audit"],
+                cwd=REPO,
+                env=env,
+                text=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
+                timeout=120,
+            )
         if smoke.returncode:
-            fail("Local audit smoke test failed: " + smoke.stdout[-4000:])
+            fail("Local audit dispatch smoke test failed: " + smoke.stdout[-4000:])
+        if '"files_modified": false' not in smoke.stdout or '"live_orders_placed": false' not in smoke.stdout:
+            fail("Audit smoke test did not return the expected read-only safety flags.")
+
         print("WHJ_BRIDGE_AUDIT_INSTALL=OK")
         print(f"Backups: {bridge_backup} | {assist_backup}")
         print("Audit utility installed outside the Git repository.")
-        print("Read-only local audit smoke test passed; no ledger files were modified.")
+        print("Local read-only audit dispatch smoke test passed; no ledger files were modified.")
         print(smoke.stdout[-6000:])
-    except Exception:
+    except BaseException:
         shutil.copy2(bridge_backup, BRIDGE)
         shutil.copy2(assist_backup, ASSIST)
         if audit_created and AUDIT.exists():
             AUDIT.unlink()
         raise
+
 
 if __name__ == "__main__":
     main()
