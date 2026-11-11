@@ -7,6 +7,8 @@ on:
     paths:
       - "slow_momentum_lab.py"
       - "historical_research.py"
+      - "research_governance.py"
+      - "tests/test_research_governance.py"
       - ".github/workflows/slow-momentum-isolated-research.yml"
 
 permissions:
@@ -28,10 +30,13 @@ jobs:
       - name: Evaluate isolated daily-close momentum
         run: |
           python - <<'PY'
+          import hashlib
           import json
+          import os
           from datetime import datetime, timezone
           from pathlib import Path
           from historical_research import aggregate_candles, load_two_year_candles
+          from research_governance import build_trial_manifest
           from slow_momentum_lab import evaluate_slow_momentum
 
           # Read-only market-data loader and isolated evaluator only.
@@ -40,6 +45,34 @@ jobs:
           daily = aggregate_candles(hourly, 24)
           closes = [float(row["close"]) for row in daily]
           report = evaluate_slow_momentum(closes)
+          dataset_payload = json.dumps(daily, sort_keys=True, separators=(",", ":"), allow_nan=False).encode("utf-8")
+          dataset_sha256 = hashlib.sha256(dataset_payload).hexdigest()
+          generated_at = datetime.now(timezone.utc).isoformat()
+          trial_manifest = [
+              build_trial_manifest(
+                  trial_id="slow-tsmom-" + str(lookback) + "d-" + os.environ["GITHUB_RUN_ID"],
+                  candidate_id="slow-tsmom-" + str(lookback) + "d",
+                  parameters={"lookback_days": int(lookback), "allocation_fraction": report["allocation_fraction"]},
+                  dataset_sha256=dataset_sha256,
+                  data_source="Coinbase public BTC-USD spot hourly candles aggregated to complete UTC daily bars",
+                  code_commit_sha=os.environ["GITHUB_SHA"],
+                  run_id=os.environ["GITHUB_RUN_ID"],
+                  created_utc=generated_at,
+                  evaluation_protocol="70/30 chronological split with three fixed OOS subperiods; not rolling walk-forward",
+              )
+              for lookback in report["candidates"]
+          ]
+          report["trial_governance"] = {
+              "dataset_sha256": dataset_sha256,
+              "trial_count": len(trial_manifest),
+              "trial_ids": [item["trial_id"] for item in trial_manifest],
+              "selection_status": "UNASSESSED",
+              "pbo_status": "NOT_COMPUTED_NO_ALIGNED_PERIODIC_RETURN_MATRIX",
+              "warning": "This manifest records only variants in this workflow; it is not a global count of all experiments ever attempted.",
+          }
+          Path("slow_momentum_trial_manifest.json").write_text(
+              json.dumps(trial_manifest, indent=2, sort_keys=True), encoding="utf-8"
+          )
           report.update({
               "generated_at_utc": datetime.now(timezone.utc).isoformat(),
               "source": "Coinbase public BTC-USD hourly candles aggregated to complete UTC daily bars",
@@ -87,5 +120,6 @@ jobs:
           path: |
             slow_momentum_historical_report.json
             slow_momentum_historical_report.md
+            slow_momentum_trial_manifest.json
           if-no-files-found: error
           retention-days: 30
