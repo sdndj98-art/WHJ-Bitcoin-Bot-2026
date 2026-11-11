@@ -78,11 +78,13 @@ class AtrTrailingForwardPaperTests(unittest.TestCase):
             with open(path, encoding="utf-8") as handle:
                 state = json.load(handle)
             raw_equity = state["cash"] + state["quantity"] * state["previous_close"]
-            expected = (
+            expected = round(
                 state["cash"]
                 + state["quantity"] * state["previous_close"]
-                * (1.0 - slippage_rate) * (1.0 - fee_rate)
+                * (1.0 - slippage_rate) * (1.0 - fee_rate),
+                4,
             )
+            # The public summary reports equity to four decimal places.
             self.assertAlmostEqual(opened["equity_usd"], expected, places=8)
             self.assertAlmostEqual(
                 opened["equity_after_estimated_exit_costs_usd"], expected, places=8
