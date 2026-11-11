@@ -87,13 +87,32 @@ def _simulate(closes, signals, start, end, fee, slippage):
     wins = sum(pnl > 0 for pnl in closed)
     gross_profit = sum(pnl for pnl in closed if pnl > 0)
     gross_loss = -sum(pnl for pnl in closed if pnl < 0)
+    realized_pnl = sum(closed)
+    if units:
+        unrealized_net_liquidation_pnl = liquidation - entry_cost
+    else:
+        unrealized_net_liquidation_pnl = 0.0
+    closed_trade_profit_factor = (
+        round(gross_profit / gross_loss, 4)
+        if gross_loss else (None if gross_profit else 0.0)
+    )
+    close_to_close_drawdown = round(max_drawdown, 4)
     return {
         "return_pct": round((final_equity / INITIAL_EQUITY - 1.0) * 100.0, 4),
         "final_equity_usd": round(final_equity, 4),
-        "max_drawdown_pct": round(max_drawdown, 4),
+        "final_net_liquidation_equity_usd": round(final_equity, 4),
+        "max_close_to_close_drawdown_pct": close_to_close_drawdown,
+        # Compatibility alias; this remains close-to-close, never intraday OHLC drawdown.
+        "max_drawdown_pct": close_to_close_drawdown,
+        "drawdown_measurement": "close_to_close_net_liquidation",
         "closed_trades": len(closed),
         "win_rate_pct": round(wins / len(closed) * 100.0, 4) if closed else 0.0,
-        "profit_factor": round(gross_profit / gross_loss, 4) if gross_loss else (None if gross_profit else 0.0),
+        "closed_trade_profit_factor": closed_trade_profit_factor,
+        # Compatibility alias; PF intentionally describes completed trades only.
+        "profit_factor": closed_trade_profit_factor,
+        "realized_pnl_usd": round(realized_pnl, 4),
+        "open_position_count": int(bool(units)),
+        "unrealized_net_liquidation_pnl_usd": round(unrealized_net_liquidation_pnl, 4),
         "open_position_at_window_end": bool(units),
     }
 
