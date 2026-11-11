@@ -20,6 +20,21 @@ class StrategyFamilyRunnerTests(unittest.TestCase):
             self.assertEqual(candidate["protocol"], "completed_close_signal_next_open_fill_open_to_open_return")
             self.assertEqual(candidate["strategy"]["bars"], candidate["buy_and_hold"]["bars"])
 
+    def test_oos_start_uses_previous_completed_bar_for_first_next_open_fill(self):
+        candles = self.candles()
+        result = run_strategy_universe(candles, evaluation_start_index=200)
+        self.assertEqual(result["evaluation_start_index"], 200)
+        for candidate in result["results"].values():
+            self.assertEqual(candidate["strategy"]["bars"], len(candles)-201)
+            self.assertEqual(candidate["strategy"]["bars"], candidate["buy_and_hold"]["bars"])
+
+    def test_invalid_oos_start_fails_closed(self):
+        candles = self.candles()
+        for index in (True, 0, len(candles)-2, len(candles)):
+            with self.subTest(index=index):
+                with self.assertRaises(ValueError):
+                    run_strategy_universe(candles, evaluation_start_index=index)
+
     def test_ranking_is_deterministic(self):
         candles = self.candles()
         first = run_strategy_universe(candles)
