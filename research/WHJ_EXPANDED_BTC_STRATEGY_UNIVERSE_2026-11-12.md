@@ -48,3 +48,12 @@ Options volatility-surface strategies, funding/basis arbitrage, order-book strat
 ## Safety
 
 No existing paper ledgers, balances, risk limits, schedules, exchange credentials, Telegram integrations or live order pathways are changed. The new module is standalone research code.
+
+## Common evaluator and chronological holdout runner
+
+- `strategy_family_evaluator.py` evaluates completed-close signals with next-open exposure changes and subsequent open-to-open returns. It charges fixed fee/slippage on turnover and provides matched buy-and-hold returns.
+- `strategy_family_runner.py` applies this protocol to all 17 implemented candidates. Its `evaluation_start_index` option calculates signals using full past history while retaining the immediately preceding completed candle as the first OOS signal; the first OOS fill is at the next open.
+- `.github/workflows/multi-strategy-isolated-research.yml` runs a public Coinbase BTC-USD hourly-data experiment with a 70/30 chronological split, 1x/2x/3x fixed cost stress, per-candidate dataset-hashed trial manifests, and CSCV/PBO diagnostics across only these declared candidates.
+- Workflow output is a research artifact; it never reads/writes paper ledgers or places orders. It labels the ranking descriptive and all candidates unpromoted.
+
+The 70/30 experiment is not rolling walk-forward retraining and does not supply an untouched final holdout. Fixed costs do not model spread, depth, impact, latency or partial fills. No result should be called validated until the workflow artifact is inspected.
