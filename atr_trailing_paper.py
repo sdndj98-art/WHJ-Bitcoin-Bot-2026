@@ -345,9 +345,20 @@ def update_atr_trailing_account(four_hour_bars, daily_bars, state_path,
                 state["paused"], state["pause_reason"] = True, "consecutive_loss_limit"
             # A queued entry or ordinary regime exit can become stale. Keep only
             # forced risk exits pending; synthetic bars never execute them.
-            if state["paused"] and state["quantity"] > 0:
-                state["pending_action"] = "sell"
-                state["pending_action_reason"] = "risk_pause"
+            if state["quantity"] > 0:
+                state["position_peak"] = max(state["position_peak"] or close, close)
+                trailing_stop = state["position_peak"] - 3.0 * state["atr14"]
+                if state["paused"]:
+                    state["pending_action"] = "sell"
+                    state["pending_action_reason"] = "risk_pause"
+                elif close < trailing_stop:
+                    state["pending_action"] = "sell"
+                    state["pending_action_reason"] = "atr_trailing_stop"
+                elif state.get("pending_action_reason") not in (
+                    "atr_trailing_stop", "risk_pause"
+                ):
+                    state["pending_action"] = None
+                    state["pending_action_reason"] = None
             elif state.get("pending_action") == "buy" or state.get("pending_action_reason") not in (
                 "atr_trailing_stop", "risk_pause"
             ):
