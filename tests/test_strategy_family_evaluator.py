@@ -18,10 +18,13 @@ class StrategyFamilyEvaluatorTests(unittest.TestCase):
         self.assertEqual(result["strategy"]["exposure"], 0)
 
     def test_turnover_costs_are_charged_on_entry_and_exit(self):
-        result = evaluate_candidate(self.candles([100, 100, 110, 110, 110]), [True, False, False, False, False], 0.01, 0, 1)
+        rows = self.candles([100, 100, 110, 110, 110])
+        signals = [True, False, False, False, False]
+        result = evaluate_candidate(rows, signals, 0.01, 0, 1)
+        no_cost = evaluate_candidate(rows, signals, 0, 0, 1)
         self.assertEqual(result["strategy"]["closed_trades"], 1)
         self.assertAlmostEqual(result["strategy"]["turnover"], 2.0)
-        self.assertLess(result["strategy"]["net_return"], 0)
+        self.assertLess(result["strategy"]["net_return"], no_cost["strategy"]["net_return"])
 
     def test_future_signal_changes_do_not_change_prior_return_stream(self):
         rows = self.candles([100, 101, 102, 103, 104, 105])
