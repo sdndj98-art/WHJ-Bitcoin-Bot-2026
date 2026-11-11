@@ -38,10 +38,10 @@ jobs:
           import json
           from datetime import datetime, timezone
           from pathlib import Path
-          from gold_market_data import load_xauusd_daily
+          from gold_market_data import load_gold_daily
           from regime_ema_ohlc_lab import evaluate_regime_fold
 
-          bars = load_xauusd_daily(period="10y")
+          bars = load_gold_daily(period="10y")
           n = len(bars)
           cuts = [int(n * x) for x in (0.55, 0.70, 0.85, 1.0)]
           if n < 1000 or any(cuts[i + 1] - cuts[i] < 300 for i in range(3)):
@@ -61,8 +61,8 @@ jobs:
                   row["cost_stress"][label] = evaluate_regime_fold(bars, start, end, fee, slip)
               folds.append(row)
           report = {
-              "asset": "COMEX gold futures reference COMEX gold",
-              "symbol": "GC=F=X",
+              "asset": "COMEX gold futures reference",
+              "symbol": "GC=F",
               "source": "Yahoo Finance chart API",
               "timeframe": "1d",
               "generated_at_utc": datetime.now(timezone.utc).isoformat(),
@@ -78,7 +78,7 @@ jobs:
                   "risk": "25% maximum allocation; 2% stop; 4% target; no leverage",
                   "benchmark": "matched 25% buy-and-hold with 75% cash plus all-cash baseline",
                   "costs_per_side": costs,
-                  "limitations": "Yahoo GC=F=X is a reference spot-price series, not broker bid/ask execution. Fixed fee/slippage are proxies; spread, swap/financing, broker markup, market impact, and holiday/session differences are not modelled.",
+                  "limitations": "Yahoo GC=F is a reference spot-price series, not broker bid/ask execution. Fixed fee/slippage are proxies; spread, swap/financing, broker markup, market impact, and holiday/session differences are not modelled.",
               },
               "folds": folds,
               "promotion_status": "NO_CANDIDATE_PROMOTED",
@@ -87,7 +87,7 @@ jobs:
           }
           Path("whj_xauusd_gold_report.json").write_text(json.dumps(report, indent=2, sort_keys=True), encoding="utf-8")
           lines = [
-              "# WHJ COMEX gold gold daily research", "",
+              "# WHJ COMEX gold daily research", "",
               f"- Generated UTC: {report['generated_at_utc']}",
               f"- Source: {report['source']} ({report['symbol']})",
               f"- Daily candles: {n}; SHA-256: `{fingerprint}`",
