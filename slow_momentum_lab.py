@@ -137,8 +137,10 @@ def evaluate_slow_momentum(closes, fee=0.001, slippage=0.0005,
                            lookbacks=DEFAULT_LOOKBACKS):
     """Evaluate fixed 8/12/16-week candidates on chronological holdout windows.
 
-    Returns normal-cost and 2x-cost results. No parameters are selected or
-    retuned using the holdout. Buy-and-hold uses the same 25% initial allocation.
+    Returns normal-cost and 2x/3x cost results. The three OOS slices are
+    chronological subperiods, not rolling walk-forward retraining. No parameters
+    are selected or retuned using the holdout. Buy-and-hold uses the same 25%
+    initial allocation.
     """
     lookbacks = tuple(lookbacks)
     _validate(closes, fee, slippage, lookbacks)
@@ -283,6 +285,10 @@ def evaluate_cost_stress(closes, fee, slippage, lookbacks, multiplier=2.0):
         "slippage_per_side": stressed_slippage,
         "matched_buy_and_hold": {
             "out_of_sample": buy_and_hold(split, len(closes)),
+            "oos_subperiods": [
+                buy_and_hold(edges[k], edges[k + 1]) for k in range(3)
+            ],
+            # Deprecated compatibility alias; these are fixed chronological slices.
             "walk_forward_windows": [
                 buy_and_hold(edges[k], edges[k + 1]) for k in range(3)
             ],
