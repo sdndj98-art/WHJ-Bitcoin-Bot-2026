@@ -256,5 +256,48 @@ class QualifiedForwardPaperMonitorTests(unittest.TestCase):
 
 
 
+    def test_interrupted_publication_is_rolled_back_on_next_invocation(self):
+        import qualified_forward_paper_monitor as monitor
+
+        ledger_names = [config["file"] for config in CANDIDATES.values()] + [ATR_FILE]
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            original = {}
+            staged = {}
+            with tempfile.TemporaryDirectory(dir=folder) as stage_folder:
+                for index, name in enumerate(ledger_names):
+                    original[name] = (f"original-ledger-{index}\\n").encode()
+                    (root / name).write_bytes(original[name])
+                    staged_path = Path(stage_folder) / name
+                    staged_path.write_text(json.dumps({"staged": index}), encoding="utf-8")
+                    staged[name] = staged_path
+
+                real_replace = monitor.os.replace
+                calls = {"count": 0}
+
+                def simulate_process_termination(source, destination):
+                    calls["count"] += 1
+                    # 1 = durable journal; 2 = first ledger replacement;
+                    # 3 = abrupt termination before the second ledger replacement.
+                    if calls["count"] == 3:
+                        raise KeyboardInterrupt("simulated abrupt termination")
+                    return real_replace(source, destination)
+
+                with mock.patch(
+                    "qualified_forward_paper_monitor.os.replace",
+                    side_effect=simulate_process_termination,
+                ):
+                    with self.assertRaisesRegex(KeyboardInterrupt, "abrupt termination"):
+                        monitor._publish_qualified_ledgers(root, staged)
+
+            self.assertTrue((root / monitor._TRANSACTION_FILE).exists())
+            self.assertNotEqual((root / ledger_names[0]).read_bytes(), original[ledger_names[0]])
+            monitor._recover_qualified_transaction(root)
+            for name in ledger_names:
+                self.assertEqual((root / name).read_bytes(), original[name])
+            self.assertFalse((root / monitor._TRANSACTION_FILE).exists())
+
+
+
 if __name__ == "__main__":
     unittest.main()
