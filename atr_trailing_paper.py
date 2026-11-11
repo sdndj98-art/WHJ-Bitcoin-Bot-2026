@@ -320,18 +320,39 @@ def update_atr_trailing_account(four_hour_bars, daily_bars, state_path,
         # cannot execute. Cancel any queued action so a stale signal cannot fill
         # later on an unrelated executable candle.
         if not bar["execution_eligible"]:
+            # Synthetic bars cannot fill orders, but their mark-to-market value
+            # must still trigger risk guards. Otherwise a loss breach that
+            # recovers before the next executable bar could go unnoticed.
+            state["equity"] = state["cash"] + state["quantity"] * close
+            state["peak_equity"] = max(state["peak_equity"], state["equity"])
+            drawdown = (
+                (state["peak_equity"] - state["equity"]) / state["peak_equity"]
+                if state["peak_equity"] > 0 else 0.0
+            )
+            state["max_drawdown_pct"] = max(
+                state["max_drawdown_pct"], drawdown * 100.0
+            )
+            daily_loss = (
+                (state["daily_start_equity"] - state["equity"])
+                / state["daily_start_equity"]
+                if state["daily_start_equity"] > 0 else 0.0
+            )
+            if drawdown >= max_drawdown_fraction:
+                state["paused"], state["pause_reason"] = True, "maximum_drawdown"
+            elif daily_loss >= daily_loss_fraction:
+                state["paused"], state["pause_reason"] = True, "daily_loss_limit"
+            elif state["consecutive_losses"] >= max_consecutive_losses:
+                state["paused"], state["pause_reason"] = True, "consecutive_loss_limit"
             # A queued entry or ordinary regime exit can become stale. Keep only
-            # forced risk exits (ATR stop / persistent risk pause) pending.
-            if state.get("pending_action") == "buy" or state.get("pending_action_reason") not in (
+            # forced risk exits pending; synthetic bars never execute them.
+            if state["paused"] and state["quantity"] > 0:
+                state["pending_action"] = "sell"
+                state["pending_action_reason"] = "risk_pause"
+            elif state.get("pending_action") == "buy" or state.get("pending_action_reason") not in (
                 "atr_trailing_stop", "risk_pause"
             ):
                 state["pending_action"] = None
                 state["pending_action_reason"] = None
-            state["equity"] = state["cash"] + state["quantity"] * close
-            state["peak_equity"] = max(state["peak_equity"], state["equity"])
-            if state["peak_equity"] > 0:
-                drawdown = (state["peak_equity"] - state["equity"]) / state["peak_equity"]
-                state["max_drawdown_pct"] = max(state["max_drawdown_pct"], drawdown * 100.0)
             state["previous_close"] = close
             state["last_timestamp"] = bar["timestamp"]
             state["processed_new_candles"] += 1
