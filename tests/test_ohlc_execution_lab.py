@@ -17,7 +17,7 @@ class OhlcExecutionLabTests(unittest.TestCase):
     def test_gap_through_stop_fills_at_open_not_stop(self):
         result = simulate_ohlc_risk(
             [100, 100, 90], [101, 101, 95], [99, 99, 85],
-            [100, 100, 92], [False, True, False], [False, False, False],
+            [100, 100, 92], [True, False, False], [False, False, False],
             fee=0, slippage=0, stop_loss_pct=0.05, take_profit_pct=0.5,
         )
         event = result["exit_events"][0]
@@ -28,7 +28,7 @@ class OhlcExecutionLabTests(unittest.TestCase):
     def test_same_bar_stop_and_target_uses_adverse_stop_first(self):
         result = simulate_ohlc_risk(
             [100, 100, 100], [101, 110, 101], [99, 90, 99],
-            [100, 100, 100], [False, True, False], [False, False, False],
+            [100, 100, 100], [True, False, False], [False, False, False],
             fee=0, slippage=0, stop_loss_pct=0.05, take_profit_pct=0.05,
         )
         event = result["exit_events"][0]
