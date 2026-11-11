@@ -1,0 +1,27 @@
+name: Paper ledger audit tests
+
+on:
+  pull_request:
+    branches:
+      - strategy/qualified-forward-monitor-20261111
+  push:
+    branches:
+      - feature/read-only-paper-ledger-audit-20261112
+
+permissions:
+  contents: read
+
+jobs:
+  audit-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Compile audit utility
+        run: python -m py_compile paper_ledger_audit.py tests/test_paper_ledger_audit.py
+      - name: Run audit tests
+        run: python -m unittest tests.test_paper_ledger_audit -v
