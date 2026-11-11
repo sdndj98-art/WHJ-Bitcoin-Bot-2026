@@ -46,15 +46,29 @@ class CusumTripleBarrierLabTests(unittest.TestCase):
         self.assertEqual(purged_past_event_indices(labels, 10, embargo_bars=2), [])
         self.assertEqual(purged_past_event_indices(labels, 12, embargo_bars=2), [0, 1])
 
-    def test_invalid_inputs_fail_closed(self):
+    def test_invalid_lookback_types_raise_value_error(self):
         with self.assertRaises(ValueError):
-            cusum_event_indices([100.0] * 10, volatility_lookback=20)
+            cusum_event_indices([100.0] * 30, volatility_lookback="20")
+        with self.assertRaises(ValueError):
+            trailing_volatility([100.0] * 30, lookback=None)
+
+    def test_invalid_event_or_volatility_containers_raise_value_error(self):
+        with self.assertRaises(ValueError):
+            triple_barrier_labels([100.0, 101.0, 102.0], None, [None] * 3)
+        with self.assertRaises(ValueError):
+            triple_barrier_labels([100.0, 101.0, 102.0], [0], None)
+
+    def test_missing_event_volatility_is_skipped_and_misalignment_rejected(self):
         self.assertEqual(
             triple_barrier_labels([100.0, 101.0, 102.0], [0], [None, None, None]),
             [],
         )
         with self.assertRaises(ValueError):
             triple_barrier_labels([100.0, 101.0, 102.0], [0], [None, None])
+
+    def test_invalid_inputs_fail_closed(self):
+        with self.assertRaises(ValueError):
+            cusum_event_indices([100.0] * 10, volatility_lookback=20)
         with self.assertRaises(ValueError):
             purged_past_event_indices([], 10, embargo_bars=-1)
 
