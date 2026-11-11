@@ -13,12 +13,17 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from atr_trailing_paper import (
+    _load as _load_atr_state,
     seed_atr_trailing_account,
     update_atr_trailing_account,
 )
 from forward_paper_monitor import validate_hourly_feed
 from historical_research import aggregate_candles, load_two_year_candles
-from paper_account import seed_forward_paper_account, update_paper_account
+from paper_account import (
+    _load_state as _load_qualified_state,
+    seed_forward_paper_account,
+    update_paper_account,
+)
 
 
 DEFAULT_STATE_DIR = Path(
@@ -181,6 +186,10 @@ def process_qualified_forward_candidates(
     for name, config in CANDIDATES.items():
         path = directory / config["file"]
         last = _existing_timestamp(path, config["strategy"])
+        if path.exists():
+            _load_qualified_state(
+                path, config["initial_cash"], config["strategy"]
+            )
         latest = bars[config["hours"]][-1]["timestamp"]
         if last is not None and latest < last:
             raise ValueError(
@@ -194,6 +203,8 @@ def process_qualified_forward_candidates(
         raise ValueError("Feed is older than saved ATR checkpoint; refusing rollback")
     # Validate every ATR field read later before the first of the four ledgers
     # is updated. This prevents a corrupt ATR counter from causing a partial cycle.
+    if atr_path.exists():
+        _load_atr_state(atr_path, 250.0)
     atr_processed_before = _existing_processed_count(atr_path)
 
     results = {}
