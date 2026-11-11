@@ -36,8 +36,8 @@ jobs:
           from datetime import datetime, timezone
           from pathlib import Path
           from historical_research import aggregate_candles, load_two_year_candles
-          from research_governance import build_trial_manifest
-          from slow_momentum_lab import evaluate_slow_momentum
+          from research_governance import build_trial_manifest, cscv_probability_of_backtest_overfitting
+          from slow_momentum_lab import evaluate_slow_momentum, momentum_signals, periodic_net_returns
 
           # Read-only market-data loader and isolated evaluator only.
           # No paper account functions, monitors, caches, or order pathways.
@@ -73,6 +73,32 @@ jobs:
           Path("slow_momentum_trial_manifest.json").write_text(
               json.dumps(trial_manifest, indent=2, sort_keys=True), encoding="utf-8"
           )
+          periodic_returns = {
+              str(lookback): periodic_net_returns(
+                  closes,
+                  momentum_signals(closes, int(lookback)),
+                  report["split_index"],
+                  len(closes),
+                  fee=report["costs"]["fee_per_side"],
+                  slippage=report["costs"]["slippage_per_side"],
+              )
+              for lookback in report["candidates"]
+          }
+          return_count = len(next(iter(periodic_returns.values())))
+          pbo_partitions = next((count for count in (8, 6, 4) if return_count % count == 0), None)
+          if pbo_partitions is not None:
+              pbo_result = cscv_probability_of_backtest_overfitting(
+                  periodic_returns, partitions=pbo_partitions
+              )
+              report["trial_governance"]["cscv_pbo"] = pbo_result
+              report["trial_governance"]["pbo_status"] = "COMPUTED_DIAGNOSTIC_ONLY"
+          else:
+              report["trial_governance"]["cscv_pbo"] = None
+              report["trial_governance"]["pbo_status"] = "NOT_COMPUTED_NO_EVEN_DIVISOR"
+          report["trial_governance"]["pbo_scope_warning"] = (
+              "CSCV/PBO is calculated only across the three declared slow-momentum variants on this 30% OOS return segment. "
+              "It does not cover all repository experiments and does not restore an untouched final holdout."
+          )
           report.update({
               "generated_at_utc": datetime.now(timezone.utc).isoformat(),
               "source": "Coinbase public BTC-USD hourly candles aggregated to complete UTC daily bars",
@@ -91,6 +117,9 @@ jobs:
               f"- Daily observations: {len(daily)}",
               f"- Date range: {report['daily_start_utc']} to {report['daily_end_utc']}",
               f"- Imputed hourly candles: {report['imputed_hourly_candles']}",
+              f"- Declared candidate trials: {report['trial_governance']['trial_count']}",
+              f"- CSCV/PBO status: {report['trial_governance']['pbo_status']}",
+              f"- CSCV/PBO estimate: {report['trial_governance'].get('cscv_pbo', {}).get('pbo_estimate', 'not computed')}",
               "- Research-only; no paper ledgers accessed or changed; no live orders.", "",
               "## Normal-cost out-of-sample results", "",
               "| Lookback | Return | PF | Max DD | Trades | OOS windows |",
