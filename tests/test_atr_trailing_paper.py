@@ -50,6 +50,50 @@ class AtrTrailingForwardPaperTests(unittest.TestCase):
             self.assertEqual(again["processed_new_candles"], 0)
             self.assertEqual(again["completed_trades"], 0)
 
+    def test_open_position_equity_includes_estimated_exit_fee_and_slippage(self):
+        four_hour, daily = self.market()
+        fee_rate = 0.002
+        slippage_rate = 0.001
+        with tempfile.TemporaryDirectory() as folder:
+            path = f"{folder}/atr.json"
+            seed_atr_trailing_account(four_hour, daily, path)
+            index = len(four_hour)
+            close = 100.0 + index * 0.1
+            signal = {
+                "timestamp": index * 4 * 3600,
+                "open": close - 0.05, "high": close + 0.5,
+                "low": close - 0.5, "close": close,
+            }
+            fill = dict(signal)
+            fill["timestamp"] += 4 * 3600
+            fill["open"] += 0.1
+            fill["high"] += 0.1
+            fill["low"] += 0.1
+            fill["close"] += 0.1
+            opened = update_atr_trailing_account(
+                four_hour + [signal, fill], daily, path,
+                fee_rate=fee_rate, slippage_rate=slippage_rate,
+            )
+            self.assertTrue(opened["open_position"])
+            with open(path, encoding="utf-8") as handle:
+                state = json.load(handle)
+            raw_equity = state["cash"] + state["quantity"] * state["previous_close"]
+            expected = (
+                state["cash"]
+                + state["quantity"] * state["previous_close"]
+                * (1.0 - slippage_rate) * (1.0 - fee_rate)
+            )
+            self.assertAlmostEqual(opened["equity_usd"], expected, places=8)
+            self.assertAlmostEqual(
+                opened["equity_after_estimated_exit_costs_usd"], expected, places=8
+            )
+            self.assertLess(opened["equity_usd"], raw_equity)
+            repeated = update_atr_trailing_account(
+                four_hour + [signal, fill], daily, path,
+                fee_rate=fee_rate, slippage_rate=slippage_rate,
+            )
+            self.assertAlmostEqual(repeated["equity_usd"], expected, places=8)
+
     def test_fixture_has_bullish_prior_daily_regime_and_ema_alignment(self):
         four_hour, daily = self.market()
         timestamp = len(four_hour) * 4 * 3600
