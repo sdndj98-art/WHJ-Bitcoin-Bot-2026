@@ -156,6 +156,16 @@ def _write_json_atomically(payload, path):
 _TRANSACTION_FILE = ".qualified_forward_paper_transaction.json"
 
 
+
+def _fsync_directory(directory):
+    """Persist directory-entry changes before advancing a ledger transaction."""
+    descriptor = os.open(Path(directory), os.O_RDONLY)
+    try:
+        os.fsync(descriptor)
+    finally:
+        os.close(descriptor)
+
+
 def _restore_transaction(directory, journal):
     """Restore the pre-publication bytes recorded in a pending transaction."""
     root = Path(directory)
@@ -193,7 +203,10 @@ def _restore_transaction(directory, journal):
                 raise
         else:
             target.unlink(missing_ok=True)
+    # Persist every restored rename/removal before deleting the only rollback journal.
+    _fsync_directory(root)
     (root / _TRANSACTION_FILE).unlink(missing_ok=True)
+    _fsync_directory(root)
 
 
 def _recover_qualified_transaction(directory):
@@ -235,21 +248,15 @@ def _publish_qualified_ledgers(directory, staged_paths):
     journal = {"version": 1, "backups": backups}
     journal_path = root / _TRANSACTION_FILE
     _write_json_atomically(journal, journal_path)
+    # The rollback journal must be durable before the first live ledger is replaced.
+    _fsync_directory(root)
     try:
         for filename in sorted(filenames):
             os.replace(staged_paths[filename], root / filename)
         # Ensure directory entries are flushed before removing the recovery journal.
-        directory_fd = os.open(root, os.O_RDONLY)
-        try:
-            os.fsync(directory_fd)
-        finally:
-            os.close(directory_fd)
+        _fsync_directory(root)
         journal_path.unlink()
-        directory_fd = os.open(root, os.O_RDONLY)
-        try:
-            os.fsync(directory_fd)
-        finally:
-            os.close(directory_fd)
+        _fsync_directory(root)
     except Exception:
         # Immediate rollback for ordinary exceptions. If rollback itself fails,
         # leave the journal so the next invocation refuses to proceed until recovery.
