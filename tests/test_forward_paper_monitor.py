@@ -1,4 +1,5 @@
 import json
+import forward_paper_monitor
 import tempfile
 import unittest
 from unittest.mock import patch
@@ -525,6 +526,23 @@ class ForwardPaperMonitorTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "imputed"):
             validate_hourly_feed(candles, last_close + 60)
 
+
+    def test_main_uses_documented_kraken_cvd_journal_and_checkpoint_paths(self):
+        with patch("forward_paper_monitor.load_two_year_candles", return_value=[{"timestamp": 1}]):
+            with patch("forward_paper_monitor.process_forward_accounts", return_value={"status": "PAPER_MONITORING"}) as processor:
+                with patch("forward_paper_monitor.write_report_atomically"):
+                    with patch("builtins.print"):
+                        forward_paper_monitor.main()
+        kwargs = processor.call_args.kwargs
+        self.assertEqual(
+            kwargs["cvd_journal_path"],
+            "state/kraken_btc_usd_trades.jsonl",
+        )
+        self.assertEqual(
+            kwargs["cvd_checkpoint_path"],
+            "state/kraken_btc_usd_trades.jsonl.checkpoint.json",
+        )
+        self.assertTrue(kwargs["require_cvd_confirmation"])
 
     def test_forward_monitor_loads_verified_cvd_and_reports_entry_gate(self):
         candles = self.make_candles()
