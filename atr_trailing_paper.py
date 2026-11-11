@@ -97,10 +97,105 @@ def _load(path, initial_cash):
         state = json.loads(target.read_text(encoding="utf-8"))
     except (OSError, json.JSONDecodeError) as exc:
         raise ValueError("ATR paper state is unreadable; refusing to reset it") from exc
+    if not isinstance(state, dict):
+        raise ValueError("ATR paper state must be a JSON object")
     if state.get("strategy") != "ema20_50_daily_sma200_atr3_trailing":
         raise ValueError("ATR paper state strategy mismatch")
-    if float(state.get("initial_cash", -1)) != float(initial_cash):
-        raise ValueError("ATR paper initial cash mismatch")
+
+    required = (
+        "initial_cash", "cash", "quantity", "equity", "peak_equity",
+        "max_drawdown_pct", "ema20", "ema50", "atr14", "previous_close",
+        "position_peak", "pending_action", "last_timestamp",
+        "forward_seed_timestamp", "daily_bucket", "daily_start_equity",
+        "completed_trades", "wins", "losses", "consecutive_losses",
+        "fees_paid", "trades", "paused", "pause_reason",
+        "processed_new_candles", "last_signal", "last_daily_regime",
+        "last_setup",
+    )
+    if any(key not in state for key in required):
+        raise ValueError("ATR paper state is missing required fields")
+
+    try:
+        expected_cash = _finite(initial_cash, "initial_cash", 0)
+        stored_initial = _finite(state["initial_cash"], "state initial_cash", 0)
+        if stored_initial != expected_cash or expected_cash <= 0:
+            raise ValueError("ATR paper initial cash mismatch")
+
+        for key in ("cash", "quantity", "equity", "peak_equity",
+                    "max_drawdown_pct", "daily_start_equity", "fees_paid"):
+            _finite(state[key], f"state {key}", 0)
+        for key in ("ema20", "ema50", "atr14", "previous_close"):
+            _finite(state[key], f"state {key}", 0.000000001)
+        if state["daily_start_equity"] <= 0 or state["peak_equity"] <= 0:
+            raise ValueError("invalid positive equity checkpoint")
+        if state["max_drawdown_pct"] > 100:
+            raise ValueError("invalid maximum drawdown")
+        for key in ("last_timestamp", "forward_seed_timestamp"):
+            number = _finite(state[key], f"state {key}", 0)
+            if not number.is_integer():
+                raise ValueError(f"state {key} must be whole seconds")
+        for key in ("completed_trades", "wins", "losses",
+                    "consecutive_losses", "processed_new_candles"):
+            value = state[key]
+            if isinstance(value, bool) or not isinstance(value, int) or value < 0:
+                raise ValueError(f"state {key} must be a non-negative integer")
+        if state["wins"] + state["losses"] != state["completed_trades"]:
+            raise ValueError("inconsistent completed trade counters")
+        if state["forward_seed_timestamp"] > state["last_timestamp"]:
+            raise ValueError("forward seed timestamp is after last timestamp")
+        if not isinstance(state["daily_bucket"], str) or not state["daily_bucket"]:
+            raise ValueError("invalid daily bucket")
+        datetime.fromisoformat(state["daily_bucket"])
+        if state["pending_action"] not in (None, "buy", "sell"):
+            raise ValueError("invalid pending action")
+        if not isinstance(state["paused"], bool):
+            raise ValueError("invalid paused flag")
+        if state["pause_reason"] is not None and not isinstance(state["pause_reason"], str):
+            raise ValueError("invalid pause reason")
+        if not isinstance(state["last_signal"], str):
+            raise ValueError("invalid last signal")
+        for key in ("last_daily_regime", "last_setup"):
+            if state[key] is not None and not isinstance(state[key], bool):
+                raise ValueError(f"invalid {key} flag")
+        if state["position_peak"] is not None:
+            _finite(state["position_peak"], "state position_peak", 0.000000001)
+        if not isinstance(state["trades"], list):
+            raise ValueError("state trades must be a list")
+        for trade in state["trades"]:
+            if not isinstance(trade, dict):
+                raise ValueError("invalid trade record")
+            for key in ("entry_timestamp", "entry_price", "quantity", "entry_fee"):
+                if key not in trade:
+                    raise ValueError("incomplete trade record")
+            for key in ("entry_price", "quantity", "entry_fee"):
+                _finite(trade[key], f"trade {key}", 0)
+            entry_time = _finite(trade["entry_timestamp"], "trade entry_timestamp", 0)
+            if not entry_time.is_integer() or trade["entry_price"] <= 0 or trade["quantity"] <= 0:
+                raise ValueError("invalid trade entry")
+            exit_fields = ("exit_timestamp", "exit_price", "exit_fee", "pnl_usd")
+            if any(key in trade for key in exit_fields) and not all(key in trade for key in exit_fields):
+                raise ValueError("incomplete trade exit")
+            if all(key in trade for key in exit_fields):
+                exit_time = _finite(trade["exit_timestamp"], "trade exit_timestamp", 0)
+                _finite(trade["exit_price"], "trade exit_price", 0.000000001)
+                _finite(trade["exit_fee"], "trade exit_fee", 0)
+                _finite(trade["pnl_usd"], "trade pnl_usd")
+                if not exit_time.is_integer() or exit_time < entry_time:
+                    raise ValueError("invalid trade exit timestamp")
+        open_trades = [trade for trade in state["trades"] if "exit_timestamp" not in trade]
+        if len(open_trades) > 1:
+            raise ValueError("multiple open trades in single-position account")
+        if state["quantity"] > 0:
+            if len(open_trades) != 1 or not math.isclose(
+                state["quantity"], float(open_trades[0]["quantity"]), rel_tol=1e-9, abs_tol=1e-12
+            ):
+                raise ValueError("open position does not match trade ledger")
+        elif open_trades:
+            raise ValueError("open trade exists without account quantity")
+    except (TypeError, ValueError, OverflowError) as exc:
+        if isinstance(exc, ValueError) and str(exc).startswith("ATR paper"):
+            raise
+        raise ValueError("ATR paper state validation failed") from exc
     return state
 
 
