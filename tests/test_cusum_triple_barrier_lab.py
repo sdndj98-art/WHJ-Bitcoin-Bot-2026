@@ -27,7 +27,7 @@ class CusumTripleBarrierLabTests(unittest.TestCase):
 
     def test_triple_barrier_enters_after_event_and_stops_on_first_touch(self):
         closes = [100.0, 100.0, 100.0, 103.0, 104.0, 105.0]
-        volatility = [None, None, 0.01, 0.01, 0.01, 0.01]
+        volatility = [None, 0.01, 0.01, 0.01, 0.01, 0.01]
         labels = triple_barrier_labels(
             closes, [1], volatility, profit_take=2.0, stop_loss=2.0, max_holding=3
         )
