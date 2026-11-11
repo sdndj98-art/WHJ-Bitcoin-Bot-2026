@@ -113,7 +113,7 @@ def evaluate_regime_fold(bars, oos_start, oos_end, fee=0.001, slippage=0.0005):
         exits = [False] * len(fold)
         for j in range(local_start, len(fold)):
             original = start + j
-            entries[j] = bool(states[original] and (j == 0 or not states[original - 1]))
+            entries[j] = bool(states[original] and (j == local_start or not states[original - 1]))
             exits[j] = bool(not states[original] and j > 0 and states[original - 1])
         result[name] = simulate_ohlc_risk(
             [r["open"] for r in fold], [r["high"] for r in fold],
