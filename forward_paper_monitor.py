@@ -254,7 +254,14 @@ def assess_sleeve_health(account, min_closed_trades=30, review_drawdown_pct=8.0)
 
 
 def _account_rows(bars):
-    return [[int(row["timestamp"] // 1000), 0, 0, 0, str(row["close"])] for row in bars]
+    """Preserve synthetic-bar execution blocks when adapting OHLCV to paper rows."""
+    return [
+        [
+            int(row["timestamp"] // 1000), 0, 0, 0, str(row["close"]),
+            not bool(row.get("imputed", False)),
+        ]
+        for row in bars
+    ]
 
 
 
