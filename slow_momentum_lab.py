@@ -145,7 +145,10 @@ def evaluate_slow_momentum(closes, fee=0.001, slippage=0.0005,
             "final_equity_usd": round(equity, 4),
         })
 
-    stress = evaluate_cost_stress(prices, fee, slippage, lookbacks)
+    stress = {
+        "2x": evaluate_cost_stress(prices, fee, slippage, lookbacks, multiplier=2.0),
+        "3x": evaluate_cost_stress(prices, fee, slippage, lookbacks, multiplier=3.0),
+    }
     return {
         "mode": "DAILY_CLOSE_SLOW_TSMOM_FIXED_RULE_RESEARCH",
         "signal_rule": "Long when close[t] > close[t-lookback]; otherwise cash.",
@@ -160,26 +163,58 @@ def evaluate_slow_momentum(closes, fee=0.001, slippage=0.0005,
             "walk_forward_windows": benchmark[1:],
         },
         "candidates": results,
-        "two_x_cost_stress": stress,
+        "cost_stress": stress,
         "research_only": True,
         "execution_enabled": False,
         "selection_warning": "No winner is selected; all lookbacks are reported and the holdout must not be used for tuning.",
     }
 
 
-def evaluate_cost_stress(closes, fee, slippage, lookbacks):
-    """Re-run the same fixed signals at twice the fee and slippage."""
-    stressed_fee = min(fee * 2.0, 0.999999)
-    stressed_slippage = min(slippage * 2.0, 0.999999)
+def evaluate_cost_stress(closes, fee, slippage, lookbacks, multiplier=2.0):
+    """Re-run candidates and matched buy-and-hold at multiplied costs."""
+    if isinstance(multiplier, bool) or not isinstance(multiplier, (int, float)) or multiplier < 1:
+        raise ValueError("cost multiplier must be a number >= 1")
+    stressed_fee = min(fee * multiplier, 0.999999)
+    stressed_slippage = min(slippage * multiplier, 0.999999)
     split = int(len(closes) * 0.70)
+    edges = [split + ((len(closes) - split) * k) // 3 for k in range(4)]
     result = {}
     for lookback in lookbacks:
         signals = momentum_signals(closes, lookback)
-        result[str(lookback)] = _simulate(
-            closes, signals, split, len(closes), stressed_fee, stressed_slippage
-        )
+        result[str(lookback)] = {
+            "out_of_sample": _simulate(
+                closes, signals, split, len(closes), stressed_fee, stressed_slippage
+            ),
+            "walk_forward_windows": [
+                _simulate(
+                    closes, signals, edges[k], edges[k + 1],
+                    stressed_fee, stressed_slippage
+                )
+                for k in range(3)
+            ],
+        }
+
+    def buy_and_hold(start, end):
+        allocation = INITIAL_EQUITY * ALLOCATION_FRACTION
+        entry = closes[start] * (1.0 + stressed_slippage)
+        units = allocation * (1.0 - stressed_fee) / entry
+        proceeds = units * closes[end - 1] * (1.0 - stressed_slippage)
+        proceeds *= 1.0 - stressed_fee
+        equity = INITIAL_EQUITY - allocation + proceeds
+        return {
+            "return_pct": round((equity / INITIAL_EQUITY - 1.0) * 100.0, 4),
+            "final_equity_usd": round(equity, 4),
+        }
+
     return {
+        "multiplier": multiplier,
         "fee_per_side": stressed_fee,
         "slippage_per_side": stressed_slippage,
+        "matched_buy_and_hold": {
+            "out_of_sample": buy_and_hold(split, len(closes)),
+            "walk_forward_windows": [
+                buy_and_hold(edges[k], edges[k + 1]) for k in range(3)
+            ],
+        },
         "candidates": result,
     }
