@@ -117,6 +117,60 @@ def _simulate(closes, signals, start, end, fee, slippage):
     }
 
 
+def periodic_net_returns(closes, signals, start, end, fee=0.001, slippage=0.0005,
+                        allocation_fraction=ALLOCATION_FRACTION):
+    """Return aligned net-liquidation returns under the slow lab's exact fill rules.
+
+    Signal at close t is executed at close t+1. Returns include entry/exit
+    friction and mark any open position to net liquidation at each close.
+    This produces a return stream for diagnostics, not a separate strategy.
+    """
+    if not isinstance(closes, (list, tuple)) or len(closes) < 2:
+        raise ValueError("At least two closes are required")
+    if not isinstance(signals, (list, tuple)) or len(signals) != len(closes):
+        raise ValueError("signals must align with closes")
+    if any(type(value) is not bool for value in signals):
+        raise ValueError("signals must contain booleans")
+    for price in closes:
+        if isinstance(price, bool) or not isinstance(price, (int, float)) or not math.isfinite(price) or price <= 0:
+            raise ValueError("closes must be finite positive prices")
+    if isinstance(start, bool) or not isinstance(start, int) or start < 1:
+        raise ValueError("start must be an integer >= 1")
+    if isinstance(end, bool) or not isinstance(end, int) or end > len(closes) or end <= start:
+        raise ValueError("end must be an integer greater than start and <= data length")
+    if not (0 <= fee < 1 and 0 <= slippage < 1):
+        raise ValueError("fee and slippage must be between 0 and 1")
+    if not (0 < allocation_fraction <= ALLOCATION_FRACTION):
+        raise ValueError("allocation may not exceed the incumbent research cap")
+
+    cash = INITIAL_EQUITY
+    units = 0.0
+    previous_equity = INITIAL_EQUITY
+    returns = []
+    for index in range(start, end):
+        if signals[index - 1] and units == 0:
+            allocation = cash * allocation_fraction
+            fill = float(closes[index]) * (1.0 + slippage)
+            units = allocation * (1.0 - fee) / fill
+            cash -= allocation
+        elif not signals[index - 1] and units > 0:
+            fill = float(closes[index]) * (1.0 - slippage)
+            proceeds = units * fill * (1.0 - fee)
+            cash += proceeds
+            units = 0.0
+        if units > 0:
+            liquidation = units * float(closes[index]) * (1.0 - slippage)
+            liquidation *= 1.0 - fee
+            equity = cash + liquidation
+        else:
+            equity = cash
+        if equity <= 0 or previous_equity <= 0:
+            raise ValueError("Net liquidation equity became non-positive")
+        returns.append(equity / previous_equity - 1.0)
+        previous_equity = equity
+    return returns
+
+
 def _attach_matched_benchmark(candidate_metrics, benchmark_metrics):
     """Attach excess returns only after verifying identical evaluation boundaries."""
     if len(candidate_metrics) != len(benchmark_metrics):
