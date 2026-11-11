@@ -1,5 +1,5 @@
 import unittest
-from gold_market_data import load_xauusd_daily, parse_yahoo_chart
+from gold_market_data import load_gold_daily, parse_yahoo_chart
 
 
 def payload(n=1100):
@@ -46,7 +46,7 @@ class GoldMarketDataTests(unittest.TestCase):
         with self.assertRaises(RuntimeError):
             parse_yahoo_chart({"chart": {"error": {"description": "unavailable"}}})
         with self.assertRaises(ValueError):
-            load_xauusd_daily(period="1y")
+            load_gold_daily(period="1y")
 
 
 if __name__ == "__main__":
