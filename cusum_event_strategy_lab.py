@@ -222,6 +222,29 @@ def _evaluate_trades(bars, selected_events, sigma, fee, slippage):
     }
 
 
+def _purged_training_labels(labeled, oos_start):
+    cutoff = oos_start - PURGE_EMBARGO_BARS
+    return [
+        item for item in labeled
+        if item["index"] < oos_start and item["end_index"] < cutoff
+        and item["label"] in (-1, 1)
+    ]
+
+
+def _matched_buy_hold(bars, oos_start, oos_end, fee, slippage):
+    entry = bars[oos_start + 1]["open"] * (1.0 + slippage)
+    exit_price = bars[oos_end - 1]["close"] * (1.0 - slippage)
+    allocation = INITIAL_EQUITY * ALLOCATION_FRACTION
+    units = allocation * (1.0 - fee) / entry
+    final = INITIAL_EQUITY - allocation + units * exit_price * (1.0 - fee)
+    return {
+        "return_pct": round((final / INITIAL_EQUITY - 1.0) * 100.0, 4),
+        "final_equity_usd": round(final, 6),
+        "allocation_fraction": ALLOCATION_FRACTION,
+        "uninvested_cash_usd": round(INITIAL_EQUITY - allocation, 6),
+    }
+
+
 def evaluate_cusum_fold(bars, oos_start, oos_end, fee=0.001, slippage=0.0005):
     """Fit only on purged pre-fold labels; test events are strictly later."""
     rows = _validate_bars(bars)
@@ -242,10 +265,7 @@ def evaluate_cusum_fold(bars, oos_start, oos_end, fee=0.001, slippage=0.0005):
         if outcome is not None:
             labeled.append({"index": event, "label": outcome["label"],
                             "end_index": outcome["exit_index"], "features": features[event]})
-    cutoff = oos_start - PURGE_EMBARGO_BARS
-    training = [item for item in labeled
-                if item["index"] < oos_start and item["end_index"] < cutoff
-                and item["label"] in (-1, 1)]
+    training = _purged_training_labels(labeled, oos_start)
     if len(training) < MIN_TRAINING_LABELS:
         return {
             "status": "INSUFFICIENT_EVIDENCE", "training_labels": len(training),
@@ -260,6 +280,8 @@ def evaluate_cusum_fold(bars, oos_start, oos_end, fee=0.001, slippage=0.0005):
             if probability >= PROBABILITY_THRESHOLD:
                 test_events.append({"index": item["index"], "probability": probability})
     result = _evaluate_trades(rows, test_events, sigma, fee, slippage)
+    result["buy_and_hold"] = _matched_buy_hold(rows, oos_start, oos_end, fee, slippage)
+    result["cash"] = {"return_pct": 0.0, "final_equity_usd": INITIAL_EQUITY}
     result.update({
         "status": "EVALUATED",
         "training_labels": model["training_labels"],
@@ -274,5 +296,8 @@ def evaluate_cusum_fold(bars, oos_start, oos_end, fee=0.001, slippage=0.0005):
         "profit_take_vol_multiplier": PROFIT_TAKE_VOL_MULTIPLIER,
         "stop_loss_vol_multiplier": STOP_LOSS_VOL_MULTIPLIER,
         "execution": "next_bar_open; gap-aware; same-bar stop-first; time exit next open",
+        "allocation_fraction": ALLOCATION_FRACTION,
+        "fee_per_side": fee,
+        "slippage_per_side": slippage,
     })
     return result
