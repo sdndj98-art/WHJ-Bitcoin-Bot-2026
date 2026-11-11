@@ -134,9 +134,11 @@ class QualifiedForwardPaperMonitorTests(unittest.TestCase):
         candles = self.candles()
         with tempfile.TemporaryDirectory() as folder:
             atr_path = Path(folder) / ATR_FILE
+            from qualified_forward_paper_monitor import _native_bars
+            latest_completed_4h = _native_bars(candles, 4)[-1]["timestamp"]
             atr_path.write_text(json.dumps({
                 "strategy": "ema20_50_daily_sma200_atr3_trailing",
-                "last_timestamp": int(candles[-1]["timestamp"] / 1000),
+                "last_timestamp": latest_completed_4h,
                 "processed_new_candles": "not-an-integer",
             }), encoding="utf-8")
             with self.assertRaisesRegex(ValueError, "processing counter is invalid"):
