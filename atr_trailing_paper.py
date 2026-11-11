@@ -89,6 +89,13 @@ def _daily_regime(daily, four_hour_timestamp):
     return daily[index]["close"] > average
 
 
+def _equity_after_estimated_exit_costs(state, price, fee_rate, slippage_rate):
+    """Mark an open position at net liquidation value after estimated exit costs."""
+    liquidation = float(state["quantity"]) * float(price) * (1.0 - slippage_rate)
+    liquidation -= liquidation * fee_rate
+    return float(state["cash"]) + liquidation
+
+
 def _load(path, initial_cash):
     target = Path(path)
     if not target.exists():
@@ -295,10 +302,10 @@ def update_atr_trailing_account(four_hour_bars, daily_bars, state_path,
     if len(four_hour) < 1 or len(daily) < 200:
         raise ValueError("Insufficient OHLC data for ATR strategy update")
     if four_hour[-1]["timestamp"] <= state["last_timestamp"]:
-        return _summary(state)
+        return _summary(state, fee_rate, slippage_rate)
     new_bars = [bar for bar in four_hour if bar["timestamp"] > state["last_timestamp"]]
     if not new_bars:
-        return _summary(state)
+        return _summary(state, fee_rate, slippage_rate)
     if new_bars[0]["timestamp"] - state["last_timestamp"] != 4 * 3600:
         raise ValueError("New 4h candles must continue exactly from the saved timestamp")
     for previous, current in zip(new_bars, new_bars[1:]):
@@ -323,7 +330,9 @@ def update_atr_trailing_account(four_hour_bars, daily_bars, state_path,
             # Synthetic bars cannot fill orders, but their mark-to-market value
             # must still trigger risk guards. Otherwise a loss breach that
             # recovers before the next executable bar could go unnoticed.
-            state["equity"] = state["cash"] + state["quantity"] * close
+            state["equity"] = _equity_after_estimated_exit_costs(
+                state, close, fee_rate, slippage_rate
+            )
             state["peak_equity"] = max(state["peak_equity"], state["equity"])
             drawdown = (
                 (state["peak_equity"] - state["equity"]) / state["peak_equity"]
@@ -371,7 +380,9 @@ def update_atr_trailing_account(four_hour_bars, daily_bars, state_path,
             continue
 
         # Apply risk guards to the current mark before allowing a queued entry.
-        pre_equity = state["cash"] + state["quantity"] * close
+        pre_equity = _equity_after_estimated_exit_costs(
+            state, close, fee_rate, slippage_rate
+        )
         state["peak_equity"] = max(state["peak_equity"], pre_equity)
         pre_drawdown = (
             (state["peak_equity"] - pre_equity) / state["peak_equity"]
@@ -422,7 +433,9 @@ def update_atr_trailing_account(four_hour_bars, daily_bars, state_path,
 
         state["pending_action"] = None
         state["pending_action_reason"] = None
-        state["equity"] = state["cash"] + state["quantity"] * close
+        state["equity"] = _equity_after_estimated_exit_costs(
+            state, close, fee_rate, slippage_rate
+        )
         state["peak_equity"] = max(state["peak_equity"], state["equity"])
         drawdown = (state["peak_equity"] - state["equity"]) / state["peak_equity"]
         state["max_drawdown_pct"] = max(state["max_drawdown_pct"], drawdown * 100.0)
@@ -461,17 +474,20 @@ def update_atr_trailing_account(four_hour_bars, daily_bars, state_path,
         state["last_timestamp"] = bar["timestamp"]
         state["processed_new_candles"] += 1
     _save(state_path, state)
-    return _summary(state)
+    return _summary(state, fee_rate, slippage_rate)
 
 
-def _summary(state):
-    equity = float(state["cash"]) + float(state["quantity"]) * float(state["previous_close"])
+def _summary(state, fee_rate, slippage_rate):
+    equity = _equity_after_estimated_exit_costs(
+        state, state["previous_close"], fee_rate, slippage_rate
+    )
     return {
         "strategy": state["strategy"],
         "mode": "FORWARD_ONLY_PAPER",
         "initial_cash_usd": state["initial_cash"],
         "cash_usd": round(state["cash"], 4),
         "equity_usd": round(equity, 4),
+        "equity_after_estimated_exit_costs_usd": round(equity, 4),
         "return_pct": round((equity / state["initial_cash"] - 1.0) * 100.0, 4),
         "completed_trades": state["completed_trades"],
         "wins": state["wins"],
