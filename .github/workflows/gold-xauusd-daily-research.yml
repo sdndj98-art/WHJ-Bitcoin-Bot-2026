@@ -1,4 +1,4 @@
-name: WHJ XAUUSD Gold Daily Research
+name: WHJ GC=F Gold Daily Research
 
 on:
   workflow_dispatch:
@@ -31,7 +31,7 @@ jobs:
         run: |
           python -m unittest discover -s tests -p 'test_gold_market_data.py' -v
           python -m unittest discover -s tests -p 'test_regime_ema_ohlc_lab.py' -v
-      - name: Evaluate XAUUSD daily historical folds
+      - name: Evaluate GC=F daily historical folds
         run: |
           python - <<'PY'
           import hashlib
@@ -45,7 +45,7 @@ jobs:
           n = len(bars)
           cuts = [int(n * x) for x in (0.55, 0.70, 0.85, 1.0)]
           if n < 1000 or any(cuts[i + 1] - cuts[i] < 300 for i in range(3)):
-              raise RuntimeError(f"Insufficient XAUUSD daily history or fold lengths: n={n}, cuts={cuts}")
+              raise RuntimeError(f"Insufficient GC=F daily history or fold lengths: n={n}, cuts={cuts}")
           serial = json.dumps(bars, sort_keys=True, separators=(",", ":"), allow_nan=False).encode()
           fingerprint = hashlib.sha256(serial).hexdigest()
           costs = {
@@ -61,8 +61,8 @@ jobs:
                   row["cost_stress"][label] = evaluate_regime_fold(bars, start, end, fee, slip)
               folds.append(row)
           report = {
-              "asset": "Gold spot reference XAU/USD",
-              "symbol": "XAUUSD=X",
+              "asset": "COMEX gold futures reference COMEX gold",
+              "symbol": "GC=F=X",
               "source": "Yahoo Finance chart API",
               "timeframe": "1d",
               "generated_at_utc": datetime.now(timezone.utc).isoformat(),
@@ -78,7 +78,7 @@ jobs:
                   "risk": "25% maximum allocation; 2% stop; 4% target; no leverage",
                   "benchmark": "matched 25% buy-and-hold with 75% cash plus all-cash baseline",
                   "costs_per_side": costs,
-                  "limitations": "Yahoo XAUUSD=X is a reference spot-price series, not broker bid/ask execution. Fixed fee/slippage are proxies; spread, swap/financing, broker markup, market impact, and holiday/session differences are not modelled.",
+                  "limitations": "Yahoo GC=F=X is a reference spot-price series, not broker bid/ask execution. Fixed fee/slippage are proxies; spread, swap/financing, broker markup, market impact, and holiday/session differences are not modelled.",
               },
               "folds": folds,
               "promotion_status": "NO_CANDIDATE_PROMOTED",
@@ -87,7 +87,7 @@ jobs:
           }
           Path("whj_xauusd_gold_report.json").write_text(json.dumps(report, indent=2, sort_keys=True), encoding="utf-8")
           lines = [
-              "# WHJ XAU/USD gold daily research", "",
+              "# WHJ COMEX gold gold daily research", "",
               f"- Generated UTC: {report['generated_at_utc']}",
               f"- Source: {report['source']} ({report['symbol']})",
               f"- Daily candles: {n}; SHA-256: `{fingerprint}`",
@@ -104,7 +104,7 @@ jobs:
                       lines.append(f"| {fold['fold']} | {level} | {name} | {metric['return_pct']:.4f}% | {metric['max_intrabar_ohlc_envelope_drawdown_pct']:.4f}% | {metric['closed_trades']} | {pf if pf is not None else '—'} | {result['buy_and_hold']['return_pct']:.4f}% | 0.0000% |")
           lines += [
               "",
-              "> XAU/USD reference data is not a broker execution feed. Costs are sensitivity proxies, not a quote of any broker's actual spread, commission, or overnight financing. Results are historical and do not establish future profitability. No paper ledger or order pathway is accessed.",
+              "> COMEX gold reference data is not a broker execution feed. Costs are sensitivity proxies, not a quote of any broker's actual spread, commission, or overnight financing. Results are historical and do not establish future profitability. No paper ledger or order pathway is accessed.",
           ]
           Path("whj_xauusd_gold_report.md").write_text("\n".join(lines) + "\n", encoding="utf-8")
           PY
