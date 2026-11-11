@@ -82,15 +82,21 @@ def build_regime_signals(bars):
     return {"ema50_200": baseline, "ema50_200_atr90_past180": filtered}
 
 
-def _buy_hold_return(bars, start, end, fee, slippage):
-    # Same OOS start convention as the strategy: first signal-close, next open.
+def _buy_hold_return(bars, start, end, fee, slippage, allocation_fraction=0.25):
+    """Buy-and-hold with the same initial capital allocation as the strategy."""
+    if not (0 < allocation_fraction <= 0.25):
+        raise ValueError("Benchmark allocation must be in (0, 0.25]")
     entry = bars[start + 1]["open"] * (1.0 + slippage)
     exit_price = bars[end - 1]["close"] * (1.0 - slippage)
-    units = INITIAL_EQUITY * (1.0 - fee) / entry
-    final = units * exit_price * (1.0 - fee)
+    allocated = INITIAL_EQUITY * allocation_fraction
+    cash = INITIAL_EQUITY - allocated
+    units = allocated * (1.0 - fee) / entry
+    final = cash + units * exit_price * (1.0 - fee)
     return {
         "return_pct": round((final / INITIAL_EQUITY - 1.0) * 100.0, 4),
         "final_equity_usd": round(final, 4),
+        "allocation_fraction": allocation_fraction,
+        "uninvested_cash_usd": round(cash, 4),
     }
 
 
