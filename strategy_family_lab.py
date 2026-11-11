@@ -138,7 +138,7 @@ def build_strategy_signals(candles):
             if len(recent) == 20 and len(history) >= 80:
                 compressed = sum(recent)/len(recent) < median(history)
                 signals["volatility_squeeze_breakout"][i] = compressed and price > max(high[i-20:i])
-        if i >= 13:
+        if i >= 14:
             lowest, highest = min(low[i-13:i+1]), max(high[i-13:i+1])
             if highest > lowest:
                 k = 100*(price-lowest)/(highest-lowest)
