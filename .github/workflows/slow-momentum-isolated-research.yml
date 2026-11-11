@@ -9,6 +9,7 @@ on:
       - "historical_research.py"
       - "research_governance.py"
       - "tests/test_research_governance.py"
+      - "tests/test_slow_momentum_lab.py"
       - ".github/workflows/slow-momentum-isolated-research.yml"
 
 permissions:
