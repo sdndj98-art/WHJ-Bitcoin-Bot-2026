@@ -157,7 +157,16 @@ class AtrTrailingForwardPaperTests(unittest.TestCase):
                 "low": price - 0.5, "close": price,
                 "execution_eligible": False,
             }
-            blocked = update_atr_trailing_account(four_hour + [synthetic], daily, path)
+            signal_bar = dict(synthetic)
+            signal_bar["execution_eligible"] = True
+            queued = update_atr_trailing_account(
+                four_hour + [signal_bar], daily, path
+            )
+            self.assertEqual(queued["pending_action"], "buy")
+            synthetic["timestamp"] += 4 * 3600
+            blocked = update_atr_trailing_account(
+                four_hour + [signal_bar, synthetic], daily, path
+            )
             self.assertEqual(blocked["last_signal"], "blocked_synthetic_bar")
             self.assertIsNone(blocked["pending_action"])
             self.assertFalse(blocked["open_position"])
@@ -167,9 +176,10 @@ class AtrTrailingForwardPaperTests(unittest.TestCase):
             for field in ("open", "high", "low", "close"):
                 real[field] += 0.1
             allowed = update_atr_trailing_account(
-                four_hour + [synthetic, real], daily, path
+                four_hour + [signal_bar, synthetic, real], daily, path
             )
-            self.assertEqual(allowed["last_signal"], "entry_queued")
+            self.assertFalse(allowed["open_position"])
+            self.assertEqual(allowed["completed_trades"], 0)
             self.assertEqual(allowed["pending_action"], "buy")
 
     def test_rejects_gap_between_saved_checkpoint_and_new_bar(self):
