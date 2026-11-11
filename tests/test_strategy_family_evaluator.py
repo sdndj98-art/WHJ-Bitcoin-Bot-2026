@@ -9,7 +9,7 @@ class StrategyFamilyEvaluatorTests(unittest.TestCase):
     def test_signal_at_close_fills_next_open_and_returns_following_open_interval(self):
         rows = self.candles([100, 110, 121, 133.1, 146.41])
         result = evaluate_candidate(rows, [True, True, True, True, True], 0, 0, 1)
-        self.assertAlmostEqual(result["strategy"]["net_return"], 0.21)
+        self.assertAlmostEqual(result["strategy"]["net_return"], 0.331)
         self.assertEqual(result["strategy"]["bars"], 3)
 
     def test_flat_candidate_has_no_market_exposure(self):
