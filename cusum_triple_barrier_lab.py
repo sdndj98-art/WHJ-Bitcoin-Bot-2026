@@ -6,15 +6,6 @@ must not be used as trading signals or fed into existing paper accounts.
 import math
 
 
-def _log_returns(closes):
-    returns = [0.0]
-    for previous, current in zip(closes, closes[1:]):
-        if previous <= 0 or current <= 0:
-            raise ValueError("prices must be positive")
-        returns.append(math.log(float(current) / float(previous)))
-    return returns
-
-
 def _validate_prices(closes, minimum=3):
     if not isinstance(closes, (list, tuple)) or len(closes) < minimum:
         raise ValueError(f"at least {minimum} closes are required")
@@ -25,19 +16,29 @@ def _validate_prices(closes, minimum=3):
             raise ValueError("prices must be finite and positive")
 
 
+def _log_returns(closes):
+    returns = [0.0]
+    for previous, current in zip(closes, closes[1:]):
+        returns.append(math.log(float(current) / float(previous)))
+    return returns
+
+
 def cusum_event_indices(closes, volatility_lookback=20, threshold_multiplier=1.0):
     """Return symmetric CUSUM event indices using past-only rolling volatility.
 
     At index t, the threshold is estimated from returns ending at t-1;
     the return at t can trigger an event but cannot change its own threshold.
     """
-    _validate_prices(closes, minimum=volatility_lookback + 2)
-    if isinstance(volatility_lookback, bool) or not isinstance(volatility_lookback, int) or volatility_lookback < 2:
+    if (isinstance(volatility_lookback, bool)
+            or not isinstance(volatility_lookback, int)
+            or volatility_lookback < 2):
         raise ValueError("volatility_lookback must be an integer >= 2")
-    if not isinstance(threshold_multiplier, (int, float)) or isinstance(threshold_multiplier, bool):
-        raise ValueError("threshold_multiplier must be numeric")
-    if not math.isfinite(threshold_multiplier) or threshold_multiplier <= 0:
+    if (isinstance(threshold_multiplier, bool)
+            or not isinstance(threshold_multiplier, (int, float))
+            or not math.isfinite(threshold_multiplier)
+            or threshold_multiplier <= 0):
         raise ValueError("threshold_multiplier must be finite and positive")
+    _validate_prices(closes, minimum=volatility_lookback + 2)
 
     returns = _log_returns(closes)
     positive_sum = 0.0
@@ -61,9 +62,9 @@ def cusum_event_indices(closes, volatility_lookback=20, threshold_multiplier=1.0
 
 def trailing_volatility(closes, lookback=20):
     """Causal close-to-close log-return volatility aligned to each close."""
-    _validate_prices(closes, minimum=lookback + 2)
     if isinstance(lookback, bool) or not isinstance(lookback, int) or lookback < 2:
         raise ValueError("lookback must be an integer >= 2")
+    _validate_prices(closes, minimum=lookback + 2)
     returns = _log_returns(closes)
     values = [None] * len(closes)
     for i in range(lookback + 1, len(closes)):
@@ -82,8 +83,10 @@ def triple_barrier_labels(closes, event_indices, volatility,
     the event. The event's volatility must be available at event time.
     """
     _validate_prices(closes, minimum=3)
-    if len(volatility) != len(closes):
+    if not isinstance(volatility, (list, tuple)) or len(volatility) != len(closes):
         raise ValueError("volatility must align with closes")
+    if not isinstance(event_indices, (list, tuple)):
+        raise ValueError("event_indices must be a list or tuple")
     if not isinstance(max_holding, int) or isinstance(max_holding, bool) or max_holding < 1:
         raise ValueError("max_holding must be a positive integer")
     for value in (profit_take, stop_loss):
