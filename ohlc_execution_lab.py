@@ -41,7 +41,7 @@ def simulate_ohlc_risk(
             raise ValueError("OHLC prices must be finite positive numbers")
         if h < max(o, l, c) or l > min(o, h, c):
             raise ValueError("Invalid OHLC candle at index %d" % i)
-    if any(type(x) is not bool for x in entry_signals + exit_signals):
+    if any(type(x) is not bool for seq in (entry_signals, exit_signals) for x in seq):
         raise ValueError("Signals must contain booleans")
     if not (0 <= fee < 1 and 0 <= slippage < 1):
         raise ValueError("Fee and slippage must be in [0, 1)")
