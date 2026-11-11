@@ -184,6 +184,7 @@ def update_market_data_cache(
         start_ms = max(0, cached[-1]["timestamp"] - overlap_hours * INTERVAL_MS)
         fetched = _fetch_incremental(start_ms, cutoff)
         additions = [{
+            # fetch_page already normalizes Coinbase timestamps to milliseconds.
             "timestamp": int(row[0]), "open": float(row[1]), "high": float(row[2]),
             "low": float(row[3]), "close": float(row[4]), "volume": float(row[5]),
             "imputed": False,
