@@ -11,10 +11,12 @@ on:
     paths:
       - "forward_paper_monitor.py"
       - "qualified_forward_paper_monitor.py"
+      - "atr_trailing_paper.py"
       - "paper_account.py"
       - "historical_research.py"
       - "tests/test_forward_paper_monitor.py"
       - "tests/test_qualified_forward_paper_monitor.py"
+      - "tests/test_atr_trailing_paper.py"
       - ".github/workflows/forward-paper-monitor.yml"
 
 permissions:
