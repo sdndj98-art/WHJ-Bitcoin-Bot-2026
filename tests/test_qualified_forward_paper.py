@@ -68,6 +68,45 @@ class QualifiedForwardPaperCandidateTests(unittest.TestCase):
             self.assertTrue(updated["open_position"])
             self.assertEqual(updated["completed_trades"], 0)
 
+    def test_normal_exit_signal_on_synthetic_bar_is_recomputed_after_rebound(self):
+        with tempfile.TemporaryDirectory() as folder:
+            path = f"{folder}/paper.json"
+            history = [
+                [index * 3600, 0, 0, 0, str(100.0 + index)]
+                for index in range(200)
+            ]
+            seed_forward_paper_account(
+                history, state_path=path, initial_cash=1000.0,
+                strategy="sma_trend",
+            )
+            limits = {
+                "strategy": "sma_trend",
+                "daily_loss_fraction": 0.99,
+                "max_drawdown_fraction": 0.99,
+            }
+            opened = update_paper_account(
+                [[200 * 3600, 0, 0, 0, "300", True]],
+                state_path=path, **limits,
+            )
+            self.assertTrue(opened["open_position"])
+            update_paper_account(
+                [[201 * 3600, 0, 0, 0, "150", False]],
+                state_path=path, **limits,
+            )
+            held = update_paper_account(
+                [[202 * 3600, 0, 0, 0, "300", False]],
+                state_path=path, **limits,
+            )
+            self.assertTrue(held["open_position"])
+            self.assertFalse(held["pending_exit_on_next_executable"])
+            rebound = update_paper_account(
+                [[203 * 3600, 0, 0, 0, "310", True]],
+                state_path=path, **limits,
+            )
+            self.assertTrue(rebound["open_position"])
+            self.assertEqual(rebound["completed_trades"], 0)
+            self.assertFalse(rebound["pending_exit_on_next_executable"])
+
     def test_qualified_candidate_ledgers_are_idempotent_on_repeated_history(self):
         with tempfile.TemporaryDirectory() as folder:
             candles = self.candles()
