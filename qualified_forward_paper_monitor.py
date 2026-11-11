@@ -330,7 +330,7 @@ def process_qualified_forward_candidates(
             shutil.copy2(atr_path, stage_dir / ATR_FILE)
 
         results = {}
-            for name, config in CANDIDATES.items():
+        for name, config in CANDIDATES.items():
             native = bars[config["hours"]]
             rows = _account_rows(native)
             path = stage_dir / config["file"]
@@ -370,7 +370,7 @@ def process_qualified_forward_candidates(
         atr_account = update_atr_trailing_account(
             four_hour,
             daily,
-            str(atr_path),
+            str(stage_dir / ATR_FILE),
             initial_cash=250.0,
             allocation_fraction=0.10,
             max_drawdown_fraction=0.10,
