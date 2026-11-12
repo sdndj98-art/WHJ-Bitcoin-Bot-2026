@@ -103,6 +103,7 @@ def build_free_report(root: Path) -> dict:
             "owner_role": task["owner_role"],
             "reviewer_role": task["reviewer_role"],
             "status": "collected" if inspected else "blocked",
+            "execution_status": "not_executed_plan_only",
             "recommendation": "needs_human",
             "files_expected": paths,
             "files_inspected": inspected,
@@ -121,6 +122,8 @@ def build_free_report(root: Path) -> dict:
         "task_count": len(reports),
         "collected_tasks": sum(row["status"] == "collected" for row in reports),
         "blocked_tasks": sum(row["status"] == "blocked" for row in reports),
+        "executed_research_tasks": 0,
+        "plan_only_tasks": len(reports),
         "live_trading_enabled": False,
         "repository_writes_enabled": False,
         "paper_ledger_mutation_enabled": False,
@@ -143,7 +146,9 @@ def write_report(root: Path, output_dir: Path) -> dict:
         "- Provider: none (deterministic Python checks only)",
         "- API calls: 0",
         "- Cost: $0.00",
-        f"- Tasks collected: {result['collected_tasks']}/{result['task_count']}",
+        f"- Repository inventories collected: {result['collected_tasks']}/{result['task_count']}",
+        f"- Research tasks actually executed: {result['executed_research_tasks']}/{result['task_count']} (PLAN ONLY)",
+        "- This run does not mean 24 research reviews were completed; it only inventories configured source files.",
         "- Profitability claims: none",
         "- Live trading / repository writes / paper-ledger mutation: disabled",
         "",
@@ -183,8 +188,9 @@ def main(argv=None) -> int:
     result = write_report(Path(args.root), Path(args.output_dir))
     print(
         f"Free WHJ workers complete: tasks={result['task_count']} "
-        f"collected={result['collected_tasks']} blocked={result['blocked_tasks']} "
-        "api_calls=0 cost_usd=0.00"
+        f"inventories_collected={result['collected_tasks']} blocked={result['blocked_tasks']} "
+        f"research_tasks_executed={result['executed_research_tasks']} "
+        "mode=PLAN_ONLY api_calls=0 cost_usd=0.00"
     )
     return 0
 
