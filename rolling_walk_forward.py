@@ -5,6 +5,8 @@ test block. The selected signal is frozen for the next contiguous block.
 Signals must be causal completed-bar booleans; fills use the common evaluator.
 This module has no account, ledger, exchange, order, or promotion integration.
 """
+import math
+
 from strategy_family_evaluator import evaluate_candidate
 
 
@@ -36,6 +38,13 @@ def evaluate_rolling_walk_forward(
         raise ValueError("training requires >=4 bars and each test block >=3 bars")
     if initial_train_bars >= len(candles):
         raise ValueError("initial training window must leave test data")
+    if (isinstance(allocation_fraction, bool)
+            or not isinstance(allocation_fraction, (int, float))
+            or not math.isfinite(allocation_fraction)
+            or not 0 < allocation_fraction <= 0.25):
+        raise ValueError("allocation_fraction must be finite and in (0, 0.25]")
+    if any(not isinstance(name, str) or not name for name in signals_by_candidate):
+        raise ValueError("candidate names must be non-empty strings")
     names = sorted(signals_by_candidate)
     for name in names:
         series = signals_by_candidate[name]
