@@ -133,7 +133,7 @@ class CvdPaperOverlayTests(unittest.TestCase):
                 for offset in range(12)
             ]
             journal.write_text(
-                "".join(json.dumps(event, separators=(",", ":")) + "\\n" for event in events),
+                "".join(json.dumps(event, separators=(",", ":")) + "\n" for event in events),
                 encoding="utf-8",
             )
             checkpoint = build_continuity_checkpoint(str(journal), "BTC/USD", 1011)
