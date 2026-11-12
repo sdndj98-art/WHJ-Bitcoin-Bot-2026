@@ -16,6 +16,7 @@ from trade_journal_checkpoint import (
     load_continuity_checkpoint,
     save_continuity_checkpoint_atomic,
     validate_continuity_checkpoint,
+    upgrade_legacy_continuity_checkpoint,
 )
 
 from kraken_order_flow import (
@@ -99,6 +100,11 @@ def run_collector(args, stop_event, websocket_factory=None):
                     "continuity cannot be certified"
                 )
             checkpoint = load_continuity_checkpoint(checkpoint_path)
+            if checkpoint.get("version") == 1:
+                checkpoint = upgrade_legacy_continuity_checkpoint(
+                    checkpoint, trade_log_path, pair, ledger.last_trade_id
+                )
+                save_continuity_checkpoint_atomic(checkpoint_path, checkpoint)
             metadata = validate_continuity_checkpoint(
                 checkpoint, trade_log_path, pair, ledger.last_trade_id
             )
