@@ -335,12 +335,14 @@ def process_forward_accounts(
             )
     directory = Path(state_dir)
     results = {}
+    # Dedicated $10 BTC paper wallet split equally across five independent sleeves.
+    # This replaces the former research-only $1,900 aggregate sizing.
     configurations = (
-        ("1h_sma_trend", 1, "sma_trend", 200.0),
-        ("1h_ema_trend", 1, "ema_trend", 200.0),
-        ("1h_rsi14_mean_reversion", 1, "rsi14_mean_reversion", 200.0),
-        ("4h", 4, "ema50_200_regime", 500.0),
-        ("6h", 6, "ema50_200_regime", 500.0),
+        ("1h_sma_trend", 1, "sma_trend", 2.0),
+        ("1h_ema_trend", 1, "ema_trend", 2.0),
+        ("1h_rsi14_mean_reversion", 1, "rsi14_mean_reversion", 2.0),
+        ("4h", 4, "ema50_200_regime", 2.0),
+        ("6h", 6, "ema50_200_regime", 2.0),
     )
     # Preflight every timeframe before creating or updating any account ledger.
     # Each sleeve needs 200 complete native-timeframe bars for indicator warm-up.
