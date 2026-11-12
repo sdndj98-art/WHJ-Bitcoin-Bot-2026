@@ -194,7 +194,7 @@ class KrakenCvdResearchTests(unittest.TestCase):
         self.assertEqual(upgraded["first_trade_timestamp_ns"], 10_000_000_000)
         self.assertEqual(upgraded["last_trade_timestamp_ns"], 181_000_000_000)
         self.path.write_text(
-            self.path.read_text(encoding="utf-8") + json.dumps(self.event(104, 200)) + "\\n",
+            self.path.read_text(encoding="utf-8") + json.dumps(self.event(104, 200)) + "\n",
             encoding="utf-8",
         )
         with self.assertRaisesRegex(ValueError, "journal_size_bytes|journal_sha256"):
