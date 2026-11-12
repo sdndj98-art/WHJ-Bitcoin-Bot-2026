@@ -35,6 +35,7 @@ jobs:
         run: |
           mkdir -p _site
           cp dashboard-source/web/index.html _site/index.html
+          cp dashboard-source/dual_portfolio.json _site/dual_portfolio.json
           touch _site/.nojekyll
       - name: Upload dashboard site
         uses: actions/upload-pages-artifact@v3
