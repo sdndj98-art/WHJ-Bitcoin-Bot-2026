@@ -11,10 +11,12 @@ on:
       - "strategy_family_lab.py"
       - "strategy_family_evaluator.py"
       - "strategy_family_runner.py"
+      - "rolling_walk_forward.py"
       - "research_governance.py"
       - "tests/test_strategy_family_lab.py"
       - "tests/test_strategy_family_evaluator.py"
       - "tests/test_strategy_family_runner.py"
+      - "tests/test_rolling_walk_forward.py"
       - ".github/workflows/multi-strategy-isolated-research.yml"
 
 permissions:
@@ -44,6 +46,8 @@ jobs:
           from historical_research import load_two_year_candles
           from research_governance import build_trial_manifest, cscv_probability_of_backtest_overfitting
           from strategy_family_runner import run_strategy_universe
+          from strategy_family_lab import build_strategy_signals
+          from rolling_walk_forward import evaluate_rolling_walk_forward
 
           # Public Coinbase spot data only. No paper account, monitor, cache,
           # exchange credentials, order route, or live-trading code is invoked.
@@ -64,6 +68,19 @@ jobs:
                   bars_per_year=24*365, evaluation_start_index=split_index,
               )
           base = reports["1x"]
+          # Separate expanding-window walk-forward: each fold selects among
+          # the same 17 predeclared causal signal streams using only prior data.
+          # The final 40% is evaluated in contiguous 10%-sized test blocks.
+          walk_forward = evaluate_rolling_walk_forward(
+              candles,
+              build_strategy_signals(candles),
+              initial_train_bars=int(len(candles) * 0.60),
+              test_bars=max(32, int(len(candles) * 0.10)),
+              fee_rate=0.001,
+              slippage_rate=0.0005,
+              bars_per_year=24*365,
+              allocation_fraction=base["allocation_fraction"],
+          )
           return_matrix = {name: item["net_returns"] for name, item in base["results"].items()}
           count = len(next(iter(return_matrix.values())))
           partitions = next((n for n in (8, 6, 4) if count >= 8 and count % n == 0), None)
@@ -94,6 +111,7 @@ jobs:
           "allocation_cap_fraction": base["allocation_cap_fraction"],
               "candidate_names": list(base["results"]),
               "cost_stress": reports,
+              "rolling_walk_forward": walk_forward,
               "cscv_pbo": pbo,
               "pbo_scope_warning": "CSCV/PBO is a selection-bias diagnostic across only the 17 declared candidates on this single OOS segment; not a future-profit probability, not a global trial census, and not a replacement for an untouched final holdout.",
               "trial_manifest": manifests,
@@ -121,6 +139,19 @@ jobs:
               m, b = item['strategy'], item['buy_and_hold']
               pf = m['profit_factor'] if m['profit_factor'] is not None else '—'
               lines.append(f"| {name} | {m['net_return']*100:.2f}% | {b['net_return']*100:.2f}% | {(m['net_return']-b['net_return'])*100:.2f} pp | {m['max_drawdown']*100:.2f}% | {pf} | {m['exposure']*100:.1f}% | {m['closed_trades']} |")
+          lines += ["", "## Expanding-window rolling walk-forward", ""]
+          lines.append(f"- Protocol: {walk_forward['protocol']}; folds: {walk_forward['fold_count']}; initial training bars: {walk_forward['initial_train_bars']}; test bars/fold: {walk_forward['test_bars']}")
+          lines.append("- Candidate selection uses only each fold's prior training history; each chosen signal is frozen for that test block.")
+          lines.append("")
+          lines.append("| Cost | Aggregate strategy | Matched buy/hold | Excess | Max close-to-close DD | OOS bars |")
+          lines.append("|---|---:|---:|---:|---:|---:|")
+          for level, aggregate in walk_forward["aggregate_oos_cost_scenarios"].items():
+              sm, bm = aggregate["strategy"], aggregate["buy_and_hold"]
+              lines.append(f"| {level} | {sm['net_return']*100:.2f}% | {bm['net_return']*100:.2f}% | {aggregate['excess_return']*100:.2f} pp | {sm['max_close_to_close_drawdown']*100:.2f}% | {sm['bars']} |")
+          lines.append("")
+          for fold in walk_forward["folds"]:
+              baseline_fold = fold["cost_scenarios"]["1x"]
+              lines.append(f"- Fold {fold['fold']}: selected {fold['selected_candidate']}; training ends at {fold['training_end_index_exclusive']}; OOS indices {fold['test_start_index']}–{fold['test_end_index_exclusive']-1}; 1x return {baseline_fold['strategy']['net_return']*100:.2f}%, matched B&H {baseline_fold['buy_and_hold']['net_return']*100:.2f}%, trades {baseline_fold['strategy']['closed_trades']}.")
           lines += ["", "## Cost stress ranking stability", ""]
           for level, report in reports.items():
               lines.append(f"### {level} costs")
