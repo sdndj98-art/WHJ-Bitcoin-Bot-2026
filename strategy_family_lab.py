@@ -126,7 +126,7 @@ def build_strategy_signals(candles):
             if sd > 0:
                 z = (price-avg)/sd
                 signals["bollinger_mean_reversion"][i] = price < avg-2*sd and (sma200[i] is None or price > sma200[i])
-                signals["zscore20_mean_reversion"][i] = z < -2 and (sma200[i] is None or price > sma200[i])
+                signals["zscore20_mean_reversion"][i] = z < -1.5 and (sma200[i] is None or price > sma200[i])
         if i >= 20:
             avg_vol = sum(volume[i-20:i])/20
             signals["volume_confirmed_breakout"][i] = (price > max(high[i-20:i]) and avg_vol > 0 and volume[i] >= 1.5*avg_vol)
