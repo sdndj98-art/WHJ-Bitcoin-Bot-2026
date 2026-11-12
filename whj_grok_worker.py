@@ -20,11 +20,11 @@ from whj_agent_office import TASKS, build_plan, render_markdown, validate_plan
 
 MODEL = os.getenv("WHJ_GROK_MODEL", "grok-4.7")
 ENDPOINT = "https://api.x.ai/v1/responses"
-MAX_OUTPUT_TOKENS = int(os.getenv("WHJ_AGENT_MAX_OUTPUT_TOKENS", "1000"))
+MAX_OUTPUT_TOKENS = int(os.getenv("WHJ_AGENT_MAX_OUTPUT_TOKENS", "600"))
 DEFAULT_BUDGET_USD = float(os.getenv("WHJ_AGENT_BUDGET_USD", "0.50"))
 INPUT_USD_PER_MILLION = float(os.getenv("WHJ_AGENT_INPUT_USD_PER_MILLION", "2.0"))
 OUTPUT_USD_PER_MILLION = float(os.getenv("WHJ_AGENT_OUTPUT_USD_PER_MILLION", "6.0"))
-MAX_PROMPT_CHARS = 24000
+MAX_PROMPT_CHARS = 10000
 
 REPORT_SCHEMA = {
     "type": "object",
@@ -63,10 +63,21 @@ TASK_CONTEXT = {
     "market_quality_review": ["kraken_cvd_research.py", "volume_liquidity_strategy.py", "trade_candle_builder.py"],
     "strategy_inventory": ["strategy_family_lab.py", "slow_momentum_lab.py", "regime_ema_ohlc_lab.py", "gold_forward_shadow.py"],
     "cost_model_review": ["ohlc_execution_lab.py", "strategy_family_evaluator.py", "slow_momentum_lab.py"],
-    "historical_evaluation": ["strategy_family_runner.py", "multi_strategy_isolated_research.py", "research_governance.py"],
+    "historical_evaluation": ["strategy_family_runner.py", "strategy_family_evaluator.py", "research_governance.py"],
     "walk_forward_review": ["research_governance.py", "slow_momentum_lab.py", "ema_adx_cross_exchange_lab.py"],
     "statistical_review": ["research_governance.py", "strategy_family_runner.py", "slow_momentum_lab.py"],
+    "momentum_strategy_review": ["strategy_family_lab.py", "slow_momentum_lab.py", "strategy_family_evaluator.py"],
+    "breakout_strategy_review": ["strategy_family_lab.py", "strategy_family_evaluator.py", "tests/test_strategy_family_lab.py"],
+    "mean_reversion_strategy_review": ["strategy_family_lab.py", "strategy_family_evaluator.py", "strategy_regimes.py"],
+    "volatility_strategy_review": ["regime_ema_ohlc_lab.py", "ohlc_execution_lab.py", "gold_forward_shadow.py"],
+    "benchmark_review": ["strategy_family_runner.py", "strategy_family_evaluator.py", "research_governance.py"],
+    "ml_research_review": ["research_governance.py", "cusum_event_sampler.py", "triple_barrier_lab.py"],
+    "cross_asset_review": ["gold_market_data.py", "multi_timeframe_cvd.py", "strategy_family_lab.py"],
     "risk_review": ["ohlc_execution_lab.py", "paper_account.py", "forward_paper_monitor.py", "gold_forward_shadow.py"],
+    "paper_monitor_review": ["forward_paper_monitor.py", "paper_account.py", "gold_forward_shadow.py", "gold_forward_shadow_runner.py"],
+    "dashboard_reporting_review": ["dashboard.py", "server.py", "web/index.html"],
+    "qa_review": ["tests/test_strategy_family_lab.py", "tests/test_strategy_family_evaluator.py", "tests/test_gold_forward_shadow.py", "tests/test_whj_agent_office.py"],
+    "reproducibility_review": ["research_governance.py", "gold_market_data.py", "strategy_family_runner.py"],
     "red_team_review": ["research/WHJ_ADVERSARIAL_STRATEGY_SIMULATOR_AUDIT_2026-11-12.md", "research/WHJ_AI_RESEARCH_OFFICE_MVP_2026-11-12.md"],
     "safety_review": ["whj_agent_office.py", "whj_grok_worker.py", "paper_account.py", "gold_forward_shadow.py"],
 }
@@ -165,7 +176,7 @@ def request_grok(prompt: str, api_key: str, max_retries: int = 3) -> tuple[dict,
     )
     for attempt in range(max_retries + 1):
         try:
-            with urllib.request.urlopen(request, timeout=180) as response:
+            with urllib.request.urlopen(request, timeout=120) as response:
                 data = json.loads(response.read().decode("utf-8"))
             return parse_response(data)
         except urllib.error.HTTPError as exc:
