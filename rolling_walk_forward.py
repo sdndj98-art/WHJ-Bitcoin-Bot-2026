@@ -89,10 +89,11 @@ def evaluate_rolling_walk_forward(
             training_scores[name] = training["excess_return"]
 
         selected = max(names, key=lambda name: (training_scores[name], name))
-        # Retain the last pre-test signal bar so its next-open fill is aligned
-        # to the first executable interval inside the OOS block.
-        test_rows = candles[train_end - 1:test_end]
-        test_signals = signals_by_candidate[selected][train_end - 1:test_end]
+        # Keep two pre-test candles: the final completed training signal fills
+        # at open[train_end - 1], making OOS returns contiguous across folds.
+        # The training score itself ends at open[train_end - 1].
+        test_rows = candles[train_end - 2:test_end]
+        test_signals = signals_by_candidate[selected][train_end - 2:test_end]
         cost_scenarios = {}
         for multiplier in (1, 2, 3):
             scenario = evaluate_candidate(
