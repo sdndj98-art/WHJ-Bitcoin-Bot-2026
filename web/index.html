@@ -1460,4 +1460,57 @@ document.querySelectorAll(".agent-nav button").forEach(b=>b.addEventListener("cl
 
 </script>
 
+
+<style>
+#whj-portfolios{margin:14px 0 24px;direction:rtl;color:var(--t,#edf5ff)}
+#whj-portfolios .wp-head{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin:10px 0}
+#whj-portfolios .wp-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+#whj-portfolios .wp-card{background:linear-gradient(150deg,#10243b,#091525);border:1px solid #294159;border-radius:15px;padding:14px;min-width:0}
+#whj-portfolios .wp-card h3{margin:0;font-size:16px}
+#whj-portfolios .wp-sub{color:#91a8c0;font-size:11px;margin-top:4px}
+#whj-portfolios .wp-metrics{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:13px 0}
+#whj-portfolios .wp-metric{background:#ffffff08;border:1px solid #ffffff12;border-radius:10px;padding:9px}
+#whj-portfolios .wp-metric span{display:block;color:#91a8c0;font-size:11px}
+#whj-portfolios .wp-metric b{display:block;font-size:18px;margin-top:3px;font-variant-numeric:tabular-nums}
+#whj-portfolios .wp-status{font-size:11px;border:1px solid #b98a3c66;color:#f5c36b;border-radius:99px;padding:5px 9px}
+#whj-portfolios .wp-table-wrap{overflow:auto}
+#whj-portfolios table{width:100%;border-collapse:collapse;font-size:12px;min-width:500px}
+#whj-portfolios th,#whj-portfolios td{padding:9px 7px;border-bottom:1px solid #ffffff12;text-align:right}
+#whj-portfolios th{color:#91a8c0;font-weight:500}
+#whj-portfolios .wp-empty{text-align:center;color:#91a8c0;padding:18px 8px}
+#whj-portfolios .wp-note{font-size:11px;color:#91a8c0;line-height:1.7;margin-top:10px}
+@media(max-width:720px){#whj-portfolios .wp-grid{grid-template-columns:1fr}#whj-portfolios .wp-metric b{font-size:17px}}
+</style>
+<section id="whj-portfolios" aria-label="محافظ التداول التجريبي">
+ <div class="wp-head"><div><div class="q-kicker">WHJ / DUAL PAPER PORTFOLIOS</div><h2 style="margin:5px 0;font-size:20px">محافظ التداول والصفقات</h2><div class="wp-sub">سجل مستقل لكل أصل · تداول تجريبي فقط · لا أوامر حقيقية</div></div><span id="wp-updated" class="wp-status">بانتظار قراءة الحالة</span></div>
+ <div class="wp-grid">
+  <article class="wp-card"><div class="wp-head"><div><h3>₿ Bitcoin · BTC/USD</h3><div class="wp-sub">محفظة تجريبية مستقلة</div></div><span id="wp-btc-status" class="wp-status">غير مفعّلة</span></div>
+   <div class="wp-metrics">
+    <div class="wp-metric"><span>الرصيد الحالي</span><b id="wp-btc-equity">$10.00</b></div>
+    <div class="wp-metric"><span>الربح / الخسارة</span><b id="wp-btc-pnl">$0.00</b></div>
+    <div class="wp-metric"><span>العائد</span><b id="wp-btc-return">0.00%</b></div>
+    <div class="wp-metric"><span>الصفقات المغلقة</span><b id="wp-btc-count">0</b></div>
+   </div><div class="wp-sub">التغذية: <b id="wp-btc-feed">غير متصلة</b> · الرسوم: <b id="wp-btc-fees">$0.00</b></div>
+  </article>
+  <article class="wp-card"><div class="wp-head"><div><h3>Au Gold · XAU/USD</h3><div class="wp-sub">محفظة تجريبية مستقلة</div></div><span id="wp-gold-status" class="wp-status">بانتظار تغذية السعر</span></div>
+   <div class="wp-metrics">
+    <div class="wp-metric"><span>الرصيد الحالي</span><b id="wp-gold-equity">$10.00</b></div>
+    <div class="wp-metric"><span>الربح / الخسارة</span><b id="wp-gold-pnl">$0.00</b></div>
+    <div class="wp-metric"><span>العائد</span><b id="wp-gold-return">0.00%</b></div>
+    <div class="wp-metric"><span>الصفقات المغلقة</span><b id="wp-gold-count">0</b></div>
+   </div><div class="wp-sub">التغذية: <b id="wp-gold-feed">تحتاج ربط XAUUSD الفوري</b> · الرسوم: <b id="wp-gold-fees">$0.00</b></div>
+  </article>
+ </div>
+ <article class="wp-card" style="margin-top:12px"><div class="wp-head"><div><h3>سجل الصفقات</h3><div class="wp-sub">صفقات BTC وGold مع فصل واضح بين الأصلين</div></div><span class="wp-status" id="wp-trade-count">0 صفقة</span></div>
+  <div class="wp-table-wrap"><table><thead><tr><th>الأصل</th><th>الاستراتيجية</th><th>الاتجاه</th><th>الدخول</th><th>الخروج</th><th>النتيجة</th><th>الحالة</th></tr></thead><tbody id="wp-trades"><tr><td colspan="7" class="wp-empty">لا توجد صفقات مسجلة بعد. لن نعرض صفقات تجريبية وهمية.</td></tr></tbody></table></div>
+  <div class="wp-note" id="wp-trade-note">تُعرض الصفقات عندما يكتبها محرك التداول التجريبي في ملف الحالة. المحفظتان حالياً معدّتان فقط ولم يبدأ تنفيذ الصفقات.</div>
+ </article>
+</section>
+<script>
+(()=>{const $=id=>document.getElementById(id),money=v=>Number.isFinite(Number(v))?'$'+Number(v).toFixed(2):'—',pct=v=>Number.isFinite(Number(v))?Number(v).toFixed(2)+'%':'—';
+const set=(id,v)=>{const e=$(id);if(e)e.textContent=v??'—'};
+function portfolio(key,p){const prefix=key==='btc'?'wp-btc':'wp-gold';set(prefix+'-equity',money(p.equity_usd));set(prefix+'-pnl',money(p.pnl_usd));set(prefix+'-return',pct(p.return_pct));set(prefix+'-count',p.closed_trades??0);set(prefix+'-fees',money(p.fees_usd));set(prefix+'-feed',p.feed_status||'غير معروف');set(prefix+'-status',p.status||'غير معروف')}
+async function refresh(){try{const r=await fetch('./dual_portfolio.json?t='+Date.now(),{cache:'no-store'});if(!r.ok)throw Error('HTTP '+r.status);const d=await r.json();portfolio('btc',d.btc||{});portfolio('gold',d.gold||{});set('wp-updated',d.updated_at?'آخر تحديث: '+d.updated_at:'الإعدادات مقروءة · التداول غير نشط');const trades=Array.isArray(d.trades)?d.trades:[];set('wp-trade-count',trades.length+' صفقة');const body=$('wp-trades');if(body){body.replaceChildren();if(!trades.length){const tr=document.createElement('tr'),td=document.createElement('td');td.colSpan=7;td.className='wp-empty';td.textContent='لا توجد صفقات مسجلة بعد. لن نعرض صفقات تجريبية وهمية.';tr.append(td);body.append(tr)}else trades.slice().reverse().forEach(t=>{const tr=document.createElement('tr');[t.asset,t.strategy,t.side,t.entry_price,t.exit_price,money(t.pnl_usd),t.status].forEach(v=>{const td=document.createElement('td');td.textContent=v??'—';tr.append(td)});body.append(tr)})}set('wp-trade-note',d.paper_only?'وضع تجريبي فقط · الأوامر الحقيقية متوقفة':'تحذير: إعداد paper_only غير مؤكد')}catch(e){set('wp-updated','تعذر قراءة بيانات المحافظ');set('wp-trade-note','ملف الحالة غير متاح حالياً؛ لا توجد بيانات صفقات مؤكدة للعرض.')}}
+refresh();setInterval(refresh,15000)})();
+</script>
 </body></html>
