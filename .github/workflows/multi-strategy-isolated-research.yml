@@ -45,7 +45,7 @@ jobs:
           from datetime import datetime, timezone
           from pathlib import Path
           from historical_research import load_two_year_candles
-          from research_governance import build_trial_manifest, cscv_probability_of_backtest_overfitting
+          from research_governance import (build_trial_manifest, cscv_probability_of_backtest_overfitting, moving_block_bootstrap_return_ci)
           from strategy_family_runner import run_strategy_universe
           from strategy_family_lab import build_strategy_signals
           from rolling_walk_forward import evaluate_rolling_walk_forward
@@ -97,6 +97,18 @@ jobs:
           count = len(next(iter(return_matrix.values())))
           partitions = next((n for n in (8, 6, 4) if count >= 8 and count % n == 0), None)
           pbo = cscv_probability_of_backtest_overfitting(return_matrix, partitions=partitions) if partitions else None
+          # Conditional uncertainty diagnostic for the five descriptive OOS leaders.
+          # This is not selection-adjusted and is not a substitute for an untouched final holdout.
+          bootstrap_ci = {}
+          for rank_index, name in enumerate(base["descriptive_ranking_by_terminal_excess_equity"][:5]):
+              candidate_returns = base["results"][name]["net_returns"]
+              bootstrap_ci[name] = moving_block_bootstrap_return_ci(
+                  candidate_returns,
+                  block_length=min(24, len(candidate_returns)),
+                  bootstrap_samples=1000,
+                  confidence_level=0.95,
+                  seed=20261113 + rank_index,
+              )
           walk_forward_manifests = [
               build_trial_manifest(
                   trial_id=f"btc-walk-forward-fold-{fold['fold']}-{fold['selected_candidate']}-{os.environ['GITHUB_RUN_ID']}",
@@ -153,6 +165,7 @@ jobs:
               "market_regime_diagnostics": regime_diagnostics,
               "rolling_walk_forward_trial_manifest": walk_forward_manifests,
               "cscv_pbo": pbo,
+              "top_five_moving_block_bootstrap_95pct_ci": bootstrap_ci,
               "pbo_scope_warning": "CSCV/PBO is a selection-bias diagnostic across only the 17 declared candidates on this single OOS segment; not a future-profit probability, not a global trial census, and not a replacement for an untouched final holdout.",
               "trial_manifest": manifests,
               "promotion_status": "NO_CANDIDATE_PROMOTED",
@@ -182,6 +195,14 @@ jobs:
               m, b = item['strategy'], item['buy_and_hold']
               pf = m['profit_factor'] if m['profit_factor'] is not None else '—'
               lines.append(f"| {name} | {m['net_return']*100:.2f}% | {b['net_return']*100:.2f}% | {(m['net_return']-b['net_return'])*100:.2f} pp | {m['max_drawdown']*100:.2f}% | {pf} | {m['exposure']*100:.1f}% | {m['closed_trades']} |")
+          lines += ["", "## Top-five moving-block bootstrap uncertainty", ""]
+          lines.append("| Candidate | Observed OOS return | 95% conditional interval | Block (hours) | Samples |")
+          lines.append("|---|---:|---:|---:|---:|")
+          for name in ranked[:5]:
+              ci = bootstrap_ci[name]
+              lines.append(f"| {name} | {ci['observed_compounded_return_pct']:.2f}% | [{ci['lower_return_pct']:.2f}%, {ci['upper_return_pct']:.2f}%] | {ci['block_length']} | {ci['bootstrap_samples']} |")
+          lines.append("")
+          lines.append("> Conditional resampling of candidates selected by this same OOS ranking; it is not selection-adjusted, does not cover all historical trials, and does not replace a final untouched holdout.")
           lines += ["", "## Expanding-window rolling walk-forward", ""]
           lines.append(f"- Protocol: {walk_forward['protocol']}; folds: {walk_forward['fold_count']}; initial training bars: {walk_forward['initial_train_bars']}; test bars/fold: {walk_forward['test_bars']}")
           lines.append("- Candidate selection uses only each fold's prior training history; each chosen signal is frozen for that test block.")
