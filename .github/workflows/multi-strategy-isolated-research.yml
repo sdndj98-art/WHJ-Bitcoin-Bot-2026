@@ -181,11 +181,11 @@ jobs:
           lines.append("|---|---:|---:|---:|---:|---:|")
           for level, aggregate in walk_forward["aggregate_oos_cost_scenarios"].items():
               sm, bm = aggregate["strategy"], aggregate["buy_and_hold"]
-              lines.append(f"| {level} | {sm['net_return']*100:.2f}% | {bm['net_return']*100:.2f}% | {aggregate['excess_return']*100:.2f} pp | {sm['max_close_to_close_drawdown']*100:.2f}% | {sm['bars']} |")
+              lines.append(f"| {level} | {sm['net_return']*100:.2f}% | {bm['net_return']*100:.2f}% | {aggregate['excess_return']*100:.2f} pp | {sm['max_open_to_open_drawdown']*100:.2f}% | {sm['bars']} |")
           lines.append("")
           for fold in walk_forward["folds"]:
               baseline_fold = fold["cost_scenarios"]["1x"]
-              lines.append(f"- Fold {fold['fold']}: selected {fold['selected_candidate']}; training ends at {fold['training_end_index_exclusive']}; OOS indices {fold['test_start_index']}–{fold['test_end_index_exclusive']-1}; 1x return {baseline_fold['strategy']['net_return']*100:.2f}%, matched B&H {baseline_fold['buy_and_hold']['net_return']*100:.2f}%, trades {baseline_fold['strategy']['closed_trades']}.")
+              lines.append(f"- Fold {fold['fold']}: selected {fold['selected_candidate']}; training ends at {fold['training_end_index_exclusive']}; OOS open interval {fold['test_return_start_open_index']}→{fold['test_return_end_open_index']}; 1x return {baseline_fold['strategy']['net_return']*100:.2f}%, matched B&H {baseline_fold['buy_and_hold']['net_return']*100:.2f}%, trades {baseline_fold['strategy']['closed_trades']}.")
           lines += ["", "## Cost stress ranking stability", ""]
           for level, report in reports.items():
               lines.append(f"### {level} costs")
