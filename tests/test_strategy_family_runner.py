@@ -16,9 +16,21 @@ class StrategyFamilyRunnerTests(unittest.TestCase):
         self.assertEqual(result["candidate_count"], 17)
         self.assertEqual(set(result["results"]), set(result["descriptive_ranking_by_terminal_excess_equity"]))
         self.assertEqual(result["promotion_status"], "NO_CANDIDATE_PROMOTED")
+        self.assertEqual(result["allocation_fraction"], 0.25)
+        self.assertEqual(result["allocation_cap_fraction"], 0.25)
         for candidate in result["results"].values():
             self.assertEqual(candidate["protocol"], "completed_close_signal_next_open_fill_open_to_open_return")
             self.assertEqual(candidate["strategy"]["bars"], candidate["buy_and_hold"]["bars"])
+            self.assertEqual(candidate["allocation_fraction"], 0.25)
+            self.assertLessEqual(candidate["strategy"]["exposure"], 0.25)
+
+    def test_lower_allocation_is_allowed_but_cap_cannot_be_raised(self):
+        reduced = run_strategy_universe(self.candles(), allocation_fraction=0.10)
+        self.assertEqual(reduced["allocation_fraction"], 0.10)
+        with self.assertRaises(ValueError):
+            run_strategy_universe(self.candles(), allocation_fraction=0.250001)
+        with self.assertRaises(ValueError):
+            run_strategy_universe(self.candles(), allocation_fraction=1.0)
 
     def test_oos_start_uses_previous_completed_bar_for_first_next_open_fill(self):
         candles = self.candles()
