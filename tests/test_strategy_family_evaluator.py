@@ -47,5 +47,28 @@ class StrategyFamilyEvaluatorTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             evaluate_candidate(rows, [False]*4)
 
+    def test_fractional_allocation_scales_returns_and_exposure(self):
+        rows = self.candles([100, 100, 110, 110, 110])
+        full = evaluate_candidate(rows, [True]*5, 0, 0, 1)
+        quarter = evaluate_candidate(rows, [True]*5, 0, 0, 1, allocation_fraction=0.25)
+        self.assertAlmostEqual(full["strategy"]["net_return"], 0.21)
+        self.assertAlmostEqual(quarter["strategy"]["net_return"], 0.05)
+        self.assertAlmostEqual(quarter["strategy"]["exposure"], 0.25)
+        self.assertAlmostEqual(quarter["buy_and_hold"]["net_return"], 0.05)
+        self.assertEqual(quarter["allocation_fraction"], 0.25)
+
+    def test_fractional_allocation_scales_turnover_costs(self):
+        rows = self.candles([100, 100, 100, 100, 100])
+        result = evaluate_candidate(rows, [True, False, False, False, False], 0.01, 0, 1, allocation_fraction=0.25)
+        self.assertAlmostEqual(result["strategy"]["turnover"], 0.5)
+        self.assertAlmostEqual(result["strategy"]["net_return"], -0.005)
+
+    def test_invalid_allocation_fails_closed(self):
+        rows = self.candles([100, 101, 102, 103])
+        for allocation in (0, -0.1, 1.01, float("nan"), True):
+            with self.subTest(allocation=allocation):
+                with self.assertRaises(ValueError):
+                    evaluate_candidate(rows, [False]*4, allocation_fraction=allocation)
+
 if __name__ == "__main__":
     unittest.main()
