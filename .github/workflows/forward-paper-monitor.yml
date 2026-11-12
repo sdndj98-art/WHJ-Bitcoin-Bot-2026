@@ -10,6 +10,7 @@ on:
       - "forward_paper_monitor.py"
       - "paper_account.py"
       - "historical_research.py"
+      - "forward_paper_monitor.py"
       - "tests/test_forward_paper_monitor.py"
       - ".github/workflows/forward-paper-monitor.yml"
 
@@ -41,13 +42,13 @@ jobs:
             paper_forward_1h_rsi14_mean_reversion.json
             paper_forward_4h_ema50_200.json
             paper_forward_6h_ema50_200.json
-          key: whj-forward-paper-v1-${{ github.run_id }}-${{ github.run_attempt }}
+          key: whj-forward-paper-v2-${{ github.run_id }}-${{ github.run_attempt }}
           restore-keys: |
-            whj-forward-paper-v1-
+            whj-forward-paper-v2-
       - name: Guard against missing paper ledger cache
-        if: steps.restore-paper-ledgers.outputs.cache-matched-key == '' && github.run_number != '1'
+        if: steps.restore-paper-ledgers.outputs.cache-matched-key == '' && github.event_name == 'schedule'
         run: |
-          echo "::error::Forward paper ledger cache is missing after initialization. Refusing to reseed accounts or erase forward history."
+          echo "::error::Forward paper ledger cache is missing. Refusing to reseed accounts or erase forward history."
           exit 1
       - name: Run focused safety tests
         run: python -m unittest discover -s tests -p 'test_forward_paper_monitor.py' -v
@@ -63,7 +64,7 @@ jobs:
             paper_forward_1h_rsi14_mean_reversion.json
             paper_forward_4h_ema50_200.json
             paper_forward_6h_ema50_200.json
-          key: whj-forward-paper-v1-${{ github.run_id }}-${{ github.run_attempt }}
+          key: whj-forward-paper-v2-${{ github.run_id }}-${{ github.run_attempt }}
       - name: Publish concise paper status to workflow summary
         if: success()
         run: |
