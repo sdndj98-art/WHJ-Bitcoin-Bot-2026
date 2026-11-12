@@ -73,10 +73,8 @@ def evaluate_rolling_walk_forward(
     folds = []
     stitched_oos_signals = [False] * len(candles)
     train_end = initial_train_bars
-    while train_end + 2 < len(candles):
-        test_end = min(train_end + test_bars, len(candles))
-        if test_end - train_end < 3:
-            break
+    while train_end + test_bars + 1 < len(candles):
+        test_end = train_end + test_bars
         training_rows = candles[:train_end]
         training_scores = {}
         for name in names:
@@ -88,15 +86,15 @@ def evaluate_rolling_walk_forward(
             training_scores[name] = training["excess_return"]
 
         selected = max(names, key=lambda name: (training_scores[name], name))
-        # Keep two pre-test candles: the final completed training signal fills
-        # at open[train_end - 1], making OOS returns contiguous across folds.
-        # The training score itself ends at open[train_end - 1].
-        test_rows = candles[train_end - 2:test_end]
-        test_signals = signals_by_candidate[selected][train_end - 2:test_end]
-        # Stitch only signals whose returns belong to this fold. The aggregate
-        # OOS stream is evaluated once below, preserving exposure continuity.
-        stitched_oos_signals[train_end - 2:test_end - 2] = (
-            signals_by_candidate[selected][train_end - 2:test_end - 2]
+        # The fold is selected after close[train_end - 1]; its first signal
+        # therefore fills at open[train_end]. Keep one prior candle for that
+        # signal and one endpoint candle so the fold has exactly test_bars returns.
+        test_rows = candles[train_end - 1:test_end + 1]
+        test_signals = signals_by_candidate[selected][train_end - 1:test_end + 1]
+        # Stitch only signals whose returns belong to this fold. Adjacent folds
+        # meet at the same open boundary with no overlap or missing return.
+        stitched_oos_signals[train_end - 1:test_end - 1] = (
+            signals_by_candidate[selected][train_end - 1:test_end - 1]
         )
         cost_scenarios = {}
         for multiplier in (1, 2, 3):
@@ -119,8 +117,8 @@ def evaluate_rolling_walk_forward(
             "training_end_index_exclusive": train_end,
             "test_start_index": train_end,
             "test_end_index_exclusive": test_end,
-            "test_return_start_open_index": train_end - 1,
-            "test_return_end_open_index": test_end - 1,
+            "test_return_start_open_index": train_end,
+            "test_return_end_open_index": test_end,
             "selected_candidate": selected,
             "training_excess_returns": training_scores,
             "test_strategy": baseline["strategy"],
@@ -135,8 +133,8 @@ def evaluate_rolling_walk_forward(
     if not folds:
         raise ValueError("data does not contain a complete test fold")
     final_test_end = folds[-1]["test_end_index_exclusive"]
-    aggregate_rows = candles[initial_train_bars - 2:final_test_end]
-    aggregate_signals = stitched_oos_signals[initial_train_bars - 2:final_test_end]
+    aggregate_rows = candles[initial_train_bars - 1:final_test_end + 1]
+    aggregate_signals = stitched_oos_signals[initial_train_bars - 1:final_test_end + 1]
     aggregate_cost_scenarios = {}
     for multiplier in (1, 2, 3):
         aggregate = evaluate_candidate(
