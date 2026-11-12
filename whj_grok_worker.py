@@ -72,7 +72,7 @@ TASK_CONTEXT = {
 }
 
 def estimate_cost(input_chars: int, max_output_tokens: int = MAX_OUTPUT_TOKENS) -> float:
-    estimated_input_tokens = max(1, (input_chars + 3) // 4)
+    estimated_input_tokens = max(1, (input_chars + 1) // 2)
     return (
         estimated_input_tokens * INPUT_USD_PER_MILLION
         + max_output_tokens * OUTPUT_USD_PER_MILLION
