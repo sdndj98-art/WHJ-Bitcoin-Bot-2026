@@ -232,7 +232,7 @@ def run_office(root: Path, output_dir: Path, api_key: str, budget_usd: float = D
     usage_total = {"input_tokens": 0, "output_tokens": 0}
     spend = 0.0
     reports = []
-    worker_tasks = [task for task in plan["tasks"] if task["task_id"] not in {"pm_acceptance"}]
+    worker_tasks = list(plan["tasks"])
     for task in worker_tasks:
         paths = TASK_CONTEXT.get(task["task_id"], [])
         sources = _read_sources(root, paths)
