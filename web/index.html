@@ -1006,6 +1006,31 @@ main{max-width:1720px!important;padding:22px clamp(12px,2vw,30px) 42px!important
 <div class="card tablecard"><div class="head"><h2>تفاصيل الاستراتيجيات الخمس</h2><span>خمسة حسابات مستقلة</span></div><div class="tablewrap"><table><thead><tr><th>الإطار</th><th>القيمة</th><th>العائد</th><th>الصفقات</th><th>نسبة الفوز</th><th>معامل الربحية</th><th>أقصى تراجع</th><th>التعرّض</th><th>المركز</th><th>حالة المخاطر</th><th>تقييم الاستراتيجية</th></tr></thead><tbody id="forwardRows"><tr><td colspan="11" class="empty">حمّل تقريراً صالحاً لعرض النتائج</td></tr></tbody></table></div></div>
 <div class="card" style="margin-top:13px"><div class="head"><h2>حدود الحماية</h2><span>لكل حساب افتراضي</span></div><div class="mini"><span>تخصيص الصفقة</span><b id="forwardAllocation">—</b></div><div class="mini"><span>إيقاف عند أقصى تراجع</span><b id="forwardMaxDD">—</b></div><div class="mini"><span>إيقاف الخسارة اليومية</span><b id="forwardDaily">—</b></div><div class="mini"><span>حد الخسائر المتتالية</span><b id="forwardStreak">—</b></div><div class="mini"><span>جودة بيانات السوق</span><b id="forwardQuality">—</b></div><div class="mini"><span>آخر شمعة ساعة</span><b id="forwardCandle">—</b></div><p class="sub" style="margin-top:12px">هذه النتائج محاكاة مستقبلية وليست أرباحاً فعلية أو ضماناً للأداء. رفع التقرير محلي داخل المتصفح ولا يرسله إلى خادم.</p></div>
 </section>
+<section id="whj-portfolios" aria-label="محافظ التداول التجريبي">
+ <div class="wp-head"><div><div class="q-kicker">WHJ / DUAL PAPER PORTFOLIOS</div><h2 style="margin:5px 0;font-size:20px">محافظ التداول والصفقات</h2><div class="wp-sub">سجل مستقل لكل أصل · تداول تجريبي فقط · لا أوامر حقيقية</div></div><span id="wp-updated" class="wp-status">بانتظار قراءة الحالة</span></div>
+ <div class="wp-grid">
+  <article class="wp-card"><div class="wp-head"><div><h3>₿ Bitcoin · BTC/USD</h3><div class="wp-sub">محفظة تجريبية مستقلة</div></div><span id="wp-btc-status" class="wp-status">غير مفعّلة</span></div>
+   <div class="wp-metrics">
+    <div class="wp-metric"><span>الرصيد الحالي</span><b id="wp-btc-equity">$10.00</b></div>
+    <div class="wp-metric"><span>الربح / الخسارة</span><b id="wp-btc-pnl">$0.00</b></div>
+    <div class="wp-metric"><span>العائد</span><b id="wp-btc-return">0.00%</b></div>
+    <div class="wp-metric"><span>الصفقات المغلقة</span><b id="wp-btc-count">0</b></div>
+   </div><div class="wp-sub">التغذية: <b id="wp-btc-feed">غير متصلة</b> · الرسوم: <b id="wp-btc-fees">$0.00</b></div>
+  </article>
+  <article class="wp-card"><div class="wp-head"><div><h3>Au Gold · XAU/USD</h3><div class="wp-sub">محفظة تجريبية مستقلة</div></div><span id="wp-gold-status" class="wp-status">بانتظار تغذية السعر</span></div>
+   <div class="wp-metrics">
+    <div class="wp-metric"><span>الرصيد الحالي</span><b id="wp-gold-equity">$10.00</b></div>
+    <div class="wp-metric"><span>الربح / الخسارة</span><b id="wp-gold-pnl">$0.00</b></div>
+    <div class="wp-metric"><span>العائد</span><b id="wp-gold-return">0.00%</b></div>
+    <div class="wp-metric"><span>الصفقات المغلقة</span><b id="wp-gold-count">0</b></div>
+   </div><div class="wp-sub">التغذية: <b id="wp-gold-feed">تحتاج ربط XAUUSD الفوري</b> · الرسوم: <b id="wp-gold-fees">$0.00</b></div>
+  </article>
+ </div>
+ <article class="wp-card" style="margin-top:12px"><div class="wp-head"><div><h3>سجل الصفقات</h3><div class="wp-sub">صفقات BTC وGold مع فصل واضح بين الأصلين</div></div><span class="wp-status" id="wp-trade-count">0 صفقة</span></div>
+  <div class="wp-table-wrap"><table><thead><tr><th>الأصل</th><th>الاستراتيجية</th><th>الاتجاه</th><th>الدخول</th><th>الخروج</th><th>النتيجة</th><th>الحالة</th></tr></thead><tbody id="wp-trades"><tr><td colspan="7" class="wp-empty">لا توجد صفقات مسجلة بعد. لن نعرض صفقات تجريبية وهمية.</td></tr></tbody></table></div>
+  <div class="wp-note" id="wp-trade-note">تُعرض الصفقات عندما يكتبها محرك التداول التجريبي في ملف الحالة. المحفظتان حالياً معدّتان فقط ولم يبدأ تنفيذ الصفقات.</div>
+ </article>
+</section>
 <footer class="footer">WHJ BITCOIN BOT · بيانات المحاكاة لا تمثل أرباحاً حقيقية ولا تعد توصية استثمارية.</footer></main></div>
 <script>
 let report=null;let mt5Snapshot=null;const $=id=>document.getElementById(id);const fmt=(v,d=2)=>v===undefined||v===null||v===""?"—":Number.isFinite(Number(v))?Number(v).toLocaleString("en-US",{minimumFractionDigits:d,maximumFractionDigits:d}):String(v);const money=v=>v===undefined||v===null?"—":"$"+fmt(v);const pct=v=>v===undefined||v===null?"—":fmt(v)+"%";const set=(id,v)=>$(id).textContent=v;const esc=v=>String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));const accounts=()=>report&&report.persistent_paper_portfolio&&report.persistent_paper_portfolio.accounts||{};
@@ -1481,31 +1506,7 @@ document.querySelectorAll(".agent-nav button").forEach(b=>b.addEventListener("cl
 #whj-portfolios .wp-note{font-size:11px;color:#91a8c0;line-height:1.7;margin-top:10px}
 @media(max-width:720px){#whj-portfolios .wp-grid{grid-template-columns:1fr}#whj-portfolios .wp-metric b{font-size:17px}}
 </style>
-<section id="whj-portfolios" aria-label="محافظ التداول التجريبي">
- <div class="wp-head"><div><div class="q-kicker">WHJ / DUAL PAPER PORTFOLIOS</div><h2 style="margin:5px 0;font-size:20px">محافظ التداول والصفقات</h2><div class="wp-sub">سجل مستقل لكل أصل · تداول تجريبي فقط · لا أوامر حقيقية</div></div><span id="wp-updated" class="wp-status">بانتظار قراءة الحالة</span></div>
- <div class="wp-grid">
-  <article class="wp-card"><div class="wp-head"><div><h3>₿ Bitcoin · BTC/USD</h3><div class="wp-sub">محفظة تجريبية مستقلة</div></div><span id="wp-btc-status" class="wp-status">غير مفعّلة</span></div>
-   <div class="wp-metrics">
-    <div class="wp-metric"><span>الرصيد الحالي</span><b id="wp-btc-equity">$10.00</b></div>
-    <div class="wp-metric"><span>الربح / الخسارة</span><b id="wp-btc-pnl">$0.00</b></div>
-    <div class="wp-metric"><span>العائد</span><b id="wp-btc-return">0.00%</b></div>
-    <div class="wp-metric"><span>الصفقات المغلقة</span><b id="wp-btc-count">0</b></div>
-   </div><div class="wp-sub">التغذية: <b id="wp-btc-feed">غير متصلة</b> · الرسوم: <b id="wp-btc-fees">$0.00</b></div>
-  </article>
-  <article class="wp-card"><div class="wp-head"><div><h3>Au Gold · XAU/USD</h3><div class="wp-sub">محفظة تجريبية مستقلة</div></div><span id="wp-gold-status" class="wp-status">بانتظار تغذية السعر</span></div>
-   <div class="wp-metrics">
-    <div class="wp-metric"><span>الرصيد الحالي</span><b id="wp-gold-equity">$10.00</b></div>
-    <div class="wp-metric"><span>الربح / الخسارة</span><b id="wp-gold-pnl">$0.00</b></div>
-    <div class="wp-metric"><span>العائد</span><b id="wp-gold-return">0.00%</b></div>
-    <div class="wp-metric"><span>الصفقات المغلقة</span><b id="wp-gold-count">0</b></div>
-   </div><div class="wp-sub">التغذية: <b id="wp-gold-feed">تحتاج ربط XAUUSD الفوري</b> · الرسوم: <b id="wp-gold-fees">$0.00</b></div>
-  </article>
- </div>
- <article class="wp-card" style="margin-top:12px"><div class="wp-head"><div><h3>سجل الصفقات</h3><div class="wp-sub">صفقات BTC وGold مع فصل واضح بين الأصلين</div></div><span class="wp-status" id="wp-trade-count">0 صفقة</span></div>
-  <div class="wp-table-wrap"><table><thead><tr><th>الأصل</th><th>الاستراتيجية</th><th>الاتجاه</th><th>الدخول</th><th>الخروج</th><th>النتيجة</th><th>الحالة</th></tr></thead><tbody id="wp-trades"><tr><td colspan="7" class="wp-empty">لا توجد صفقات مسجلة بعد. لن نعرض صفقات تجريبية وهمية.</td></tr></tbody></table></div>
-  <div class="wp-note" id="wp-trade-note">تُعرض الصفقات عندما يكتبها محرك التداول التجريبي في ملف الحالة. المحفظتان حالياً معدّتان فقط ولم يبدأ تنفيذ الصفقات.</div>
- </article>
-</section>
+
 <script>
 (()=>{const $=id=>document.getElementById(id),money=v=>Number.isFinite(Number(v))?'$'+Number(v).toFixed(2):'—',pct=v=>Number.isFinite(Number(v))?Number(v).toFixed(2)+'%':'—';
 const set=(id,v)=>{const e=$(id);if(e)e.textContent=v??'—'};
