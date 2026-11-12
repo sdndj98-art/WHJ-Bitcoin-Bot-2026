@@ -4,6 +4,7 @@ import unittest
 from pathlib import Path
 
 import run_kraken_cvd_service as service
+import kraken_cvd_collector
 
 
 class KrakenCvdServiceTests(unittest.TestCase):
@@ -38,6 +39,13 @@ class KrakenCvdServiceTests(unittest.TestCase):
         self.assertIn("--checkpoint-file", command)
         self.assertNotIn("create_order", command)
         self.assertNotIn("private", command)
+        # Keep the supervisor and collector CLI contracts synchronized.
+        parsed = kraken_cvd_collector.build_parser().parse_args(command[2:])
+        self.assertEqual(parsed.pair, "BTC/USD")
+        self.assertEqual(parsed.state_file, "state/cvd.json")
+        self.assertEqual(parsed.trade_log, "state/trades.jsonl")
+        self.assertEqual(parsed.checkpoint_file, "state/trades.checkpoint.json")
+        self.assertEqual(parsed.max_reconnect_attempts, 0)
 
 
 if __name__ == "__main__":
