@@ -123,7 +123,10 @@ jobs:
               m, b = item['strategy'], item['buy_and_hold']
               pf = m['profit_factor'] if m['profit_factor'] is not None else '—'
               lines.append(f"| {name} | {m['net_return']*100:.2f}% | {b['net_return']*100:.2f}% | {(m['net_return']-b['net_return'])*100:.2f} pp | {m['max_drawdown']*100:.2f}% | {pf} | {m['exposure']*100:.1f}% | {m['closed_trades']} |")
-          lines += ["", "## Cost stress ranking stability", ""]
+          lines += ["", "## Top-five dependence-aware bootstrap uncertainty", "", "| Candidate | Observed OOS return | 95% block-bootstrap interval |", "|---|---:|---:|"]
+          for name, ci in bootstrap_ci.items():
+              lines.append("| {} | {:.2f}% | [{:.2f}%, {:.2f}%] |".format(name, ci["observed_compounded_return_pct"], ci["lower_return_pct"], ci["upper_return_pct"]))
+          lines += ["", "> Circular moving-block bootstrap: 1,000 samples with 24-hour blocks where available. Conditional on this OOS series; not a future-profit probability.", "", "## Cost stress ranking stability", ""]
           for level, report in reports.items():
               lines.append(f"### {level} costs")
               for name in report['descriptive_ranking_by_terminal_excess_equity'][:5]:
