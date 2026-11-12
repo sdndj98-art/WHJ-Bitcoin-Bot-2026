@@ -7,7 +7,11 @@ from kraken_cvd_research import (
     load_normalized_trade_journal,
     analyze_trade_journal,
 )
-from trade_journal_checkpoint import build_continuity_checkpoint
+from trade_journal_checkpoint import (
+    build_continuity_checkpoint,
+    inspect_trade_journal,
+    upgrade_legacy_continuity_checkpoint,
+)
 
 
 class KrakenCvdResearchTests(unittest.TestCase):
@@ -173,6 +177,30 @@ class KrakenCvdResearchTests(unittest.TestCase):
         self.assertEqual(
             self.checkpoint()["first_trade_timestamp_ns"], 10_000_000_000
         )
+
+    def test_legacy_checkpoint_upgrades_only_when_journal_bytes_match(self):
+        self.write_events(self.valid_events())
+        metadata = inspect_trade_journal(self.path)
+        legacy = {
+            "version": 1,
+            "source": "kraken_spot_trade_feed_adapter",
+            "feed_continuity_verified": True,
+            **metadata,
+        }
+        upgraded = upgrade_legacy_continuity_checkpoint(
+            legacy, self.path, "BTC/USD", expected_last_trade_id=103
+        )
+        self.assertEqual(upgraded["version"], 2)
+        self.assertEqual(upgraded["first_trade_timestamp_ns"], 10_000_000_000)
+        self.assertEqual(upgraded["last_trade_timestamp_ns"], 181_000_000_000)
+        self.path.write_text(
+            self.path.read_text(encoding="utf-8") + json.dumps(self.event(104, 200)) + "\\n",
+            encoding="utf-8",
+        )
+        with self.assertRaisesRegex(ValueError, "journal_size_bytes|journal_sha256"):
+            upgrade_legacy_continuity_checkpoint(
+                legacy, self.path, "BTC/USD", expected_last_trade_id=103
+            )
 
     def test_rejects_checkpoint_with_wrong_last_trade_id(self):
         self.write_events(self.valid_events())
