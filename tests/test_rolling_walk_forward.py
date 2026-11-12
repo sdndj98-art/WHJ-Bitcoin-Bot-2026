@@ -34,6 +34,9 @@ class RollingWalkForwardTests(unittest.TestCase):
             [f["test_return_end_open_index"] for f in result["folds"][:-1]],
         )
         self.assertEqual(set(result["aggregate_oos_cost_scenarios"]), {"1x", "2x", "3x"})
+        self.assertIn("period_sharpe", result["aggregate_oos_cost_scenarios"]["1x"]["strategy"])
+        self.assertIn("periodic_profit_factor", result["aggregate_oos_cost_scenarios"]["1x"]["strategy"])
+        self.assertTrue(all("training_closed_trades" in fold for fold in result["folds"]))
         for fold in result["folds"]:
             self.assertEqual(set(fold["cost_scenarios"]), {"1x", "2x", "3x"})
         self.assertEqual(
