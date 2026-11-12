@@ -177,15 +177,21 @@ jobs:
           lines.append(f"- Protocol: {walk_forward['protocol']}; folds: {walk_forward['fold_count']}; initial training bars: {walk_forward['initial_train_bars']}; test bars/fold: {walk_forward['test_bars']}")
           lines.append("- Candidate selection uses only each fold's prior training history; each chosen signal is frozen for that test block.")
           lines.append("")
-          lines.append("| Cost | Aggregate strategy | Matched buy/hold | Excess | Max open-to-open DD | OOS bars |")
-          lines.append("|---|---:|---:|---:|---:|---:|")
+          lines.append("| Cost | Aggregate strategy | Matched buy/hold | Excess | Max open-to-open DD | Periodic PF | Sharpe | Closed trades | Exposure | OOS bars |")
+          lines.append("|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|")
           for level, aggregate in walk_forward["aggregate_oos_cost_scenarios"].items():
               sm, bm = aggregate["strategy"], aggregate["buy_and_hold"]
-              lines.append(f"| {level} | {sm['net_return']*100:.2f}% | {bm['net_return']*100:.2f}% | {aggregate['excess_return']*100:.2f} pp | {sm['max_open_to_open_drawdown']*100:.2f}% | {sm['bars']} |")
+              pf = sm["periodic_profit_factor"]
+              pf_text = pf if isinstance(pf, str) else (f"{pf:.2f}" if pf is not None else "—")
+              sharpe = sm["period_sharpe"]
+              sharpe_text = f"{sharpe:.2f}" if sharpe is not None else "—"
+              lines.append(f"| {level} | {sm['net_return']*100:.2f}% | {bm['net_return']*100:.2f}% | {aggregate['excess_return']*100:.2f} pp | {sm['max_open_to_open_drawdown']*100:.2f}% | {pf_text} | {sharpe_text} | {sm['closed_trades']} | {sm['exposure']*100:.1f}% | {sm['bars']} |")
           lines.append("")
+          lines.append("- Aggregate walk-forward metrics describe one adaptive selection process, not a single fixed candidate. The selected candidate may change at fold boundaries.")
           for fold in walk_forward["folds"]:
               baseline_fold = fold["cost_scenarios"]["1x"]
-              lines.append(f"- Fold {fold['fold']}: selected {fold['selected_candidate']}; training ends at {fold['training_end_index_exclusive']}; OOS open interval {fold['test_return_start_open_index']}→{fold['test_return_end_open_index']}; 1x return {baseline_fold['strategy']['net_return']*100:.2f}%, matched B&H {baseline_fold['buy_and_hold']['net_return']*100:.2f}%, trades {baseline_fold['strategy']['closed_trades']}.")
+              training_trades = fold["training_closed_trades"][fold["selected_candidate"]]
+              lines.append(f"- Fold {fold['fold']}: selected {fold['selected_candidate']}; training ends at {fold['training_end_index_exclusive']}; selected-candidate training trades {training_trades}; OOS open interval {fold['test_return_start_open_index']}→{fold['test_return_end_open_index']}; 1x return {baseline_fold['strategy']['net_return']*100:.2f}%, matched B&H {baseline_fold['buy_and_hold']['net_return']*100:.2f}%, OOS trades {baseline_fold['strategy']['closed_trades']}.")
           lines += ["", "## Cost stress ranking stability", ""]
           for level, report in reports.items():
               lines.append(f"### {level} costs")
