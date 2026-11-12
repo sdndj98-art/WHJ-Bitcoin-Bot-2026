@@ -1672,6 +1672,14 @@ body:has(#whj-wallboard) .banner p{margin:3px 0}
    set('wb-gold-equity',money(gold.equity_usd));set('wb-gold-pnl','P/L '+money(gold.pnl_usd));
    set('wb-gold-status',status(gold));set('wb-gold-feed',gold.feed_status||'مطلوبة');
    set('wb-gold-trades',(gold.closed_trades||0)+' صفقة · رسوم '+money(gold.fees_usd));
+   const closedTrades=Number(btc.closed_trades||0)+Number(gold.closed_trades||0);
+   const strategies=Array.isArray(d.strategies)?d.strategies:[];
+   set('wb-agent-1',btc.feed_status==='CONNECTED'?'تغذية BTC متاحة':'بانتظار اتصال BTC');
+   set('wb-agent-2',d.data_quality?.quality|| (btc.feed_status==='CONNECTED'?'بانتظار فحص الجودة':'موقوف: لا توجد بيانات'));
+   set('wb-agent-3',strategies.length?strategies.length+' مرشحاً قيد المراجعة':'لا توجد استراتيجيات مؤهلة');
+   set('wb-agent-4',d.paper_only===true&&btc.feed_status==='CONNECTED'?'محاكاة بعد اجتياز الفحص':'موقوف حتى تحقق البيانات');
+   set('wb-agent-5',trades.length?'يسجل '+trades.length+' صفقة':'سجل فارغ');
+   set('wb-agent-6',closedTrades>=30?'عينة أولية قابلة للتقييم':'عينة غير كافية ('+closedTrades+'/30)');
    set('wb-system',d.status==='ACTIVE'?'مراقبة موثقة':'غير نشط / بانتظار البيانات');
    set('wb-updated',d.updated_at||'لا يوجد تحديث تداول');
    set('wb-audit-status',trades.length?'توجد سجلات صفقات':'لا توجد أحداث مسجلة');
