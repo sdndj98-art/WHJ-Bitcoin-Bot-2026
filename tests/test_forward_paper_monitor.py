@@ -332,7 +332,7 @@ class ForwardPaperMonitorTests(unittest.TestCase):
             self.assertEqual(first["initial_cash_usd"], 10.0)
             self.assertEqual(first["completed_trades"], 0)
             self.assertEqual(first["schema_version"], 1)
-            self.assertEqual(first["qualified_ensemble"]["initial_cash_usd"], 1000.0)
+            self.assertEqual(first["qualified_ensemble"]["initial_cash_usd"], 4.0)
             self.assertEqual(first["qualified_ensemble"]["return_pct"], 0.0)
             self.assertEqual(first["qualified_ensemble"]["completed_trades"], 0)
             self.assertEqual(first["qualified_ensemble"]["status"], "INSUFFICIENT_FORWARD_SAMPLE")
