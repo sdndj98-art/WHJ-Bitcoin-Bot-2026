@@ -2,6 +2,7 @@ import math
 import unittest
 
 from strategy_family_lab import build_strategy_signals
+from strategy_lab import _market_regime_diagnostics
 from rolling_walk_forward import evaluate_rolling_walk_forward
 
 
@@ -84,6 +85,22 @@ class RollingWalkForwardTests(unittest.TestCase):
         self.assertEqual(result["allocation_fraction"], 0.25)
         for fold in result["folds"]:
             self.assertLessEqual(fold["test_strategy"]["exposure"], 0.25)
+
+    def test_regime_diagnostics_cover_all_17_candidates_and_are_not_pnl(self):
+        rows = []
+        for i in range(280):
+            close = 100.0 + 0.08 * i + 3.0 * math.sin(i / 9.0)
+            rows.append([i, close, close * 1.01, close * 0.99, close, 1000.0])
+        signals = build_strategy_signals(rows)
+        closes = [row[4] for row in rows]
+        diagnostics = _market_regime_diagnostics(closes, signals, 220)
+        self.assertIn("not trade-level PnL", diagnostics["measurement"])
+        for regime in diagnostics["regimes"].values():
+            self.assertEqual(
+                set(regime["strategy_signal_diagnostics"]),
+                set(signals),
+            )
+            self.assertIn(regime["evidence_status"], {"DESCRIPTIVE_ONLY", "INSUFFICIENT_SAMPLE"})
 
     def test_aggregate_benchmark_entry_cost_is_charged_once_across_folds(self):
         rows = self.candles(22)
