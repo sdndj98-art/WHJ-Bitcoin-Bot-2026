@@ -66,3 +66,13 @@ The 70/30 experiment is not rolling walk-forward retraining and does not supply 
 - Added tests for expanding/contiguous fold boundaries, future-price isolation of the first fold's selection, invalid inputs, the full 17-signal universe on synthetic OHLCV, and the allocation cap.
 
 This is a new evaluator implementation, not a completed historical BTC result. It relies on the caller to provide causal, predeclared signal streams; it does not prove their causality, reserve a final untouched holdout, or model spread/depth/impact/latency. Full repository tests and a real historical workflow artifact must pass/be inspected before any empirical conclusion.
+
+### Walk-forward fold integrity and cost stress (2026-11-12)
+
+- Each fold chooses a candidate using only the expanding history through the prior boundary, then evaluates the frozen signal stream over the next block.
+- The test slice retains two pre-test candles so the first OOS open-to-open return begins at the prior boundary open; successive fold return intervals are contiguous without a skipped boundary bar.
+- Each selected fold is evaluated at 1x, 2x, and 3x the same fee/slippage assumptions. Candidate selection remains based on the predeclared 1x training score; stressed costs do not influence selection.
+- Aggregate OOS net return, matched buy-and-hold return, excess return, and close-to-close drawdown are reported separately for each cost scenario.
+- Drawdown is explicitly close-to-close/open-to-open equity drawdown, not intrabar OHLC drawdown.
+
+The evaluator still requires a full repository test run and a historical dataset run before its metrics can be treated as empirical evidence. It does not model variable spread, order-book depth, impact, latency, or tick-level execution; no candidate is promoted.
