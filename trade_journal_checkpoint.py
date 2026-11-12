@@ -113,9 +113,11 @@ def upgrade_legacy_continuity_checkpoint(checkpoint, path, symbol, expected_last
             or checkpoint.get("feed_continuity_verified") is not True):
         raise ValueError("legacy continuity checkpoint is not trusted")
     metadata = inspect_trade_journal(path)
+    # Check exact byte identity before derived cursor metadata so journal
+    # mutation is reported as an integrity failure, not a secondary ID mismatch.
     legacy_fields = (
-        "symbol", "first_trade_id", "last_trade_id", "trade_count",
         "journal_size_bytes", "journal_sha256",
+        "symbol", "first_trade_id", "last_trade_id", "trade_count",
     )
     for field in legacy_fields:
         if checkpoint.get(field) != metadata[field]:
