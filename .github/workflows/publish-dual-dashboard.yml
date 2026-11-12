@@ -1,4 +1,4 @@
-name: Publish WHJ dual-portfolio dashboard
+name: Publish WHJ QuantumOrb neural command center
 
 on:
   push:
@@ -24,24 +24,22 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout dashboard source from research branch
+      - name: Checkout QuantumOrb dashboard source
         uses: actions/checkout@v4
         with:
-          ref: research/global-evidence-strategy-lab-20261112
+          ref: feature/quantumorb-living-motion-20261110
           path: dashboard-source
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v5
-      - name: Assemble isolated dashboard site
+      - name: Assemble QuantumOrb site
         run: |
           mkdir -p _site
-          cp dashboard-source/index.html _site/index.html
-          cp dashboard-source/dual_portfolio_dashboard.html _site/dual_portfolio_dashboard.html
-          cp dashboard-source/dual_portfolio.json _site/dual_portfolio.json
+          cp dashboard-source/web/index.html _site/index.html
           touch _site/.nojekyll
       - name: Upload dashboard site
         uses: actions/upload-pages-artifact@v3
         with:
           path: _site
-      - name: Deploy dashboard
+      - name: Deploy QuantumOrb dashboard
         id: deployment
         uses: actions/deploy-pages@v4
