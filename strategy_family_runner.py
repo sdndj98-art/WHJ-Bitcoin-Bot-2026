@@ -1,9 +1,23 @@
 """Run every implemented BTC signal candidate under one matched research protocol."""
+import math
+
 from strategy_family_lab import build_strategy_signals, STRATEGY_FAMILIES
 from strategy_family_evaluator import evaluate_candidate
 
-def run_strategy_universe(candles, fee_rate=0.001, slippage_rate=0.0005, bars_per_year=24*365, evaluation_start_index=None):
+# Research cap inherited from the existing WHJ evaluation contract.
+MAX_RESEARCH_ALLOCATION_FRACTION = 0.25
+
+
+def run_strategy_universe(
+    candles, fee_rate=0.001, slippage_rate=0.0005, bars_per_year=24*365,
+    evaluation_start_index=None, allocation_fraction=MAX_RESEARCH_ALLOCATION_FRACTION,
+):
     """Evaluate all declared candidates on identical rows; never promote a winner."""
+    if (isinstance(allocation_fraction, bool)
+            or not isinstance(allocation_fraction, (int, float))
+            or not math.isfinite(allocation_fraction)
+            or not 0 < allocation_fraction <= MAX_RESEARCH_ALLOCATION_FRACTION):
+        raise ValueError("allocation_fraction must be in (0, 0.25]; research cap cannot be raised")
     signals = build_strategy_signals(candles)
     if evaluation_start_index is not None:
         if isinstance(evaluation_start_index, bool) or not isinstance(evaluation_start_index, int):
@@ -17,7 +31,11 @@ def run_strategy_universe(candles, fee_rate=0.001, slippage_rate=0.0005, bars_pe
         signal_offset = 0
     results = {}
     for name, series in signals.items():
-        results[name] = evaluate_candidate(evaluation_candles, series[signal_offset:], fee_rate, slippage_rate, bars_per_year)
+        results[name] = evaluate_candidate(
+            evaluation_candles, series[signal_offset:], fee_rate,
+            slippage_rate, bars_per_year,
+            allocation_fraction=allocation_fraction,
+        )
     family_members = {name: list(members) for name, members in STRATEGY_FAMILIES.items()}
     ranking = sorted(
         results,
@@ -27,6 +45,8 @@ def run_strategy_universe(candles, fee_rate=0.001, slippage_rate=0.0005, bars_pe
     return {
         "protocol": "same_candles_same_next_open_costs_matched_buy_and_hold",
         "candidate_count": len(results),
+        "allocation_fraction": allocation_fraction,
+        "allocation_cap_fraction": MAX_RESEARCH_ALLOCATION_FRACTION,
         "evaluation_start_index": evaluation_start_index,
         "signal_warmup_contract": "Signals are calculated on the full history; when an OOS start is supplied, the immediately preceding completed bar is retained as the first signal and the first OOS fill is at the next open.",
         "family_members": family_members,
