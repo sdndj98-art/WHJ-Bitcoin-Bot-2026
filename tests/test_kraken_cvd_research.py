@@ -185,7 +185,13 @@ class KrakenCvdResearchTests(unittest.TestCase):
             "version": 1,
             "source": "kraken_spot_trade_feed_adapter",
             "feed_continuity_verified": True,
-            **metadata,
+            **{
+                field: metadata[field]
+                for field in (
+                    "symbol", "first_trade_id", "last_trade_id", "trade_count",
+                    "journal_size_bytes", "journal_sha256",
+                )
+            },
         }
         upgraded = upgrade_legacy_continuity_checkpoint(
             legacy, self.path, "BTC/USD", expected_last_trade_id=103
