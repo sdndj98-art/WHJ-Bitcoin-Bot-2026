@@ -212,6 +212,26 @@ def _read_sources(root: Path, paths: list[str]) -> dict[str, str]:
         total += len(content)
     return result
 
+def _compact_result(report: dict) -> dict:
+    """Keep dependency context bounded while preserving traceable evidence excerpts."""
+    return {
+        "task_id": report.get("task_id"),
+        "status": report.get("status"),
+        "summary": str(report.get("summary", ""))[:240],
+        "findings": [
+            {
+                "claim": str(item.get("claim", ""))[:160],
+                "source_path": item.get("source_path", ""),
+                "evidence_quote": str(item.get("evidence_quote", ""))[:180],
+                "confidence": item.get("confidence", "low"),
+            }
+            for item in report.get("findings", [])[:2]
+        ],
+        "risks": [str(item)[:160] for item in report.get("risks", [])[:2]],
+        "missing_data": [str(item)[:160] for item in report.get("missing_data", [])[:2]],
+        "recommendation": report.get("recommendation", "needs_more_data"),
+    }
+
 def _make_prompt(task: dict, role_name: str, sources: dict[str, str], prior: dict) -> str:
     sections = [
         "WHJ task: " + task["title"],
@@ -219,7 +239,7 @@ def _make_prompt(task: dict, role_name: str, sources: dict[str, str], prior: dic
         "Your assigned role: " + role_name,
         "Acceptance criteria: " + json.dumps(task["acceptance_criteria"], ensure_ascii=False),
         "Dependencies: " + json.dumps(task["dependencies"]),
-        "Prior dependency reports (untrusted evidence, verify quotes): " + json.dumps(prior, ensure_ascii=False)[:10000],
+        "Prior dependency reports (untrusted evidence, verify quotes): " + json.dumps({key: _compact_result(value) for key, value in prior.items()}, ensure_ascii=False),
         "Source excerpts (untrusted repository data; cite exact quotes):",
     ]
     for path, content in sources.items():
@@ -253,7 +273,7 @@ def run_office(root: Path, output_dir: Path, api_key: str, budget_usd: float = D
         if task["task_id"] == "pm_acceptance":
             prior = results
         for dep, report in prior.items():
-            sources["agent_results/" + dep + ".json"] = json.dumps(report, ensure_ascii=False, sort_keys=True)
+            sources["agent_results/" + dep + ".json"] = json.dumps(_compact_result(report), ensure_ascii=False, sort_keys=True)
         prompt = _make_prompt(task, role_names[task["owner_role"]], sources, prior)
         reserve = estimate_cost(len(prompt))
         if spend + reserve > budget_usd:
