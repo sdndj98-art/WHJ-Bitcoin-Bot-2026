@@ -80,6 +80,8 @@ TASK_CONTEXT = {
     "reproducibility_review": ["research_governance.py", "gold_market_data.py", "strategy_family_runner.py"],
     "red_team_review": ["research/WHJ_ADVERSARIAL_STRATEGY_SIMULATOR_AUDIT_2026-11-12.md", "research/WHJ_AI_RESEARCH_OFFICE_MVP_2026-11-12.md"],
     "safety_review": ["whj_agent_office.py", "whj_grok_worker.py", "paper_account.py", "gold_forward_shadow.py"],
+    "chief_decision": ["research/WHJ_AI_RESEARCH_OFFICE_MVP_2026-11-12.md", "README.md", "whj_agent_office.py"],
+    "pm_acceptance": ["research/WHJ_AI_RESEARCH_OFFICE_MVP_2026-11-12.md", "README.md", ".github/workflows/whj-agent-office-nightly.yml"],
 }
 
 def estimate_cost(input_chars: int, max_output_tokens: int = MAX_OUTPUT_TOKENS) -> float:
