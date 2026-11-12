@@ -14,6 +14,7 @@ from pathlib import Path
 
 from paper_account import seed_forward_paper_account, update_paper_account
 from strategy_lab import run_strategy_lab
+from slow_momentum_lab import evaluate_slow_momentum
 
 BASE_URL = "https://api.exchange.coinbase.com/products/BTC-USD/candles"
 INTERVAL_MS = 60 * 60 * 1000
@@ -2157,6 +2158,9 @@ def main():
         )
 
     daily_bars = aggregate_candles(candles, 24)
+    slow_time_series_momentum_research = evaluate_slow_momentum(
+        [bar["close"] for bar in daily_bars], fee=FEE_RATE, slippage=SLIPPAGE_RATE
+    )
     ohlc_breakout_research = run_ohlc_breakout_lab(daily_bars)
     ohlc_breakout_stress = run_ohlc_breakout_lab(daily_bars, fee=0.002, slippage=0.001)
     long_short_research = run_long_short_lab(daily_bars)
@@ -2243,6 +2247,7 @@ def main():
             "must_outperform_matched_buy_and_hold_in_base_and_stress": True,
         },
         "forward_paper_accounts": forward_paper,
+        "slow_time_series_momentum_research": slow_time_series_momentum_research,
         "ohlc_breakout_research": ohlc_breakout_research,
         "ohlc_breakout_stress": ohlc_breakout_stress,
         "long_short_research": long_short_research,
@@ -2300,6 +2305,22 @@ def main():
                 timeframe: forward_paper["forward_only_ema50_200_4h_6h_50_50_portfolio"]["sleeves"][timeframe]["max_drawdown_pct"]
                 for timeframe in ("4h", "6h")
             },
+        },
+        "slow_time_series_momentum": {
+            horizon: {
+                "oos_return_pct": metrics["out_of_sample"]["return_pct"],
+                "oos_max_drawdown_pct": metrics["out_of_sample"]["max_drawdown_pct"],
+                "oos_profit_factor": metrics["out_of_sample"]["profit_factor"],
+                "oos_trades": metrics["out_of_sample"]["closed_trades"],
+                "window_returns_pct": [
+                    item["metrics"]["return_pct"] for item in metrics["walk_forward_windows"]
+                ],
+                "two_x_cost_return_pct": slow_time_series_momentum_research["cost_stress"]["2x"]["candidates"][horizon]["out_of_sample"]["return_pct"],
+                "three_x_cost_return_pct": slow_time_series_momentum_research["cost_stress"]["3x"]["candidates"][horizon]["out_of_sample"]["return_pct"],
+                "two_x_cost_benchmark_return_pct": slow_time_series_momentum_research["cost_stress"]["2x"]["matched_buy_and_hold"]["out_of_sample"]["return_pct"],
+                "three_x_cost_benchmark_return_pct": slow_time_series_momentum_research["cost_stress"]["3x"]["matched_buy_and_hold"]["out_of_sample"]["return_pct"],
+            }
+            for horizon, metrics in slow_time_series_momentum_research["candidates"].items()
         },
         "strategies": {
             name: {

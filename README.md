@@ -134,3 +134,10 @@ python cvd_timeframes.py --trade-log state/kraken_btc_usd_trades.jsonl --output 
 ```
 
 The replay produces 1s, 5s, 15s, 30s, 1m, 3m, 5m, 15m, 30m, 1h, 4h, 6h, 12h and 1d bars with OHLC, buy/sell volume, delta, cumulative CVD, closed-bar status and missing-interval flags. Empty intervals are not fabricated. The CVD history begins at the first event retained in the journal; it is venue-specific and is not a consolidated-market signal or a trading instruction.
+
+
+## XAU/USD gold research (separate from BTC)
+
+The research branch includes an isolated daily gold study for Yahoo Finance's `GC=F` continuous COMEX gold-futures reference series. It validates daily OHLC data, drops the final potentially incomplete candle, fingerprints the dataset, and compares the same fixed EMA50/EMA200 and past-only ATR-volatility filter under three chronological out-of-sample folds. Signals execute at the next daily open; the OHLC simulator applies a 25% allocation cap, fixed 2% stop / 4% target, stop-first collision handling, and 1x/2x/3x fee-and-slippage sensitivity. Cash and a matched 25%-allocated buy-and-hold baseline are included.
+
+This is a **separate gold research track**, not a claim that BTC parameters transfer to gold. Yahoo's GC=F is a continuous COMEX gold-futures reference series, not spot XAU/USD or a broker bid/ask feed; costs are proxies and do not include actual broker spread, commission, overnight swap/financing, markup, or market impact. For broker-specific live quotes or paper monitoring, the existing optional MT5 adapter can read broker symbols such as `XAUUSD` (exact suffix varies), but it is read-only and its BTC paper-ledger update is deliberately blocked for non-BTC symbols. The gold workflow does not access or modify existing paper ledgers and never sends orders.

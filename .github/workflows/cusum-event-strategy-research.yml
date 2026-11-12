@@ -1,0 +1,120 @@
+name: WHJ Purged CUSUM Triple Barrier Research
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [research/global-evidence-strategy-lab-20261112]
+    paths:
+      - "cusum_event_strategy_lab.py"
+      - "cusum_triple_barrier_lab.py"
+      - "tests/test_cusum_event_strategy_lab.py"
+      - ".github/workflows/cusum-event-strategy-research.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: whj-cusum-event-strategy-research
+  cancel-in-progress: false
+
+jobs:
+  isolated-cusum-research:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Run focused tests
+        run: python -m unittest discover -s tests -p 'test_cusum_event_strategy_lab.py' -v
+      - name: Evaluate purged expanding OOS folds
+        run: |
+          python - <<'PY'
+          import hashlib
+          import json
+          from datetime import datetime, timezone
+          from pathlib import Path
+          from historical_research import load_two_year_candles
+          from cusum_event_strategy_lab import evaluate_cusum_fold
+
+          candles = load_two_year_candles(days=1500)
+          n = len(candles)
+          if n < 1500:
+              raise RuntimeError(f"Insufficient data: {n} hourly candles")
+          payload = json.dumps(candles, sort_keys=True, separators=(",", ":"), allow_nan=False).encode()
+          dataset_hash = hashlib.sha256(payload).hexdigest()
+          cuts = [int(n * x) for x in (0.55, 0.70, 0.85, 1.0)]
+          if any(cuts[i + 1] - cuts[i] < 1000 for i in range(3)):
+              raise RuntimeError(f"Insufficient fold lengths: {cuts}")
+          costs = {"1x": (0.001, 0.0005), "2x": (0.002, 0.001), "3x": (0.003, 0.0015)}
+          folds = []
+          for fold_no in range(3):
+              start, end = cuts[fold_no], cuts[fold_no + 1]
+              item = {"fold": fold_no + 1, "oos_start_index": start, "oos_end_exclusive": end, "cost_stress": {}}
+              for level, (fee, slip) in costs.items():
+                  item["cost_stress"][level] = evaluate_cusum_fold(candles, start, end, fee, slip)
+              folds.append(item)
+          report = {
+              "generated_at_utc": datetime.now(timezone.utc).isoformat(),
+              "source": "Coinbase public BTC-USD hourly spot candles",
+              "dataset_sha256": dataset_hash,
+              "candle_count": n,
+              "imputed_hour_count": int(candles[0].get("_imputed_hour_count", 0)),
+              "first_timestamp_utc": datetime.fromtimestamp(candles[0]["timestamp"] / 1000, timezone.utc).isoformat(),
+              "last_timestamp_utc": datetime.fromtimestamp(candles[-1]["timestamp"] / 1000, timezone.utc).isoformat(),
+              "protocol": {
+                  "folds": "three consecutive chronological OOS folds covering final 45%; each fold resets to $1,000",
+                  "training": "expanding prior-only labels; labels ending within 24 bars of OOS start are purged; 24-bar embargo",
+                  "event_sampling": "symmetric CUSUM; 24-bar past-only volatility; threshold 1.0 sigma",
+                  "features": ["1h return", "3h return", "6h return", "12h return", "24h return", "past 24h return volatility", "EMA200 distance"],
+                  "classifier": "deterministic class-balanced logistic regression; 160 epochs; L2 0.01; fixed probability threshold 0.55",
+                  "triple_barrier": "next-open entry; 1.5 sigma*sqrt(24) profit barrier; 1.0 sigma*sqrt(24) stop; 24-bar maximum holding; stop-first collision",
+                  "risk": "25% of available cash per trade; long/cash only; no leverage",
+                  "benchmarks": "cash and matched 25%-allocated buy-and-hold with 75% cash",
+                  "costs": "fee and slippage per side at 1x, 2x, and 3x",
+                  "limitations": "fixed percentage costs do not model spread, depth, impact, latency, or partial fills; labels and fills use OHLC bars, not tick-level path reconstruction",
+              },
+              "folds": folds,
+              "promotion_status": "NO_CANDIDATE_PROMOTED",
+              "live_orders": False,
+              "paper_ledgers_read_or_written": False,
+          }
+          Path("cusum_event_strategy_report.json").write_text(json.dumps(report, indent=2, sort_keys=True), encoding="utf-8")
+          lines = [
+              "# WHJ purged CUSUM triple-barrier research", "",
+              f"- Generated UTC: {report['generated_at_utc']}",
+              f"- Dataset SHA-256: `{dataset_hash}`",
+              f"- BTC-USD hourly candles: {n}",
+              f"- Explicitly imputed flat hours: {report['imputed_hour_count']}",
+              "- Status: RESEARCH ONLY — NO CANDIDATE PROMOTED", "",
+              "| Fold | Costs | Status | Train labels | OOS events | Selected | Trades | Return | OHLC DD | PF | Matched 25% buy/hold | Cash |",
+              "|---:|---|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|",
+          ]
+          for fold in folds:
+              for level, result in fold["cost_stress"].items():
+                  if result["status"] != "EVALUATED":
+                      lines.append(f"| {fold['fold']} | {level} | {result['status']} | {result.get('training_labels', 0)} | 0 | 0 | 0 | — | — | — | — | 0.0000% |")
+                      continue
+                  lines.append(
+                      f"| {fold['fold']} | {level} | {result['status']} | {result['training_labels']} | "
+                      f"{result['oos_cusum_events']} | {result['oos_selected_events']} | {result['closed_trades']} | "
+                      f"{result['return_pct']:.4f}% | {result['max_intrabar_ohlc_envelope_drawdown_pct']:.4f}% | "
+                      f"{result['closed_trade_profit_factor'] if result['closed_trade_profit_factor'] is not None else '—'} | "
+                      f"{result['buy_and_hold']['return_pct']:.4f}% | 0.0000% |"
+                  )
+          lines += [
+              "",
+              "> This is one fixed research candidate, not a parameter sweep. Labels are purged before each OOS fold and no test labels train the classifier. Results are historical evidence only; no candidate is promoted and no paper or live trading state is touched.",
+          ]
+          Path("cusum_event_strategy_report.md").write_text("\n".join(lines) + "\n", encoding="utf-8")
+          PY
+      - name: Upload isolated CUSUM research report
+        uses: actions/upload-artifact@v4
+        with:
+          name: whj-cusum-event-research-${{ github.run_number }}
+          path: |
+            cusum_event_strategy_report.json
+            cusum_event_strategy_report.md
+          if-no-files-found: error
+          retention-days: 30

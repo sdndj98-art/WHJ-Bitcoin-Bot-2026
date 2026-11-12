@@ -1,0 +1,144 @@
+# Research rerun audit: workflow-file updates intentionally retrigger this isolated public-data job.
+# 2026-11-12 audit rerun: publish the actual 17-candidate historical report for review.
+# 2026-11-12 final-head rerun: bind the report and manifest to the latest PR head.
+name: WHJ Isolated Multi-Strategy Historical Research
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [research/global-evidence-strategy-lab-20261112]
+    paths:
+      - "strategy_family_lab.py"
+      - "strategy_family_evaluator.py"
+      - "strategy_family_runner.py"
+      - "research_governance.py"
+      - "tests/test_strategy_family_lab.py"
+      - "tests/test_strategy_family_evaluator.py"
+      - "tests/test_strategy_family_runner.py"
+      - ".github/workflows/multi-strategy-isolated-research.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: whj-isolated-multi-strategy-research
+  cancel-in-progress: false
+
+jobs:
+  isolated-multi-strategy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Evaluate strategy universe on chronological holdout
+        run: |
+          python - <<'PY'
+          import hashlib
+          import json
+          import os
+          from datetime import datetime, timezone
+          from pathlib import Path
+          from historical_research import load_two_year_candles
+          from research_governance import build_trial_manifest, cscv_probability_of_backtest_overfitting
+          from strategy_family_runner import run_strategy_universe
+
+          # Public Coinbase spot data only. No paper account, monitor, cache,
+          # exchange credentials, order route, or live-trading code is invoked.
+          candles = load_two_year_candles(days=1500)
+          if len(candles) < 1000:
+              raise RuntimeError(f"Insufficient hourly history: {len(candles)} candles")
+          dataset_payload = json.dumps(candles, sort_keys=True, separators=(",", ":"), allow_nan=False).encode("utf-8")
+          dataset_sha256 = hashlib.sha256(dataset_payload).hexdigest()
+          split_index = int(len(candles) * 0.70)
+          if split_index < 250 or len(candles) - split_index < 32:
+              raise RuntimeError("Insufficient train/OOS observations for the declared evaluation protocol")
+          generated = datetime.now(timezone.utc).isoformat()
+          cost_levels = {"1x": (0.001, 0.0005), "2x": (0.002, 0.001), "3x": (0.003, 0.0015)}
+          reports = {}
+          for level, (fee, slippage) in cost_levels.items():
+              reports[level] = run_strategy_universe(
+                  candles, fee_rate=fee, slippage_rate=slippage,
+                  bars_per_year=24*365, evaluation_start_index=split_index,
+              )
+          base = reports["1x"]
+          return_matrix = {name: item["net_returns"] for name, item in base["results"].items()}
+          count = len(next(iter(return_matrix.values())))
+          partitions = next((n for n in (8, 6, 4) if count >= 8 and count % n == 0), None)
+          pbo = cscv_probability_of_backtest_overfitting(return_matrix, partitions=partitions) if partitions else None
+          manifests = [
+              build_trial_manifest(
+                  trial_id=f"btc-family-{name}-{os.environ['GITHUB_RUN_ID']}",
+                  candidate_id=name,
+                  parameters={"fee_rate": 0.001, "slippage_rate": 0.0005, "bars_per_year": 8760},
+                  dataset_sha256=dataset_sha256,
+                  data_source="Coinbase public BTC-USD hourly spot candles",
+                  code_commit_sha=os.environ["GITHUB_SHA"],
+                  run_id=os.environ["GITHUB_RUN_ID"],
+                  created_utc=generated,
+                  evaluation_protocol="70/30 chronological split; indicators see full past history; OOS starts with prior completed close and next-open fill; matched buy-and-hold; 1x/2x/3x fixed fee/slippage stress; not rolling retraining",
+              ) for name in base["results"]
+          ]
+          output = {
+              "generated_at_utc": generated,
+              "source": "Coinbase public BTC-USD hourly spot candles",
+              "dataset_sha256": dataset_sha256,
+              "candle_count": len(candles),
+              "train_end_index": split_index-1,
+              "oos_start_index": split_index,
+              "oos_candles": len(candles)-split_index,
+              "candidate_count": base["candidate_count"],
+              "candidate_names": list(base["results"]),
+              "cost_stress": reports,
+              "cscv_pbo": pbo,
+              "pbo_scope_warning": "CSCV/PBO is a selection-bias diagnostic across only the 17 declared candidates on this single OOS segment; not a future-profit probability, not a global trial census, and not a replacement for an untouched final holdout.",
+              "trial_manifest": manifests,
+              "promotion_status": "NO_CANDIDATE_PROMOTED",
+              "live_orders": False,
+              "paper_ledgers_read_or_written": False,
+          }
+          Path("btc_strategy_universe_report.json").write_text(json.dumps(output, indent=2, sort_keys=True), encoding="utf-8")
+          Path("btc_strategy_trial_manifest.json").write_text(json.dumps(manifests, indent=2, sort_keys=True), encoding="utf-8")
+          lines = [
+              "# WHJ multi-strategy BTC historical research", "",
+              f"- Generated UTC: {generated}",
+              f"- Dataset SHA-256: `{dataset_sha256}`",
+              f"- Hourly candles: {len(candles)}; OOS candles: {len(candles)-split_index}",
+              f"- Candidate count: {base['candidate_count']}",
+              f"- CSCV/PBO: {pbo if pbo is not None else 'not computed (partition constraints)'}",
+              "- Status: RESEARCH ONLY — NO CANDIDATE PROMOTED", "",
+              "| Candidate | OOS net return | Matched B&H | Excess | Max DD | PF (periodic) | Exposure | Trades closed |",
+              "|---|---:|---:|---:|---:|---:|---:|---:|",
+          ]
+          ranked = base['descriptive_ranking_by_terminal_excess_equity']
+          for name in ranked:
+              item = base['results'][name]
+              m, b = item['strategy'], item['buy_and_hold']
+              pf = m['profit_factor'] if m['profit_factor'] is not None else '—'
+              lines.append(f"| {name} | {m['net_return']*100:.2f}% | {b['net_return']*100:.2f}% | {(m['net_return']-b['net_return'])*100:.2f} pp | {m['max_drawdown']*100:.2f}% | {pf} | {m['exposure']*100:.1f}% | {m['closed_trades']} |")
+          lines += ["", "## Cost stress ranking stability", ""]
+          for level, report in reports.items():
+              lines.append(f"### {level} costs")
+              for name in report['descriptive_ranking_by_terminal_excess_equity'][:5]:
+                  m = report['results'][name]['strategy']
+                  b = report['results'][name]['buy_and_hold']
+                  lines.append(f"- {name}: net {m['net_return']*100:.2f}%, matched B&H {b['net_return']*100:.2f}%, excess {(m['net_return']-b['net_return'])*100:.2f} pp")
+              lines.append("")
+          lines += [
+              "> This is a single 70/30 chronological experiment, not rolling walk-forward retraining. Fixed percentage costs do not model spread, depth, impact, latency, or partial fills. Periodic-return profit factor is not closed-trade profit factor.",
+              "> The descriptive ranking is exposed to multiple testing and is not a selection/promotion decision. A separate untouched holdout and forward-only paper validation are still required.",
+          ]
+          Path("btc_strategy_universe_report.md").write_text("\n".join(lines)+"\n", encoding="utf-8")
+          PY
+      - name: Upload isolated multi-strategy report
+        uses: actions/upload-artifact@v4
+        with:
+          name: whj-multi-strategy-research-${{ github.run_number }}
+          path: |
+            btc_strategy_universe_report.json
+            btc_strategy_universe_report.md
+            btc_strategy_trial_manifest.json
+          if-no-files-found: error
+          retention-days: 30

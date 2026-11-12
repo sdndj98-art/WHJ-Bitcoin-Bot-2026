@@ -1,0 +1,186 @@
+# Research rerun audit: workflow-file updates intentionally retrigger this isolated public-data job.
+# 2026-11-12 audit rerun: publish OOS returns, uncertainty intervals, and trial governance.
+name: WHJ Isolated Slow Momentum Historical Research
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [research/global-evidence-strategy-lab-20261112]
+    paths:
+      - "slow_momentum_lab.py"
+      - "historical_research.py"
+      - "research_governance.py"
+      - "tests/test_research_governance.py"
+      - "tests/test_slow_momentum_lab.py"
+      - ".github/workflows/slow-momentum-isolated-research.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: whj-isolated-slow-momentum-research
+  cancel-in-progress: false
+
+jobs:
+  isolated-slow-momentum:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Evaluate isolated daily-close momentum
+        run: |
+          python - <<'PY'
+          import hashlib
+          import json
+          import os
+          from datetime import datetime, timezone
+          from pathlib import Path
+          from historical_research import aggregate_candles, load_two_year_candles
+          from research_governance import (
+              build_trial_manifest,
+              cscv_probability_of_backtest_overfitting,
+              moving_block_bootstrap_return_ci,
+              trade_concentration_diagnostic,
+          )
+          from slow_momentum_lab import evaluate_slow_momentum, momentum_signals, periodic_net_returns
+
+          # Read-only market-data loader and isolated evaluator only.
+          # No paper account functions, monitors, caches, or order pathways.
+          hourly = load_two_year_candles(days=1500)
+          daily = aggregate_candles(hourly, 24)
+          closes = [float(row["close"]) for row in daily]
+          report = evaluate_slow_momentum(closes)
+          dataset_payload = json.dumps(daily, sort_keys=True, separators=(",", ":"), allow_nan=False).encode("utf-8")
+          dataset_sha256 = hashlib.sha256(dataset_payload).hexdigest()
+          generated_at = datetime.now(timezone.utc).isoformat()
+          trial_manifest = [
+              build_trial_manifest(
+                  trial_id="slow-tsmom-" + str(lookback) + "d-" + os.environ["GITHUB_RUN_ID"],
+                  candidate_id="slow-tsmom-" + str(lookback) + "d",
+                  parameters={"lookback_days": int(lookback), "allocation_fraction": report["allocation_fraction"]},
+                  dataset_sha256=dataset_sha256,
+                  data_source="Coinbase public BTC-USD spot hourly candles aggregated to complete UTC daily bars",
+                  code_commit_sha=os.environ["GITHUB_SHA"],
+                  run_id=os.environ["GITHUB_RUN_ID"],
+                  created_utc=generated_at,
+                  evaluation_protocol="70/30 chronological split with three fixed OOS subperiods; not rolling walk-forward",
+              )
+              for lookback in report["candidates"]
+          ]
+          report["trial_governance"] = {
+              "dataset_sha256": dataset_sha256,
+              "trial_count": len(trial_manifest),
+              "trial_ids": [item["trial_id"] for item in trial_manifest],
+              "selection_status": "UNASSESSED",
+              "pbo_status": "NOT_COMPUTED_NO_ALIGNED_PERIODIC_RETURN_MATRIX",
+              "warning": "This manifest records only variants in this workflow; it is not a global count of all experiments ever attempted.",
+          }
+          Path("slow_momentum_trial_manifest.json").write_text(
+              json.dumps(trial_manifest, indent=2, sort_keys=True), encoding="utf-8"
+          )
+          periodic_returns = {
+              str(lookback): periodic_net_returns(
+                  closes,
+                  momentum_signals(closes, int(lookback)),
+                  report["split_index"],
+                  len(closes),
+                  fee=report["costs"]["fee_per_side"],
+                  slippage=report["costs"]["slippage_per_side"],
+              )
+              for lookback in report["candidates"]
+          }
+          # Quantify uncertainty and winner concentration on OOS-only data.
+          # The bootstrap is conditional on a fixed 7-day block length and is
+          # a fragility diagnostic, not a probability of future profitability.
+          for key, candidate in report["candidates"].items():
+              oos_metrics = candidate["out_of_sample"]
+              closed_pnls = oos_metrics.pop("closed_trade_pnls_usd", [])
+              oos_metrics["trade_concentration_diagnostic"] = trade_concentration_diagnostic(closed_pnls)
+              oos_metrics["moving_block_bootstrap_return_ci"] = moving_block_bootstrap_return_ci(
+                  periodic_returns[key],
+                  block_length=min(7, len(periodic_returns[key])),
+                  bootstrap_samples=2000,
+                  seed=20261112 + int(key),
+              )
+
+          return_count = len(next(iter(periodic_returns.values())))
+          pbo_partitions = next((count for count in (8, 6, 4) if return_count % count == 0), None)
+          if pbo_partitions is not None:
+              pbo_result = cscv_probability_of_backtest_overfitting(
+                  periodic_returns, partitions=pbo_partitions
+              )
+              report["trial_governance"]["cscv_pbo"] = pbo_result
+              report["trial_governance"]["pbo_status"] = "COMPUTED_DIAGNOSTIC_ONLY"
+          else:
+              report["trial_governance"]["cscv_pbo"] = None
+              report["trial_governance"]["pbo_status"] = "NOT_COMPUTED_NO_EVEN_DIVISOR"
+          report["trial_governance"]["pbo_scope_warning"] = (
+              "CSCV/PBO is calculated only across the three declared slow-momentum variants on this 30% OOS return segment. "
+              "It does not cover all repository experiments and does not restore an untouched final holdout."
+          )
+          report.update({
+              "generated_at_utc": datetime.now(timezone.utc).isoformat(),
+              "source": "Coinbase public BTC-USD hourly candles aggregated to complete UTC daily bars",
+              "hourly_candle_count": len(hourly),
+              "daily_candle_count": len(daily),
+              "daily_start_utc": datetime.fromtimestamp(daily[0]["timestamp"] / 1000, timezone.utc).isoformat(),
+              "daily_end_utc": datetime.fromtimestamp(daily[-1]["timestamp"] / 1000, timezone.utc).isoformat(),
+              "imputed_hourly_candles": sum(bool(row.get("imputed")) for row in hourly),
+              "live_orders": False,
+              "paper_ledgers_read_or_written": False,
+          })
+          Path("slow_momentum_historical_report.json").write_text(json.dumps(report, indent=2, sort_keys=True), encoding="utf-8")
+          pbo_result = report["trial_governance"].get("cscv_pbo")
+          pbo_estimate = (
+              pbo_result.get("pbo_estimate", "not computed")
+              if isinstance(pbo_result, dict) else "not computed"
+          )
+          lines = [
+              "# WHJ isolated slow-momentum historical research", "",
+              f"- Generated UTC: {report['generated_at_utc']}",
+              f"- Daily observations: {len(daily)}",
+              f"- Date range: {report['daily_start_utc']} to {report['daily_end_utc']}",
+              f"- Imputed hourly candles: {report['imputed_hourly_candles']}",
+              f"- Declared candidate trials: {report['trial_governance']['trial_count']}",
+              f"- CSCV/PBO status: {report['trial_governance']['pbo_status']}",
+              f"- CSCV/PBO estimate: {pbo_estimate}",
+              "- Research-only; no paper ledgers accessed or changed; no live orders.", "",
+              "## Normal-cost out-of-sample results", "",
+              "| Lookback | Return | 95% block-bootstrap CI | PF | Max DD | Trades | Top-1 winner share | OOS windows |",
+              "|---:|---:|---:|---:|---:|---:|---:|---|",
+          ]
+          for key, candidate in report["candidates"].items():
+              m = candidate["out_of_sample"]
+              windows = ", ".join(f"{w['metrics']['return_pct']:.2f}%" for w in candidate["walk_forward_windows"])
+              pf = m["profit_factor"] if m["profit_factor"] is not None else "—"
+              ci = m["moving_block_bootstrap_return_ci"]
+              concentration = m["trade_concentration_diagnostic"]
+              ci_text = f"[{ci['lower_return_pct']:.2f}%, {ci['upper_return_pct']:.2f}%]"
+              top1 = concentration["top_1_winner_share_pct"]
+              top1_text = f"{top1:.1f}%" if top1 is not None else "n/a"
+              lines.append(f"| {key} days | {m['return_pct']:.2f}% | {ci_text} | {pf} | {m['max_drawdown_pct']:.2f}% | {m['closed_trades']} | {top1_text} | {windows} |")
+          bh = report["buy_and_hold_25pct"]["out_of_sample"]
+          lines += ["", f"Matched 25% buy-and-hold OOS return: **{bh['return_pct']:.2f}%**", "", "## Cost stress", ""]
+          for level, scenario in report["cost_stress"].items():
+              lines.append(f"### {level} costs")
+              for key, candidate in scenario["candidates"].items():
+                  m = candidate["out_of_sample"]
+                  lines.append(f"- {key} days: {m['return_pct']:.2f}% return, {m['closed_trades']} trades")
+              lines.append(f"- Matched buy-and-hold: {scenario['matched_buy_and_hold']['out_of_sample']['return_pct']:.2f}%")
+              lines.append("")
+          lines.append("> No winning parameter is selected. Three chronological windows and higher-cost cases expose instability; this is not a live-trading recommendation.")
+          Path("slow_momentum_historical_report.md").write_text("\n".join(lines) + "\n", encoding="utf-8")
+          PY
+      - name: Upload isolated report
+        uses: actions/upload-artifact@v4
+        with:
+          name: whj-isolated-slow-momentum-${{ github.run_number }}
+          path: |
+            slow_momentum_historical_report.json
+            slow_momentum_historical_report.md
+            slow_momentum_trial_manifest.json
+          if-no-files-found: error
+          retention-days: 30
