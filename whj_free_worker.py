@@ -68,8 +68,14 @@ def build_free_report(root: Path) -> dict:
     reports = []
     for task in plan["tasks"]:
         paths = TASK_CONTEXT.get(task["task_id"], [])
-        inspected = [item for path in paths if (item := inspect_file(root, path)) is not None]
-        missing = [path for path in paths if inspect_file(root, path) is None]
+        inspected = []
+        missing = []
+        for path in paths:
+            item = inspect_file(root, path)
+            if item is None:
+                missing.append(path)
+            else:
+                inspected.append(item)
         findings = []
         for item in inspected:
             detail = f"sha256={item['sha256']} bytes={item['bytes']}"
@@ -189,10 +195,10 @@ def write_report(root: Path, output_dir: Path) -> dict:
         lines += [f"### {row['task_id']} — {row['status']}", ""]
         for item in row["files_inspected"]:
             lines.append(f"- `{item['path']}`: {item['bytes']} bytes; SHA-256 `{item['sha256']}`")
+            if item["python_ast_valid"] is not None:
+                lines.append(f"  - Python AST valid: {item['python_ast_valid']}")
         for check in row["deterministic_checks"]:
             lines.append(f"- Check {check['check']} on `{check['source_path']}`: **{check['status']}** — {check['detail']}")
-            if item.get("python_ast_valid") is not None:
-                lines.append(f"  - Python AST valid: {item['python_ast_valid']}")
         for risk in row["risks"]:
             lines.append(f"- Risk: {risk}")
         for missing in row["missing_data"]:
