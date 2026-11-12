@@ -1,0 +1,38 @@
+name: WHJ AI Research Office Nightly Plan
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 0 * * *"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: whj-agent-office-nightly
+  cancel-in-progress: false
+
+jobs:
+  build-office-plan:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: research/global-evidence-strategy-lab-20261112
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Validate agent-office governance
+        run: python -m unittest discover -s tests -p 'test_whj_agent_office.py' -v
+      - name: Generate nightly research work plan
+        run: python whj_agent_office.py plan --output-dir research/agent_office
+      - name: Upload nightly plan
+        uses: actions/upload-artifact@v4
+        with:
+          name: whj-agent-office-plan-${{ github.run_number }}
+          path: |
+            research/agent_office/latest_plan.json
+            research/agent_office/latest_plan.md
+          if-no-files-found: error
+          retention-days: 30
