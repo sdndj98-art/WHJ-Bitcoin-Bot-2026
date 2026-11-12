@@ -69,3 +69,8 @@ python -m unittest tests.test_whj_agent_office -v
 ```
 
 The default plan files are written under `research/agent_office/`. They are generated artifacts and should not be treated as evidence that any candidate strategy is profitable.
+
+
+## Scheduled-run branch limitation
+
+GitHub Actions scheduled workflows run from the repository's default branch, not from an arbitrary research branch. This workflow file currently lives on `research/global-evidence-strategy-lab-20261112`, while PR #122 is still open and unmerged. Therefore its `schedule` trigger is configured in this branch but will not execute nightly until the workflow is present on the repository default branch. Push-triggered runs and manual `workflow_dispatch` runs on the research branch remain available. Do not describe the free worker as continuously running or as a nightly service before that default-branch condition is satisfied. Merging this research PR is a separate repository decision and is not performed automatically.
