@@ -51,17 +51,17 @@ class StrategyFamilyEvaluatorTests(unittest.TestCase):
         rows = self.candles([100, 100, 110, 110, 110])
         full = evaluate_candidate(rows, [True]*5, 0, 0, 1)
         quarter = evaluate_candidate(rows, [True]*5, 0, 0, 1, allocation_fraction=0.25)
-        self.assertAlmostEqual(full["strategy"]["net_return"], 0.21)
-        self.assertAlmostEqual(quarter["strategy"]["net_return"], 0.05)
+        self.assertAlmostEqual(full["strategy"]["net_return"], 0.10)
+        self.assertAlmostEqual(quarter["strategy"]["net_return"], 0.025)
         self.assertAlmostEqual(quarter["strategy"]["exposure"], 0.25)
-        self.assertAlmostEqual(quarter["buy_and_hold"]["net_return"], 0.05)
+        self.assertAlmostEqual(quarter["buy_and_hold"]["net_return"], 0.025)
         self.assertEqual(quarter["allocation_fraction"], 0.25)
 
     def test_fractional_allocation_scales_turnover_costs(self):
         rows = self.candles([100, 100, 100, 100, 100])
         result = evaluate_candidate(rows, [True, False, False, False, False], 0.01, 0, 1, allocation_fraction=0.25)
         self.assertAlmostEqual(result["strategy"]["turnover"], 0.5)
-        self.assertAlmostEqual(result["strategy"]["net_return"], -0.005)
+        self.assertAlmostEqual(result["strategy"]["net_return"], (1-0.0025)**2-1)
 
     def test_invalid_allocation_fails_closed(self):
         rows = self.candles([100, 101, 102, 103])
