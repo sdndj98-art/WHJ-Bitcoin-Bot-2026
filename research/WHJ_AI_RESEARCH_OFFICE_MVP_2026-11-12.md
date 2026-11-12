@@ -6,8 +6,8 @@ Create a governed research organization that can later use multiple LLM workers 
 
 ## Implemented in this MVP
 
-- A 24-role roster with stable role IDs.
-- A 13-task research plan covering BTC and gold data, strategy inventory, market quality, execution costs, historical evaluation, walk-forward robustness, statistical validation, risk, red-team review, safety review, leadership synthesis, and project acceptance.
+- A 24-role roster with stable role IDs; every role owns exactly one task in the 24-task plan.
+- A 24-task research plan covering BTC and gold data, strategy inventory, market quality, execution costs, historical evaluation, walk-forward robustness, statistical validation, risk, red-team review, safety review, leadership synthesis, and project acceptance.
 - Explicit task ownership, a separate reviewer, dependency links, acceptance criteria, and evidence fields.
 - Dependency-cycle and governance validation.
 - A command-line planner that writes JSON and Markdown.
