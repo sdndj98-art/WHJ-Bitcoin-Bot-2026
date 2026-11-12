@@ -2,7 +2,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from whj_free_worker import build_free_report, inspect_file
+from whj_free_worker import build_free_report, inspect_file, write_report
 
 
 class WHJFreeWorkerTests(unittest.TestCase):
@@ -46,6 +46,18 @@ class WHJFreeWorkerTests(unittest.TestCase):
             item = inspect_file(root, "bad.py")
         self.assertFalse(item["python_ast_valid"])
         self.assertIn("syntax_error", item)
+
+    def test_write_report_renders_ast_and_check_evidence(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / "strategy_family_lab.py").write_text("def signal():\\n    return 'HOLD'\\n", encoding="utf-8")
+            output = root / "out"
+            result = write_report(root, output)
+            markdown = (output / "latest_free_worker_results.md").read_text(encoding="utf-8")
+            self.assertGreater(result["deterministic_checks_passed"], 0)
+            self.assertIn("python_ast_syntax", markdown)
+            self.assertIn("Python AST valid: True", markdown)
+            self.assertTrue((output / "latest_free_worker_results.json").is_file())
 
     def test_path_traversal_is_rejected(self):
         with tempfile.TemporaryDirectory() as directory:
