@@ -6,7 +6,9 @@ on:
     branches: [research/global-evidence-strategy-lab-20261112]
     paths:
       - "whj_agent_office.py"
+      - "whj_grok_worker.py"
       - "tests/test_whj_agent_office.py"
+      - "tests/test_whj_grok_worker.py"
       - ".github/workflows/whj-agent-office-nightly.yml"
   schedule:
     - cron: "0 0 * * *"
@@ -21,7 +23,7 @@ concurrency:
 jobs:
   build-office-plan:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
         with:
@@ -30,15 +32,29 @@ jobs:
         with:
           python-version: "3.12"
       - name: Validate agent-office governance
-        run: python -m unittest discover -s tests -p 'test_whj_agent_office.py' -v
+        run: |
+          python -m unittest discover -s tests -p 'test_whj_agent_office.py' -v
+          python -m unittest discover -s tests -p 'test_whj_grok_worker.py' -v
       - name: Generate nightly research work plan
         run: python whj_agent_office.py plan --output-dir research/agent_office
-      - name: Upload nightly plan
+      - name: Run Grok workers only when explicitly enabled
+        env:
+          XAI_API_KEY: ${{ secrets.XAI_API_KEY }}
+          WHJ_AGENT_AUTORUN: ${{ vars.WHJ_AGENT_AUTORUN }}
+          WHJ_AGENT_BUDGET_USD: "0.50"
+        run: |
+          if [ "$WHJ_AGENT_AUTORUN" = "true" ] && [ -n "$XAI_API_KEY" ]; then
+            python whj_grok_worker.py run --budget-usd "$WHJ_AGENT_BUDGET_USD"
+          else
+            echo "Grok execution disabled: explicit repository variable and API secret are both required."
+          fi
+      - name: Upload nightly office outputs
         uses: actions/upload-artifact@v4
         with:
-          name: whj-agent-office-plan-${{ github.run_number }}
+          name: whj-agent-office-${{ github.run_number }}
           path: |
             research/agent_office/latest_plan.json
             research/agent_office/latest_plan.md
+            research/agent_office/runs/**
           if-no-files-found: error
           retention-days: 30
