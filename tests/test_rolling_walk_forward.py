@@ -1,5 +1,7 @@
+import math
 import unittest
 
+from strategy_family_lab import build_strategy_signals
 from rolling_walk_forward import evaluate_rolling_walk_forward
 
 
@@ -51,6 +53,32 @@ class RollingWalkForwardTests(unittest.TestCase):
             original["folds"][0]["selected_candidate"],
             altered["folds"][0]["selected_candidate"],
         )
+
+    def test_all_17_predeclared_btc_candidates_run_under_25pct_cap(self):
+        rows = []
+        for i in range(280):
+            close = 100.0 + 0.08 * i + 3.0 * math.sin(i / 9.0)
+            rows.append([i, close, close * 1.01, close * 0.99, close, 1000.0])
+        signals = build_strategy_signals(rows)
+        self.assertEqual(len(signals), 17)
+        result = evaluate_rolling_walk_forward(
+            rows, signals, initial_train_bars=220, test_bars=30,
+            fee_rate=0.001, slippage_rate=0.0005,
+        )
+        self.assertGreaterEqual(result["fold_count"], 1)
+        self.assertEqual(result["allocation_fraction"], 0.25)
+        for fold in result["folds"]:
+            self.assertLessEqual(fold["test_strategy"]["exposure"], 0.25)
+
+    def test_rejects_allocation_above_research_cap(self):
+        rows = self.candles(12)
+        for allocation in (0.250001, 1.0, True, float("nan")):
+            with self.subTest(allocation=allocation):
+                with self.assertRaises(ValueError):
+                    evaluate_rolling_walk_forward(
+                        rows, {"a": [True] * 12}, 6, 3,
+                        allocation_fraction=allocation,
+                    )
 
     def test_rejects_misaligned_or_invalid_inputs(self):
         rows = self.candles(12)
