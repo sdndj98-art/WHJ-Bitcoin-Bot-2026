@@ -137,6 +137,9 @@ def validate_plan(plan: dict) -> None:
     task_ids = {task.get("task_id") for task in tasks}
     if len(task_ids) != len(tasks):
         raise ValueError("Duplicate task IDs")
+    owners = [task.get("owner_role") for task in tasks]
+    if len(tasks) != 24 or set(owners) != set(ROLES) or len(set(owners)) != 24:
+        raise ValueError("Each of the 24 office roles must own exactly one task")
     graph = {}
     for task in tasks:
         owner, reviewer = task.get("owner_role"), task.get("reviewer_role")
