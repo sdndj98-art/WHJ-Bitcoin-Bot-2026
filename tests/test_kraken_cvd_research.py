@@ -170,6 +170,10 @@ class KrakenCvdResearchTests(unittest.TestCase):
         self.assertEqual(diagnostic["status"], "READY_FOR_CVD_ANALYSIS")
         self.assertTrue(diagnostic["feed_continuity_verified"])
         self.assertTrue(result["feed_continuity_verified"])
+        self.assertEqual(
+            result["continuity_checkpoint"]["first_trade_timestamp_ns"],
+            10_000_000_000,
+        )
 
     def test_rejects_checkpoint_with_wrong_last_trade_id(self):
         self.write_events(self.valid_events())
