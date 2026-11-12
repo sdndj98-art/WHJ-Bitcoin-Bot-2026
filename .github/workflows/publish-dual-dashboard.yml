@@ -1,0 +1,47 @@
+name: Publish WHJ dual-portfolio dashboard
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - ".github/workflows/publish-dual-dashboard.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout dashboard source from research branch
+        uses: actions/checkout@v4
+        with:
+          ref: research/global-evidence-strategy-lab-20261112
+          path: dashboard-source
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@v5
+      - name: Assemble isolated dashboard site
+        run: |
+          mkdir -p _site
+          cp dashboard-source/index.html _site/index.html
+          cp dashboard-source/dual_portfolio_dashboard.html _site/dual_portfolio_dashboard.html
+          cp dashboard-source/dual_portfolio.json _site/dual_portfolio.json
+          touch _site/.nojekyll
+      - name: Upload dashboard site
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+      - name: Deploy dashboard
+        id: deployment
+        uses: actions/deploy-pages@v4
