@@ -749,6 +749,75 @@ main{max-width:1720px!important;padding:22px clamp(12px,2vw,30px) 42px!important
 <div class="mobilehead">WHJ BITCOIN · مركز القيادة</div><header class="top"><div><div class="eyebrow">WHJ / COMMAND CENTER</div><h1 id="pageTitle">نظرة عامة</h1><div class="sub">مراقبة أداء البوت وتحليل BTC/USD</div></div><div class="topright"><button class="toolbtn" id="exportJson" type="button">تنزيل التقرير JSON</button><button class="toolbtn" id="exportCsv" type="button">تصدير الصفقات CSV</button><span class="pill"><i class="dot"></i><span id="systemState">جارٍ تحميل البيانات</span></span><button class="refresh" id="refresh">↻ تحديث البيانات</button></div></header>
 <div class="banner"><div><b>وضع الحماية مفعّل — التداول الحقيقي متوقف</b><p>تعرض اللوحة بيانات التحليل والمحاكاة فقط، ولا ترسل أوامر إلى منصات التداول.</p></div><span class="status">● PAPER MODE</span></div>
 
+<section id="whj-wallboard" aria-label="لوحة WHJ الموحدة">
+ <div class="wb-kpis">
+  <article class="wb-kpi"><small>إجمالي رأس المال التجريبي</small><b id="wb-total">$20.00</b><em>BTC + XAUUSD</em></article>
+  <article class="wb-kpi"><small>صافي الربح / الخسارة</small><b id="wb-pnl">$0.00</b><em id="wb-return">0.00% عائد</em></article>
+  <article class="wb-kpi"><small>الصفقات المغلقة</small><b id="wb-count">0</b><em>سجل موثق فقط</em></article>
+  <article class="wb-kpi"><small>حالة النظام</small><b class="wb-warn" id="wb-system">بانتظار التغذية</b><em>لا أوامر حقيقية</em></article>
+ </div>
+ <div class="wb-main">
+  <article class="wb-panel wb-neural">
+   <div class="wb-head"><div><small>WHJ / QUANTUMORB</small><h2>الشجرة العصبية ومركز القيادة</h2></div><span class="wb-tag">PAPER ONLY</span></div>
+   <svg class="wb-tree" viewBox="0 0 640 230" role="img" aria-label="شبكة عقد مترابطة تمثل مراحل التحليل">
+    <defs><linearGradient id="wbGlow" x1="0" x2="1"><stop stop-color="#39c6e8"/><stop offset="1" stop-color="#a58bff"/></linearGradient></defs>
+    <g fill="none" stroke="url(#wbGlow)" stroke-width="2" opacity=".7">
+     <path d="M320 116 L205 52 M320 116 L205 116 M320 116 L205 180 M320 116 L435 52 M320 116 L435 116 M320 116 L435 180"/>
+     <path d="M205 52 L92 28 M205 52 L92 78 M205 116 L92 116 M205 180 L92 152 M205 180 L92 204 M435 52 L548 28 M435 52 L548 78 M435 116 L548 116 M435 180 L548 152 M435 180 L548 204"/>
+    </g>
+    <g fill="#102a43" stroke="#51d9eb" stroke-width="2">
+     <circle cx="320" cy="116" r="32"/><circle cx="205" cy="52" r="15"/><circle cx="205" cy="116" r="15"/><circle cx="205" cy="180" r="15"/><circle cx="435" cy="52" r="15"/><circle cx="435" cy="116" r="15"/><circle cx="435" cy="180" r="15"/>
+     <circle cx="92" cy="28" r="8"/><circle cx="92" cy="78" r="8"/><circle cx="92" cy="116" r="8"/><circle cx="92" cy="152" r="8"/><circle cx="92" cy="204" r="8"/><circle cx="548" cy="28" r="8"/><circle cx="548" cy="78" r="8"/><circle cx="548" cy="116" r="8"/><circle cx="548" cy="152" r="8"/><circle cx="548" cy="204" r="8"/>
+    </g>
+    <g fill="#e9f8ff" font-size="12" text-anchor="middle" font-family="Tahoma,Arial">
+     <text x="320" y="120" font-size="13" font-weight="bold">WHJ</text>
+     <text x="205" y="26">SCAN</text><text x="205" y="90">VERIFY</text><text x="205" y="154">SIZE</text>
+     <text x="435" y="26">EXECUTE</text><text x="435" y="90">LOG</text><text x="435" y="154">EVALUATE</text>
+    </g>
+   </svg>
+   <div class="wb-flow"><span>بيانات السوق</span><i>←</i><span>التحقق</span><i>←</i><span>الإشارة</span><i>←</i><span>المخاطر</span><i>←</i><span>محاكاة</span><i>←</i><span>التقييم</span></div>
+  </article>
+  <article class="wb-panel wb-agents">
+   <div class="wb-head"><div><small>AGENT TELEMETRY</small><h2>الوكلاء الستة</h2></div><span class="wb-tag wb-muted">وظائف برمجية</span></div>
+   <div class="wb-agent-list">
+    <div><b>01 · ماسح السوق</b><span id="wb-agent-1">بانتظار بيانات</span></div>
+    <div><b>02 · مدقق البيانات</b><span id="wb-agent-2">بانتظار بيانات</span></div>
+    <div><b>03 · مدير الاستراتيجيات والحجم</b><span id="wb-agent-3">غير نشط</span></div>
+    <div><b>04 · منفذ التداول التجريبي</b><span id="wb-agent-4">محاكاة فقط</span></div>
+    <div><b>05 · مسجل القرارات</b><span id="wb-agent-5">بانتظار أحداث</span></div>
+    <div><b>06 · مقيّم الأداء</b><span id="wb-agent-6">بانتظار عينة</span></div>
+   </div>
+   <p class="wb-note">هذه وحدات وظيفية معروضة بوضوح؛ لا ندّعي أنها ستة نماذج مستقلة أو أنها تعمل دون بيانات.</p>
+  </article>
+ </div>
+ <div class="wb-lower">
+  <article class="wb-panel wb-wallets">
+   <div class="wb-head"><div><small>DUAL PAPER PORTFOLIOS</small><h2>المحافظ</h2></div><span class="wb-tag">20 USD TOTAL</span></div>
+   <div class="wb-wallet-grid">
+    <div class="wb-wallet"><b>₿ BTC / USD</b><strong id="wb-btc-equity">$10.00</strong><span id="wb-btc-pnl">P/L $0.00</span><small id="wb-btc-status">غير متصلة</small><small id="wb-btc-trades">0 صفقة · رسوم $0.00</small></div>
+    <div class="wb-wallet wb-gold"><b>Au XAUUSD</b><strong id="wb-gold-equity">$10.00</strong><span id="wb-gold-pnl">P/L $0.00</span><small id="wb-gold-status">مصدر السعر مطلوب</small><small id="wb-gold-trades">0 صفقة · رسوم $0.00</small></div>
+   </div>
+  </article>
+  <article class="wb-panel wb-strategies">
+   <div class="wb-head"><div><small>STRATEGY LAB</small><h2>الاستراتيجيات والتقييم</h2></div></div>
+   <div class="wb-strat-list"><div><b>EMA / SMA Trend</b><span>بانتظار اختبار مستقبلي</span></div><div><b>RSI Mean Reversion</b><span>بانتظار اختبار مستقبلي</span></div><div><b>Breakout / Donchian</b><span>بانتظار اختبار مستقبلي</span></div><div><b>Multi-timeframe</b><span>مراقبة تجريبية</span></div></div>
+  </article>
+  <article class="wb-panel wb-trades">
+   <div class="wb-head"><div><small>EXECUTION JOURNAL</small><h2>آخر الصفقات والأسباب</h2></div><span id="wb-trade-total" class="wb-tag">0</span></div>
+   <div class="wb-table-wrap"><table><thead><tr><th>الأصل</th><th>الاستراتيجية</th><th>الاتجاه</th><th>الدخول</th><th>الخروج</th><th>P/L</th><th>السبب / الحالة</th></tr></thead><tbody id="wb-trade-rows"><tr><td colspan="7">لا توجد صفقات موثقة حتى الآن</td></tr></tbody></table></div>
+  </article>
+  <article class="wb-panel wb-risk">
+   <div class="wb-head"><div><small>RISK & DATA QUALITY</small><h2>المخاطر وجودة البيانات</h2></div></div>
+   <div class="wb-risk-row"><span>تغذية BTC</span><b id="wb-btc-feed">غير متصلة</b></div>
+   <div class="wb-risk-row"><span>تغذية الذهب</span><b id="wb-gold-feed">مطلوبة</b></div>
+   <div class="wb-risk-row"><span>حظر التداول الحقيقي</span><b class="wb-good">مفعّل</b></div>
+   <div class="wb-risk-row"><span>سجل قرارات حديث</span><b id="wb-audit-status">لا توجد أحداث</b></div>
+   <div class="wb-risk-row"><span>آخر تحديث</span><b id="wb-updated">الإعدادات الأولية</b></div>
+  </article>
+ </div>
+</section>
+
+
 
 
 
@@ -1516,5 +1585,100 @@ const set=(id,v)=>{const e=$(id);if(e)e.textContent=v??'—'};
 function portfolio(key,p){const prefix=key==='btc'?'wp-btc':'wp-gold';set(prefix+'-equity',money(p.equity_usd));set(prefix+'-pnl',money(p.pnl_usd));set(prefix+'-return',pct(p.return_pct));set(prefix+'-count',p.closed_trades??0);set(prefix+'-fees',money(p.fees_usd));set(prefix+'-feed',p.feed_status||'غير معروف');set(prefix+'-status',p.status||'غير معروف')}
 async function refresh(){try{const r=await fetch('./dual_portfolio.json?t='+Date.now(),{cache:'no-store'});if(!r.ok)throw Error('HTTP '+r.status);const d=await r.json();portfolio('btc',d.btc||{});portfolio('gold',d.gold||{});set('wp-updated',d.updated_at?'آخر تحديث: '+d.updated_at:'الإعدادات مقروءة · التداول غير نشط');const trades=Array.isArray(d.trades)?d.trades:[];set('wp-trade-count',trades.length+' صفقة');const body=$('wp-trades');if(body){body.replaceChildren();if(!trades.length){const tr=document.createElement('tr'),td=document.createElement('td');td.colSpan=7;td.className='wp-empty';td.textContent='لا توجد صفقات مسجلة بعد. لن نعرض صفقات تجريبية وهمية.';tr.append(td);body.append(tr)}else trades.slice().reverse().forEach(t=>{const tr=document.createElement('tr');[t.asset,t.strategy,t.side,t.entry_price,t.exit_price,money(t.pnl_usd),t.status].forEach(v=>{const td=document.createElement('td');td.textContent=v??'—';tr.append(td)});body.append(tr)})}set('wp-trade-note',d.paper_only?'وضع تجريبي فقط · الأوامر الحقيقية متوقفة':'تحذير: إعداد paper_only غير مؤكد')}catch(e){set('wp-updated','تعذر قراءة بيانات المحافظ');set('wp-trade-note','ملف الحالة غير متاح حالياً؛ لا توجد بيانات صفقات مؤكدة للعرض.')}}
 refresh();setInterval(refresh,15000)})();
+</script>
+
+<style id="whj-wallboard-style">
+/* One-screen wallboard: all operational domains are visible together. */
+body:has(#whj-wallboard) .shell{display:block;min-height:100vh}
+body:has(#whj-wallboard) .side{display:none}
+body:has(#whj-wallboard) main{max-width:1900px;padding:12px 18px 18px}
+body:has(#whj-wallboard) .top{margin:0 0 8px}
+body:has(#whj-wallboard) .top h1{font-size:19px;margin:3px 0}
+body:has(#whj-wallboard) .banner{margin:0 0 9px;padding:8px 12px}
+body:has(#whj-wallboard) .banner p{margin:3px 0}
+#quantumorb,#whj-portfolios,.view{display:none!important}
+#whj-wallboard{direction:rtl;display:grid;gap:9px;color:var(--t);font-size:12px}
+#whj-wallboard *{box-sizing:border-box}
+#whj-wallboard h2{font-size:15px;margin:3px 0 0}
+#whj-wallboard small{color:var(--m);font-size:10px}
+#whj-wallboard .wb-kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px}
+#whj-wallboard .wb-kpi,#whj-wallboard .wb-panel{background:linear-gradient(145deg,#10243a,#0a1727);border:1px solid var(--line);border-radius:12px;padding:10px;min-width:0}
+#whj-wallboard .wb-kpi{display:grid;gap:3px}
+#whj-wallboard .wb-kpi b{font-size:21px;font-variant-numeric:tabular-nums}
+#whj-wallboard .wb-kpi em{font-style:normal;color:var(--m);font-size:10px}
+#whj-wallboard .wb-warn{color:var(--a);font-size:14px}
+#whj-wallboard .wb-main{display:grid;grid-template-columns:minmax(0,1.7fr) minmax(300px,1fr);gap:9px}
+#whj-wallboard .wb-head{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:6px}
+#whj-wallboard .wb-tag{border:1px solid #39c6e866;border-radius:30px;padding:4px 8px;color:#7ce8f2;font-size:9px;white-space:nowrap}
+#whj-wallboard .wb-muted{color:var(--m);border-color:var(--line)}
+#whj-wallboard .wb-tree{display:block;width:100%;height:160px}
+#whj-wallboard .wb-flow{display:flex;align-items:center;justify-content:center;gap:6px;flex-wrap:wrap;color:#9ec5d8;font-size:10px}
+#whj-wallboard .wb-flow span{background:#ffffff09;border:1px solid #ffffff12;border-radius:20px;padding:4px 8px}
+#whj-wallboard .wb-flow i{font-style:normal;color:var(--c)}
+#whj-wallboard .wb-agent-list{display:grid;gap:5px}
+#whj-wallboard .wb-agent-list>div,.wb-strat-list>div{display:flex;justify-content:space-between;gap:8px;align-items:center;padding:7px 8px;border-radius:8px;background:#ffffff08}
+#whj-wallboard .wb-agent-list b,.wb-strat-list b{font-size:11px}
+#whj-wallboard .wb-agent-list span,.wb-strat-list span{color:var(--a);font-size:10px;text-align:left}
+#whj-wallboard .wb-note{font-size:9px;color:var(--m);margin:7px 0 0;line-height:1.5}
+#whj-wallboard .wb-lower{display:grid;grid-template-columns:1.05fr 1fr 1.35fr 1fr;gap:9px;align-items:stretch}
+#whj-wallboard .wb-wallet-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+#whj-wallboard .wb-wallet{border:1px solid #39c6e855;background:#ffffff08;border-radius:9px;padding:9px;display:grid;gap:4px;min-width:0}
+#whj-wallboard .wb-wallet strong{font-size:20px;font-variant-numeric:tabular-nums}
+#whj-wallboard .wb-wallet span{color:var(--m);font-size:10px}
+#whj-wallboard .wb-wallet small{overflow-wrap:anywhere}
+#whj-wallboard .wb-gold{border-color:#d9aa5a66}
+#whj-wallboard .wb-gold strong{color:#f5c36b}
+#whj-wallboard .wb-strat-list{display:grid;gap:5px}
+#whj-wallboard .wb-table-wrap{overflow:auto}
+#whj-wallboard table{width:100%;border-collapse:collapse;font-size:10px;min-width:450px}
+#whj-wallboard th,#whj-wallboard td{padding:6px 5px;text-align:right;border-bottom:1px solid #ffffff12;white-space:nowrap}
+#whj-wallboard th{color:var(--m);font-weight:500}
+#whj-wallboard .wb-risk-row{display:flex;justify-content:space-between;gap:8px;padding:7px 0;border-bottom:1px solid #ffffff12;font-size:10px}
+#whj-wallboard .wb-risk-row b{color:var(--a);text-align:left}
+#whj-wallboard .wb-risk-row .wb-good{color:var(--g)}
+@media(min-width:1500px) and (min-height:850px){#whj-wallboard .wb-tree{height:185px}#whj-wallboard .wb-kpi,#whj-wallboard .wb-panel{padding:12px}}
+@media(max-width:1100px){#whj-wallboard .wb-lower{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:760px){body:has(#whj-wallboard) main{padding:10px}#whj-wallboard .wb-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}#whj-wallboard .wb-main{grid-template-columns:1fr}#whj-wallboard .wb-lower{grid-template-columns:1fr}#whj-wallboard .wb-tree{height:140px}#whj-wallboard .wb-wallet strong{font-size:18px}}
+</style>
+
+<script id="whj-wallboard-data">
+(()=> {
+ const $=id=>document.getElementById(id);
+ const money=v=>Number.isFinite(Number(v))?'+Number(v).toFixed(2):'—';
+ const pct=v=>Number.isFinite(Number(v))?Number(v).toFixed(2)+'%':'—';
+ const set=(id,v)=>{const e=$(id);if(e)e.textContent=v??'—'};
+ const status=(p)=>p.status||p.feed_status||'غير معروف';
+ function renderTrades(trades){
+  const body=$('wb-trade-rows');if(!body)return;body.replaceChildren();
+  if(!trades.length){const tr=document.createElement('tr'),td=document.createElement('td');td.colSpan=7;td.textContent='لا توجد صفقات موثقة حتى الآن';tr.append(td);body.append(tr);return;}
+  trades.slice(-6).reverse().forEach(t=>{const tr=document.createElement('tr');
+   const values=[t.asset,t.strategy,t.side,t.entry_price,t.exit_price,money(t.pnl_usd),t.reason||t.status||'—'];
+   values.forEach(v=>{const td=document.createElement('td');td.textContent=v??'—';tr.append(td)});body.append(tr);
+  });
+ }
+ async function refresh(){
+  try{
+   const response=await fetch('./dual_portfolio.json?t='+Date.now(),{cache:'no-store'});
+   if(!response.ok)throw new Error('HTTP '+response.status);
+   const d=await response.json(),btc=d.btc||{},gold=d.gold||{},trades=Array.isArray(d.trades)?d.trades:[];
+   const total=Number(btc.equity_usd||0)+Number(gold.equity_usd||0);
+   const pnl=Number(btc.pnl_usd||0)+Number(gold.pnl_usd||0);
+   const initial=Number(btc.initial_equity_usd||0)+Number(gold.initial_equity_usd||0);
+   set('wb-total',money(total));set('wb-pnl',money(pnl));set('wb-return',pct(initial?pnl/initial*100:0)+' عائد');
+   set('wb-count',Number(btc.closed_trades||0)+Number(gold.closed_trades||0));set('wb-trade-total',trades.length+' سجل');
+   set('wb-btc-equity',money(btc.equity_usd));set('wb-btc-pnl','P/L '+money(btc.pnl_usd));
+   set('wb-btc-status',status(btc));set('wb-btc-feed',btc.feed_status||'غير متصل');
+   set('wb-btc-trades',(btc.closed_trades||0)+' صفقة · رسوم '+money(btc.fees_usd));
+   set('wb-gold-equity',money(gold.equity_usd));set('wb-gold-pnl','P/L '+money(gold.pnl_usd));
+   set('wb-gold-status',status(gold));set('wb-gold-feed',gold.feed_status||'مطلوبة');
+   set('wb-gold-trades',(gold.closed_trades||0)+' صفقة · رسوم '+money(gold.fees_usd));
+   set('wb-system',d.status==='ACTIVE'?'مراقبة موثقة':'غير نشط / بانتظار البيانات');
+   set('wb-updated',d.updated_at||'لا يوجد تحديث تداول');
+   set('wb-audit-status',trades.length?'توجد سجلات صفقات':'لا توجد أحداث مسجلة');
+   renderTrades(trades);
+  }catch(error){set('wb-system','تعذر تحميل ملف الحالة');set('wb-updated','ملف المحافظ غير متاح');}
+ }
+ refresh();setInterval(refresh,15000);
+})();
 </script>
 </body></html>
