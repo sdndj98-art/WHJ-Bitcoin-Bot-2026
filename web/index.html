@@ -1691,6 +1691,61 @@ body:has(#whj-wallboard) .banner p{margin:3px 0}
  refresh();setInterval(refresh,15000);
 })();
 </script>
+
+<style id="whj-mobile-full-page-layout">
+/* Let the unified dashboard and restored neural tree use their natural height on phones. */
+html,body{min-height:100%;height:auto;overflow-x:hidden!important;overflow-y:auto!important}
+.shell{height:auto!important;min-height:100dvh!important;overflow:visible!important}
+main{height:auto!important;min-height:100dvh!important;overflow:visible!important;zoom:1!important}
+#whj-wallboard{display:block!important;width:100%;max-width:100%;overflow:visible!important}
+#whj-wallboard .wb-main{grid-template-columns:minmax(0,1fr)!important}
+#whj-wallboard .wb-lower{grid-template-columns:minmax(0,1fr)!important}
+#wb-original-neural-tree{min-width:0!important;width:100%!important;overflow:visible!important}
+#wb-original-neural-tree .q-core{min-height:0!important;height:auto!important;overflow:visible!important}
+#wb-original-neural-tree .q-network-stage{height:clamp(500px,68vw,620px)!important;min-height:500px!important;flex:0 0 clamp(500px,68vw,620px)!important;overflow:hidden!important}
+#wb-original-neural-tree #q-network{height:100%!important;min-height:0!important}
+#wb-original-neural-tree .q-core-foot{font-size:10px!important;line-height:1.45!important}
+@media(max-width:700px){
+ html,body{height:auto!important;min-height:100%!important;overflow-x:hidden!important;overflow-y:auto!important}
+ .shell{height:auto!important;min-height:100dvh!important;overflow:visible!important}
+ main{height:auto!important;min-height:100dvh!important;padding:10px 9px 24px!important;overflow:visible!important;zoom:1!important}
+ #whj-wallboard{height:auto!important;overflow:visible!important}
+ #whj-wallboard .wb-kpis{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+ #whj-wallboard .wb-main,#whj-wallboard .wb-lower{grid-template-columns:minmax(0,1fr)!important}
+ #wb-original-neural-tree .q-core{min-height:0!important;height:auto!important;padding:10px!important}
+ #wb-original-neural-tree .q-core-top{flex-wrap:wrap!important;gap:8px!important}
+ #wb-original-neural-tree .q-core-title{font-size:14px!important}
+ #wb-original-neural-tree .q-core-sub{font-size:8px!important}
+ #wb-original-neural-tree .q-network-stage{height:520px!important;min-height:520px!important;flex:0 0 520px!important}
+ #wb-original-neural-tree .q-module-node{width:94px!important;height:104px!important;min-height:104px!important;padding:6px 4px!important;gap:4px!important}
+ #wb-original-neural-tree .q-module-node b{font-size:8px!important}
+ #wb-original-neural-tree .q-module-node small,#wb-original-neural-tree .q-module-node em{font-size:7px!important;line-height:1.2!important}
+ #wb-original-neural-tree .q-node-icon{width:34px!important;height:34px!important;flex-basis:34px!important}
+ #wb-original-neural-tree .q-node-icon svg{width:21px!important;height:21px!important}
+ #wb-original-neural-tree .q-node-scanner{left:1%!important;top:8%!important}
+ #wb-original-neural-tree .q-node-guard{left:calc(50% - 47px)!important;top:0!important}
+ #wb-original-neural-tree .q-node-sizer{right:1%!important;top:8%!important}
+ #wb-original-neural-tree .q-node-executor{left:1%!important;bottom:10%!important}
+ #wb-original-neural-tree .q-node-logger{left:calc(50% - 47px)!important;bottom:0!important}
+ #wb-original-neural-tree .q-node-equity{right:1%!important;bottom:10%!important}
+ #wb-original-neural-tree .q-decision-core{width:160px!important;min-height:138px!important;top:49%!important;padding:9px!important}
+ #wb-original-neural-tree .q-decision-core>b{font-size:14px!important}
+ #wb-original-neural-tree .q-decision-core>small{font-size:7px!important}
+ #wb-original-neural-tree .q-decision-core>span:last-child{font-size:8px!important}
+ #wb-original-neural-tree .q-decision-output{width:190px!important;min-height:50px!important;padding:6px 9px!important}
+ #wb-original-neural-tree .q-decision-output>strong{font-size:9px!important}
+ #wb-original-neural-tree .q-decision-output>small,#wb-original-neural-tree .q-decision-output>span{font-size:7px!important}
+ #whj-wallboard .wb-panel{padding:10px!important}
+ #whj-wallboard .wb-table-wrap{max-width:100%;overflow-x:auto}
+}
+@media(max-width:380px){
+ #wb-original-neural-tree .q-network-stage{height:500px!important;min-height:500px!important;flex-basis:500px!important}
+ #wb-original-neural-tree .q-module-node{width:82px!important;height:96px!important;min-height:96px!important}
+ #wb-original-neural-tree .q-node-guard{left:calc(50% - 41px)!important}
+ #wb-original-neural-tree .q-node-logger{left:calc(50% - 41px)!important}
+ #wb-original-neural-tree .q-decision-core{width:142px!important;min-height:126px!important}
+}
+</style>
 </body></html>+Number(v).toFixed(2);
  const pct=v=>Number.isFinite(Number(v))?Number(v).toFixed(2)+'%':'—';
  const set=(id,v)=>{const e=$(id);if(e)e.textContent=v??'—'};
