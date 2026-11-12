@@ -117,6 +117,8 @@ def evaluate_rolling_walk_forward(
             "training_end_index_exclusive": train_end,
             "test_start_index": train_end,
             "test_end_index_exclusive": test_end,
+            "test_return_start_open_index": train_end - 1,
+            "test_return_end_open_index": test_end - 1,
             "selected_candidate": selected,
             "training_excess_returns": training_scores,
             "test_strategy": baseline["strategy"],
