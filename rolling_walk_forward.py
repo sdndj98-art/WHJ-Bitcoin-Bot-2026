@@ -22,7 +22,7 @@ def _path_summary(returns):
             drawdown = min(drawdown, value / peak - 1.0)
     return {
         "net_return": equity[-1] - 1.0,
-        "max_close_to_close_drawdown": drawdown,
+        "max_open_to_open_drawdown": drawdown,
         "bars": len(returns),
     }
 
@@ -128,7 +128,7 @@ def evaluate_rolling_walk_forward(
             "test_excess_return": baseline["excess_return"],
             "cost_scenarios": cost_scenarios,
             "selection_rule": "max_training_excess_return_vs_matched_buy_and_hold_at_1x_cost",
-            "drawdown_measurement": "close_to_close_open_to_open_equity",
+            "drawdown_measurement": "open_to_open_equity",
         })
         train_end = test_end
 
