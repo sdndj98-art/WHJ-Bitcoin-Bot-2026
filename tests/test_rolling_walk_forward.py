@@ -90,7 +90,12 @@ class RollingWalkForwardTests(unittest.TestCase):
             fee_rate=0.001, slippage_rate=0.0005, bars_per_year=1,
         )
         aggregate = result["aggregate_oos_cost_scenarios"]["1x"]
-        expected = (1 + 0.25 * (120.0 / 108.0 - 1)) * (1 - 0.0015 * 0.25) - 1
+        expected_equity = 1.0
+        for open_index in range(8, 20):
+            gross = (101.0 + open_index) / (100.0 + open_index) - 1.0
+            entry_cost = 0.0015 * 0.25 if open_index == 8 else 0.0
+            expected_equity *= (1 + 0.25 * gross) * (1 - entry_cost)
+        expected = expected_equity - 1.0
         self.assertAlmostEqual(aggregate["buy_and_hold"]["net_return"], expected)
         self.assertTrue(aggregate["benchmark_entry_cost_charged_once"])
         self.assertTrue(aggregate["fold_boundary_exposure_is_continuous"])
