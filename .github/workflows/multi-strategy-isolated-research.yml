@@ -60,6 +60,9 @@ jobs:
           if split_index < 250 or len(candles) - split_index < 32:
               raise RuntimeError("Insufficient train/OOS observations for the declared evaluation protocol")
           generated = datetime.now(timezone.utc).isoformat()
+          first_timestamp_utc = datetime.fromtimestamp(candles[0]["timestamp"] / 1000, timezone.utc).isoformat()
+          last_timestamp_utc = datetime.fromtimestamp(candles[-1]["timestamp"] / 1000, timezone.utc).isoformat()
+          imputed_hourly_candles = int(candles[0].get("_imputed_hour_count", 0))
           cost_levels = {"1x": (0.001, 0.0005), "2x": (0.002, 0.001), "3x": (0.003, 0.0015)}
           reports = {}
           for level, (fee, slippage) in cost_levels.items():
@@ -103,6 +106,9 @@ jobs:
               "source": "Coinbase public BTC-USD hourly spot candles",
               "dataset_sha256": dataset_sha256,
               "candle_count": len(candles),
+              "first_timestamp_utc": first_timestamp_utc,
+              "last_timestamp_utc": last_timestamp_utc,
+              "imputed_hourly_candles": imputed_hourly_candles,
               "train_end_index": split_index-1,
               "oos_start_index": split_index,
               "oos_candles": len(candles)-split_index,
@@ -126,6 +132,8 @@ jobs:
               f"- Generated UTC: {generated}",
               f"- Dataset SHA-256: `{dataset_sha256}`",
               f"- Hourly candles: {len(candles)}; OOS candles: {len(candles)-split_index}",
+              f"- Date range: {first_timestamp_utc} to {last_timestamp_utc}",
+              f"- Imputed hourly candles: {imputed_hourly_candles}",
               f"- Candidate count: {base['candidate_count']}",
               f"- Research allocation: {base['allocation_fraction']:.0%} (hard cap {base['allocation_cap_fraction']:.0%})",
               f"- CSCV/PBO: {pbo if pbo is not None else 'not computed (partition constraints)'}",
@@ -143,7 +151,7 @@ jobs:
           lines.append(f"- Protocol: {walk_forward['protocol']}; folds: {walk_forward['fold_count']}; initial training bars: {walk_forward['initial_train_bars']}; test bars/fold: {walk_forward['test_bars']}")
           lines.append("- Candidate selection uses only each fold's prior training history; each chosen signal is frozen for that test block.")
           lines.append("")
-          lines.append("| Cost | Aggregate strategy | Matched buy/hold | Excess | Max close-to-close DD | OOS bars |")
+          lines.append("| Cost | Aggregate strategy | Matched buy/hold | Excess | Max open-to-open DD | OOS bars |")
           lines.append("|---|---:|---:|---:|---:|---:|")
           for level, aggregate in walk_forward["aggregate_oos_cost_scenarios"].items():
               sm, bm = aggregate["strategy"], aggregate["buy_and_hold"]
@@ -161,7 +169,7 @@ jobs:
                   lines.append(f"- {name}: net {m['net_return']*100:.2f}%, matched B&H {b['net_return']*100:.2f}%, excess {(m['net_return']-b['net_return'])*100:.2f} pp")
               lines.append("")
           lines += [
-              "> This is a single 70/30 chronological experiment, not rolling walk-forward retraining. Fixed percentage costs do not model spread, depth, impact, latency, or partial fills. Periodic-return profit factor is not closed-trade profit factor.",
+              "> The candidate ranking table is a separate single 70/30 chronological experiment, not rolling retraining. The expanding-window results above are reported separately. Fixed percentage costs do not model spread, depth, impact, latency, or partial fills. Periodic-return profit factor is not closed-trade profit factor.",
               "> The descriptive ranking is exposed to multiple testing and is not a selection/promotion decision. A separate untouched holdout and forward-only paper validation are still required.",
           ]
           Path("btc_strategy_universe_report.md").write_text("\n".join(lines)+"\n", encoding="utf-8")
