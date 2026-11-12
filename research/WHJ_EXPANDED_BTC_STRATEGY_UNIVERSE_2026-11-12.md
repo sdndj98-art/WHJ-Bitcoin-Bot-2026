@@ -14,11 +14,11 @@ Add a broad, explicit strategy-family universe without pretending that every fam
 | Trend | SMA 20/50, EMA 12/26, SMA200 regime |
 | Momentum | 20/60/120-bar rate-of-change with long-term regime filter |
 | Breakout | Donchian 20/10, Donchian 55/20, ATR-buffered channel breakout |
-| Mean reversion | RSI(2), RSI(14), Bollinger(20,2), z-score(20), stochastic reversal |
+| Mean reversion | RSI(2), RSI(14), Bollinger(20,2), z-score(20, -1.5), stochastic reversal |
 | Volume/flow proxies | Volume-confirmed breakout, OBV trend confirmation |
 | Volatility | ATR-normalized volatility compression followed by breakout |
 
-These are candidate signal definitions, not claims of profitability. They are intentionally separate from the existing `strategy_lab.py` and historical/paper workflows until a common evaluator and matched benchmarks are explicitly wired and tested.
+The Bollinger candidate enters below -2 standard deviations; the separate z-score candidate enters below -1.5 standard deviations. A deterministic regression test verifies they are not duplicate signal streams. These are candidate signal definitions, not claims of profitability. They are intentionally separate from the existing `strategy_lab.py` and historical/paper workflows until a common evaluator and matched benchmarks are explicitly wired and tested.
 
 ## Deferred until suitable data exists
 
