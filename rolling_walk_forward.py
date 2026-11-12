@@ -170,8 +170,9 @@ def evaluate_rolling_walk_forward(
         "candidate_names": names,
         "folds": folds,
         "aggregate_oos_cost_scenarios": aggregate_cost_scenarios,
-        "tested_through_index_exclusive": folds[-1]["test_end_index_exclusive"],
-        "unused_tail_bars": len(candles) - folds[-1]["test_end_index_exclusive"],
+        "tested_through_index_exclusive": final_test_end + 1,
+        "tested_through_open_index": final_test_end,
+        "unused_tail_bars": len(candles) - (final_test_end + 1),
         "promotion_status": "NO_CANDIDATE_PROMOTED",
         "limitations": [
             "Candidate definitions and parameters must be frozen before this run.",
