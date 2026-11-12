@@ -35,7 +35,7 @@ jobs:
           from datetime import datetime, timezone
           from pathlib import Path
           from historical_research import load_two_year_candles
-          from research_governance import build_trial_manifest, cscv_probability_of_backtest_overfitting
+          from research_governance import (build_trial_manifest, cscv_probability_of_backtest_overfitting, moving_block_bootstrap_return_ci)
           from strategy_family_runner import run_strategy_universe
 
           # Public Coinbase spot data only. No paper account, monitor, cache,
@@ -61,6 +61,17 @@ jobs:
           count = len(next(iter(return_matrix.values())))
           partitions = next((n for n in (8, 6, 4) if count >= 8 and count % n == 0), None)
           pbo = cscv_probability_of_backtest_overfitting(return_matrix, partitions=partitions) if partitions else None
+          # Dependence-aware uncertainty is reported for the five descriptive leaders only.
+          # It is a diagnostic, not a promotion gate or a substitute for a final holdout.
+          bootstrap_ci = {}
+          for name in base["descriptive_ranking_by_terminal_excess_equity"][:5]:
+              bootstrap_ci[name] = moving_block_bootstrap_return_ci(
+                  base["results"][name]["net_returns"],
+                  block_length=min(24, len(base["results"][name]["net_returns"])),
+                  bootstrap_samples=1000,
+                  confidence_level=0.95,
+                  seed=20261112,
+              )
           manifests = [
               build_trial_manifest(
                   trial_id=f"btc-family-{name}-{os.environ['GITHUB_RUN_ID']}",
@@ -86,6 +97,7 @@ jobs:
               "candidate_names": list(base["results"]),
               "cost_stress": reports,
               "cscv_pbo": pbo,
+              "top_five_moving_block_bootstrap_95pct_ci": bootstrap_ci,
               "pbo_scope_warning": "CSCV/PBO is a selection-bias diagnostic across only the 17 declared candidates on this single OOS segment; not a future-profit probability, not a global trial census, and not a replacement for an untouched final holdout.",
               "trial_manifest": manifests,
               "promotion_status": "NO_CANDIDATE_PROMOTED",
