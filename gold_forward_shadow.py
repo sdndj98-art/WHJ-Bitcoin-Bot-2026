@@ -157,15 +157,89 @@ def _close_position(state, raw_price, reason, timestamp, gap=False):
     state["target_price"] = None
 
 
+def _validate_shadow_state(state):
+    """Reject corrupt or incompatible ledgers before any candle is processed."""
+    if not isinstance(state, dict):
+        raise ValueError("Invalid gold shadow state")
+    if state.get("schema_version") != 1 or state.get("mode") != "FORWARD_ONLY_SHADOW_PAPER":
+        raise ValueError("Invalid gold shadow state")
+    if state.get("asset") != "GC=F":
+        raise ValueError("Gold shadow ledger asset mismatch")
+    if state.get("strategy") not in STRATEGIES:
+        raise ValueError("Unknown strategy in gold shadow state")
+
+    required_numbers = (
+        "initial_cash_usd", "cash_usd", "units", "entry_cost_usd",
+        "equity_usd", "peak_equity_usd", "max_drawdown_pct",
+        "fees_paid_usd", "realized_pnl_usd",
+    )
+    for key in required_numbers:
+        value = state.get(key)
+        if isinstance(value, bool) or not isinstance(value, (int, float)) or not math.isfinite(value):
+            raise ValueError("Invalid numeric field in gold shadow state: " + key)
+    if state["initial_cash_usd"] <= 0 or state["cash_usd"] < 0 or state["units"] < 0:
+        raise ValueError("Invalid cash or position size in gold shadow state")
+    if state["entry_cost_usd"] < 0 or state["fees_paid_usd"] < 0:
+        raise ValueError("Invalid cost field in gold shadow state")
+    if state["equity_usd"] <= 0 or state["peak_equity_usd"] < state["equity_usd"]:
+        raise ValueError("Invalid equity checkpoint in gold shadow state")
+    if not 0 <= state["max_drawdown_pct"] <= 100:
+        raise ValueError("Invalid drawdown checkpoint in gold shadow state")
+
+    timestamp = state.get("last_processed_timestamp")
+    if isinstance(timestamp, bool) or not isinstance(timestamp, int) or timestamp <= 0:
+        raise ValueError("Gold shadow checkpoint timestamp is invalid")
+    if type(state.get("last_completed_signal")) is not bool:
+        raise ValueError("Invalid signal checkpoint in gold shadow state")
+    if state.get("live_trading_eligible") is not False or state.get("historical_trades_booked") != 0:
+        raise ValueError("Unsafe gold shadow ledger flags")
+    if not isinstance(state.get("risk_pause_reasons"), list) or any(
+        not isinstance(reason, str) or not reason for reason in state["risk_pause_reasons"]
+    ):
+        raise ValueError("Invalid risk pause reasons in gold shadow state")
+
+    for key in ("completed_trades", "wins", "losses"):
+        value = state.get(key)
+        if isinstance(value, bool) or not isinstance(value, int) or value < 0:
+            raise ValueError("Invalid trade counter in gold shadow state: " + key)
+    log = state.get("trade_log")
+    if not isinstance(log, list) or len(log) != state["completed_trades"]:
+        raise ValueError("Trade log and completed-trade count do not match")
+    if state["wins"] + state["losses"] != state["completed_trades"]:
+        raise ValueError("Win/loss counters do not match completed trades")
+    logged_pnl = 0.0
+    for trade in log:
+        if not isinstance(trade, dict):
+            raise ValueError("Invalid trade-log entry")
+        pnl = trade.get("net_pnl_usd")
+        stamp = trade.get("timestamp")
+        if isinstance(pnl, bool) or not isinstance(pnl, (int, float)) or not math.isfinite(pnl):
+            raise ValueError("Invalid trade-log PnL")
+        if isinstance(stamp, bool) or not isinstance(stamp, int) or stamp <= 0:
+            raise ValueError("Invalid trade-log timestamp")
+        if not isinstance(trade.get("reason"), str) or type(trade.get("gap_through_stop")) is not bool:
+            raise ValueError("Invalid trade-log metadata")
+        logged_pnl += pnl
+    tolerance = max(0.01, len(log) * 0.00006)
+    if abs(logged_pnl - state["realized_pnl_usd"]) > tolerance:
+        raise ValueError("Realized PnL does not reconcile with trade log")
+
+    if state["units"] > 0:
+        for key in ("entry_fill_price", "stop_price", "target_price"):
+            value = state.get(key)
+            if isinstance(value, bool) or not isinstance(value, (int, float)) or not math.isfinite(value) or value <= 0:
+                raise ValueError("Invalid open-position field in gold shadow state: " + key)
+        if state["entry_cost_usd"] <= 0:
+            raise ValueError("Open position is missing its entry cost")
+    elif (state.get("entry_fill_price") is not None or state.get("stop_price") is not None
+          or state.get("target_price") is not None or state["entry_cost_usd"] != 0):
+        raise ValueError("Flat gold shadow ledger contains stale position fields")
+
+
 def advance_gold_shadow_state(bars, state):
     """Process each unseen daily candle once, using prior-close signals at next open."""
     rows = _validate_bars(bars)
-    if not isinstance(state, dict) or state.get("schema_version") != 1 or state.get("mode") != "FORWARD_ONLY_SHADOW_PAPER":
-        raise ValueError("Invalid gold shadow state")
-    if state.get("strategy") not in STRATEGIES:
-        raise ValueError("Unknown strategy in gold shadow state")
-    if not isinstance(state.get("last_processed_timestamp"), int):
-        raise ValueError("Gold shadow checkpoint timestamp is invalid")
+    _validate_shadow_state(state)
     signals = build_signals(rows)[state["strategy"]]
     by_timestamp = {row["timestamp"]: i for i, row in enumerate(rows)}
     checkpoint = state["last_processed_timestamp"]
