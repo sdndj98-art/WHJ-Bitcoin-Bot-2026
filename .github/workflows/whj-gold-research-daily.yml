@@ -3,6 +3,10 @@ name: WHJ Daily Gold Research
 
 on:
   workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/whj-gold-research-daily.yml"
   schedule:
     - cron: "45 22 * * *"
 
