@@ -1644,7 +1644,58 @@ body:has(#whj-wallboard) .banner p{margin:3px 0}
 <script id="whj-wallboard-data">
 (()=> {
  const $=id=>document.getElementById(id);
- const money=v=>Number.isFinite(Number(v))?'+Number(v).toFixed(2):'—';
+ const money=v=>v===undefined||v===null||!Number.isFinite(Number(v))?'—':'
+ const pct=v=>Number.isFinite(Number(v))?Number(v).toFixed(2)+'%':'—';
+ const set=(id,v)=>{const e=$(id);if(e)e.textContent=v??'—'};
+ const status=(p)=>p.status||p.feed_status||'غير معروف';
+ function renderTrades(trades){
+  const body=$('wb-trade-rows');if(!body)return;body.replaceChildren();
+  if(!trades.length){const tr=document.createElement('tr'),td=document.createElement('td');td.colSpan=7;td.textContent='لا توجد صفقات موثقة حتى الآن';tr.append(td);body.append(tr);return;}
+  trades.slice(-6).reverse().forEach(t=>{const tr=document.createElement('tr');
+   const values=[t.asset,t.strategy,t.side,t.entry_price,t.exit_price,money(t.pnl_usd),t.reason||t.status||'—'];
+   values.forEach(v=>{const td=document.createElement('td');td.textContent=v??'—';tr.append(td)});body.append(tr);
+  });
+ }
+ async function refresh(){
+  try{
+   const response=await fetch('./dual_portfolio.json?t='+Date.now(),{cache:'no-store'});
+   if(!response.ok)throw new Error('HTTP '+response.status);
+   const d=await response.json(),btc=d.btc||{},gold=d.gold||{},trades=Array.isArray(d.trades)?d.trades:[];
+   const total=Number(btc.equity_usd||0)+Number(gold.equity_usd||0);
+   const pnl=Number(btc.pnl_usd||0)+Number(gold.pnl_usd||0);
+   const initial=Number(btc.initial_equity_usd||0)+Number(gold.initial_equity_usd||0);
+   set('wb-total',money(total));set('wb-pnl',money(pnl));set('wb-return',pct(initial?pnl/initial*100:0)+' عائد');
+   set('wb-count',Number(btc.closed_trades||0)+Number(gold.closed_trades||0));set('wb-trade-total',trades.length+' سجل');
+   set('wb-btc-equity',money(btc.equity_usd));set('wb-btc-pnl','P/L '+money(btc.pnl_usd));
+   set('wb-btc-status',status(btc));set('wb-btc-feed',btc.feed_status||'غير متصل');
+   set('wb-btc-trades',(btc.closed_trades||0)+' صفقة · رسوم '+money(btc.fees_usd));
+   set('wb-gold-equity',money(gold.equity_usd));set('wb-gold-pnl','P/L '+money(gold.pnl_usd));
+   set('wb-gold-status',status(gold));set('wb-gold-feed',gold.feed_status||'مطلوبة');
+   set('wb-gold-trades',(gold.closed_trades||0)+' صفقة · رسوم '+money(gold.fees_usd));
+   const closedTrades=Number(btc.closed_trades||0)+Number(gold.closed_trades||0);
+   const strategies=Array.isArray(d.strategies)?d.strategies:[];
+   set('wb-agent-1',btc.feed_status==='CONNECTED'?'تغذية BTC متاحة':'بانتظار اتصال BTC');
+   set('wb-agent-2',d.data_quality?.quality|| (btc.feed_status==='CONNECTED'?'بانتظار فحص الجودة':'موقوف: لا توجد بيانات'));
+   set('wb-agent-3',strategies.length?strategies.length+' مرشحاً قيد المراجعة':'لا توجد استراتيجيات مؤهلة');
+   set('wb-agent-4',d.paper_only===true&&btc.feed_status==='CONNECTED'?'محاكاة بعد اجتياز الفحص':'موقوف حتى تحقق البيانات');
+   set('wb-agent-5',trades.length?'يسجل '+trades.length+' صفقة':'سجل فارغ');
+   set('wb-agent-6',closedTrades>=30?'عينة أولية قابلة للتقييم':'عينة غير كافية ('+closedTrades+'/30)');
+   set('wb-agent-1',btc.feed_status==='CONNECTED'?'بيانات متاحة':'بانتظار تغذية BTC');
+   set('wb-agent-2',d.data_quality==='HEALTHY'?'جودة البيانات سليمة':'يتطلب التحقق');
+   set('wb-agent-3',Array.isArray(d.strategies)&&d.strategies.length?'مرشحون للتقييم':'لا توجد استراتيجيات مفعلة');
+   set('wb-agent-4','تجريبي فقط · لا أوامر حقيقية');
+   set('wb-agent-5',trades.length?'سجلات متاحة':'بانتظار أحداث');
+   set('wb-agent-6',trades.length?'عينة غير كافية حتى التقييم':'بانتظار عينة تداول');
+   set('wb-system',d.status==='ACTIVE'?'مراقبة موثقة':'غير نشط / بانتظار البيانات');
+   set('wb-updated',d.updated_at||'لا يوجد تحديث تداول');
+   set('wb-audit-status',trades.length?'توجد سجلات صفقات':'لا توجد أحداث مسجلة');
+   renderTrades(trades);
+  }catch(error){set('wb-system','تعذر تحميل ملف الحالة');set('wb-updated','ملف المحافظ غير متاح');}
+ }
+ refresh();setInterval(refresh,15000);
+})();
+</script>
+</body></html>+Number(v).toFixed(2);
  const pct=v=>Number.isFinite(Number(v))?Number(v).toFixed(2)+'%':'—';
  const set=(id,v)=>{const e=$(id);if(e)e.textContent=v??'—'};
  const status=(p)=>p.status||p.feed_status||'غير معروف';
