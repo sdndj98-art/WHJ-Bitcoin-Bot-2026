@@ -19,7 +19,7 @@ class WHJAgentOfficeTests(unittest.TestCase):
         self.assertEqual(first, second)
         self.assertEqual(first["generated_at_utc"], "2026-11-12T00:00:00+00:00")
 
-    def test_every_task_has_distinct_owner_and_reviewer(self):
+    def test_each_office_role_owns_exactly_one_task(self):\n        plan = build_plan()\n        owners = [task["owner_role"] for task in plan["tasks"]]\n        self.assertEqual(len(owners), 24)\n        self.assertEqual(len(set(owners)), 24)\n\n    def test_every_task_has_distinct_owner_and_reviewer(self):
         plan = build_plan()
         for task in plan["tasks"]:
             self.assertNotEqual(task["owner_role"], task["reviewer_role"])
