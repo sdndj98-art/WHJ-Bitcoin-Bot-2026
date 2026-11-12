@@ -20,9 +20,13 @@ Limitations: `GC=F` is not spot XAU/USD or a broker feed. The fixed fee/slippage
 ## Bitcoin research run
 
 - Workflow run: [43140750323](https://github.com/sdndj98-art/WHJ-Bitcoin-Bot-2026/actions/runs/43140750323)
-- Status at record creation: in progress; no BTC result is claimed.
-- The workflow evaluates 17 declared BTC signal candidates using public Coinbase BTC-USD hourly data, a 70/30 chronological split, matched buy-and-hold, 1x/2x/3x cost stress, trial manifests, CSCV/PBO where sample constraints permit, and block-bootstrap uncertainty for the five descriptive leaders.
-- Promotion status remains `NO_CANDIDATE_PROMOTED`.
+- Workflow conclusion: success; artifact [whj-multi-strategy-research-1](https://github.com/sdndj98-art/WHJ-Bitcoin-Bot-2026/actions/runs/43140750323) (artifact ID `13908304938`).
+- Data: 36,000 Coinbase BTC-USD hourly candles; 10,800 OOS bars; dataset SHA-256 `397010673a3e72e79fdf2ce48abb9b378643e6c05ae490ebb4b3b8cdca0e5013`.
+- All 17 candidate returns were negative at 1x costs. The matched buy-and-hold benchmark returned -36.23%.
+- RSI14 mean reversion was the least-negative candidate at -5.37% (30.87 percentage points ahead of buy-and-hold), but had only 11 closed trades and 0.2% exposure. Its 95% circular block-bootstrap interval was [-12.24%, -0.36%], entirely below zero. This is not evidence of positive profitability and may largely reflect staying in cash.
+- RSI14 returned -8.44% at 2x costs and -11.43% at 3x costs. The other candidates also deteriorated materially under cost stress.
+- CSCV/PBO was not computed because the OOS periodic-return count did not satisfy the configured equal-partition divisibility constraints.
+- **Decision: reject promotion of all candidates.** No strategy has demonstrated positive net OOS returns with adequate trade count or independent validation.
 
 ## Safety
 
