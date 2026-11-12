@@ -110,5 +110,40 @@ class GoldForwardShadowTests(unittest.TestCase):
             seed_gold_shadow_state(bad, "ema50_200")
 
 
+    def test_rejects_corrupt_ledger_before_mutating_it(self):
+        import copy
+        bars = rising_bars()
+        original = seed_gold_shadow_state(bars, "ema50_200")
+        corruptions = (
+            {"cash_usd": -1.0},
+            {"asset": "XAUUSD"},
+            {"completed_trades": 1},
+            {"max_drawdown_pct": float("nan")},
+        )
+        for changes in corruptions:
+            state = copy.deepcopy(original)
+            state.update(changes)
+            before = json.dumps(state, sort_keys=True, allow_nan=True)
+            with self.subTest(changes=changes):
+                with self.assertRaises(ValueError):
+                    advance_gold_shadow_state(bars, state)
+                self.assertEqual(
+                    json.dumps(state, sort_keys=True, allow_nan=True), before
+                )
+
+    def test_rejects_inconsistent_open_position_checkpoint(self):
+        bars = rising_bars()
+        state = seed_gold_shadow_state(bars, "ema50_200")
+        state.update({
+            "units": 1.0,
+            "entry_fill_price": 2500.0,
+            "entry_cost_usd": 2500.0,
+            "stop_price": None,
+            "target_price": 2600.0,
+        })
+        with self.assertRaisesRegex(ValueError, "open-position field"):
+            advance_gold_shadow_state(bars, state)
+
+
 if __name__ == "__main__":
     unittest.main()
