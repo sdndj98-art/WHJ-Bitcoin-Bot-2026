@@ -2,6 +2,12 @@ name: WHJ AI Research Office Nightly Plan
 
 on:
   workflow_dispatch:
+  push:
+    branches: [research/global-evidence-strategy-lab-20261112]
+    paths:
+      - "whj_agent_office.py"
+      - "tests/test_whj_agent_office.py"
+      - ".github/workflows/whj-agent-office-nightly.yml"
   schedule:
     - cron: "0 0 * * *"
 
