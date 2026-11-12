@@ -757,27 +757,10 @@ main{max-width:1720px!important;padding:22px clamp(12px,2vw,30px) 42px!important
   <article class="wb-kpi"><small>حالة النظام</small><b class="wb-warn" id="wb-system">بانتظار التغذية</b><em>لا أوامر حقيقية</em></article>
  </div>
  <div class="wb-main">
-  <article class="wb-panel wb-neural">
-   <div class="wb-head"><div><small>WHJ / QUANTUMORB</small><h2>الشجرة العصبية ومركز القيادة</h2></div><span class="wb-tag">PAPER ONLY</span></div>
-   <svg class="wb-tree" viewBox="0 0 640 230" role="img" aria-label="شبكة عقد مترابطة تمثل مراحل التحليل">
-    <defs><linearGradient id="wbGlow" x1="0" x2="1"><stop stop-color="#39c6e8"/><stop offset="1" stop-color="#a58bff"/></linearGradient></defs>
-    <g fill="none" stroke="url(#wbGlow)" stroke-width="2" opacity=".7">
-     <path d="M320 116 L205 52 M320 116 L205 116 M320 116 L205 180 M320 116 L435 52 M320 116 L435 116 M320 116 L435 180"/>
-     <path d="M205 52 L92 28 M205 52 L92 78 M205 116 L92 116 M205 180 L92 152 M205 180 L92 204 M435 52 L548 28 M435 52 L548 78 M435 116 L548 116 M435 180 L548 152 M435 180 L548 204"/>
-    </g>
-    <g fill="#102a43" stroke="#51d9eb" stroke-width="2">
-     <circle cx="320" cy="116" r="32"/><circle cx="205" cy="52" r="15"/><circle cx="205" cy="116" r="15"/><circle cx="205" cy="180" r="15"/><circle cx="435" cy="52" r="15"/><circle cx="435" cy="116" r="15"/><circle cx="435" cy="180" r="15"/>
-     <circle cx="92" cy="28" r="8"/><circle cx="92" cy="78" r="8"/><circle cx="92" cy="116" r="8"/><circle cx="92" cy="152" r="8"/><circle cx="92" cy="204" r="8"/><circle cx="548" cy="28" r="8"/><circle cx="548" cy="78" r="8"/><circle cx="548" cy="116" r="8"/><circle cx="548" cy="152" r="8"/><circle cx="548" cy="204" r="8"/>
-    </g>
-    <g fill="#e9f8ff" font-size="12" text-anchor="middle" font-family="Tahoma,Arial">
-     <text x="320" y="120" font-size="13" font-weight="bold">WHJ</text>
-     <text x="205" y="26">SCAN</text><text x="205" y="90">VERIFY</text><text x="205" y="154">SIZE</text>
-     <text x="435" y="26">EXECUTE</text><text x="435" y="90">LOG</text><text x="435" y="154">EVALUATE</text>
-    </g>
-   </svg>
-   <div class="wb-flow"><span>بيانات السوق</span><i>←</i><span>التحقق</span><i>←</i><span>الإشارة</span><i>←</i><span>المخاطر</span><i>←</i><span>محاكاة</span><i>←</i><span>التقييم</span></div>
-  </article>
-  <article class="wb-panel wb-agents">
+  <article class="wb-panel wb-neural" id="wb-neural-panel">
+   <div class="wb-head"><div><small>WHJ / QUANTUMORB</small><h2>الشجرة العصبية الأصلية</h2></div><span class="wb-tag">PAPER ONLY</span></div>
+   <div id="wb-original-neural-tree"></div>
+  </article>  <article class="wb-panel wb-agents">
    <div class="wb-head"><div><small>AGENT TELEMETRY</small><h2>الوكلاء الستة</h2></div><span class="wb-tag wb-muted">وظائف برمجية</span></div>
    <div class="wb-agent-list">
     <div><b>01 · ماسح السوق</b><span id="wb-agent-1">بانتظار بيانات</span></div>
@@ -1641,6 +1624,19 @@ body:has(#whj-wallboard) .banner p{margin:3px 0}
 @media(max-width:760px){body:has(#whj-wallboard) main{padding:10px}#whj-wallboard .wb-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}#whj-wallboard .wb-main{grid-template-columns:1fr}#whj-wallboard .wb-lower{grid-template-columns:1fr}#whj-wallboard .wb-tree{height:140px}#whj-wallboard .wb-wallet strong{font-size:18px}}
 </style>
 
+<style id="whj-restore-original-neural-tree">
+#wb-original-neural-tree{width:100%;min-width:0}
+#wb-original-neural-tree .q-core{display:block!important;width:100%;min-width:0}
+#wb-original-neural-tree .q-core-top{margin-bottom:12px}
+#wb-original-neural-tree .q-network-stage{height:510px!important;min-height:510px!important;flex-basis:510px!important;width:100%;max-width:100%;position:relative;overflow:hidden}
+#wb-original-neural-tree .q-core-foot{display:flex;flex-wrap:wrap;gap:8px;justify-content:space-between;margin-top:10px;font-size:10px}
+#wb-original-neural-tree .q-module-node{z-index:4}
+#wb-original-neural-tree .q-links{position:absolute;inset:0;width:100%;height:100%}
+@media(max-width:760px){#wb-original-neural-tree .q-network-stage{height:410px!important;min-height:410px!important;flex-basis:410px!important}#wb-original-neural-tree .q-core-top{font-size:11px}}
+</style>
+<script id="whj-restore-original-neural-tree-script">
+(()=>{const host=document.getElementById('wb-original-neural-tree');const tree=document.querySelector('#quantumorb .q-core');if(!host||!tree)return;host.appendChild(tree);requestAnimationFrame(()=>{window.dispatchEvent(new Event('resize'));const c=document.getElementById('q-network');if(c){const r=c.getBoundingClientRect();if(r.width&&r.height)window.dispatchEvent(new Event('resize'));}});})();
+</script>
 <script id="whj-wallboard-data">
 (()=> {
  const $=id=>document.getElementById(id);
