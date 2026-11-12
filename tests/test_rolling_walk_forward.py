@@ -28,6 +28,13 @@ class RollingWalkForwardTests(unittest.TestCase):
         )
         self.assertEqual(result["promotion_status"], "NO_CANDIDATE_PROMOTED")
         self.assertEqual(result["unused_tail_bars"], 0)
+        self.assertEqual(set(result["aggregate_oos_cost_scenarios"]), {"1x", "2x", "3x"})
+        for fold in result["folds"]:
+            self.assertEqual(set(fold["cost_scenarios"]), {"1x", "2x", "3x"})
+        self.assertEqual(
+            result["aggregate_oos_cost_scenarios"]["1x"]["strategy"]["bars"],
+            sum(fold["cost_scenarios"]["1x"]["strategy"]["bars"] for fold in result["folds"]),
+        )
 
     def test_training_selection_uses_only_past_rows(self):
         rows = self.candles(12)
