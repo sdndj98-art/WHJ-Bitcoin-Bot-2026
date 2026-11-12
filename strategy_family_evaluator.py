@@ -102,7 +102,7 @@ def evaluate_candidate(candles, signals, fee_rate=0.001, slippage_rate=0.0005, b
         "allocation_fraction": allocation_fraction,
         "cost_model": {"fee_rate_per_turnover_unit": fee_rate, "slippage_rate_per_turnover_unit": slippage_rate, "allocation_scaled_turnover": True, "limitations": "No explicit spread, depth, impact, latency, or intrabar path."},
         "strategy": _metrics(strategy_returns, exposures, turnovers, closed_trades, bars_per_year, equity),
-        "buy_and_hold": _metrics(benchmark_returns, [True]*len(benchmark_returns), [1.0 if i == 0 else 0.0 for i in range(len(benchmark_returns))], 0, bars_per_year, benchmark_equity),
+        "buy_and_hold": _metrics(benchmark_returns, [allocation_fraction]*len(benchmark_returns), [allocation_fraction if i == 0 else 0.0 for i in range(len(benchmark_returns))], 0, bars_per_year, benchmark_equity),
         "excess_return": equity[-1] - benchmark_equity[-1],
         "net_returns": strategy_returns,
         "benchmark_net_returns": benchmark_returns,
