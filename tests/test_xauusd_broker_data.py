@@ -103,6 +103,19 @@ class XAUUSDBrokerDataTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "cost_model missing"):
             validate_xauusd_cost_model({"quote_currency": "USD"})
 
+    def test_rejects_non_usd_quote_and_negative_execution_costs(self):
+        non_usd = dict(COSTS, quote_currency="EUR")
+        with self.assertRaisesRegex(ValueError, "USD-quoted"):
+            validate_xauusd_cost_model(non_usd)
+
+        negative_commission = dict(COSTS, commission_usd_per_lot_per_side=-0.01)
+        with self.assertRaisesRegex(ValueError, "non-negative"):
+            validate_xauusd_cost_model(negative_commission)
+
+        negative_slippage = dict(COSTS, slippage_bps_per_side=-0.1)
+        with self.assertRaisesRegex(ValueError, "non-negative"):
+            validate_xauusd_cost_model(negative_slippage)
+
     def test_round_trip_costs_include_spread_slippage_commission_and_triple_swap(self):
         result = estimate_xauusd_round_trip(
             side="long", lots=1.0,
