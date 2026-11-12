@@ -663,9 +663,145 @@ main{max-width:1720px!important;padding:22px clamp(12px,2vw,30px) 42px!important
 @media(prefers-reduced-motion:reduce){#quantumorb .q-flow-path,#quantumorb .q-branch-path,#quantumorb .q-output-path{animation:none!important}}
 </style>
 
-</head><body><div class="shell"><aside class="side"><div class="brand"><div class="logo">₿</div><div><b>WHJ BITCOIN</b><small>مركز قيادة التداول الذكي</small></div></div><div class="navlabel">القائمة الرئيسية</div><nav class="nav"><button class="active" data-view="overview"><span class="ico">⌂</span>الرئيسية</button><button data-view="scanner"><span class="ico">⌁</span>ماسح السوق</button><button data-view="strategies"><span class="ico">◈</span>الاستراتيجيات</button><button data-view="trades"><span class="ico">⇄</span>الصفقات</button><button data-view="risk"><span class="ico">⌁</span>المخاطر</button><button data-view="system"><span class="ico">⚙</span>النظام</button><button data-view="agents"><span class="ico">✣</span>مركز الوكلاء</button><button data-view="forward"><span class="ico">◷</span>المراقبة المستقبلية</button><button data-view="mt5"><span class="ico">⌁</span>منصة MT5</button></nav><div class="navlabel agent-nav-label">وحدات التشغيل الست</div><nav class="agent-nav" aria-label="وحدات التشغيل"><button type="button" data-agent-target="0"><span>⌕</span>ماسح السوق</button><button type="button" data-agent-target="1"><span>⚑</span>بوابة التحقق</button><button type="button" data-agent-target="2"><span>◈</span>مدير الحجم</button><button type="button" data-agent-target="3"><span>Ⅱ</span>المحاكي الورقي</button><button type="button" data-agent-target="4"><span>≡</span>سجل القرارات</button><button type="button" data-agent-target="5"><span>◉</span>مراقب المحفظة</button></nav><div class="sidefoot">WHJ Bitcoin Bot 2026<br>مراقبة وتحليل · Paper Trading فقط</div></aside><main>
+<style id="whj-quantumorb-living-motion">
+/* WHJ QUANTUMORB living motion layer — presentation only; no trading logic changes */
+@keyframes whjCorePulse {
+  0%,100% { box-shadow:0 0 0 7px rgba(165,139,255,.055),0 0 34px rgba(125,105,255,.22),inset 0 1px rgba(255,255,255,.13); }
+  50% { box-shadow:0 0 0 11px rgba(165,139,255,.09),0 0 58px rgba(81,229,242,.28),inset 0 1px rgba(255,255,255,.16); }
+}
+@keyframes whjOrbitSpin { to { transform:rotate(360deg); } }
+@keyframes whjModuleBreath {
+  0%,100% { filter:brightness(1); }
+  50% { filter:brightness(1.16); }
+}
+@keyframes whjStatePass {
+  0%,100% { box-shadow:0 0 0 1px rgba(72,231,179,.12),0 0 15px rgba(72,231,179,.10),inset 0 1px rgba(255,255,255,.08); }
+  50% { box-shadow:0 0 0 2px rgba(72,231,179,.22),0 0 30px rgba(72,231,179,.24),inset 0 1px rgba(255,255,255,.12); }
+}
+@keyframes whjStateUnknown {
+  0%,100% { box-shadow:0 0 0 1px rgba(255,198,111,.10),0 0 10px rgba(255,198,111,.07); }
+  50% { box-shadow:0 0 0 2px rgba(255,198,111,.18),0 0 22px rgba(255,198,111,.15); }
+}
+@keyframes whjStateBlocked {
+  0%,100% { box-shadow:0 0 0 1px rgba(255,112,139,.12),0 0 12px rgba(255,112,139,.08); }
+  50% { box-shadow:0 0 0 2px rgba(255,112,139,.25),0 0 25px rgba(255,112,139,.20); }
+}
+@keyframes whjIconGlow {
+  0%,100% { transform:translateY(0) scale(1); filter:drop-shadow(0 0 2px currentColor); }
+  50% { transform:translateY(-2px) scale(1.045); filter:drop-shadow(0 0 8px currentColor); }
+}
+.q-decision-core { animation:whjCorePulse 4.8s ease-in-out infinite; }
+.q-core-orbit { animation:whjOrbitSpin 34s linear infinite; }
+.q-decision-core>strong { transition:color .25s,border-color .25s,background .25s; }
+.q-module-node { transition:filter .25s,border-color .25s,box-shadow .25s; }
+.q-module-node[data-state="pass"] { animation:whjStatePass 3.2s ease-in-out infinite; }
+.q-module-node[data-state="unknown"] { animation:whjStateUnknown 4.2s ease-in-out infinite; }
+.q-module-node[data-state="blocked"] { animation:whjStateBlocked 2.2s ease-in-out infinite; }
+.q-module-node[data-state="pass"] .q-node-icon,
+.q-module-node[data-state="blocked"] .q-node-icon { animation:whjIconGlow 3.1s ease-in-out infinite; }
+.q-module-node:hover { filter:brightness(1.2); }
+.q-decision-output { animation:whjCorePulse 5.6s ease-in-out infinite; }
+.q-flow-path { stroke-dasharray:5 12; }
+@media(max-width:700px) {
+  .q-decision-core { animation-duration:6s; }
+  .q-module-node[data-state="pass"] .q-node-icon,
+  .q-module-node[data-state="blocked"] .q-node-icon { animation-duration:4.2s; }
+}
+@media(prefers-reduced-motion:reduce) {
+  .q-decision-core,.q-core-orbit,.q-module-node,.q-module-node .q-node-icon,.q-decision-output,.q-flow-path { animation:none!important; transition:none!important; }
+}
+</style>
+<style id="whj-quantumorb-visible-motion-v2">
+/* Stronger, unmistakable command-center motion; presentation only. */
+.q-network-stage{border-color:rgba(81,229,242,.38)!important;box-shadow:inset 0 0 55px rgba(31,143,184,.12),0 0 28px rgba(54,188,219,.08)!important}
+.q-links{z-index:2!important;pointer-events:none}
+.q-flow-path{stroke-width:3.6!important;stroke-dasharray:5 15!important;animation:qFlowVisible 1.35s linear infinite!important;filter:drop-shadow(0 0 7px rgba(81,229,242,.9))!important}
+.q-flow-path:nth-of-type(2){animation-duration:1.05s!important}
+.q-flow-path:nth-of-type(3){animation-duration:1.55s!important}
+.q-flow-path:nth-of-type(4){animation-duration:1.2s!important}
+.q-flow-path:nth-of-type(5){animation-duration:1.4s!important}
+.q-flow-path:nth-of-type(6){animation-duration:1.65s!important}
+.q-output-path{stroke-width:4.8!important;stroke-dasharray:7 12!important;animation:qFlowVisible .85s linear infinite!important;filter:drop-shadow(0 0 9px rgba(181,151,255,.95))!important}
+.q-branch-path{stroke-width:1.8!important;stroke-dasharray:4 9!important;animation:qFlowVisible 3.4s linear infinite!important}
+.q-module-node{border-width:1.5px!important;box-shadow:0 0 0 1px rgba(81,229,242,.13),0 8px 28px rgba(0,0,0,.42),0 0 18px rgba(81,229,242,.13)!important;animation:qNodeBreath 3.6s ease-in-out infinite!important}
+.q-node-scanner{animation-delay:0s!important}.q-node-guard{animation-delay:.55s!important}.q-node-sizer{animation-delay:1.1s!important}.q-node-executor{animation-delay:1.65s!important}.q-node-logger{animation-delay:2.2s!important}.q-node-equity{animation-delay:2.75s!important}
+.q-node-icon{box-shadow:0 0 0 4px rgba(81,229,242,.055),0 0 22px rgba(81,229,242,.28)!important;animation:qIconPulse 2.2s ease-in-out infinite!important}
+.q-node-icon svg{filter:drop-shadow(0 0 4px currentColor)}
+.q-decision-core{border-width:2px!important;box-shadow:0 0 0 8px rgba(165,139,255,.08),0 0 0 18px rgba(81,229,242,.045),0 0 52px rgba(112,112,255,.38),inset 0 1px rgba(255,255,255,.14)!important;animation:qCoreBreath 2.8s ease-in-out infinite!important}
+.q-core-orbit{inset:-17px!important;border:1px solid rgba(81,229,242,.5)!important;border-radius:38px!important;box-shadow:0 0 22px rgba(81,229,242,.13)!important;animation:qOrbitTurn 12s linear infinite!important}
+.q-decision-output{border-color:rgba(81,229,242,.8)!important;box-shadow:0 0 0 4px rgba(81,229,242,.06),0 0 28px rgba(81,229,242,.24)!important;animation:qOutputPulse 2s ease-in-out infinite!important}
+.q-decision-output>b{animation:qOutputArrow 1.1s ease-in-out infinite!important}
+@keyframes qFlowVisible{to{stroke-dashoffset:-80}}
+@keyframes qNodeBreath{0%,100%{transform:translateY(0);filter:brightness(1)}50%{transform:translateY(-4px);filter:brightness(1.18)}}
+@keyframes qIconPulse{0%,100%{transform:scale(1);filter:brightness(1)}50%{transform:scale(1.09);filter:brightness(1.35)}}
+@keyframes qCoreBreath{0%,100%{filter:brightness(1)}50%{filter:brightness(1.22)}}
+@keyframes qOrbitTurn{to{transform:rotate(360deg)}}
+@keyframes qOutputPulse{0%,100%{filter:brightness(1)}50%{filter:brightness(1.25)}}
+@keyframes qOutputArrow{0%,100%{transform:translateX(0)}50%{transform:translateX(-5px)}}
+@media(max-width:620px){
+ .q-flow-path{stroke-width:3!important;stroke-dasharray:4 13!important}
+ .q-decision-core{box-shadow:0 0 0 5px rgba(165,139,255,.08),0 0 0 12px rgba(81,229,242,.045),0 0 35px rgba(112,112,255,.3)!important}
+}
+@media(prefers-reduced-motion:reduce){
+ .q-flow-path,.q-output-path,.q-branch-path,.q-module-node,.q-node-icon,.q-decision-core,.q-core-orbit,.q-decision-output,.q-decision-output>b{animation:none!important}
+}
+</style></head><body><div class="shell"><aside class="side"><div class="brand"><div class="logo">₿</div><div><b>WHJ BITCOIN</b><small>مركز قيادة التداول الذكي</small></div></div><div class="navlabel">القائمة الرئيسية</div><nav class="nav"><button class="active" data-view="overview"><span class="ico">⌂</span>الرئيسية</button><button data-view="scanner"><span class="ico">⌁</span>ماسح السوق</button><button data-view="strategies"><span class="ico">◈</span>الاستراتيجيات</button><button data-view="trades"><span class="ico">⇄</span>الصفقات</button><button data-view="risk"><span class="ico">⌁</span>المخاطر</button><button data-view="system"><span class="ico">⚙</span>النظام</button><button data-view="agents"><span class="ico">✣</span>مركز الوكلاء</button><button data-view="forward"><span class="ico">◷</span>المراقبة المستقبلية</button><button data-view="mt5"><span class="ico">⌁</span>منصة MT5</button></nav><div class="navlabel agent-nav-label">وحدات التشغيل الست</div><nav class="agent-nav" aria-label="وحدات التشغيل"><button type="button" data-agent-target="0"><span>⌕</span>ماسح السوق</button><button type="button" data-agent-target="1"><span>⚑</span>بوابة التحقق</button><button type="button" data-agent-target="2"><span>◈</span>مدير الحجم</button><button type="button" data-agent-target="3"><span>Ⅱ</span>المحاكي الورقي</button><button type="button" data-agent-target="4"><span>≡</span>سجل القرارات</button><button type="button" data-agent-target="5"><span>◉</span>مراقب المحفظة</button></nav><div class="sidefoot">WHJ Bitcoin Bot 2026<br>مراقبة وتحليل · Paper Trading فقط</div></aside><main>
 <div class="mobilehead">WHJ BITCOIN · مركز القيادة</div><header class="top"><div><div class="eyebrow">WHJ / COMMAND CENTER</div><h1 id="pageTitle">نظرة عامة</h1><div class="sub">مراقبة أداء البوت وتحليل BTC/USD</div></div><div class="topright"><button class="toolbtn" id="exportJson" type="button">تنزيل التقرير JSON</button><button class="toolbtn" id="exportCsv" type="button">تصدير الصفقات CSV</button><span class="pill"><i class="dot"></i><span id="systemState">جارٍ تحميل البيانات</span></span><button class="refresh" id="refresh">↻ تحديث البيانات</button></div></header>
 <div class="banner"><div><b>وضع الحماية مفعّل — التداول الحقيقي متوقف</b><p>تعرض اللوحة بيانات التحليل والمحاكاة فقط، ولا ترسل أوامر إلى منصات التداول.</p></div><span class="status">● PAPER MODE</span></div>
+
+<section id="whj-wallboard" aria-label="لوحة WHJ الموحدة">
+ <div class="wb-kpis">
+  <article class="wb-kpi"><small>إجمالي رأس المال التجريبي</small><b id="wb-total">$20.00</b><em>BTC + XAUUSD</em></article>
+  <article class="wb-kpi"><small>صافي الربح / الخسارة</small><b id="wb-pnl">$0.00</b><em id="wb-return">0.00% عائد</em></article>
+  <article class="wb-kpi"><small>الصفقات المغلقة</small><b id="wb-count">0</b><em>سجل موثق فقط</em></article>
+  <article class="wb-kpi"><small>حالة النظام</small><b class="wb-warn" id="wb-system">بانتظار التغذية</b><em>لا أوامر حقيقية</em></article>
+ </div>
+ <div class="wb-main">
+  <article class="wb-panel wb-neural" id="wb-neural-panel">
+   <div class="wb-head"><div><small>WHJ / QUANTUMORB</small><h2>الشجرة العصبية الأصلية</h2></div><span class="wb-tag">PAPER ONLY</span></div>
+   <div id="wb-original-neural-tree"></div>
+  </article>  <article class="wb-panel wb-agents">
+   <div class="wb-head"><div><small>AGENT TELEMETRY</small><h2>الوكلاء الستة</h2></div><span class="wb-tag wb-muted">وظائف برمجية</span></div>
+   <div class="wb-agent-list">
+    <div><b>01 · ماسح السوق</b><span id="wb-agent-1">بانتظار بيانات</span></div>
+    <div><b>02 · مدقق البيانات</b><span id="wb-agent-2">بانتظار بيانات</span></div>
+    <div><b>03 · مدير الاستراتيجيات والحجم</b><span id="wb-agent-3">غير نشط</span></div>
+    <div><b>04 · منفذ التداول التجريبي</b><span id="wb-agent-4">محاكاة فقط</span></div>
+    <div><b>05 · مسجل القرارات</b><span id="wb-agent-5">بانتظار أحداث</span></div>
+    <div><b>06 · مقيّم الأداء</b><span id="wb-agent-6">بانتظار عينة</span></div>
+   </div>
+   <p class="wb-note">هذه وحدات وظيفية معروضة بوضوح؛ لا ندّعي أنها ستة نماذج مستقلة أو أنها تعمل دون بيانات.</p>
+  </article>
+ </div>
+ <div class="wb-lower">
+  <article class="wb-panel wb-wallets">
+   <div class="wb-head"><div><small>DUAL PAPER PORTFOLIOS</small><h2>المحافظ</h2></div><span class="wb-tag">20 USD TOTAL</span></div>
+   <div class="wb-wallet-grid">
+    <div class="wb-wallet"><b>₿ BTC / USD</b><strong id="wb-btc-equity">$10.00</strong><span id="wb-btc-pnl">P/L $0.00</span><small id="wb-btc-status">غير متصلة</small><small id="wb-btc-trades">0 صفقة · رسوم $0.00</small></div>
+    <div class="wb-wallet wb-gold"><b>Au XAUUSD</b><strong id="wb-gold-equity">$10.00</strong><span id="wb-gold-pnl">P/L $0.00</span><small id="wb-gold-status">مصدر السعر مطلوب</small><small id="wb-gold-trades">0 صفقة · رسوم $0.00</small></div>
+   </div>
+  </article>
+  <article class="wb-panel wb-strategies">
+   <div class="wb-head"><div><small>STRATEGY LAB</small><h2>الاستراتيجيات والتقييم</h2></div></div>
+   <div class="wb-strat-list"><div><b>EMA / SMA Trend</b><span>بانتظار اختبار مستقبلي</span></div><div><b>RSI Mean Reversion</b><span>بانتظار اختبار مستقبلي</span></div><div><b>Breakout / Donchian</b><span>بانتظار اختبار مستقبلي</span></div><div><b>Multi-timeframe</b><span>مراقبة تجريبية</span></div></div>
+  </article>
+  <article class="wb-panel wb-trades">
+   <div class="wb-head"><div><small>EXECUTION JOURNAL</small><h2>آخر الصفقات والأسباب</h2></div><span id="wb-trade-total" class="wb-tag">0</span></div>
+   <div class="wb-table-wrap"><table><thead><tr><th>الأصل</th><th>الاستراتيجية</th><th>الاتجاه</th><th>الدخول</th><th>الخروج</th><th>P/L</th><th>السبب / الحالة</th></tr></thead><tbody id="wb-trade-rows"><tr><td colspan="7">لا توجد صفقات موثقة حتى الآن</td></tr></tbody></table></div>
+  </article>
+  <article class="wb-panel wb-risk">
+   <div class="wb-head"><div><small>RISK & DATA QUALITY</small><h2>المخاطر وجودة البيانات</h2></div></div>
+   <div class="wb-risk-row"><span>تغذية BTC</span><b id="wb-btc-feed">غير متصلة</b></div>
+   <div class="wb-risk-row"><span>تغذية الذهب</span><b id="wb-gold-feed">مطلوبة</b></div>
+   <div class="wb-risk-row"><span>حظر التداول الحقيقي</span><b class="wb-good">مفعّل</b></div>
+   <div class="wb-risk-row"><span>سجل قرارات حديث</span><b id="wb-audit-status">لا توجد أحداث</b></div>
+   <div class="wb-risk-row"><span>آخر تحديث</span><b id="wb-updated">الإعدادات الأولية</b></div>
+  </article>
+ </div>
+</section>
+
+
+
 
 
 <section id="quantumorb" aria-label="WHJ Quantum command center">
@@ -737,6 +873,31 @@ main{max-width:1720px!important;padding:22px clamp(12px,2vw,30px) 42px!important
    <div class="q-chiprow"><span class="q-chip">DAILY GUARD: <span data-mirror="dailyPause">—</span></span><span class="q-chip">LOSS STREAK: <span data-mirror="lossStreak">—</span></span></div>
   </article>
  </div>
+</section>
+<section id="whj-portfolios" aria-label="محافظ التداول التجريبي">
+ <div class="wp-head"><div><div class="q-kicker">WHJ / DUAL PAPER PORTFOLIOS</div><h2 style="margin:5px 0;font-size:20px">محافظ التداول والصفقات</h2><div class="wp-sub">سجل مستقل لكل أصل · تداول تجريبي فقط · لا أوامر حقيقية</div></div><span id="wp-updated" class="wp-status">بانتظار قراءة الحالة</span></div>
+ <div class="wp-grid">
+  <article class="wp-card"><div class="wp-head"><div><h3>₿ Bitcoin · BTC/USD</h3><div class="wp-sub">محفظة تجريبية مستقلة</div></div><span id="wp-btc-status" class="wp-status">غير مفعّلة</span></div>
+   <div class="wp-metrics">
+    <div class="wp-metric"><span>الرصيد الحالي</span><b id="wp-btc-equity">$10.00</b></div>
+    <div class="wp-metric"><span>الربح / الخسارة</span><b id="wp-btc-pnl">$0.00</b></div>
+    <div class="wp-metric"><span>العائد</span><b id="wp-btc-return">0.00%</b></div>
+    <div class="wp-metric"><span>الصفقات المغلقة</span><b id="wp-btc-count">0</b></div>
+   </div><div class="wp-sub">التغذية: <b id="wp-btc-feed">غير متصلة</b> · الرسوم: <b id="wp-btc-fees">$0.00</b></div>
+  </article>
+  <article class="wp-card"><div class="wp-head"><div><h3>Au Gold · XAU/USD</h3><div class="wp-sub">محفظة تجريبية مستقلة</div></div><span id="wp-gold-status" class="wp-status">بانتظار تغذية السعر</span></div>
+   <div class="wp-metrics">
+    <div class="wp-metric"><span>الرصيد الحالي</span><b id="wp-gold-equity">$10.00</b></div>
+    <div class="wp-metric"><span>الربح / الخسارة</span><b id="wp-gold-pnl">$0.00</b></div>
+    <div class="wp-metric"><span>العائد</span><b id="wp-gold-return">0.00%</b></div>
+    <div class="wp-metric"><span>الصفقات المغلقة</span><b id="wp-gold-count">0</b></div>
+   </div><div class="wp-sub">التغذية: <b id="wp-gold-feed">تحتاج ربط XAUUSD الفوري</b> · الرسوم: <b id="wp-gold-fees">$0.00</b></div>
+  </article>
+ </div>
+ <article class="wp-card" style="margin-top:12px"><div class="wp-head"><div><h3>سجل الصفقات</h3><div class="wp-sub">صفقات BTC وGold مع فصل واضح بين الأصلين</div></div><span class="wp-status" id="wp-trade-count">0 صفقة</span></div>
+  <div class="wp-table-wrap"><table><thead><tr><th>الأصل</th><th>الاستراتيجية</th><th>الاتجاه</th><th>الدخول</th><th>الخروج</th><th>النتيجة</th><th>الحالة</th></tr></thead><tbody id="wp-trades"><tr><td colspan="7" class="wp-empty">لا توجد صفقات مسجلة بعد. لن نعرض صفقات تجريبية وهمية.</td></tr></tbody></table></div>
+  <div class="wp-note" id="wp-trade-note">تُعرض الصفقات عندما يكتبها محرك التداول التجريبي في ملف الحالة. المحفظتان حالياً معدّتان فقط ولم يبدأ تنفيذ الصفقات.</div>
+ </article>
 </section>
 <section class="view active" id="overview"><div class="grid">
 <article class="card metric"><div class="label">سعر Bitcoin <span>BTC / USD</span></div><div class="value neutral" id="price">—</div><div class="hint" id="updated">بانتظار آخر تقرير</div></article>
@@ -924,6 +1085,7 @@ main{max-width:1720px!important;padding:22px clamp(12px,2vw,30px) 42px!important
 <div class="card tablecard"><div class="head"><h2>تفاصيل الاستراتيجيات الخمس</h2><span>خمسة حسابات مستقلة</span></div><div class="tablewrap"><table><thead><tr><th>الإطار</th><th>القيمة</th><th>العائد</th><th>الصفقات</th><th>نسبة الفوز</th><th>معامل الربحية</th><th>أقصى تراجع</th><th>التعرّض</th><th>المركز</th><th>حالة المخاطر</th><th>تقييم الاستراتيجية</th></tr></thead><tbody id="forwardRows"><tr><td colspan="11" class="empty">حمّل تقريراً صالحاً لعرض النتائج</td></tr></tbody></table></div></div>
 <div class="card" style="margin-top:13px"><div class="head"><h2>حدود الحماية</h2><span>لكل حساب افتراضي</span></div><div class="mini"><span>تخصيص الصفقة</span><b id="forwardAllocation">—</b></div><div class="mini"><span>إيقاف عند أقصى تراجع</span><b id="forwardMaxDD">—</b></div><div class="mini"><span>إيقاف الخسارة اليومية</span><b id="forwardDaily">—</b></div><div class="mini"><span>حد الخسائر المتتالية</span><b id="forwardStreak">—</b></div><div class="mini"><span>جودة بيانات السوق</span><b id="forwardQuality">—</b></div><div class="mini"><span>آخر شمعة ساعة</span><b id="forwardCandle">—</b></div><p class="sub" style="margin-top:12px">هذه النتائج محاكاة مستقبلية وليست أرباحاً فعلية أو ضماناً للأداء. رفع التقرير محلي داخل المتصفح ولا يرسله إلى خادم.</p></div>
 </section>
+
 <footer class="footer">WHJ BITCOIN BOT · بيانات المحاكاة لا تمثل أرباحاً حقيقية ولا تعد توصية استثمارية.</footer></main></div>
 <script>
 let report=null;let mt5Snapshot=null;const $=id=>document.getElementById(id);const fmt=(v,d=2)=>v===undefined||v===null||v===""?"—":Number.isFinite(Number(v))?Number(v).toLocaleString("en-US",{minimumFractionDigits:d,maximumFractionDigits:d}):String(v);const money=v=>v===undefined||v===null?"—":"$"+fmt(v);const pct=v=>v===undefined||v===null?"—":fmt(v)+"%";const set=(id,v)=>$(id).textContent=v;const esc=v=>String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));const accounts=()=>report&&report.persistent_paper_portfolio&&report.persistent_paper_portfolio.accounts||{};
@@ -1378,4 +1540,255 @@ document.querySelectorAll(".agent-nav button").forEach(b=>b.addEventListener("cl
 
 </script>
 
+
+<style>
+#whj-portfolios{margin:14px 0 24px;direction:rtl;color:var(--t,#edf5ff)}
+#whj-portfolios .wp-head{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin:10px 0}
+#whj-portfolios .wp-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+#whj-portfolios .wp-card{background:linear-gradient(150deg,#10243b,#091525);border:1px solid #294159;border-radius:15px;padding:14px;min-width:0}
+#whj-portfolios .wp-card h3{margin:0;font-size:16px}
+#whj-portfolios .wp-sub{color:#91a8c0;font-size:11px;margin-top:4px}
+#whj-portfolios .wp-metrics{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:13px 0}
+#whj-portfolios .wp-metric{background:#ffffff08;border:1px solid #ffffff12;border-radius:10px;padding:9px}
+#whj-portfolios .wp-metric span{display:block;color:#91a8c0;font-size:11px}
+#whj-portfolios .wp-metric b{display:block;font-size:18px;margin-top:3px;font-variant-numeric:tabular-nums}
+#whj-portfolios .wp-status{font-size:11px;border:1px solid #b98a3c66;color:#f5c36b;border-radius:99px;padding:5px 9px}
+#whj-portfolios .wp-table-wrap{overflow:auto}
+#whj-portfolios table{width:100%;border-collapse:collapse;font-size:12px;min-width:500px}
+#whj-portfolios th,#whj-portfolios td{padding:9px 7px;border-bottom:1px solid #ffffff12;text-align:right}
+#whj-portfolios th{color:#91a8c0;font-weight:500}
+#whj-portfolios .wp-empty{text-align:center;color:#91a8c0;padding:18px 8px}
+#whj-portfolios .wp-note{font-size:11px;color:#91a8c0;line-height:1.7;margin-top:10px}
+@media(max-width:720px){#whj-portfolios .wp-grid{grid-template-columns:1fr}#whj-portfolios .wp-metric b{font-size:17px}}
+</style>
+
+<script>
+(()=>{const $=id=>document.getElementById(id),money=v=>Number.isFinite(Number(v))?'$'+Number(v).toFixed(2):'—',pct=v=>Number.isFinite(Number(v))?Number(v).toFixed(2)+'%':'—';
+const set=(id,v)=>{const e=$(id);if(e)e.textContent=v??'—'};
+function portfolio(key,p){const prefix=key==='btc'?'wp-btc':'wp-gold';set(prefix+'-equity',money(p.equity_usd));set(prefix+'-pnl',money(p.pnl_usd));set(prefix+'-return',pct(p.return_pct));set(prefix+'-count',p.closed_trades??0);set(prefix+'-fees',money(p.fees_usd));set(prefix+'-feed',p.feed_status||'غير معروف');set(prefix+'-status',p.status||'غير معروف')}
+async function refresh(){try{const r=await fetch('./dual_portfolio.json?t='+Date.now(),{cache:'no-store'});if(!r.ok)throw Error('HTTP '+r.status);const d=await r.json();portfolio('btc',d.btc||{});portfolio('gold',d.gold||{});set('wp-updated',d.updated_at?'آخر تحديث: '+d.updated_at:'الإعدادات مقروءة · التداول غير نشط');const trades=Array.isArray(d.trades)?d.trades:[];set('wp-trade-count',trades.length+' صفقة');const body=$('wp-trades');if(body){body.replaceChildren();if(!trades.length){const tr=document.createElement('tr'),td=document.createElement('td');td.colSpan=7;td.className='wp-empty';td.textContent='لا توجد صفقات مسجلة بعد. لن نعرض صفقات تجريبية وهمية.';tr.append(td);body.append(tr)}else trades.slice().reverse().forEach(t=>{const tr=document.createElement('tr');[t.asset,t.strategy,t.side,t.entry_price,t.exit_price,money(t.pnl_usd),t.status].forEach(v=>{const td=document.createElement('td');td.textContent=v??'—';tr.append(td)});body.append(tr)})}set('wp-trade-note',d.paper_only?'وضع تجريبي فقط · الأوامر الحقيقية متوقفة':'تحذير: إعداد paper_only غير مؤكد')}catch(e){set('wp-updated','تعذر قراءة بيانات المحافظ');set('wp-trade-note','ملف الحالة غير متاح حالياً؛ لا توجد بيانات صفقات مؤكدة للعرض.')}}
+refresh();setInterval(refresh,15000)})();
+</script>
+
+<style id="whj-wallboard-style">
+/* One-screen wallboard: all operational domains are visible together. */
+body:has(#whj-wallboard) .shell{display:block;min-height:100vh}
+body:has(#whj-wallboard) .side{display:none}
+body:has(#whj-wallboard) main{max-width:1900px;padding:12px 18px 18px}
+body:has(#whj-wallboard) .top{margin:0 0 8px}
+body:has(#whj-wallboard) .top h1{font-size:19px;margin:3px 0}
+body:has(#whj-wallboard) .banner{margin:0 0 9px;padding:8px 12px}
+body:has(#whj-wallboard) .banner p{margin:3px 0}
+#quantumorb,#whj-portfolios,.view{display:none!important}
+#whj-wallboard{direction:rtl;display:grid;gap:9px;color:var(--t);font-size:12px}
+#whj-wallboard *{box-sizing:border-box}
+#whj-wallboard h2{font-size:15px;margin:3px 0 0}
+#whj-wallboard small{color:var(--m);font-size:10px}
+#whj-wallboard .wb-kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px}
+#whj-wallboard .wb-kpi,#whj-wallboard .wb-panel{background:linear-gradient(145deg,#10243a,#0a1727);border:1px solid var(--line);border-radius:12px;padding:10px;min-width:0}
+#whj-wallboard .wb-kpi{display:grid;gap:3px}
+#whj-wallboard .wb-kpi b{font-size:21px;font-variant-numeric:tabular-nums}
+#whj-wallboard .wb-kpi em{font-style:normal;color:var(--m);font-size:10px}
+#whj-wallboard .wb-warn{color:var(--a);font-size:14px}
+#whj-wallboard .wb-main{display:grid;grid-template-columns:minmax(0,1.7fr) minmax(300px,1fr);gap:9px}
+#whj-wallboard .wb-head{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:6px}
+#whj-wallboard .wb-tag{border:1px solid #39c6e866;border-radius:30px;padding:4px 8px;color:#7ce8f2;font-size:9px;white-space:nowrap}
+#whj-wallboard .wb-muted{color:var(--m);border-color:var(--line)}
+#whj-wallboard .wb-tree{display:block;width:100%;height:160px}
+#whj-wallboard .wb-flow{display:flex;align-items:center;justify-content:center;gap:6px;flex-wrap:wrap;color:#9ec5d8;font-size:10px}
+#whj-wallboard .wb-flow span{background:#ffffff09;border:1px solid #ffffff12;border-radius:20px;padding:4px 8px}
+#whj-wallboard .wb-flow i{font-style:normal;color:var(--c)}
+#whj-wallboard .wb-agent-list{display:grid;gap:5px}
+#whj-wallboard .wb-agent-list>div,.wb-strat-list>div{display:flex;justify-content:space-between;gap:8px;align-items:center;padding:7px 8px;border-radius:8px;background:#ffffff08}
+#whj-wallboard .wb-agent-list b,.wb-strat-list b{font-size:11px}
+#whj-wallboard .wb-agent-list span,.wb-strat-list span{color:var(--a);font-size:10px;text-align:left}
+#whj-wallboard .wb-note{font-size:9px;color:var(--m);margin:7px 0 0;line-height:1.5}
+#whj-wallboard .wb-lower{display:grid;grid-template-columns:1.05fr 1fr 1.35fr 1fr;gap:9px;align-items:stretch}
+#whj-wallboard .wb-wallet-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+#whj-wallboard .wb-wallet{border:1px solid #39c6e855;background:#ffffff08;border-radius:9px;padding:9px;display:grid;gap:4px;min-width:0}
+#whj-wallboard .wb-wallet strong{font-size:20px;font-variant-numeric:tabular-nums}
+#whj-wallboard .wb-wallet span{color:var(--m);font-size:10px}
+#whj-wallboard .wb-wallet small{overflow-wrap:anywhere}
+#whj-wallboard .wb-gold{border-color:#d9aa5a66}
+#whj-wallboard .wb-gold strong{color:#f5c36b}
+#whj-wallboard .wb-strat-list{display:grid;gap:5px}
+#whj-wallboard .wb-table-wrap{overflow:auto}
+#whj-wallboard table{width:100%;border-collapse:collapse;font-size:10px;min-width:450px}
+#whj-wallboard th,#whj-wallboard td{padding:6px 5px;text-align:right;border-bottom:1px solid #ffffff12;white-space:nowrap}
+#whj-wallboard th{color:var(--m);font-weight:500}
+#whj-wallboard .wb-risk-row{display:flex;justify-content:space-between;gap:8px;padding:7px 0;border-bottom:1px solid #ffffff12;font-size:10px}
+#whj-wallboard .wb-risk-row b{color:var(--a);text-align:left}
+#whj-wallboard .wb-risk-row .wb-good{color:var(--g)}
+@media(min-width:1500px) and (min-height:850px){#whj-wallboard .wb-tree{height:185px}#whj-wallboard .wb-kpi,#whj-wallboard .wb-panel{padding:12px}}
+@media(max-width:1100px){#whj-wallboard .wb-lower{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:760px){body:has(#whj-wallboard) main{padding:10px}#whj-wallboard .wb-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}#whj-wallboard .wb-main{grid-template-columns:1fr}#whj-wallboard .wb-lower{grid-template-columns:1fr}#whj-wallboard .wb-tree{height:140px}#whj-wallboard .wb-wallet strong{font-size:18px}}
+</style>
+
+<style id="whj-restore-original-neural-tree">
+#wb-original-neural-tree{width:100%;min-width:0}
+#wb-original-neural-tree .q-core{display:block!important;width:100%;min-width:0}
+#wb-original-neural-tree .q-core-top{margin-bottom:12px}
+#wb-original-neural-tree .q-network-stage{height:510px!important;min-height:510px!important;flex-basis:510px!important;width:100%;max-width:100%;position:relative;overflow:hidden}
+#wb-original-neural-tree .q-core-foot{display:flex;flex-wrap:wrap;gap:8px;justify-content:space-between;margin-top:10px;font-size:10px}
+#wb-original-neural-tree .q-module-node{z-index:4}
+#wb-original-neural-tree .q-links{position:absolute;inset:0;width:100%;height:100%}
+@media(max-width:760px){#wb-original-neural-tree .q-network-stage{height:410px!important;min-height:410px!important;flex-basis:410px!important}#wb-original-neural-tree .q-core-top{font-size:11px}}
+</style>
+<script id="whj-restore-original-neural-tree-script">
+(()=>{const host=document.getElementById('wb-original-neural-tree');const tree=document.querySelector('#quantumorb .q-core');if(!host||!tree)return;host.appendChild(tree);requestAnimationFrame(()=>{window.dispatchEvent(new Event('resize'));const c=document.getElementById('q-network');if(c){const r=c.getBoundingClientRect();if(r.width&&r.height)window.dispatchEvent(new Event('resize'));}});})();
+</script>
+<script id="whj-wallboard-data">
+(()=> {
+ const $=id=>document.getElementById(id);
+ const money=v=>v===undefined||v===null||!Number.isFinite(Number(v))?'—':String.fromCharCode(36)+Number(v).toFixed(2);
+ const pct=v=>Number.isFinite(Number(v))?Number(v).toFixed(2)+'%':'—';
+ const set=(id,v)=>{const e=$(id);if(e)e.textContent=v??'—'};
+ const status=(p)=>p.status||p.feed_status||'غير معروف';
+ function renderTrades(trades){
+  const body=$('wb-trade-rows');if(!body)return;body.replaceChildren();
+  if(!trades.length){const tr=document.createElement('tr'),td=document.createElement('td');td.colSpan=7;td.textContent='لا توجد صفقات موثقة حتى الآن';tr.append(td);body.append(tr);return;}
+  trades.slice(-6).reverse().forEach(t=>{const tr=document.createElement('tr');
+   const values=[t.asset,t.strategy,t.side,t.entry_price,t.exit_price,money(t.pnl_usd),t.reason||t.status||'—'];
+   values.forEach(v=>{const td=document.createElement('td');td.textContent=v??'—';tr.append(td)});body.append(tr);
+  });
+ }
+ async function refresh(){
+  try{
+   const response=await fetch('./dual_portfolio.json?t='+Date.now(),{cache:'no-store'});
+   if(!response.ok)throw new Error('HTTP '+response.status);
+   const d=await response.json(),btc=d.btc||{},gold=d.gold||{},trades=Array.isArray(d.trades)?d.trades:[];
+   const total=Number(btc.equity_usd||0)+Number(gold.equity_usd||0);
+   const pnl=Number(btc.pnl_usd||0)+Number(gold.pnl_usd||0);
+   const initial=Number(btc.initial_equity_usd||0)+Number(gold.initial_equity_usd||0);
+   set('wb-total',money(total));set('wb-pnl',money(pnl));set('wb-return',pct(initial?pnl/initial*100:0)+' عائد');
+   set('wb-count',Number(btc.closed_trades||0)+Number(gold.closed_trades||0));set('wb-trade-total',trades.length+' سجل');
+   set('wb-btc-equity',money(btc.equity_usd));set('wb-btc-pnl','P/L '+money(btc.pnl_usd));
+   set('wb-btc-status',status(btc));set('wb-btc-feed',btc.feed_status||'غير متصل');
+   set('wb-btc-trades',(btc.closed_trades||0)+' صفقة · رسوم '+money(btc.fees_usd));
+   set('wb-gold-equity',money(gold.equity_usd));set('wb-gold-pnl','P/L '+money(gold.pnl_usd));
+   set('wb-gold-status',status(gold));set('wb-gold-feed',gold.feed_status||'مطلوبة');
+   set('wb-gold-trades',(gold.closed_trades||0)+' صفقة · رسوم '+money(gold.fees_usd));
+   const closedTrades=Number(btc.closed_trades||0)+Number(gold.closed_trades||0);
+   const strategies=Array.isArray(d.strategies)?d.strategies:[];
+   set('wb-agent-1',btc.feed_status==='CONNECTED'?'تغذية BTC متاحة':'بانتظار اتصال BTC');
+   set('wb-agent-2',d.data_quality?.quality|| (btc.feed_status==='CONNECTED'?'بانتظار فحص الجودة':'موقوف: لا توجد بيانات'));
+   set('wb-agent-3',strategies.length?strategies.length+' مرشحاً قيد المراجعة':'لا توجد استراتيجيات مؤهلة');
+   set('wb-agent-4',d.paper_only===true&&btc.feed_status==='CONNECTED'?'محاكاة بعد اجتياز الفحص':'موقوف حتى تحقق البيانات');
+   set('wb-agent-5',trades.length?'يسجل '+trades.length+' صفقة':'سجل فارغ');
+   set('wb-agent-6',closedTrades>=30?'عينة أولية قابلة للتقييم':'عينة غير كافية ('+closedTrades+'/30)');
+   set('wb-agent-1',btc.feed_status==='CONNECTED'?'بيانات متاحة':'بانتظار تغذية BTC');
+   set('wb-agent-2',d.data_quality==='HEALTHY'?'جودة البيانات سليمة':'يتطلب التحقق');
+   set('wb-agent-3',Array.isArray(d.strategies)&&d.strategies.length?'مرشحون للتقييم':'لا توجد استراتيجيات مفعلة');
+   set('wb-agent-4','تجريبي فقط · لا أوامر حقيقية');
+   set('wb-agent-5',trades.length?'سجلات متاحة':'بانتظار أحداث');
+   set('wb-agent-6',trades.length?'عينة غير كافية حتى التقييم':'بانتظار عينة تداول');
+   set('wb-system',d.status==='ACTIVE'?'مراقبة موثقة':'غير نشط / بانتظار البيانات');
+   set('wb-updated',d.updated_at||'لا يوجد تحديث تداول');
+   set('wb-audit-status',trades.length?'توجد سجلات صفقات':'لا توجد أحداث مسجلة');
+   renderTrades(trades);
+  }catch(error){set('wb-system','تعذر تحميل ملف الحالة');set('wb-updated','ملف المحافظ غير متاح');}
+ }
+ refresh();setInterval(refresh,15000);
+})();
+</script>
+
+<style id="whj-mobile-full-page-layout">
+/* Let the unified dashboard and restored neural tree use their natural height on phones. */
+html,body{min-height:100%;height:auto;overflow-x:hidden!important;overflow-y:auto!important}
+.shell{height:auto!important;min-height:100dvh!important;overflow:visible!important}
+main{height:auto!important;min-height:100dvh!important;overflow:visible!important;zoom:1!important}
+#whj-wallboard{display:block!important;width:100%;max-width:100%;overflow:visible!important}
+#whj-wallboard .wb-main{grid-template-columns:minmax(0,1fr)!important}
+#whj-wallboard .wb-lower{grid-template-columns:minmax(0,1fr)!important}
+#wb-original-neural-tree{min-width:0!important;width:100%!important;overflow:visible!important}
+#wb-original-neural-tree .q-core{min-height:0!important;height:auto!important;overflow:visible!important}
+#wb-original-neural-tree .q-network-stage{height:clamp(500px,68vw,620px)!important;min-height:500px!important;flex:0 0 clamp(500px,68vw,620px)!important;overflow:hidden!important}
+#wb-original-neural-tree #q-network{height:100%!important;min-height:0!important}
+#wb-original-neural-tree .q-core-foot{font-size:10px!important;line-height:1.45!important}
+@media(max-width:700px){
+ html,body{height:auto!important;min-height:100%!important;overflow-x:hidden!important;overflow-y:auto!important}
+ .shell{height:auto!important;min-height:100dvh!important;overflow:visible!important}
+ main{height:auto!important;min-height:100dvh!important;padding:10px 9px 24px!important;overflow:visible!important;zoom:1!important}
+ #whj-wallboard{height:auto!important;overflow:visible!important}
+ #whj-wallboard .wb-kpis{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+ #whj-wallboard .wb-main,#whj-wallboard .wb-lower{grid-template-columns:minmax(0,1fr)!important}
+ #wb-original-neural-tree .q-core{min-height:0!important;height:auto!important;padding:10px!important}
+ #wb-original-neural-tree .q-core-top{flex-wrap:wrap!important;gap:8px!important}
+ #wb-original-neural-tree .q-core-title{font-size:14px!important}
+ #wb-original-neural-tree .q-core-sub{font-size:8px!important}
+ #wb-original-neural-tree .q-network-stage{height:520px!important;min-height:520px!important;flex:0 0 520px!important}
+ #wb-original-neural-tree .q-module-node{width:94px!important;height:104px!important;min-height:104px!important;padding:6px 4px!important;gap:4px!important}
+ #wb-original-neural-tree .q-module-node b{font-size:8px!important}
+ #wb-original-neural-tree .q-module-node small,#wb-original-neural-tree .q-module-node em{font-size:7px!important;line-height:1.2!important}
+ #wb-original-neural-tree .q-node-icon{width:34px!important;height:34px!important;flex-basis:34px!important}
+ #wb-original-neural-tree .q-node-icon svg{width:21px!important;height:21px!important}
+ #wb-original-neural-tree .q-node-scanner{left:1%!important;top:8%!important}
+ #wb-original-neural-tree .q-node-guard{left:calc(50% - 47px)!important;top:0!important}
+ #wb-original-neural-tree .q-node-sizer{right:1%!important;top:8%!important}
+ #wb-original-neural-tree .q-node-executor{left:1%!important;bottom:10%!important}
+ #wb-original-neural-tree .q-node-logger{left:calc(50% - 47px)!important;bottom:0!important}
+ #wb-original-neural-tree .q-node-equity{right:1%!important;bottom:10%!important}
+ #wb-original-neural-tree .q-decision-core{width:160px!important;min-height:138px!important;top:49%!important;padding:9px!important}
+ #wb-original-neural-tree .q-decision-core>b{font-size:14px!important}
+ #wb-original-neural-tree .q-decision-core>small{font-size:7px!important}
+ #wb-original-neural-tree .q-decision-core>span:last-child{font-size:8px!important}
+ #wb-original-neural-tree .q-decision-output{width:190px!important;min-height:50px!important;padding:6px 9px!important}
+ #wb-original-neural-tree .q-decision-output>strong{font-size:9px!important}
+ #wb-original-neural-tree .q-decision-output>small,#wb-original-neural-tree .q-decision-output>span{font-size:7px!important}
+ #whj-wallboard .wb-panel{padding:10px!important}
+ #whj-wallboard .wb-table-wrap{max-width:100%;overflow-x:auto}
+}
+@media(max-width:380px){
+ #wb-original-neural-tree .q-network-stage{height:500px!important;min-height:500px!important;flex-basis:500px!important}
+ #wb-original-neural-tree .q-module-node{width:82px!important;height:96px!important;min-height:96px!important}
+ #wb-original-neural-tree .q-node-guard{left:calc(50% - 41px)!important}
+ #wb-original-neural-tree .q-node-logger{left:calc(50% - 41px)!important}
+ #wb-original-neural-tree .q-decision-core{width:142px!important;min-height:126px!important}
+}
+</style>
+</body></html>+Number(v).toFixed(2);
+ const pct=v=>Number.isFinite(Number(v))?Number(v).toFixed(2)+'%':'—';
+ const set=(id,v)=>{const e=$(id);if(e)e.textContent=v??'—'};
+ const status=(p)=>p.status||p.feed_status||'غير معروف';
+ function renderTrades(trades){
+  const body=$('wb-trade-rows');if(!body)return;body.replaceChildren();
+  if(!trades.length){const tr=document.createElement('tr'),td=document.createElement('td');td.colSpan=7;td.textContent='لا توجد صفقات موثقة حتى الآن';tr.append(td);body.append(tr);return;}
+  trades.slice(-6).reverse().forEach(t=>{const tr=document.createElement('tr');
+   const values=[t.asset,t.strategy,t.side,t.entry_price,t.exit_price,money(t.pnl_usd),t.reason||t.status||'—'];
+   values.forEach(v=>{const td=document.createElement('td');td.textContent=v??'—';tr.append(td)});body.append(tr);
+  });
+ }
+ async function refresh(){
+  try{
+   const response=await fetch('./dual_portfolio.json?t='+Date.now(),{cache:'no-store'});
+   if(!response.ok)throw new Error('HTTP '+response.status);
+   const d=await response.json(),btc=d.btc||{},gold=d.gold||{},trades=Array.isArray(d.trades)?d.trades:[];
+   const total=Number(btc.equity_usd||0)+Number(gold.equity_usd||0);
+   const pnl=Number(btc.pnl_usd||0)+Number(gold.pnl_usd||0);
+   const initial=Number(btc.initial_equity_usd||0)+Number(gold.initial_equity_usd||0);
+   set('wb-total',money(total));set('wb-pnl',money(pnl));set('wb-return',pct(initial?pnl/initial*100:0)+' عائد');
+   set('wb-count',Number(btc.closed_trades||0)+Number(gold.closed_trades||0));set('wb-trade-total',trades.length+' سجل');
+   set('wb-btc-equity',money(btc.equity_usd));set('wb-btc-pnl','P/L '+money(btc.pnl_usd));
+   set('wb-btc-status',status(btc));set('wb-btc-feed',btc.feed_status||'غير متصل');
+   set('wb-btc-trades',(btc.closed_trades||0)+' صفقة · رسوم '+money(btc.fees_usd));
+   set('wb-gold-equity',money(gold.equity_usd));set('wb-gold-pnl','P/L '+money(gold.pnl_usd));
+   set('wb-gold-status',status(gold));set('wb-gold-feed',gold.feed_status||'مطلوبة');
+   set('wb-gold-trades',(gold.closed_trades||0)+' صفقة · رسوم '+money(gold.fees_usd));
+   const closedTrades=Number(btc.closed_trades||0)+Number(gold.closed_trades||0);
+   const strategies=Array.isArray(d.strategies)?d.strategies:[];
+   set('wb-agent-1',btc.feed_status==='CONNECTED'?'تغذية BTC متاحة':'بانتظار اتصال BTC');
+   set('wb-agent-2',d.data_quality?.quality|| (btc.feed_status==='CONNECTED'?'بانتظار فحص الجودة':'موقوف: لا توجد بيانات'));
+   set('wb-agent-3',strategies.length?strategies.length+' مرشحاً قيد المراجعة':'لا توجد استراتيجيات مؤهلة');
+   set('wb-agent-4',d.paper_only===true&&btc.feed_status==='CONNECTED'?'محاكاة بعد اجتياز الفحص':'موقوف حتى تحقق البيانات');
+   set('wb-agent-5',trades.length?'يسجل '+trades.length+' صفقة':'سجل فارغ');
+   set('wb-agent-6',closedTrades>=30?'عينة أولية قابلة للتقييم':'عينة غير كافية ('+closedTrades+'/30)');
+   set('wb-system',d.status==='ACTIVE'?'مراقبة موثقة':'غير نشط / بانتظار البيانات');
+   set('wb-updated',d.updated_at||'لا يوجد تحديث تداول');
+   set('wb-audit-status',trades.length?'توجد سجلات صفقات':'لا توجد أحداث مسجلة');
+   renderTrades(trades);
+  }catch(error){set('wb-system','تعذر تحميل ملف الحالة');set('wb-updated','ملف المحافظ غير متاح');}
+ }
+ refresh();setInterval(refresh,15000);
+})();
+</script>
 </body></html>

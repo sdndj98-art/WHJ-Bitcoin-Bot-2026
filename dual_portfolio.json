@@ -1,0 +1,46 @@
+{
+  "schema_version": 1,
+  "status": "CONFIGURED_NOT_ACTIVE",
+  "paper_only": true,
+  "live_trading_enabled": false,
+  "updated_at": null,
+  "btc": {
+    "asset": "BTC",
+    "symbol": "BTC/USD",
+    "initial_equity_usd": 10.0,
+    "equity_usd": 10.0,
+    "pnl_usd": 0.0,
+    "return_pct": 0.0,
+    "closed_trades": 0,
+    "fees_usd": 0.0,
+    "max_drawdown_pct": 0.0,
+    "feed_status": "NOT_CONNECTED",
+    "status": "CONFIGURED_NOT_ACTIVE",
+    "sleeve_budget_usd": 2.0,
+    "planned_sleeves": 5
+  },
+  "gold": {
+    "asset": "XAUUSD",
+    "symbol": "XAU/USD spot",
+    "initial_equity_usd": 10.0,
+    "equity_usd": 10.0,
+    "pnl_usd": 0.0,
+    "return_pct": 0.0,
+    "closed_trades": 0,
+    "fees_usd": 0.0,
+    "max_drawdown_pct": 0.0,
+    "feed_status": "SPOT_FEED_REQUIRED",
+    "status": "BLOCKED_PENDING_VALIDATED_XAUUSD_FEED",
+    "sleeve_budget_usd": 2.0,
+    "planned_sleeves": 5
+  },
+  "strategies": [],
+  "bull_summary": "بانتظار تشغيل تجريبي موثق",
+  "bear_summary": "بانتظار تشغيل تجريبي موثق",
+  "risk_decision": "BLOCKED: لا توجد تغذية سوق موثقة أو محركان منفصلان مفعّلان",
+  "notes": [
+    "هذه بيانات إعداد أولية وليست نتائج تداول.",
+    "لا توجد صفقات منفذة في المحافظ الجديدة.",
+    "لا يتم إرسال أوامر حقيقية."
+  ]
+}
