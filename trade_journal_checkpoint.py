@@ -103,6 +103,35 @@ def build_continuity_checkpoint(path, symbol, expected_last_trade_id):
     }
 
 
+
+def upgrade_legacy_continuity_checkpoint(checkpoint, path, symbol, expected_last_trade_id=None):
+    """Safely rebuild a v1 checkpoint's timestamp bounds from its exact journal bytes."""
+    if not isinstance(checkpoint, dict):
+        raise ValueError("legacy continuity checkpoint must be an object")
+    if (type(checkpoint.get("version")) is not int or checkpoint.get("version") != 1
+            or checkpoint.get("source") != SOURCE
+            or checkpoint.get("feed_continuity_verified") is not True):
+        raise ValueError("legacy continuity checkpoint is not trusted")
+    metadata = inspect_trade_journal(path)
+    legacy_fields = (
+        "symbol", "first_trade_id", "last_trade_id", "trade_count",
+        "journal_size_bytes", "journal_sha256",
+    )
+    for field in legacy_fields:
+        if checkpoint.get(field) != metadata[field]:
+            raise ValueError("legacy continuity checkpoint " + field + " does not match journal")
+    if expected_last_trade_id is not None and metadata["last_trade_id"] != expected_last_trade_id:
+        raise ValueError("legacy continuity checkpoint last trade ID does not match collector state")
+    if metadata["symbol"] != symbol:
+        raise ValueError("legacy continuity checkpoint symbol does not match collector")
+    return {
+        "version": 2,
+        "source": SOURCE,
+        "feed_continuity_verified": True,
+        **metadata,
+    }
+
+
 def validate_continuity_checkpoint(checkpoint, path, symbol, expected_last_trade_id=None):
     if not isinstance(checkpoint, dict):
         raise ValueError("continuity checkpoint must be an object")
