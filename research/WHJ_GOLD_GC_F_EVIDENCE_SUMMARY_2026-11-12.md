@@ -7,6 +7,7 @@
 - Daily observations: 2,514.
 - Date range: 2016-11-14 through 2026-11-11 UTC.
 - Dataset SHA-256: `6b1561ab63f51393cfed9f3930f36f081f9558521b169448272bf31ed086c9b1`.
+- Validation: [GitHub Actions run 43208411769](https://github.com/sdndj98-art/WHJ-Bitcoin-Bot-2026/actions/runs/43208411769) succeeded; all 20 gold data, strategy, shadow-ledger, and runner tests passed; report artifact `whj-gc-f-gold-13` uploaded.
 - Three chronological, non-overlapping OOS folds over the final 45%; each fold starts with $1,000.
 - Completed daily-close signals execute at the next daily open.
 - Costs are fixed per-side fee/slippage proxies at 1x, 2x, and 3x.
