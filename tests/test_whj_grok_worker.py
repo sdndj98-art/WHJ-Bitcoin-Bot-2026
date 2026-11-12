@@ -99,6 +99,26 @@ class WHJGrokWorkerTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "at least one"):
             validate_worker_report(report, {})
 
+    def test_dependency_reports_are_compacted_without_losing_evidence_refs(self):
+        report = {
+            "task_id": "btc_data_audit",
+            "status": "completed",
+            "summary": "x" * 400,
+            "findings": [
+                {"claim": "claim one", "source_path": "a.py", "evidence_quote": "quote one long enough", "confidence": "high"},
+                {"claim": "claim two", "source_path": "b.py", "evidence_quote": "quote two long enough", "confidence": "medium"},
+                {"claim": "claim three", "source_path": "c.py", "evidence_quote": "quote three long enough", "confidence": "low"},
+            ],
+            "risks": ["risk one", "risk two", "risk three"],
+            "missing_data": [],
+            "recommendation": "hold",
+        }
+        compact = _compact_result(report)
+        self.assertEqual(len(compact["summary"]), 240)
+        self.assertEqual(len(compact["findings"]), 2)
+        self.assertEqual(compact["findings"][0]["source_path"], "a.py")
+        self.assertEqual(len(compact["risks"]), 2)
+
     def test_cost_estimate_is_positive_and_bounded(self):
         self.assertGreater(estimate_cost(4000, 1000), 0)
         self.assertGreater(estimate_cost(8000, 1000), estimate_cost(4000, 1000))
