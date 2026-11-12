@@ -11,23 +11,24 @@ Create a governed research organization that can later use multiple LLM workers 
 - Explicit task ownership, a separate reviewer, dependency links, acceptance criteria, and evidence fields.
 - Dependency-cycle and governance validation.
 - A command-line planner that writes JSON and Markdown.
+- A zero-cost deterministic worker runner that inspects repository files, computes SHA-256 fingerprints, checks Python syntax without executing modules, and emits per-role evidence inventories.
 - A scheduled GitHub Actions workflow at 00:00 UTC (03:00 Baghdad time) that validates the planner and uploads the nightly plan artifact.
 
 ## Important distinction: planning versus model execution
 
-The office has a deterministic planner and a bounded Grok worker adapter. The adapter uses the xAI Responses API with structured JSON output and read-only repository excerpts. It does not expose shell, repository-write, exchange, broker, or paper-ledger tools.
+The office has a deterministic planner, a zero-cost Python worker, and an optional bounded Grok worker adapter. The free worker uses only the Python standard library and repository files: no API key, paid model, external service, network access, or extra package is required. It computes file hashes, records missing paths, and parses Python syntax without executing repository code. The optional Grok adapter uses the xAI Responses API with structured JSON output and read-only repository excerpts. It does not expose shell, repository-write, exchange, broker, or paper-ledger tools.
 
-The scheduled workflow only calls Grok when BOTH of these are explicitly configured:
+The scheduled workflow always runs the deterministic free worker. This is not an LLM and does not claim semantic reasoning or strategy profitability; every task remains marked for human/semantic review. Grok is optional and is called only when BOTH of these are explicitly configured:
 - GitHub Actions secret: `XAI_API_KEY`
 - Repository Actions variable: `WHJ_AGENT_AUTORUN=true`
 
-If either is absent, the workflow creates the nightly plan only and makes zero model API calls. The default per-run budget guard is USD 0.50, with a maximum of 1,000 output tokens per call. The adapter records token usage and estimated cost, retries transient rate-limit/server errors, and stops before a call whose estimated cost would exceed the budget.
+If either Grok setting is absent, the workflow still completes the free deterministic worker run and makes zero model API calls. If Grok is enabled, its default per-run budget guard is USD 0.50, with a maximum of 600 output tokens per call. The adapter records token usage and estimated cost, retries transient rate-limit/server errors, and stops before a call whose estimated cost would exceed the budget.
 
 This does not mean 24 separate Grok subscriptions or 24 continuously running processes. The 24 roles are specialist responsibilities coordinated by a bounded run. A run calls only the roles needed by the task plan, sequentially, and may stop early at the budget guard.
 
-The current Grok adapter creates research findings and review reports only. It does not autonomously patch or merge code. Model-generated findings are accepted only when every cited quote is an exact substring of a supplied repository file or prior agent report.
+The free worker creates structural evidence inventories only. The optional Grok adapter creates research findings and review reports only. It does not autonomously patch or merge code. Model-generated findings are accepted only when every cited quote is an exact substring of a supplied repository file or prior agent report.
 
-## Worker execution contract
+## Zero-cost operation\n\nNo payment is needed for the planner, deterministic workers, Python tests, or a GitHub Actions run that remains within the repository/account's included Actions quota. GitHub Actions quotas and usage policies can change and should be checked in repository billing settings. Do not configure `XAI_API_KEY` or `WHJ_AGENT_AUTORUN=true` for the free-only mode. No API calls are made by the free worker.\n\n## Worker execution contract
 
 Each worker must return a structured result containing:
 - task ID and role ID;
