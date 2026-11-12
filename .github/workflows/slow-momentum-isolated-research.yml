@@ -150,12 +150,12 @@ jobs:
               f"- CSCV/PBO estimate: {pbo_estimate}",
               "- Research-only; no paper ledgers accessed or changed; no live orders.", "",
               "## Normal-cost out-of-sample results", "",
-              "| Lookback | Return | 95% block-bootstrap CI | PF | Max DD | Trades | Top-1 winner share | OOS windows |",
+              "| Lookback | Return | 95% block-bootstrap CI | PF | Max DD | Trades | Top-1 winner share | OOS subperiods (not walk-forward) |",
               "|---:|---:|---:|---:|---:|---:|---:|---|",
           ]
           for key, candidate in report["candidates"].items():
               m = candidate["out_of_sample"]
-              windows = ", ".join(f"{w['metrics']['return_pct']:.2f}%" for w in candidate["walk_forward_windows"])
+              windows = ", ".join(f"{w['metrics']['return_pct']:.2f}%" for w in candidate["oos_subperiods"])
               pf = m["profit_factor"] if m["profit_factor"] is not None else "—"
               ci = m["moving_block_bootstrap_return_ci"]
               concentration = m["trade_concentration_diagnostic"]
