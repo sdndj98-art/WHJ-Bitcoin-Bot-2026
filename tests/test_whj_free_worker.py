@@ -19,6 +19,13 @@ class WHJFreeWorkerTests(unittest.TestCase):
         self.assertEqual(result["executed_research_tasks"], 0)
         self.assertEqual(result["plan_only_tasks"], 24)
         self.assertTrue(all(row["execution_status"] == "not_executed_plan_only" for row in result["reports"]))
+        self.assertGreater(result["deterministic_checks_executed"], 0)
+        self.assertEqual(result["deterministic_checks_failed"], 0)
+        self.assertEqual(
+            result["deterministic_checks_executed"],
+            sum(row["deterministic_checks_executed"] for row in result["reports"]),
+        )
+        self.assertTrue(all("deterministic_checks" in row for row in result["reports"]))
         self.assertFalse(result["live_trading_enabled"])
         self.assertFalse(result["repository_writes_enabled"])
         self.assertEqual(len({row["owner_role"] for row in result["reports"]}), 24)
