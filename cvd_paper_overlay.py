@@ -158,6 +158,11 @@ def build_latest_cvd_confirmation(
             checkpoint, journal_path, "BTC/USD",
             expected_last_trade_id=checkpoint.get("last_trade_id"),
         )
+        # A gap-free journal is not enough if collection began after this
+        # candle opened. Require the first recorded trade to predate the
+        # evaluated candle so a partial first candle cannot be called complete.
+        if metadata["first_trade_timestamp_ns"] > timestamp * 1_000_000_000:
+            return _unavailable("cvd_journal_starts_after_candle_open")
         raw = Path(journal_path).read_bytes()
         if hashlib.sha256(raw).hexdigest() != checkpoint.get("journal_sha256"):
             return _unavailable("cvd_journal_changed_during_snapshot")
