@@ -184,6 +184,18 @@ class KrakenCvdResearchTests(unittest.TestCase):
                 continuity_checkpoint=self.checkpoint(last_trade_id=102),
             )
 
+    def test_rejects_checkpoint_with_wrong_first_trade_timestamp(self):
+        self.write_events(self.valid_events())
+        checkpoint = self.checkpoint()
+        checkpoint["first_trade_timestamp_ns"] += 1
+        with self.assertRaisesRegex(ValueError, "first_trade_timestamp_ns"):
+            analyze_trade_journal(
+                self.path,
+                now_timestamp=240,
+                timeframes=["1m"],
+                continuity_checkpoint=checkpoint,
+            )
+
     def test_rejects_checkpoint_with_wrong_symbol(self):
         self.write_events(self.valid_events())
         with self.assertRaisesRegex(ValueError, "symbol"):
@@ -200,6 +212,7 @@ class KrakenCvdResearchTests(unittest.TestCase):
             {"feed_continuity_verified": False},
             {"source": "local_file"},
             {"feed_continuity_verified": 1},
+            {"version": 1},
         ):
             checkpoint = self.checkpoint()
             checkpoint.update(patch)
