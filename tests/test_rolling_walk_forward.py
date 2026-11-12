@@ -82,6 +82,19 @@ class RollingWalkForwardTests(unittest.TestCase):
         for fold in result["folds"]:
             self.assertLessEqual(fold["test_strategy"]["exposure"], 0.25)
 
+    def test_aggregate_benchmark_entry_cost_is_charged_once_across_folds(self):
+        rows = self.candles(20)
+        result = evaluate_rolling_walk_forward(
+            rows, {"always": [True] * 20, "never": [False] * 20},
+            initial_train_bars=8, test_bars=4,
+            fee_rate=0.001, slippage_rate=0.0005, bars_per_year=1,
+        )
+        aggregate = result["aggregate_oos_cost_scenarios"]["1x"]
+        expected = (1 + 0.25 * (119.0 / 107.0 - 1)) * (1 - 0.0015 * 0.25) - 1
+        self.assertAlmostEqual(aggregate["buy_and_hold"]["net_return"], expected)
+        self.assertTrue(aggregate["benchmark_entry_cost_charged_once"])
+        self.assertTrue(aggregate["fold_boundary_exposure_is_continuous"])
+
     def test_rejects_allocation_above_research_cap(self):
         rows = self.candles(12)
         for allocation in (0.250001, 1.0, True, float("nan")):
