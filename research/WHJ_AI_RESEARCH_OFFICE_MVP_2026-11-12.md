@@ -12,7 +12,7 @@ Create a governed research organization that can later use multiple LLM workers 
 - Dependency-cycle and governance validation.
 - A command-line planner that writes JSON and Markdown.
 - A zero-cost deterministic worker runner that inspects repository files, computes SHA-256 fingerprints, checks Python syntax without executing modules, and emits per-role evidence inventories.
-- A scheduled GitHub Actions workflow at 00:00 UTC (03:00 Baghdad time) that validates the planner and uploads the nightly plan artifact.
+- A scheduled GitHub Actions workflow at 22:00 UTC (01:00 Baghdad time daily) that validates the planner and uploads the nightly plan artifact.
 
 ## Important distinction: planning versus model execution
 
