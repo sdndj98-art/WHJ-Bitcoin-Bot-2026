@@ -5,12 +5,14 @@ from whj_agent_office import ROLES, build_plan, render_markdown, validate_plan
 
 
 class WHJAgentOfficeTests(unittest.TestCase):
-    def test_roster_has_24_distinct_roles(self):
+    def test_roster_has_24_distinct_roles_and_tasks(self):
         plan = build_plan()
         self.assertEqual(len(plan["roles"]), 24)
         self.assertEqual(len({row["role_id"] for row in plan["roles"]}), 24)
         self.assertEqual(plan["worker_role_count"], 20)
         self.assertEqual(len(ROLES), 24)
+        self.assertEqual(len(plan["tasks"]), 24)
+        self.assertEqual({task["owner_role"] for task in plan["tasks"]}, set(ROLES))
 
     def test_plan_is_reproducible_for_fixed_timestamp(self):
         now = datetime(2026, 11, 12, tzinfo=timezone.utc)
@@ -19,7 +21,13 @@ class WHJAgentOfficeTests(unittest.TestCase):
         self.assertEqual(first, second)
         self.assertEqual(first["generated_at_utc"], "2026-11-12T00:00:00+00:00")
 
-    def test_each_office_role_owns_exactly_one_task(self):\n        plan = build_plan()\n        owners = [task["owner_role"] for task in plan["tasks"]]\n        self.assertEqual(len(owners), 24)\n        self.assertEqual(len(set(owners)), 24)\n\n    def test_every_task_has_distinct_owner_and_reviewer(self):
+    def test_each_office_role_owns_exactly_one_task(self):
+        plan = build_plan()
+        owners = [task["owner_role"] for task in plan["tasks"]]
+        self.assertEqual(len(owners), 24)
+        self.assertEqual(len(set(owners)), 24)
+
+    def test_every_task_has_distinct_owner_and_reviewer(self):
         plan = build_plan()
         for task in plan["tasks"]:
             self.assertNotEqual(task["owner_role"], task["reviewer_role"])
@@ -33,6 +41,13 @@ class WHJAgentOfficeTests(unittest.TestCase):
         self.assertIn("PLAN ONLY", markdown)
         self.assertIn("UNKNOWN", markdown)
         self.assertEqual(plan["task_count"], len(plan["tasks"]))
+
+    def test_red_team_reviews_all_20_specialist_workers(self):
+        plan = build_plan()
+        red_team = next(task for task in plan["tasks"] if task["task_id"] == "red_team_review")
+        specialist_owners = {task["owner_role"] for task in plan["tasks"] if task["owner_role"] not in {"chief_of_staff", "project_manager", "red_team", "safety_auditor"}}
+        self.assertEqual(len(specialist_owners), 20)
+        self.assertEqual(set(red_team["dependencies"]), {task["task_id"] for task in plan["tasks"] if task["owner_role"] in specialist_owners})
 
     def test_rejects_unsafe_live_trading_configuration(self):
         plan = build_plan()
