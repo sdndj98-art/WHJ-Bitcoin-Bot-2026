@@ -87,6 +87,22 @@ def build_free_report(root: Path) -> dict:
                 "confidence": "high",
             })
         syntax_failures = [item for item in inspected if item["python_ast_valid"] is False]
+        deterministic_checks = []
+        for item in inspected:
+            if item["python_ast_valid"] is not None:
+                deterministic_checks.append({
+                    "check": "python_ast_syntax",
+                    "source_path": item["path"],
+                    "status": "passed" if item["python_ast_valid"] else "failed",
+                    "detail": "Python source parses successfully." if item["python_ast_valid"] else item.get("syntax_error", "Python syntax error"),
+                })
+            if item["readable_text"]:
+                deterministic_checks.append({
+                    "check": "utf8_text_readability",
+                    "source_path": item["path"],
+                    "status": "passed",
+                    "detail": "File decoded as UTF-8 within the inspection size limit.",
+                })
         risks = []
         if syntax_failures:
             risks.extend(f"Python syntax error in {item['path']}: {item['syntax_error']}" for item in syntax_failures)
@@ -108,6 +124,9 @@ def build_free_report(root: Path) -> dict:
             "files_expected": paths,
             "files_inspected": inspected,
             "findings": findings,
+            "deterministic_checks": deterministic_checks,
+            "deterministic_checks_executed": len(deterministic_checks),
+            "deterministic_checks_failed": sum(check["status"] == "failed" for check in deterministic_checks),
             "risks": risks,
             "missing_data": missing_data,
             "semantic_review_required": True,
@@ -124,6 +143,12 @@ def build_free_report(root: Path) -> dict:
         "blocked_tasks": sum(row["status"] == "blocked" for row in reports),
         "executed_research_tasks": 0,
         "plan_only_tasks": len(reports),
+        "deterministic_checks_executed": sum(row["deterministic_checks_executed"] for row in reports),
+        "deterministic_checks_failed": sum(row["deterministic_checks_failed"] for row in reports),
+        "deterministic_checks_passed": sum(
+            check["status"] == "passed"
+            for row in reports for check in row["deterministic_checks"]
+        ),
         "live_trading_enabled": False,
         "repository_writes_enabled": False,
         "paper_ledger_mutation_enabled": False,
@@ -148,7 +173,9 @@ def write_report(root: Path, output_dir: Path) -> dict:
         "- Cost: $0.00",
         f"- Repository inventories collected: {result['collected_tasks']}/{result['task_count']}",
         f"- Research tasks actually executed: {result['executed_research_tasks']}/{result['task_count']} (PLAN ONLY)",
-        "- This run does not mean 24 research reviews were completed; it only inventories configured source files.",
+        f"- Deterministic source checks executed: {result['deterministic_checks_executed']} (passed: {result['deterministic_checks_passed']}, failed: {result['deterministic_checks_failed']})",
+        "- These are real UTF-8 readability and Python AST syntax checks, not semantic strategy reviews or profitability tests.",
+        "- This run does not mean 24 research reviews were completed; it inventories configured source files and runs only the deterministic checks listed above.",
         "- Profitability claims: none",
         "- Live trading / repository writes / paper-ledger mutation: disabled",
         "",
@@ -162,6 +189,8 @@ def write_report(root: Path, output_dir: Path) -> dict:
         lines += [f"### {row['task_id']} — {row['status']}", ""]
         for item in row["files_inspected"]:
             lines.append(f"- `{item['path']}`: {item['bytes']} bytes; SHA-256 `{item['sha256']}`")
+        for check in row["deterministic_checks"]:
+            lines.append(f"- Check {check['check']} on `{check['source_path']}`: **{check['status']}** — {check['detail']}")
             if item.get("python_ast_valid") is not None:
                 lines.append(f"  - Python AST valid: {item['python_ast_valid']}")
         for risk in row["risks"]:
