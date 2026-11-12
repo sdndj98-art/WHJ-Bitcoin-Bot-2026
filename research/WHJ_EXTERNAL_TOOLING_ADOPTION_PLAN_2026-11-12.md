@@ -10,7 +10,7 @@ The existing repository already has a causal candle evaluator, an isolated 17-fa
 
 | Project | WHJ disposition | Intended boundary |
 |---|---|---|
-| Cryptofeed | **Priority candidate for the CVD/data-quality gap** | Isolated public trade/order-book collector; timestamped append-only events, reconnect/backfill checks, sequence-gap detection, explicit UNKNOWN when continuity is broken. No order capability. |
+| Cryptofeed | **Do not add yet** | WHJ already has a standalone read-only Kraken WebSocket v2 collector on the research branch (`kraken_cvd_collector.py`) with a persistent CVD ledger, append-only JSONL journal, and integrity-bound checkpoint. Cryptofeed is only a future alternative if the existing adapter fails documented parity/continuity tests. No order capability. |
 | CCXT | **Optional adapter, later** | Public OHLCV/ticker/market metadata across venues for independent data replication. Do not instantiate private clients or expose create/cancel order methods to the bot. |
 | Freqtrade | **External benchmark, not embedded executor** | Run a separate dry-run comparison of selected rules after parity tests. Never connect its live mode or credentials to WHJ. |
 | VectorBT | **Optional offline research benchmark** | Compare signal/event-study calculations against WHJ's evaluator on identical data, timestamps, fills, costs and benchmark intervals. Do not use its ranking alone for promotion. |
@@ -29,10 +29,10 @@ The existing repository already has a causal candle evaluator, an isolated 17-fa
 - Add dependency pins only in an isolated optional research extra; core paper monitoring must continue to run without optional packages.
 
 ### Phase 1 — repair the evidence pipeline (highest priority)
-- Design a public-only trade collector around Cryptofeed (or a minimal exchange-specific websocket client if compatibility/continuity tests fail).
-- Persist timestamped raw trade events and a durable checkpoint; detect reconnects, duplicate/out-of-order events, missing sequence ranges, stale feeds and clock skew.
+- Reuse and audit the existing `kraken_cvd_collector.py` / `kraken_order_flow.py` / `trade_event_journal.py` implementation already present on the research branch; do not build a second collector by default.
+- Verify that the existing collector's persisted CVD state, append-only JSONL journal and SHA-256-bound checkpoint survive process restarts; prove reconnect, duplicate/out-of-order, missing-range, stale-feed and clock-skew behavior with deterministic fixtures.
 - Build CVD only from a complete, verified interval. Missing, stale or discontinuous input must remain UNKNOWN and block any CVD-required paper entry.
-- Add replay tests from captured fixtures, restart/resume tests, idempotency tests and explicit no-ledger-mutation tests.
+- Add replay, restart/resume, idempotency and explicit no-paper-ledger-mutation tests. Then add a separate supervised Termux runbook/service with a single-instance lock; do not schedule a second competing collector in GitHub Actions.
 - Do not weaken or disable the existing CVD fail-closed guard to create trades.
 
 ### Phase 2 — independent evaluator parity
@@ -68,4 +68,4 @@ No candidate is promoted on a single attractive night, one venue, one timeframe,
 
 ## Current known blocker
 
-The previously inspected forward monitor reported CVD as UNAVAILABLE because its expected Kraken trade journal/checkpoint was absent in the scheduled workflow. The existing requirement correctly fails closed. Phase 1 is therefore the first implementation target; no CVD bypass is permitted.
+The previously inspected main-branch forward monitor reported CVD as UNAVAILABLE because its expected Kraken trade journal/checkpoint was absent in the scheduled workflow. A standalone collector already exists on the research branch, but its output is not yet wired into the scheduled monitor's persistent state/cache path. Phase 1 is therefore an integration/continuity task, not a greenfield collector build; no CVD bypass is permitted.
