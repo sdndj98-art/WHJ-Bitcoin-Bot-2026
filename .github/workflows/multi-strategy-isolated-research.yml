@@ -1,6 +1,7 @@
 # Research rerun audit: workflow-file updates intentionally retrigger this isolated public-data job.
 # 2026-11-12 audit rerun: publish the actual 17-candidate historical report for review.
 # 2026-11-12 final-head rerun: bind the report and manifest to the latest PR head.
+# 2026-11-12 walk-forward boundary correction: require next-open selection timing and continuous stitched OOS equity.
 name: WHJ Isolated Multi-Strategy Historical Research
 
 on:
@@ -73,11 +74,11 @@ jobs:
           base = reports["1x"]
           # Separate expanding-window walk-forward: each fold selects among
           # the same 17 predeclared causal signal streams using only prior data.
-          # The final 40% is evaluated in contiguous 10%-sized test blocks.
+          # Use 55% initial training, then four contiguous 10%-sized test blocks; retain a 5% tail.
           walk_forward = evaluate_rolling_walk_forward(
               candles,
               build_strategy_signals(candles),
-              initial_train_bars=int(len(candles) * 0.60),
+              initial_train_bars=int(len(candles) * 0.55),
               test_bars=max(32, int(len(candles) * 0.10)),
               fee_rate=0.001,
               slippage_rate=0.0005,
@@ -88,6 +89,27 @@ jobs:
           count = len(next(iter(return_matrix.values())))
           partitions = next((n for n in (8, 6, 4) if count >= 8 and count % n == 0), None)
           pbo = cscv_probability_of_backtest_overfitting(return_matrix, partitions=partitions) if partitions else None
+          walk_forward_manifests = [
+              build_trial_manifest(
+                  trial_id=f"btc-walk-forward-fold-{fold['fold']}-{fold['selected_candidate']}-{os.environ['GITHUB_RUN_ID']}",
+                  candidate_id=fold["selected_candidate"],
+                  parameters={
+                      "fold": fold["fold"],
+                      "initial_train_bars": walk_forward["initial_train_bars"],
+                      "test_bars": walk_forward["test_bars"],
+                      "selection_rule": fold["selection_rule"],
+                      "allocation_fraction": walk_forward["allocation_fraction"],
+                      "fee_rate": 0.001,
+                      "slippage_rate": 0.0005,
+                  },
+                  dataset_sha256=dataset_sha256,
+                  data_source="Coinbase public BTC-USD hourly spot candles",
+                  code_commit_sha=os.environ["GITHUB_SHA"],
+                  run_id=os.environ["GITHUB_RUN_ID"],
+                  created_utc=generated,
+                  evaluation_protocol="Expanding-window training; candidate frozen at completed close; next-open execution; contiguous stitched OOS portfolio; 1x/2x/3x fixed fee/slippage stress.",
+              ) for fold in walk_forward["folds"]
+          ]
           manifests = [
               build_trial_manifest(
                   trial_id=f"btc-family-{name}-{os.environ['GITHUB_RUN_ID']}",
@@ -103,6 +125,8 @@ jobs:
           ]
           output = {
               "generated_at_utc": generated,
+              "code_commit_sha": os.environ["GITHUB_SHA"],
+              "run_id": os.environ["GITHUB_RUN_ID"],
               "source": "Coinbase public BTC-USD hourly spot candles",
               "dataset_sha256": dataset_sha256,
               "candle_count": len(candles),
@@ -118,6 +142,7 @@ jobs:
               "candidate_names": list(base["results"]),
               "cost_stress": reports,
               "rolling_walk_forward": walk_forward,
+              "rolling_walk_forward_trial_manifest": walk_forward_manifests,
               "cscv_pbo": pbo,
               "pbo_scope_warning": "CSCV/PBO is a selection-bias diagnostic across only the 17 declared candidates on this single OOS segment; not a future-profit probability, not a global trial census, and not a replacement for an untouched final holdout.",
               "trial_manifest": manifests,
@@ -127,6 +152,7 @@ jobs:
           }
           Path("btc_strategy_universe_report.json").write_text(json.dumps(output, indent=2, sort_keys=True), encoding="utf-8")
           Path("btc_strategy_trial_manifest.json").write_text(json.dumps(manifests, indent=2, sort_keys=True), encoding="utf-8")
+          Path("btc_walk_forward_trial_manifest.json").write_text(json.dumps(walk_forward_manifests, indent=2, sort_keys=True), encoding="utf-8")
           lines = [
               "# WHJ multi-strategy BTC historical research", "",
               f"- Generated UTC: {generated}",
@@ -169,7 +195,7 @@ jobs:
                   lines.append(f"- {name}: net {m['net_return']*100:.2f}%, matched B&H {b['net_return']*100:.2f}%, excess {(m['net_return']-b['net_return'])*100:.2f} pp")
               lines.append("")
           lines += [
-              "> The candidate ranking table is a separate single 70/30 chronological experiment, not rolling retraining. The expanding-window results above are reported separately. Fixed percentage costs do not model spread, depth, impact, latency, or partial fills. Periodic-return profit factor is not closed-trade profit factor.",
+              "> The candidate ranking table is a separate single 70/30 chronological experiment, not rolling retraining. The expanding-window results above are a distinct, stitched OOS portfolio with one continuous benchmark entry and explicit next-open fold boundaries. Fixed percentage costs do not model spread, depth, impact, latency, or partial fills. Periodic-return profit factor is not closed-trade profit factor.",
               "> The descriptive ranking is exposed to multiple testing and is not a selection/promotion decision. A separate untouched holdout and forward-only paper validation are still required.",
           ]
           Path("btc_strategy_universe_report.md").write_text("\n".join(lines)+"\n", encoding="utf-8")
@@ -182,5 +208,6 @@ jobs:
             btc_strategy_universe_report.json
             btc_strategy_universe_report.md
             btc_strategy_trial_manifest.json
+            btc_walk_forward_trial_manifest.json
           if-no-files-found: error
           retention-days: 30
