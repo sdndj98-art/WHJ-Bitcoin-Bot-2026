@@ -527,22 +527,27 @@ class ForwardPaperMonitorTests(unittest.TestCase):
             validate_hourly_feed(candles, last_close + 60)
 
 
-    def test_main_uses_documented_kraken_cvd_journal_and_checkpoint_paths(self):
+    def test_main_keeps_cvd_research_only_and_does_not_block_paper_sleeves(self):
+        unavailable = {
+            "status": "UNAVAILABLE", "available": False,
+            "direction": "UNKNOWN", "reason": "test_missing_checkpoint",
+            "research_only": True, "execution_enabled": False,
+        }
         with patch("forward_paper_monitor.load_two_year_candles", return_value=[{"timestamp": 1}]):
-            with patch("forward_paper_monitor.process_forward_accounts", return_value={"status": "PAPER_MONITORING"}) as processor:
-                with patch("forward_paper_monitor.write_report_atomically"):
-                    with patch("builtins.print"):
-                        forward_paper_monitor.main()
-        kwargs = processor.call_args.kwargs
-        self.assertEqual(
-            kwargs["cvd_journal_path"],
+            with patch("forward_paper_monitor.build_latest_cvd_confirmation", return_value=unavailable) as builder:
+                with patch("forward_paper_monitor.process_forward_accounts", return_value={"status": "PAPER_MONITORING"}) as processor:
+                    with patch("forward_paper_monitor.write_report_atomically"):
+                        with patch("builtins.print"):
+                            forward_paper_monitor.main()
+        builder.assert_called_once_with(
+            [{"timestamp": 1}],
             "state/kraken_btc_usd_trades.jsonl",
-        )
-        self.assertEqual(
-            kwargs["cvd_checkpoint_path"],
             "state/kraken_btc_usd_trades.jsonl.checkpoint.json",
+            now_timestamp=None,
         )
-        self.assertTrue(kwargs["require_cvd_confirmation"])
+        kwargs = processor.call_args.kwargs
+        self.assertFalse(kwargs["require_cvd_confirmation"])
+        self.assertEqual(kwargs["cvd_confirmation"]["reason"], "test_missing_checkpoint")
 
     def test_forward_monitor_loads_verified_cvd_and_reports_entry_gate(self):
         candles = self.make_candles()
