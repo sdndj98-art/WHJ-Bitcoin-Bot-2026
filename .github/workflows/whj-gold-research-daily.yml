@@ -1,0 +1,118 @@
+# 2026-11-12 audit rerun: refresh gold historical evidence and test the local forward-only shadow runner.
+name: WHJ Daily Gold Research
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "45 22 * * *"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: whj-xauusd-gold-daily-research
+  cancel-in-progress: false
+
+jobs:
+  gold-research:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: research/global-evidence-strategy-lab-20261112
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Run gold data, strategy, and shadow-runner tests
+        run: |
+          python -m unittest discover -s tests -p 'test_gold_market_data.py' -v
+          python -m unittest discover -s tests -p 'test_regime_ema_ohlc_lab.py' -v
+          python -m unittest discover -s tests -p 'test_gold_forward_shadow.py' -v
+          python -m unittest discover -s tests -p 'test_gold_forward_shadow_runner.py' -v
+      - name: Evaluate GC=F daily historical folds
+        run: |
+          python - <<'PY'
+          import hashlib
+          import json
+          from datetime import datetime, timezone
+          from pathlib import Path
+          from gold_market_data import load_gold_daily
+          from regime_ema_ohlc_lab import evaluate_regime_fold
+
+          bars = load_gold_daily(period="10y")
+          n = len(bars)
+          cuts = [int(n * x) for x in (0.55, 0.70, 0.85, 1.0)]
+          if n < 1000 or any(cuts[i + 1] - cuts[i] < 300 for i in range(3)):
+              raise RuntimeError(f"Insufficient GC=F daily history or fold lengths: n={n}, cuts={cuts}")
+          serial = json.dumps(bars, sort_keys=True, separators=(",", ":"), allow_nan=False).encode()
+          fingerprint = hashlib.sha256(serial).hexdigest()
+          costs = {
+              "1x": (0.0005, 0.0005),
+              "2x": (0.0010, 0.0010),
+              "3x": (0.0015, 0.0015),
+          }
+          folds = []
+          for k in range(3):
+              start, end = cuts[k], cuts[k + 1]
+              row = {"fold": k + 1, "oos_start": bars[start]["timestamp"], "oos_end": bars[end - 1]["timestamp"], "cost_stress": {}}
+              for label, (fee, slip) in costs.items():
+                  row["cost_stress"][label] = evaluate_regime_fold(bars, start, end, fee, slip)
+              folds.append(row)
+          report = {
+              "asset": "COMEX gold futures reference",
+              "symbol": "GC=F",
+              "source": "Yahoo Finance chart API",
+              "timeframe": "1d",
+              "generated_at_utc": datetime.now(timezone.utc).isoformat(),
+              "candle_count": n,
+              "first_timestamp_utc": datetime.fromtimestamp(bars[0]["timestamp"] / 1000, timezone.utc).isoformat(),
+              "last_timestamp_utc": datetime.fromtimestamp(bars[-1]["timestamp"] / 1000, timezone.utc).isoformat(),
+              "dataset_sha256": fingerprint,
+              "protocol": {
+                  "folds": "three chronological non-overlapping OOS folds over final 45%; each starts at $1,000",
+                  "warmup_bars": 260,
+                  "candidates": ["EMA50/EMA200", "EMA50/EMA200 plus ATR14/close <= prior 180-bar inclusive 90th percentile"],
+                  "execution": "signals at completed daily close, execute at next daily open",
+                  "risk": "25% maximum allocation; 2% stop; 4% target; no leverage",
+                  "benchmark": "matched 25% buy-and-hold with 75% cash plus all-cash baseline",
+                  "costs_per_side": costs,
+                  "limitations": "Yahoo GC=F is a continuous COMEX gold-futures reference series, not spot XAU/USD or broker bid/ask execution. Futures contract rolls and broker-specific pricing can differ. Fixed fee/slippage are proxies; spread, swap/financing, broker markup, market impact, and holiday/session differences are not modelled.",
+              },
+              "folds": folds,
+              "promotion_status": "NO_CANDIDATE_PROMOTED",
+              "paper_ledgers_read_or_written": False,
+              "live_orders": False,
+          }
+          Path("whj_xauusd_gold_report.json").write_text(json.dumps(report, indent=2, sort_keys=True), encoding="utf-8")
+          lines = [
+              "# WHJ COMEX gold daily research", "",
+              f"- Generated UTC: {report['generated_at_utc']}",
+              f"- Source: {report['source']} ({report['symbol']})",
+              f"- Daily candles: {n}; SHA-256: `{fingerprint}`",
+              f"- Period: {report['first_timestamp_utc']} to {report['last_timestamp_utc']}",
+              "- Status: RESEARCH ONLY — NO CANDIDATE PROMOTED", "",
+              "| Fold | Costs | Strategy | Return | OHLC DD | Trades | PF | Matched 25% buy/hold | Cash |",
+              "|---:|---|---|---:|---:|---:|---:|---:|---:|",
+          ]
+          for fold in folds:
+              for level, result in fold["cost_stress"].items():
+                  for name in ("ema50_200", "ema50_200_atr90_past180"):
+                      metric = result[name]
+                      pf = metric["closed_trade_profit_factor"]
+                      lines.append(f"| {fold['fold']} | {level} | {name} | {metric['return_pct']:.4f}% | {metric['max_intrabar_ohlc_envelope_drawdown_pct']:.4f}% | {metric['closed_trades']} | {pf if pf is not None else '—'} | {result['buy_and_hold']['return_pct']:.4f}% | 0.0000% |")
+          lines += [
+              "",
+              "> COMEX gold reference data is not a broker execution feed. Costs are sensitivity proxies, not a quote of any broker's actual spread, commission, or overnight financing. Results are historical and do not establish future profitability. No paper ledger or order pathway is accessed.",
+          ]
+          Path("whj_xauusd_gold_report.md").write_text("\n".join(lines) + "\n", encoding="utf-8")
+          PY
+      - name: Upload gold research report
+        uses: actions/upload-artifact@v4
+        with:
+          name: whj-xauusd-gold-${{ github.run_number }}
+          path: |
+            whj_xauusd_gold_report.json
+            whj_xauusd_gold_report.md
+          if-no-files-found: error
+          retention-days: 30
