@@ -61,7 +61,7 @@ The 70/30 experiment is not rolling walk-forward retraining and does not supply 
 ## Expanding-window rolling walk-forward evaluator
 
 - Added `rolling_walk_forward.py` with an expanding training window. Each fold selects one of the predeclared candidate signal streams using training-period excess return versus matched buy-and-hold, freezes that candidate, and evaluates the next contiguous block.
-- The test block retains the immediately preceding completed signal bar so the common evaluator's next-open execution timing remains aligned.
+- Each fold is selected only after the final training candle closes. Its first selected signal executes at the following open; the test slice includes that prior signal candle and the endpoint candle.
 - Allocation is hard-capped at 25%; all folds remain descriptive and report `NO_CANDIDATE_PROMOTED`.
 - Added tests for expanding/contiguous fold boundaries, future-price isolation of the first fold's selection, invalid inputs, the full 17-signal universe on synthetic OHLCV, and the allocation cap.
 
@@ -70,9 +70,9 @@ This is a new evaluator implementation, not a completed historical BTC result. I
 ### Walk-forward fold integrity and cost stress (2026-11-12)
 
 - Each fold chooses a candidate using only the expanding history through the prior boundary, then evaluates the frozen signal stream over the next block.
-- The test slice retains two pre-test candles so the first OOS open-to-open return begins at the prior boundary open; successive fold return intervals are contiguous without a skipped boundary bar.
+- The fold slice retains one prior signal candle and one endpoint candle. OOS returns start at the next open after selection, and adjacent folds meet at the same open boundary without overlapping or skipping an OOS return.
 - Each selected fold is evaluated at 1x, 2x, and 3x the same fee/slippage assumptions. Candidate selection remains based on the predeclared 1x training score; stressed costs do not influence selection.
-- Aggregate OOS net return, matched buy-and-hold return, excess return, and close-to-close drawdown are reported separately for each cost scenario.
-- Drawdown is explicitly close-to-close/open-to-open equity drawdown, not intrabar OHLC drawdown.
+- The aggregate OOS stream is stitched and evaluated once, preserving exposure across candidate switches and charging the buy-and-hold entry cost once. Aggregate net return, matched benchmark, excess return, and open-to-open drawdown are reported for each cost scenario.
+- Drawdown is open-to-open equity drawdown, not intrabar OHLC drawdown.
 
 The evaluator still requires a full repository test run and a historical dataset run before its metrics can be treated as empirical evidence. It does not model variable spread, order-book depth, impact, latency, or tick-level execution; no candidate is promoted.
