@@ -530,11 +530,18 @@ def write_report_atomically(report, output_path="forward_paper_report.json"):
 def main():
     candles = load_two_year_candles(days=90)
     cvd_journal_path = "state/kraken_btc_usd_trades.jsonl"
+    # CVD remains a research-only diagnostic. A missing trade journal must not
+    # deadlock the independent OHLCV paper sleeves; it is never an execution feed.
+    cvd_confirmation = build_latest_cvd_confirmation(
+        candles,
+        cvd_journal_path,
+        cvd_journal_path + ".checkpoint.json",
+        now_timestamp=None,
+    )
     report = process_forward_accounts(
         candles,
-        require_cvd_confirmation=True,
-        cvd_journal_path=cvd_journal_path,
-        cvd_checkpoint_path=cvd_journal_path + ".checkpoint.json",
+        cvd_confirmation=cvd_confirmation,
+        require_cvd_confirmation=False,
     )
     write_report_atomically(report)
     print(json.dumps(report, indent=2, allow_nan=False))
