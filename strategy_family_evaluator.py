@@ -7,7 +7,7 @@ No account, exchange, order, or paper-ledger integration exists here.
 """
 import math
 
-def _validate(candles, signals, fee_rate, slippage_rate, bars_per_year):
+def _validate(candles, signals, fee_rate, slippage_rate, bars_per_year, allocation_fraction):
     if len(candles) != len(signals):
         raise ValueError("candles and signals must have identical lengths")
     if len(candles) < 4:
@@ -17,6 +17,8 @@ def _validate(candles, signals, fee_rate, slippage_rate, bars_per_year):
             raise ValueError(f"{name} must be finite and in [0, 1)")
     if isinstance(bars_per_year, bool) or not isinstance(bars_per_year, (int, float)) or not math.isfinite(bars_per_year) or bars_per_year <= 0:
         raise ValueError("bars_per_year must be positive and finite")
+    if isinstance(allocation_fraction, bool) or not isinstance(allocation_fraction, (int, float)) or not math.isfinite(allocation_fraction) or not 0 < allocation_fraction <= 1:
+        raise ValueError("allocation_fraction must be finite and in (0, 1]")
     opens = []
     for row in candles:
         if isinstance(row, dict):
@@ -63,7 +65,7 @@ def _metrics(returns, exposure, turnover, closed_trades, bars_per_year, equity):
         "bar_return_volatility": volatility,
     }
 
-def evaluate_candidate(candles, signals, fee_rate=0.001, slippage_rate=0.0005, bars_per_year=24*365):
+def evaluate_candidate(candles, signals, fee_rate=0.001, slippage_rate=0.0005, bars_per_year=24*365, allocation_fraction=1.0):
     """Evaluate a long/flat signal series with next-open-to-next-open returns.
 
     Each signal is observed at candle close. Its exposure begins at the next
@@ -71,7 +73,7 @@ def evaluate_candidate(candles, signals, fee_rate=0.001, slippage_rate=0.0005, b
     incomplete intervals are excluded. This is a simplified OHLCV model, not
     a spread, depth, impact, latency, or tick-path simulator.
     """
-    opens = _validate(candles, signals, fee_rate, slippage_rate, bars_per_year)
+    opens = _validate(candles, signals, fee_rate, slippage_rate, bars_per_year, allocation_fraction)
     cost_rate = fee_rate + slippage_rate
     strategy_returns, benchmark_returns = [], []
     exposures, turnovers = [], []
@@ -82,13 +84,14 @@ def evaluate_candidate(candles, signals, fee_rate=0.001, slippage_rate=0.0005, b
         position = signals[signal_index]
         turnover = abs(int(position)-int(previous_position))
         gross = opens[signal_index+2] / opens[signal_index+1] - 1.0
-        net = (1.0 + gross) * (1.0 - cost_rate*turnover) - 1.0 if position else -cost_rate*turnover
+        scaled_turnover = allocation_fraction * turnover
+        net = (1.0 + allocation_fraction*gross) * (1.0 - cost_rate*scaled_turnover) - 1.0 if position else -cost_rate*scaled_turnover
         strategy_returns.append(net)
-        exposures.append(position)
-        turnovers.append(float(turnover))
+        exposures.append(allocation_fraction if position else 0.0)
+        turnovers.append(float(scaled_turnover))
         equity.append(equity[-1] * (1.0 + net))
-        benchmark_cost = cost_rate if signal_index == 0 else 0.0
-        benchmark_net = (1.0 + gross) * (1.0 - benchmark_cost) - 1.0
+        benchmark_cost = cost_rate * allocation_fraction if signal_index == 0 else 0.0
+        benchmark_net = (1.0 + allocation_fraction*gross) * (1.0 - benchmark_cost) - 1.0
         benchmark_returns.append(benchmark_net)
         benchmark_equity.append(benchmark_equity[-1] * (1.0 + benchmark_net))
         if previous_position and not position:
@@ -96,7 +99,8 @@ def evaluate_candidate(candles, signals, fee_rate=0.001, slippage_rate=0.0005, b
         previous_position = position
     return {
         "protocol": "completed_close_signal_next_open_fill_open_to_open_return",
-        "cost_model": {"fee_rate_per_turnover_unit": fee_rate, "slippage_rate_per_turnover_unit": slippage_rate, "limitations": "No explicit spread, depth, impact, latency, or intrabar path."},
+        "allocation_fraction": allocation_fraction,
+        "cost_model": {"fee_rate_per_turnover_unit": fee_rate, "slippage_rate_per_turnover_unit": slippage_rate, "allocation_scaled_turnover": True, "limitations": "No explicit spread, depth, impact, latency, or intrabar path."},
         "strategy": _metrics(strategy_returns, exposures, turnovers, closed_trades, bars_per_year, equity),
         "buy_and_hold": _metrics(benchmark_returns, [True]*len(benchmark_returns), [1.0 if i == 0 else 0.0 for i in range(len(benchmark_returns))], 0, bars_per_year, benchmark_equity),
         "excess_return": equity[-1] - benchmark_equity[-1],
