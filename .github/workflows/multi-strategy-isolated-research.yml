@@ -49,6 +49,7 @@ jobs:
           from strategy_family_runner import run_strategy_universe
           from strategy_family_lab import build_strategy_signals
           from rolling_walk_forward import evaluate_rolling_walk_forward
+          from strategy_lab import _market_regime_diagnostics
 
           # Public Coinbase spot data only. No paper account, monitor, cache,
           # exchange credentials, order route, or live-trading code is invoked.
@@ -75,15 +76,22 @@ jobs:
           # Separate expanding-window walk-forward: each fold selects among
           # the same 17 predeclared causal signal streams using only prior data.
           # Use 55% initial training, then four contiguous 10%-sized test blocks; retain a 5% tail.
+          strategy_signals = build_strategy_signals(candles)
           walk_forward = evaluate_rolling_walk_forward(
               candles,
-              build_strategy_signals(candles),
+              strategy_signals,
               initial_train_bars=int(len(candles) * 0.55),
               test_bars=max(32, int(len(candles) * 0.10)),
               fee_rate=0.001,
               slippage_rate=0.0005,
               bars_per_year=24*365,
               allocation_fraction=base["allocation_fraction"],
+          )
+          # Descriptive conditional forward-bar diagnostics only; this is
+          # explicitly not strategy PnL, trade PnL, or a promotion metric.
+          closes = [float(row["close"]) for row in candles]
+          regime_diagnostics = _market_regime_diagnostics(
+              closes, strategy_signals, split_index
           )
           return_matrix = {name: item["net_returns"] for name, item in base["results"].items()}
           count = len(next(iter(return_matrix.values())))
@@ -142,6 +150,7 @@ jobs:
               "candidate_names": list(base["results"]),
               "cost_stress": reports,
               "rolling_walk_forward": walk_forward,
+              "market_regime_diagnostics": regime_diagnostics,
               "rolling_walk_forward_trial_manifest": walk_forward_manifests,
               "cscv_pbo": pbo,
               "pbo_scope_warning": "CSCV/PBO is a selection-bias diagnostic across only the 17 declared candidates on this single OOS segment; not a future-profit probability, not a global trial census, and not a replacement for an untouched final holdout.",
@@ -192,6 +201,24 @@ jobs:
               baseline_fold = fold["cost_scenarios"]["1x"]
               training_trades = fold["training_closed_trades"][fold["selected_candidate"]]
               lines.append(f"- Fold {fold['fold']}: selected {fold['selected_candidate']}; training ends at {fold['training_end_index_exclusive']}; selected-candidate training trades {training_trades}; OOS open interval {fold['test_return_start_open_index']}→{fold['test_return_end_open_index']}; 1x return {baseline_fold['strategy']['net_return']*100:.2f}%, matched B&H {baseline_fold['buy_and_hold']['net_return']*100:.2f}%, OOS trades {baseline_fold['strategy']['closed_trades']}.")
+          lines += ["", "## Close-time market regime diagnostics (conditional forward bars, not PnL)", ""]
+          lines.append(regime_diagnostics["classification"])
+          lines.append(regime_diagnostics["measurement"])
+          for regime_name, regime in regime_diagnostics["regimes"].items():
+              market_return = regime["market_forward_return_pct"]
+              positive = regime["positive_forward_bar_pct"]
+              lines.append(f"### {regime_name}: {regime['bars']} bars; market next-bar return {market_return if market_return is not None else 'n/a'}%; positive bars {positive if positive is not None else 'n/a'}%; {regime['evidence_status']}")
+              for candidate_name in sorted(regime["strategy_signal_diagnostics"]):
+                  diag = regime["strategy_signal_diagnostics"][candidate_name]
+                  active_return = diag["active_forward_return_pct"]
+                  positive_active = diag["positive_active_forward_bar_pct"]
+                  interval = diag["positive_active_forward_bar_ci95_pct"]
+                  ci_text = (
+                      f"[{interval['lower_pct']:.1f}%, {interval['upper_pct']:.1f}%]"
+                      if interval is not None else "n/a"
+                  )
+                  lines.append(f"- {candidate_name}: active bars {diag['active_signal_bars']}; conditional compounded forward-bar return {active_return if active_return is not None else 'n/a'}%; positive active bars {positive_active if positive_active is not None else 'n/a'}% (Wilson 95% CI {ci_text}); {diag['evidence_status']}")
+              lines.append("")
           lines += ["", "## Cost stress ranking stability", ""]
           for level, report in reports.items():
               lines.append(f"### {level} costs")
