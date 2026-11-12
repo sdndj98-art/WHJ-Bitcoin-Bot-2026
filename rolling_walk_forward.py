@@ -71,8 +71,7 @@ def evaluate_rolling_walk_forward(
             raise ValueError("candidate signals must contain only bool values")
 
     folds = []
-    aggregate_returns = {1: [], 2: [], 3: []}
-    aggregate_benchmark_returns = {1: [], 2: [], 3: []}
+    stitched_oos_signals = [False] * len(candles)
     train_end = initial_train_bars
     while train_end + 2 < len(candles):
         test_end = min(train_end + test_bars, len(candles))
@@ -94,6 +93,11 @@ def evaluate_rolling_walk_forward(
         # The training score itself ends at open[train_end - 1].
         test_rows = candles[train_end - 2:test_end]
         test_signals = signals_by_candidate[selected][train_end - 2:test_end]
+        # Stitch only signals whose returns belong to this fold. The aggregate
+        # OOS stream is evaluated once below, preserving exposure continuity.
+        stitched_oos_signals[train_end - 2:test_end - 2] = (
+            signals_by_candidate[selected][train_end - 2:test_end - 2]
+        )
         cost_scenarios = {}
         for multiplier in (1, 2, 3):
             scenario = evaluate_candidate(
@@ -101,8 +105,6 @@ def evaluate_rolling_walk_forward(
                 slippage_rate * multiplier, bars_per_year,
                 allocation_fraction=allocation_fraction,
             )
-            aggregate_returns[multiplier].extend(scenario["net_returns"])
-            aggregate_benchmark_returns[multiplier].extend(scenario["benchmark_net_returns"])
             cost_scenarios[f"{multiplier}x"] = {
                 "strategy": scenario["strategy"],
                 "buy_and_hold": scenario["buy_and_hold"],
@@ -132,6 +134,34 @@ def evaluate_rolling_walk_forward(
 
     if not folds:
         raise ValueError("data does not contain a complete test fold")
+    final_test_end = folds[-1]["test_end_index_exclusive"]
+    aggregate_rows = candles[initial_train_bars - 2:final_test_end]
+    aggregate_signals = stitched_oos_signals[initial_train_bars - 2:final_test_end]
+    aggregate_cost_scenarios = {}
+    for multiplier in (1, 2, 3):
+        aggregate = evaluate_candidate(
+            aggregate_rows,
+            aggregate_signals,
+            fee_rate * multiplier,
+            slippage_rate * multiplier,
+            bars_per_year,
+            allocation_fraction=allocation_fraction,
+        )
+        strategy_summary = _path_summary(aggregate["net_returns"])
+        strategy_summary.update({
+            "closed_trades": aggregate["strategy"]["closed_trades"],
+            "exposure": aggregate["strategy"]["exposure"],
+            "turnover": aggregate["strategy"]["turnover"],
+            "open_position_at_end": aggregate["strategy"]["open_position_at_end"],
+        })
+        benchmark_summary = _path_summary(aggregate["benchmark_net_returns"])
+        aggregate_cost_scenarios[f"{multiplier}x"] = {
+            "strategy": strategy_summary,
+            "buy_and_hold": benchmark_summary,
+            "excess_return": strategy_summary["net_return"] - benchmark_summary["net_return"],
+            "benchmark_entry_cost_charged_once": True,
+            "fold_boundary_exposure_is_continuous": True,
+        }
     return {
         "protocol": "expanding_window_rolling_walk_forward_frozen_candidate",
         "fold_count": len(folds),
@@ -141,17 +171,7 @@ def evaluate_rolling_walk_forward(
         "candidate_count": len(names),
         "candidate_names": names,
         "folds": folds,
-        "aggregate_oos_cost_scenarios": {
-            f"{multiplier}x": {
-                "strategy": _path_summary(aggregate_returns[multiplier]),
-                "buy_and_hold": _path_summary(aggregate_benchmark_returns[multiplier]),
-                "excess_return": (
-                    _path_summary(aggregate_returns[multiplier])["net_return"]
-                    - _path_summary(aggregate_benchmark_returns[multiplier])["net_return"]
-                ),
-            }
-            for multiplier in (1, 2, 3)
-        },
+        "aggregate_oos_cost_scenarios": aggregate_cost_scenarios,
         "tested_through_index_exclusive": folds[-1]["test_end_index_exclusive"],
         "unused_tail_bars": len(candles) - folds[-1]["test_end_index_exclusive"],
         "promotion_status": "NO_CANDIDATE_PROMOTED",
