@@ -77,6 +77,7 @@ def evaluate_rolling_walk_forward(
         test_end = train_end + test_bars
         training_rows = candles[:train_end]
         training_scores = {}
+        training_closed_trades = {}
         for name in names:
             training = evaluate_candidate(
                 training_rows, signals_by_candidate[name][:train_end],
@@ -84,8 +85,9 @@ def evaluate_rolling_walk_forward(
                 allocation_fraction=allocation_fraction,
             )
             training_scores[name] = training["excess_return"]
+            training_closed_trades[name] = training["strategy"]["closed_trades"]
 
-        selected = max(names, key=lambda name: (training_scores[name], name))
+        selected = min(names, key=lambda name: (-training_scores[name], name))
         # The fold is selected after close[train_end - 1]; its first signal
         # therefore fills at open[train_end]. Keep one prior candle for that
         # signal and one endpoint candle so the fold has exactly test_bars returns.
@@ -121,6 +123,7 @@ def evaluate_rolling_walk_forward(
             "test_return_end_open_index": test_end,
             "selected_candidate": selected,
             "training_excess_returns": training_scores,
+            "training_closed_trades": training_closed_trades,
             "test_strategy": baseline["strategy"],
             "test_buy_and_hold": baseline["buy_and_hold"],
             "test_excess_return": baseline["excess_return"],
@@ -151,6 +154,9 @@ def evaluate_rolling_walk_forward(
             "exposure": aggregate["strategy"]["exposure"],
             "turnover": aggregate["strategy"]["turnover"],
             "open_position_at_end": aggregate["strategy"]["open_position_at_end"],
+            "periodic_profit_factor": aggregate["strategy"]["profit_factor"],
+            "period_sharpe": aggregate["strategy"]["period_sharpe"],
+            "bar_return_volatility": aggregate["strategy"]["bar_return_volatility"],
         })
         benchmark_summary = _path_summary(aggregate["benchmark_net_returns"])
         aggregate_cost_scenarios[f"{multiplier}x"] = {
