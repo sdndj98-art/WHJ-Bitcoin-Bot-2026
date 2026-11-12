@@ -25,6 +25,7 @@ def inspect_trade_journal(path):
     first_id = last_id = None
     symbol = None
     count = 0
+    first_timestamp_ns = None
     last_timestamp_ns = None
     for line_number, raw_line in enumerate(raw.splitlines(), 1):
         try:
@@ -51,6 +52,8 @@ def inspect_trade_journal(path):
         timestamp_ns = _trade_event_timestamp_ns(event.get("timestamp"))
         if last_timestamp_ns is not None and timestamp_ns < last_timestamp_ns:
             raise ValueError(f"journal timestamp moved backwards at line {line_number}")
+        if first_timestamp_ns is None:
+            first_timestamp_ns = timestamp_ns
         last_timestamp_ns = timestamp_ns
         if isinstance(event.get("price"), bool) or isinstance(event.get("qty"), bool):
             raise ValueError(f"invalid journal price or quantity at line {line_number}")
@@ -75,6 +78,8 @@ def inspect_trade_journal(path):
         "first_trade_id": first_id,
         "last_trade_id": last_id,
         "trade_count": count,
+        "first_trade_timestamp_ns": first_timestamp_ns,
+        "last_trade_timestamp_ns": last_timestamp_ns,
         "journal_size_bytes": len(raw),
         "journal_sha256": hashlib.sha256(raw).hexdigest(),
     }
@@ -91,7 +96,7 @@ def build_continuity_checkpoint(path, symbol, expected_last_trade_id):
     if metadata["last_trade_id"] != expected_last_trade_id:
         raise ValueError("journal last trade ID does not match collector state")
     return {
-        "version": 1,
+        "version": 2,
         "source": SOURCE,
         "feed_continuity_verified": True,
         **metadata,
@@ -101,14 +106,15 @@ def build_continuity_checkpoint(path, symbol, expected_last_trade_id):
 def validate_continuity_checkpoint(checkpoint, path, symbol, expected_last_trade_id=None):
     if not isinstance(checkpoint, dict):
         raise ValueError("continuity checkpoint must be an object")
-    if (type(checkpoint.get("version")) is not int or checkpoint.get("version") != 1
+    if (type(checkpoint.get("version")) is not int or checkpoint.get("version") != 2
             or checkpoint.get("source") != SOURCE):
         raise ValueError("continuity checkpoint source or version is not trusted")
     if checkpoint.get("feed_continuity_verified") is not True:
         raise ValueError("continuity checkpoint is not verified")
     metadata = inspect_trade_journal(path)
     integer_fields = (
-        "first_trade_id", "last_trade_id", "trade_count", "journal_size_bytes"
+        "first_trade_id", "last_trade_id", "trade_count",
+        "first_trade_timestamp_ns", "last_trade_timestamp_ns", "journal_size_bytes"
     )
     for field in integer_fields:
         value = checkpoint.get(field)
@@ -116,6 +122,8 @@ def validate_continuity_checkpoint(checkpoint, path, symbol, expected_last_trade
             raise ValueError(f"continuity checkpoint {field} is invalid")
     if not isinstance(checkpoint.get("symbol"), str):
         raise ValueError("continuity checkpoint symbol is invalid")
+    if checkpoint["first_trade_timestamp_ns"] > checkpoint["last_trade_timestamp_ns"]:
+        raise ValueError("continuity checkpoint trade timestamp range is invalid")
     if not isinstance(checkpoint.get("journal_sha256"), str):
         raise ValueError("continuity checkpoint journal_sha256 is invalid")
     for field in ("symbol", *integer_fields, "journal_sha256"):
