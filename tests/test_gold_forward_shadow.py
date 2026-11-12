@@ -81,7 +81,7 @@ class GoldForwardShadowTests(unittest.TestCase):
         bars = rising_bars()
         state = seed_gold_shadow_state(bars, "ema50_200")
         with self.assertRaisesRegex(ValueError, "Checkpoint candle is absent"):
-            advance_gold_shadow_state(bars[1:], state)
+            advance_gold_shadow_state(bars[:-1], state)
 
     def test_rejects_duplicate_or_out_of_order_timestamps(self):
         bars = rising_bars()
