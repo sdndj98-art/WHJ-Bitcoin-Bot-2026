@@ -1,4 +1,4 @@
-# 2026-11-12 audit rerun: refresh gold historical evidence on the latest isolated PR head.
+# 2026-11-12 audit rerun: refresh gold historical evidence and test the local forward-only shadow runner.
 name: WHJ GC=F Gold Daily Research
 
 on:
@@ -8,8 +8,12 @@ on:
     paths:
       - "gold_market_data.py"
       - "regime_ema_ohlc_lab.py"
+      - "gold_forward_shadow.py"
+      - "gold_forward_shadow_runner.py"
       - "tests/test_gold_market_data.py"
       - "tests/test_regime_ema_ohlc_lab.py"
+      - "tests/test_gold_forward_shadow.py"
+      - "tests/test_gold_forward_shadow_runner.py"
       - ".github/workflows/gold-xauusd-daily-research.yml"
 
 permissions:
@@ -28,10 +32,12 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-      - name: Run gold data and strategy tests
+      - name: Run gold data, strategy, and shadow-runner tests
         run: |
           python -m unittest discover -s tests -p 'test_gold_market_data.py' -v
           python -m unittest discover -s tests -p 'test_regime_ema_ohlc_lab.py' -v
+          python -m unittest discover -s tests -p 'test_gold_forward_shadow.py' -v
+          python -m unittest discover -s tests -p 'test_gold_forward_shadow_runner.py' -v
       - name: Evaluate GC=F daily historical folds
         run: |
           python - <<'PY'
