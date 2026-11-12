@@ -31,10 +31,16 @@ jobs:
         uses: actions/checkout@v4
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v5
+      - name: Assemble isolated dashboard site
+        run: |
+          mkdir -p _site
+          cp index.html _site/index.html
+          cp dual_portfolio_dashboard.html _site/dual_portfolio_dashboard.html
+          cp dual_portfolio.json _site/dual_portfolio.json
       - name: Upload dashboard site
         uses: actions/upload-pages-artifact@v3
         with:
-          path: .
+          path: _site
       - name: Deploy dashboard
         id: deployment
         uses: actions/deploy-pages@v4
