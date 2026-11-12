@@ -2,6 +2,7 @@ import unittest
 
 from whj_grok_worker import (
     REPORT_SCHEMA,
+    _compact_result,
     estimate_cost,
     parse_response,
     validate_worker_report,
@@ -120,8 +121,8 @@ class WHJGrokWorkerTests(unittest.TestCase):
         self.assertEqual(len(compact["risks"]), 2)
 
     def test_cost_estimate_is_positive_and_bounded(self):
-        self.assertGreater(estimate_cost(4000, 1000), 0)
-        self.assertGreater(estimate_cost(8000, 1000), estimate_cost(4000, 1000))
+        self.assertGreater(estimate_cost(4000, 600), 0)
+        self.assertGreater(estimate_cost(8000, 600), estimate_cost(4000, 600))
 
 
 if __name__ == "__main__":
