@@ -50,7 +50,7 @@ class WHJFreeWorkerTests(unittest.TestCase):
     def test_write_report_renders_ast_and_check_evidence(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
-            (root / "strategy_family_lab.py").write_text("def signal():\\n    return 'HOLD'\\n", encoding="utf-8")
+            (root / "strategy_family_lab.py").write_text("def signal():\n    return 'HOLD'\n", encoding="utf-8")
             output = root / "out"
             result = write_report(root, output)
             markdown = (output / "latest_free_worker_results.md").read_text(encoding="utf-8")
