@@ -85,7 +85,10 @@ class CvdPaperOverlayTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as folder:
             journal = Path(folder) / "trades.jsonl"
             checkpoint_path = Path(folder) / "checkpoint.json"
-            events = []
+            events = [{
+                "trade_id": 999, "timestamp": 3500, "price": 100.0,
+                "qty": 1.0, "side": "buy", "symbol": "BTC/USD",
+            }]
             for offset in range(12):
                 events.append({
                     "trade_id": 1000 + offset,
@@ -113,6 +116,38 @@ class CvdPaperOverlayTests(unittest.TestCase):
             self.assertEqual(result["direction"], "BULLISH")
             self.assertTrue(result["continuity_verified"])
             self.assertFalse(result["execution_enabled"])
+
+    def test_verified_but_partial_first_candle_is_unavailable(self):
+        with tempfile.TemporaryDirectory() as folder:
+            journal = Path(folder) / "trades.jsonl"
+            checkpoint_path = Path(folder) / "checkpoint.json"
+            events = [
+                {
+                    "trade_id": 1000 + offset,
+                    "timestamp": 3700 + offset * 250,
+                    "price": 101.0,
+                    "qty": 1.0,
+                    "side": "buy" if offset < 10 else "sell",
+                    "symbol": "BTC/USD",
+                }
+                for offset in range(12)
+            ]
+            journal.write_text(
+                "".join(json.dumps(event, separators=(",", ":")) + "\\n" for event in events),
+                encoding="utf-8",
+            )
+            checkpoint = build_continuity_checkpoint(str(journal), "BTC/USD", 1011)
+            save_continuity_checkpoint_atomic(str(checkpoint_path), checkpoint)
+            candles = [{
+                "timestamp": 3600 * 1000, "open": 100.0, "high": 103.0,
+                "low": 99.0, "close": 102.0, "volume": 12.0,
+            }]
+            result = build_latest_cvd_confirmation(
+                candles, str(journal), str(checkpoint_path), now_timestamp=7200,
+                max_last_trade_lag_seconds=1200,
+            )
+            self.assertFalse(result["available"])
+            self.assertEqual(result["reason"], "cvd_journal_starts_after_candle_open")
 
     def test_verified_cvd_reader_fails_closed_on_checkpoint_mismatch(self):
         with tempfile.TemporaryDirectory() as folder:
