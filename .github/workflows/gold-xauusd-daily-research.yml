@@ -1,4 +1,5 @@
 # 2026-11-12 audit rerun: verify isolated gold data, OHLC folds, and forward-shadow runner tests.
+# Output filenames intentionally say GC_F, not XAUUSD spot: source is Yahoo continuous COMEX futures.
 # 2026-11-12 audit rerun: refresh gold historical evidence and test the local forward-only shadow runner.
 name: WHJ GC=F Gold Daily Research
 
@@ -21,7 +22,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: whj-xauusd-gold-daily-research
+  group: whj-gc-f-gold-daily-research
   cancel-in-progress: false
 
 jobs:
@@ -93,7 +94,7 @@ jobs:
               "paper_ledgers_read_or_written": False,
               "live_orders": False,
           }
-          Path("whj_xauusd_gold_report.json").write_text(json.dumps(report, indent=2, sort_keys=True), encoding="utf-8")
+          Path("whj_gc_f_gold_report.json").write_text(json.dumps(report, indent=2, sort_keys=True), encoding="utf-8")
           lines = [
               "# WHJ COMEX gold daily research", "",
               f"- Generated UTC: {report['generated_at_utc']}",
@@ -114,14 +115,14 @@ jobs:
               "",
               "> COMEX gold reference data is not a broker execution feed. Costs are sensitivity proxies, not a quote of any broker's actual spread, commission, or overnight financing. Results are historical and do not establish future profitability. No paper ledger or order pathway is accessed.",
           ]
-          Path("whj_xauusd_gold_report.md").write_text("\n".join(lines) + "\n", encoding="utf-8")
+          Path("whj_gc_f_gold_report.md").write_text("\n".join(lines) + "\n", encoding="utf-8")
           PY
       - name: Upload gold research report
         uses: actions/upload-artifact@v4
         with:
-          name: whj-xauusd-gold-${{ github.run_number }}
+          name: whj-gc-f-gold-${{ github.run_number }}
           path: |
-            whj_xauusd_gold_report.json
-            whj_xauusd_gold_report.md
+            whj_gc_f_gold_report.json
+            whj_gc_f_gold_report.md
           if-no-files-found: error
           retention-days: 30
