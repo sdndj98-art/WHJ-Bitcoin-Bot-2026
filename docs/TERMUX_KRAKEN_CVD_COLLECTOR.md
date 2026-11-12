@@ -15,17 +15,14 @@ git pull --ff-only origin research/global-evidence-strategy-lab-20261112
 ## 2. Run collector safety tests
 
 ```sh
-python -m unittest tests.test_kraken_cvd_collector tests.test_kraken_order_flow tests.test_trade_event_journal tests.test_trade_journal_checkpoint tests.test_kraken_cvd_service -v
+python -m unittest discover -s tests -p 'test_kraken_cvd*.py' -v
+python -m unittest discover -s tests -p 'test_kraken_order_flow.py' -v
+python -m unittest discover -s tests -p 'test_trade_event_journal.py' -v
+python -m unittest discover -s tests -p 'test_trade_journal_checkpoint.py' -v
 python -m py_compile kraken_cvd_collector.py kraken_order_flow.py trade_event_journal.py trade_journal_checkpoint.py run_kraken_cvd_service.py cvd_paper_overlay.py
 ```
 
-If the repository's tests directory is not a Python package, use discovery instead:
-
-```sh
-python -m unittest discover -s tests -p 'test_kraken_cvd*.py' -v
-python -m unittest discover -s tests -p 'test_trade_event_journal.py' -v
-python -m unittest discover -s tests -p 'test_trade_journal_checkpoint.py' -v
-```
+These discovery commands work even when `tests/` has no `__init__.py`.
 
 ## 3. Start the public feed collector
 
