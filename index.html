@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>WHJ | Dual Portfolio Dashboard</title>
+<style>
+:root{color-scheme:dark;font-family:system-ui,sans-serif;background:#0b1220;color:#edf3fc}
+*{box-sizing:border-box}body{margin:0;padding:22px;max-width:1180px;margin-inline:auto}
+header{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:22px}
+h1{margin:0;font-size:clamp(23px,4vw,34px)}h2{margin:0 0 14px;font-size:20px}
+.muted{color:#9fb0c6}.pill{border:1px solid #43536b;border-radius:30px;padding:7px 12px;font-size:12px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px}
+.card,section{background:#151f30;border:1px solid #2a3b53;border-radius:16px;padding:18px}
+.asset{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.asset h2{margin:0}.symbol{font-size:12px;color:#9fb0c6}
+.equity{font-size:34px;font-weight:750;margin:18px 0 4px;font-variant-numeric:tabular-nums}
+.metrics{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-top:16px}
+.metric{background:#0e1726;border-radius:10px;padding:12px}.metric span{display:block;color:#9fb0c6;font-size:12px}
+.metric strong{display:block;margin-top:5px;font-size:18px;overflow-wrap:anywhere}
+section{margin-top:18px;overflow-x:auto}
+table{width:100%;border-collapse:collapse;min-width:600px}th,td{text-align:right;padding:11px;border-bottom:1px solid #2a3b53;font-size:14px}
+.notice{border-right:3px solid #e6ae4e;background:#2b2418;padding:12px;border-radius:8px;color:#f4d49a;line-height:1.7}
+.ok{color:#8de0b0}.bad{color:#ff9a9a}.small{font-size:12px}
+</style></head>
+<body>
+<header><div><h1>WHJ Dual Portfolio</h1><div class="muted">لوحة متابعة محفظتي البيتكوين والذهب — تداول ورقي فقط</div></div><span class="pill" id="overall">CONFIGURED · NOT ACTIVE</span></header>
+<div class="notice">المحافظ مهيأة برأس مال افتراضي قدره 10 دولارات لكل أصل. لا تظهر أي صفقة أو أرباح حتى تصل بيانات فعلية من محرك التداول الورقي. هذه الصفحة لا تنفذ أوامر تداول.</div>
+<div class="grid" style="margin-top:16px">
+<article class="card" id="btc">
+<div class="asset"><div><h2>Bitcoin</h2><div class="symbol">BTC / USD</div></div><span class="pill">Paper</span></div>
+<div class="equity" id="btc-equity">$10.00</div><div class="muted small">الرصيد الابتدائي المستهدف: $10.00</div>
+<div class="metrics"><div class="metric"><span>الربح / الخسارة</span><strong id="btc-pnl">—</strong></div><div class="metric"><span>العائد</span><strong id="btc-return">—</strong></div><div class="metric"><span>الصفقات المغلقة</span><strong id="btc-trades">0</strong></div><div class="metric"><span>حالة البيانات</span><strong id="btc-status">غير نشط</strong></div></div>
+</article>
+<article class="card" id="gold">
+<div class="asset"><div><h2>Gold</h2><div class="symbol">XAU / USD · Spot feed required</div></div><span class="pill">Paper</span></div>
+<div class="equity" id="gold-equity">$10.00</div><div class="muted small">الرصيد الابتدائي المستهدف: $10.00</div>
+<div class="metrics"><div class="metric"><span>الربح / الخسارة</span><strong id="gold-pnl">—</strong></div><div class="metric"><span>العائد</span><strong id="gold-return">—</strong></div><div class="metric"><span>الصفقات المغلقة</span><strong id="gold-trades">0</strong></div><div class="metric"><span>حالة البيانات</span><strong id="gold-status">بانتظار تغذية XAUUSD</strong></div></div>
+</article>
+</div>
+<section><h2>مقارنة الاستراتيجيات</h2><p class="muted small">كل أصل يُقيّم منفصلاً. لن تُرتب الاستراتيجيات قبل وجود نتائج ورقية موثقة.</p>
+<table><thead><tr><th>الأصل</th><th>الاستراتيجية</th><th>الرصيد</th><th>العائد</th><th>الصفقات</th><th>الرسوم</th><th>أقصى تراجع</th><th>الحالة</th></tr></thead><tbody id="strategies"><tr><td colspan="8" class="muted">لا توجد نتائج تنفيذ ورقي بعد — CONFIGURED_NOT_ACTIVE</td></tr></tbody></table></section>
+<section><h2>مراجعة العقول</h2><div class="grid"><div class="metric"><span>Bull Brain</span><strong id="bull">بانتظار أول تحليل</strong></div><div class="metric"><span>Bear Brain</span><strong id="bear">بانتظار أول تحليل</strong></div><div class="metric"><span>Risk Judge</span><strong id="risk">لم يصدر قراراً بعد</strong></div><div class="metric"><span>آخر تحديث</span><strong id="updated">لم يبدأ التشغيل</strong></div></div></section>
+<p class="muted small" style="margin-top:18px">مصدر البيانات: ملف dual_portfolio.json عند توفره. إذا كان الملف مفقوداً أو غير صالح، تبقى اللوحة على حالة غير نشطة ولا تخترع نتائج. التداول الحقيقي معطل.</p>
+<script>
+(async()=>{
+ try{
+  const response=await fetch('./dual_portfolio.json',{cache:'no-store'});
+  if(!response.ok) throw new Error('portfolio snapshot unavailable');
+  const d=await response.json();
+  const fmt=v=>Number.isFinite(Number(v))?'$'+Number(v).toFixed(2):'—';
+  for(const key of ['btc','gold']){
+   const a=d[key]; if(!a) continue;
+   document.getElementById(key+'-equity').textContent=fmt(a.equity_usd);
+   document.getElementById(key+'-pnl').textContent=fmt(a.pnl_usd);
+   document.getElementById(key+'-return').textContent=Number.isFinite(Number(a.return_pct))?Number(a.return_pct).toFixed(2)+'%':'—';
+   document.getElementById(key+'-trades').textContent=String(a.closed_trades??0);
+   document.getElementById(key+'-status').textContent=String(a.feed_status??'UNKNOWN');
+  }
+  if(Array.isArray(d.strategies)&&d.strategies.length){
+   document.getElementById('strategies').innerHTML=d.strategies.map(s=>'<tr>'+[s.asset,s.strategy,fmt(s.equity_usd),Number.isFinite(Number(s.return_pct))?Number(s.return_pct).toFixed(2)+'%':'—',s.closed_trades??0,fmt(s.fees_usd),Number.isFinite(Number(s.max_drawdown_pct))?Number(s.max_drawdown_pct).toFixed(2)+'%':'—',s.status].map(v=>'<td>'+String(v??'—').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))+'</td>').join('')+'</tr>').join('');
+  }
+  for(const [id,key] of [['bull','bull_summary'],['bear','bear_summary'],['risk','risk_decision']]) if(d[key]) document.getElementById(id).textContent=String(d[key]);
+  if(d.updated_at) document.getElementById('updated').textContent=String(d.updated_at);
+  document.getElementById('overall').textContent=String(d.status??'UNKNOWN');
+ }catch(_){/* Deliberately keep honest, non-active defaults until a valid paper snapshot exists. */}
+})();
+</script>
+</body></html>
