@@ -7,6 +7,8 @@ on:
     paths:
       - "whj_agent_office.py"
       - "whj_grok_worker.py"
+      - "whj_free_worker.py"
+      - "tests/test_whj_free_worker.py"
       - "tests/test_whj_agent_office.py"
       - "tests/test_whj_grok_worker.py"
       - ".github/workflows/whj-agent-office-nightly.yml"
@@ -35,8 +37,11 @@ jobs:
         run: |
           python -m unittest discover -s tests -p 'test_whj_agent_office.py' -v
           python -m unittest discover -s tests -p 'test_whj_grok_worker.py' -v
+          python -m unittest discover -s tests -p 'test_whj_free_worker.py' -v
       - name: Generate nightly research work plan
         run: python whj_agent_office.py plan --output-dir research/agent_office
+      - name: Run free deterministic workers (always on)
+        run: python whj_free_worker.py run --output-dir research/agent_office
       - name: Run Grok workers only when explicitly enabled
         env:
           XAI_API_KEY: ${{ secrets.XAI_API_KEY }}
@@ -55,6 +60,8 @@ jobs:
           path: |
             research/agent_office/latest_plan.json
             research/agent_office/latest_plan.md
+            research/agent_office/latest_free_worker_results.json
+            research/agent_office/latest_free_worker_results.md
             research/agent_office/runs/**
           if-no-files-found: error
           retention-days: 30
