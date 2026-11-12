@@ -1,3 +1,5 @@
+# 2026-11-13: validate the separate broker XAUUSD bid/ask data and cost contract.
+# GC=F history remains a futures proxy; it is not reported as spot XAUUSD.
 # 2026-11-12 audit rerun: verify isolated gold data, OHLC folds, and forward-shadow runner tests.
 # Output filenames intentionally say GC_F, not XAUUSD spot: source is Yahoo continuous COMEX futures.
 # 2026-11-12 audit rerun: refresh gold historical evidence and test the local forward-only shadow runner.
@@ -8,10 +10,12 @@ on:
   push:
     branches: [research/global-evidence-strategy-lab-20261112]
     paths:
+      - "xauusd_broker_data.py"
       - "gold_market_data.py"
       - "regime_ema_ohlc_lab.py"
       - "gold_forward_shadow.py"
       - "gold_forward_shadow_runner.py"
+      - "tests/test_xauusd_broker_data.py"
       - "tests/test_gold_market_data.py"
       - "tests/test_regime_ema_ohlc_lab.py"
       - "tests/test_gold_forward_shadow.py"
@@ -36,6 +40,7 @@ jobs:
           python-version: "3.12"
       - name: Run gold data, strategy, and shadow-runner tests
         run: |
+          python -m unittest discover -s tests -p 'test_xauusd_broker_data.py' -v
           python -m unittest discover -s tests -p 'test_gold_market_data.py' -v
           python -m unittest discover -s tests -p 'test_regime_ema_ohlc_lab.py' -v
           python -m unittest discover -s tests -p 'test_gold_forward_shadow.py' -v
