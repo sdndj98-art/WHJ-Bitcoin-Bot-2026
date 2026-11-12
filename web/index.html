@@ -1644,7 +1644,7 @@ body:has(#whj-wallboard) .banner p{margin:3px 0}
 <script id="whj-wallboard-data">
 (()=> {
  const $=id=>document.getElementById(id);
- const money=v=>v===undefined||v===null||!Number.isFinite(Number(v))?'—':'
+ const money=v=>v===undefined||v===null||!Number.isFinite(Number(v))?'—':String.fromCharCode(36)+Number(v).toFixed(2);
  const pct=v=>Number.isFinite(Number(v))?Number(v).toFixed(2)+'%':'—';
  const set=(id,v)=>{const e=$(id);if(e)e.textContent=v??'—'};
  const status=(p)=>p.status||p.feed_status||'غير معروف';
