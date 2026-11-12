@@ -57,3 +57,12 @@ No existing paper ledgers, balances, risk limits, schedules, exchange credential
 - Workflow output is a research artifact; it never reads/writes paper ledgers or places orders. It labels the ranking descriptive and all candidates unpromoted.
 
 The 70/30 experiment is not rolling walk-forward retraining and does not supply an untouched final holdout. Fixed costs do not model spread, depth, impact, latency or partial fills. No result should be called validated until the workflow artifact is inspected.
+
+## Expanding-window rolling walk-forward evaluator
+
+- Added `rolling_walk_forward.py` with an expanding training window. Each fold selects one of the predeclared candidate signal streams using training-period excess return versus matched buy-and-hold, freezes that candidate, and evaluates the next contiguous block.
+- The test block retains the immediately preceding completed signal bar so the common evaluator's next-open execution timing remains aligned.
+- Allocation is hard-capped at 25%; all folds remain descriptive and report `NO_CANDIDATE_PROMOTED`.
+- Added tests for expanding/contiguous fold boundaries, future-price isolation of the first fold's selection, invalid inputs, the full 17-signal universe on synthetic OHLCV, and the allocation cap.
+
+This is a new evaluator implementation, not a completed historical BTC result. It relies on the caller to provide causal, predeclared signal streams; it does not prove their causality, reserve a final untouched holdout, or model spread/depth/impact/latency. Full repository tests and a real historical workflow artifact must pass/be inspected before any empirical conclusion.
