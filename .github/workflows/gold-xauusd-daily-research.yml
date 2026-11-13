@@ -15,6 +15,8 @@ on:
       - "regime_ema_ohlc_lab.py"
       - "gold_forward_shadow.py"
       - "gold_forward_shadow_runner.py"
+      - "research_snapshot.py"
+      - "tests/test_research_snapshot.py"
       - "tests/test_xauusd_broker_data.py"
       - "tests/test_gold_market_data.py"
       - "tests/test_regime_ema_ohlc_lab.py"
@@ -48,20 +50,21 @@ jobs:
       - name: Evaluate GC=F daily historical folds
         run: |
           python - <<'PY'
-          import hashlib
           import json
           from datetime import datetime, timezone
           from pathlib import Path
           from gold_market_data import load_gold_daily
           from regime_ema_ohlc_lab import evaluate_regime_fold
+          from research_snapshot import canonical_json_bytes, gzip_snapshot_bytes, sha256_bytes
 
           bars = load_gold_daily(period="10y")
           n = len(bars)
           cuts = [int(n * x) for x in (0.55, 0.70, 0.85, 1.0)]
           if n < 1000 or any(cuts[i + 1] - cuts[i] < 300 for i in range(3)):
               raise RuntimeError(f"Insufficient GC=F daily history or fold lengths: n={n}, cuts={cuts}")
-          serial = json.dumps(bars, sort_keys=True, separators=(",", ":"), allow_nan=False).encode()
-          fingerprint = hashlib.sha256(serial).hexdigest()
+          serial = canonical_json_bytes(bars)
+          fingerprint = sha256_bytes(serial)
+          Path("gc_f_daily_dataset.json.gz").write_bytes(gzip_snapshot_bytes(serial))
           costs = {
               "1x": (0.0005, 0.0005),
               "2x": (0.0010, 0.0010),
@@ -84,6 +87,7 @@ jobs:
               "first_timestamp_utc": datetime.fromtimestamp(bars[0]["timestamp"] / 1000, timezone.utc).isoformat(),
               "last_timestamp_utc": datetime.fromtimestamp(bars[-1]["timestamp"] / 1000, timezone.utc).isoformat(),
               "dataset_sha256": fingerprint,
+              "dataset_snapshot_file": "gc_f_daily_dataset.json.gz",
               "protocol": {
                   "folds": "three chronological non-overlapping OOS folds over final 45%; each starts at $1,000",
                   "warmup_bars": 260,
@@ -105,6 +109,7 @@ jobs:
               f"- Generated UTC: {report['generated_at_utc']}",
               f"- Source: {report['source']} ({report['symbol']})",
               f"- Daily candles: {n}; SHA-256: `{fingerprint}`",
+              "- Dataset snapshot: `gc_f_daily_dataset.json.gz` (gzip-compressed canonical JSON; hash applies to decompressed bytes)",
               f"- Period: {report['first_timestamp_utc']} to {report['last_timestamp_utc']}",
               "- Status: RESEARCH ONLY — NO CANDIDATE PROMOTED", "",
               "| Fold | Costs | Strategy | Return | OHLC DD | Trades | PF | Matched 25% buy/hold | Cash |",
@@ -129,5 +134,6 @@ jobs:
           path: |
             whj_gc_f_gold_report.json
             whj_gc_f_gold_report.md
+            gc_f_daily_dataset.json.gz
           if-no-files-found: error
           retention-days: 30
