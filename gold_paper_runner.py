@@ -18,8 +18,8 @@ STATE = Path("state/xauusd_10usd_rsi14_mean_reversion.json")
 SNAPSHOT = Path("dual_portfolio.json")
 INITIAL_CASH = 10.0
 STRATEGY = "rsi14_mean_reversion"
-QUOTE_URL = "https://standardbullion.com/spot-prices.json"
-HISTORY_URL = "https://standardbullion.com/api/v1/market/history?metal=XAU&range=7d"
+QUOTE_URL = "https://biquote.io/api/XAUUSD?allowStale=false"
+HISTORY_URL = "https://biquote.io/api/XAUUSD/ohlc?interval=15m&limit=1000"
 BAR_SECONDS = 900
 
 
@@ -61,17 +61,17 @@ def atomic_json(path, payload):
 
 def load_market():
     now = datetime.now(timezone.utc).timestamp()
-    quote_data = get_json(QUOTE_URL)
-    updated = parse_time(quote_data.get("updated"))
-    quote_age = now - updated
-    if quote_age < -30 or quote_age > 180:
-        raise ValueError("Gold bid/ask quote is stale or future-dated")
-    if quote_data.get("unit") != "USD per troy ounce":
-        raise ValueError("Unexpected gold quote unit")
-    gold_rows = [row for row in quote_data.get("metals", []) if row.get("symbol") == "XAU"]
-    if len(gold_rows) != 1:
-        raise ValueError("Gold XAU quote missing or ambiguous")
-    quote = gold_rows[0]
+    quote = get_json(QUOTE_URL)
+    quote_age = float(quote.get("quoteAgeSeconds", math.inf))
+    quote_time = parse_time(quote.get("timestamp"))
+    if quote.get("symbol") != "XAUUSD":
+        raise ValueError("Unexpected live gold quote symbol")
+    if quote.get("marketState") != "open" or quote.get("stale") is not False:
+        raise ValueError("Gold market is closed or quote is marked stale")
+    if not math.isfinite(quote_age) or quote_age < 0 or quote_age > 180:
+        raise ValueError("Gold bid/ask quote is stale")
+    if quote_time > now + 30:
+        raise ValueError("Gold quote timestamp is in the future")
     bid, ask = float(quote["bid"]), float(quote["ask"])
     if not all(math.isfinite(x) and x > 0 for x in (bid, ask)) or ask < bid:
         raise ValueError("Invalid gold bid/ask")
@@ -82,54 +82,61 @@ def load_market():
         raise ValueError("Gold bid/ask spread exceeds the 0.50% safety ceiling")
 
     history_data = get_json(HISTORY_URL)
-    points = history_data.get("points")
-    if history_data.get("metal") != "XAU" or not isinstance(points, list):
-        raise ValueError("Gold history response schema is invalid")
-    normalized = []
-    for point in points:
-        timestamp = parse_time(point.get("t"))
-        price = float(point.get("price"))
-        if not math.isfinite(price) or price <= 0:
-            raise ValueError("Gold historical price is invalid")
-        bucket = int(timestamp // BAR_SECONDS) * BAR_SECONDS
-        # History points are provider-published 15-minute reference closes.
-        if abs(timestamp - bucket) > 60:
+    if history_data.get("symbol") != "XAUUSD" or history_data.get("interval") != "15m":
+        raise ValueError("Gold OHLC response symbol or interval is invalid")
+    source_bars = history_data.get("bars")
+    if not isinstance(source_bars, list):
+        raise ValueError("Gold OHLC bars are missing")
+    bars = []
+    for row in source_bars:
+        if row.get("isOpen") is not False:
             continue
-        if timestamp <= updated + 30:
-            normalized.append((bucket, price))
-    normalized.sort()
-    deduped = {}
-    for timestamp, price in normalized:
-        deduped[timestamp] = price
-    bars = [{"timestamp": t, "open": p, "high": p, "low": p,
-             "close": p, "volume": 0.0, "imputed": False}
-            for t, p in sorted(deduped.items())]
+        timestamp = parse_time(row.get("openTime"))
+        if abs(timestamp % BAR_SECONDS) > 1:
+            raise ValueError("Gold 15-minute candle is not aligned")
+        values = {key: float(row[key]) for key in ("open", "high", "low", "close")}
+        if not all(math.isfinite(value) and value > 0 for value in values.values()):
+            raise ValueError("Gold OHLC contains an invalid price")
+        if values["high"] < max(values["open"], values["close"], values["low"]):
+            raise ValueError("Gold candle high is inconsistent")
+        if values["low"] > min(values["open"], values["close"], values["high"]):
+            raise ValueError("Gold candle low is inconsistent")
+        bars.append({
+            "timestamp": int(timestamp), **values,
+            "volume": float(row.get("tickVolume", 0) or 0),
+            "imputed": False,
+        })
+    bars.sort(key=lambda item: item["timestamp"])
+    unique = {}
+    for bar in bars:
+        unique[bar["timestamp"]] = bar
+    bars = list(unique.values())
     if len(bars) < 200:
-        raise ValueError("At least 200 real 15-minute gold closes are required")
+        raise ValueError("At least 200 completed real 15-minute gold candles are required")
     if any(bars[i]["timestamp"] >= bars[i + 1]["timestamp"] for i in range(len(bars) - 1)):
         raise ValueError("Gold candle timestamps are not strictly increasing")
     recent = bars[-25:]
     if any(b["timestamp"] - a["timestamp"] != BAR_SECONDS for a, b in zip(recent, recent[1:])):
         raise ValueError("Recent gold 15-minute history has gaps; execution blocked")
     history_age = now - (bars[-1]["timestamp"] + BAR_SECONDS)
-    if history_age < -60 or history_age > 45 * 60:
+    if history_age < -60 or history_age > 30 * 60:
         raise ValueError("Latest completed gold 15-minute candle is stale")
     return bars, {
-        "provider": "Standard Bullion",
-        "quote_updated_at": quote_data["updated"],
+        "provider": "biquote · MT5 broker feed",
+        "source": quote.get("source"),
+        "quote_timestamp": quote.get("timestamp"),
         "quote_age_seconds": round(quote_age, 1),
         "bid_usd_oz": bid,
         "ask_usd_oz": ask,
         "mid_usd_oz": mid,
         "spread_usd_oz": spread,
         "half_spread_pct": round(half_spread_fraction * 100, 5),
-        "history_grain": history_data.get("grain", "15-minute provider closes"),
+        "history_interval": "15m",
         "history_bars": len(bars),
         "latest_closed_bar": datetime.fromtimestamp(bars[-1]["timestamp"], timezone.utc).isoformat(),
         "latest_closed_bar_age_minutes": round(history_age / 60, 2),
         "quality": "HEALTHY",
     }
-
 
 def main():
     snapshot = json.loads(SNAPSHOT.read_text(encoding="utf-8")) if SNAPSHOT.exists() else {}
@@ -167,7 +174,7 @@ def main():
             "new_trades": result["new_trades"], "risk_pause_reasons": result["risk_pause_reasons"],
             "risk_limits": result["risk_limits"], "warmup_seed_created": seed["created"],
             "data_quality": market,
-            "execution_model": "15m close-only reference history; buy/sell cost includes half latest dealer spread + 0.05% slippage and 0.10% fee per side. No live orders.",
+            "execution_model": "15m completed MT5 OHLC; buy/sell cost includes half current bid/ask spread + 0.05% slippage and 0.10% fee per side. No live orders.",
         }
     except Exception as exc:
         gold = dict(previous_gold)
@@ -206,7 +213,7 @@ def main():
     snapshot["strategies"] = strategies
     snapshot["notes"] = [
         "BTC and XAUUSD are independent $10 forward-only paper ledgers.",
-        "Gold uses Standard Bullion's own wholesale bid/ask quote and 15-minute reference history; provider prices are not the user's broker execution prices.",
+        "Gold uses biquote's MT5-sourced XAUUSD bid/ask and 15-minute OHLC feed; this is a third-party broker feed, not the user's own broker quote.",
         "Gold transaction costs conservatively model half the latest observed spread, 0.05% slippage and 0.10% fee per side.",
         "Gold strategy is exploratory and has not passed a forward-sample approval gate.",
         "Historical candles warm indicators only; no historical trades or PnL are counted.",
