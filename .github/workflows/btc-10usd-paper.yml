@@ -1,0 +1,99 @@
+name: WHJ $10 BTC Paper Portfolio
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "17 * * * *"
+  push:
+    branches: [main]
+    paths:
+      - "btc_paper_runner.py"
+      - "paper_account.py"
+      - "historical_research.py"
+      - "forward_paper_monitor.py"
+      - "dual_portfolio.json"
+      - ".github/workflows/btc-10usd-paper.yml"
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+concurrency:
+  group: whj-btc-10usd-paper
+  cancel-in-progress: false
+jobs:
+  btc-paper:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    environment:
+      name: github-pages
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Restore the independent $10 BTC ledger
+        id: restore-ledger
+        uses: actions/cache/restore@v4
+        with:
+          path: state/btc_10usd_rsi14_mean_reversion.json
+          key: whj-btc10-ledger-${{ github.run_id }}-${{ github.run_attempt }}
+          restore-keys: |
+            whj-btc10-ledger-
+      - name: Refuse silent ledger reset
+        if: steps.restore-ledger.outputs.cache-matched-key == '' && github.run_number != '1'
+        run: |
+          echo "::error::Persistent $10 BTC ledger cache is missing; refusing to reset the account."
+          exit 1
+      - name: Compile and run focused tests
+        run: |
+          python -m py_compile btc_paper_runner.py paper_account.py historical_research.py forward_paper_monitor.py
+          python -m unittest discover -s tests -v
+      - name: Run BTC forward paper engine
+        run: python btc_paper_runner.py
+      - name: Save independent BTC ledger
+        if: success()
+        uses: actions/cache/save@v4
+        with:
+          path: state/btc_10usd_rsi14_mean_reversion.json
+          key: whj-btc10-ledger-${{ github.run_id }}-${{ github.run_attempt }}
+      - name: Persist dashboard snapshot
+        if: success()
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add dual_portfolio.json
+          if ! git diff --cached --quiet; then
+            git commit -m "chore: update BTC $10 paper portfolio snapshot"
+            git push
+          fi
+      - name: Configure GitHub Pages
+        if: success()
+        uses: actions/configure-pages@v5
+      - name: Assemble dashboard
+        if: success()
+        run: |
+          mkdir -p _site
+          cp index.html _site/index.html
+          cp dual_portfolio_dashboard.html _site/dual_portfolio_dashboard.html
+          cp dual_portfolio.json _site/dual_portfolio.json
+      - name: Upload dashboard
+        if: success()
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+      - name: Deploy dashboard
+        if: success()
+        uses: actions/deploy-pages@v4
+      - name: Upload BTC paper snapshot
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: whj-btc10-paper-${{ github.run_number }}
+          path: |
+            dual_portfolio.json
+            state/btc_10usd_rsi14_mean_reversion.json
+          if-no-files-found: warn
+          retention-days: 30
