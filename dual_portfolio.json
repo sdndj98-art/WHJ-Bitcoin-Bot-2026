@@ -3,7 +3,7 @@
   "status": "BTC_AND_GOLD_PAPER_ONLY",
   "paper_only": true,
   "live_trading_enabled": false,
-  "updated_at": "2026-11-13T00:44:21+00:00",
+  "updated_at": "2026-11-13T00:45:33+00:00",
   "btc": {
     "asset": "BTC",
     "symbol": "BTC/USD",
@@ -34,7 +34,7 @@
     "processed_new_candles": 0,
     "data_quality": {
       "quality": "HEALTHY",
-      "latest_closed_candle_age_minutes": 44.34,
+      "latest_closed_candle_age_minutes": 45.54,
       "total_hourly_candles": 7200,
       "observed_hourly_candles": 7195,
       "imputed_hourly_candles": 5,
@@ -71,7 +71,7 @@
     },
     {
       "asset": "XAUUSD",
-      "strategy": "rsi14_mean_reversion",
+      "strategy": "ema_trend",
       "equity_usd": 10.0,
       "return_pct": 0.0,
       "closed_trades": 0,
