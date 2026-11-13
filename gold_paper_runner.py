@@ -93,7 +93,7 @@ def load_market():
             continue
         timestamp = parse_time(row.get("openTime"))
         if abs(timestamp % BAR_SECONDS) > 1:
-            raise ValueError("Gold 15-minute candle is not aligned")
+            raise ValueError("Gold hourly candle is not aligned")
         values = {key: float(row[key]) for key in ("open", "high", "low", "close")}
         if not all(math.isfinite(value) and value > 0 for value in values.values()):
             raise ValueError("Gold OHLC contains an invalid price")
@@ -112,15 +112,15 @@ def load_market():
         unique[bar["timestamp"]] = bar
     bars = list(unique.values())
     if len(bars) < 200:
-        raise ValueError("At least 200 completed real 15-minute gold candles are required")
+        raise ValueError("At least 200 completed real hourly gold candles are required")
     if any(bars[i]["timestamp"] >= bars[i + 1]["timestamp"] for i in range(len(bars) - 1)):
         raise ValueError("Gold candle timestamps are not strictly increasing")
     recent = bars[-25:]
     if any(b["timestamp"] - a["timestamp"] != BAR_SECONDS for a, b in zip(recent, recent[1:])):
-        raise ValueError("Recent gold 15-minute history has gaps; execution blocked")
+        raise ValueError("Recent gold hourly history has gaps; execution blocked")
     history_age = now - (bars[-1]["timestamp"] + BAR_SECONDS)
     if history_age < -60 or history_age > 90 * 60:
-        raise ValueError("Latest completed gold 15-minute candle is stale")
+        raise ValueError("Latest completed gold hourly candle is stale")
     return bars, {
         "provider": "biquote · MT5 broker feed",
         "source": quote.get("source"),
@@ -174,7 +174,7 @@ def main():
             "new_trades": result["new_trades"], "risk_pause_reasons": result["risk_pause_reasons"],
             "risk_limits": result["risk_limits"], "warmup_seed_created": seed["created"],
             "data_quality": market,
-            "execution_model": "15m completed MT5 OHLC; buy/sell cost includes half current bid/ask spread + 0.05% slippage and 0.10% fee per side. No live orders.",
+            "execution_model": "1h completed MT5 OHLC; buy/sell cost includes half current bid/ask spread + 0.05% slippage and 0.10% fee per side. No live orders.",
         }
     except Exception as exc:
         gold = dict(previous_gold)
@@ -213,7 +213,7 @@ def main():
     snapshot["strategies"] = strategies
     snapshot["notes"] = [
         "BTC and XAUUSD are independent $10 forward-only paper ledgers.",
-        "Gold uses biquote's MT5-sourced XAUUSD bid/ask and 15-minute OHLC feed; this is a third-party broker feed, not the user's own broker quote.",
+        "Gold uses biquote's MT5-sourced XAUUSD bid/ask and hourly OHLC feed; this is a third-party broker feed, not the user's own broker quote.",
         "Gold transaction costs conservatively model half the latest observed spread, 0.05% slippage and 0.10% fee per side.",
         "Gold strategy is exploratory and has not passed a forward-sample approval gate.",
         "Historical candles warm indicators only; no historical trades or PnL are counted.",
