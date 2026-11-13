@@ -8,6 +8,7 @@ from paper_account import seed_forward_paper_account, update_paper_account
 
 STATE = Path("state/btc_10usd_rsi14_mean_reversion.json")
 CASH = 10.0
+COMPOUND_ALLOCATION_FRACTION = 0.10
 STRATEGY = "rsi14_mean_reversion"
 
 def atomic_json(path, payload):
@@ -31,7 +32,7 @@ def main():
         initial_cash=CASH, strategy=STRATEGY)
     result = update_paper_account(convert(candles), state_path=str(STATE),
         initial_cash=CASH, fee_rate=0.001, slippage_rate=0.0005,
-        allocation_fraction=0.10, max_drawdown_fraction=0.10,
+        allocation_fraction=COMPOUND_ALLOCATION_FRACTION, max_drawdown_fraction=0.10,
         daily_loss_fraction=0.03, max_consecutive_losses=3,
         strategy=STRATEGY)
     equity = result["equity_after_estimated_exit_costs_usd"]
@@ -56,6 +57,8 @@ def main():
         "status":"DISABLED_PENDING_VALIDATED_XAUUSD_BID_ASK_FEED"}
     snapshot={"schema_version":1,"status":"BTC_PAPER_ONLY_GOLD_DISABLED",
         "paper_only":True,"live_trading_enabled":False,
+        "compounding_enabled":True,"sizing_mode":"COMPOUND_CURRENT_EQUITY_FRACTION",
+        "allocation_fraction":COMPOUND_ALLOCATION_FRACTION,
         "updated_at":datetime.now(timezone.utc).isoformat(timespec="seconds"),
         "btc":btc,"gold":gold,"strategies":[{"asset":"BTC","strategy":STRATEGY,
         "equity_usd":equity,"return_pct":result["return_pct"],
@@ -64,7 +67,7 @@ def main():
         "bull_summary":"RSI14 mean-reversion exploratory paper test; not approved for live use.",
         "bear_summary":"No entry unless a completed candle satisfies the strategy rule.",
         "risk_decision":status+(": "+", ".join(result["risk_pause_reasons"]) if result["risk_pause_reasons"] else ""),
-        "notes":["BTC starts with $10 simulated capital.","Historical candles warm indicators only; no historical trades or PnL are counted.",
+        "notes":["BTC starts with $10 simulated capital; each new entry sizes at 10% of current realized equity (compounding).","Historical candles warm indicators only; no historical trades or PnL are counted.",
         "Gold disabled: indicative spot mid-price is not an executable broker bid/ask feed.",
         "Exploratory strategy; minimum forward sample gate not yet met.","No real orders are sent."]}
     atomic_json("dual_portfolio.json",snapshot)
