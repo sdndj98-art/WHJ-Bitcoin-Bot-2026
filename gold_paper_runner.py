@@ -17,7 +17,7 @@ from paper_account import seed_forward_paper_account, update_paper_account
 STATE = Path("state/xauusd_10usd_rsi14_mean_reversion.json")
 SNAPSHOT = Path("dual_portfolio.json")
 INITIAL_CASH = 10.0
-STRATEGY = "rsi14_mean_reversion"
+STRATEGY = "ema_trend"
 QUOTE_URL = "https://biquote.io/api/XAUUSD?allowStale=false"
 HISTORY_URL = "https://biquote.io/api/XAUUSD/ohlc?interval=1h&limit=1000"
 BAR_SECONDS = 3600
@@ -146,7 +146,7 @@ def main():
         spread_cost = market["spread_usd_oz"] / (2.0 * market["mid_usd_oz"])
         slippage = spread_cost + 0.0005
         rows = [[bar["timestamp"], bar["open"], bar["high"], bar["low"], bar["close"], 0.0] for bar in bars]
-        seed = seed_forward_paper_account(rows[-200:], STATE, initial_cash=INITIAL_CASH, strategy=STRATEGY)
+        seed = seed_forward_paper_account(rows[-50:], STATE, initial_cash=INITIAL_CASH, strategy=STRATEGY)
         result = update_paper_account(
             rows, state_path=str(STATE), initial_cash=INITIAL_CASH,
             fee_rate=0.001, slippage_rate=slippage, allocation_fraction=0.10,
