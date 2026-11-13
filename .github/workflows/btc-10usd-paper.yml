@@ -91,7 +91,7 @@ jobs:
           git add dual_portfolio.json
           if [ -f state/xauusd_10usd_ema_trend.json ] && [ "$(cat state/xauusd_paper_initialized.json)" != "INITIALIZED" ]; then
             echo "INITIALIZED" > state/xauusd_paper_initialized.json
-            git add state/xauusd_paper_initialized.json
+            git add -f state/xauusd_paper_initialized.json
           fi
           if ! git diff --cached --quiet; then
             git commit -m "chore: update BTC $10 paper portfolio snapshot"
