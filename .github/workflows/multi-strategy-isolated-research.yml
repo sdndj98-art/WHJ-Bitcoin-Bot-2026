@@ -14,6 +14,8 @@ on:
       - "strategy_family_runner.py"
       - "rolling_walk_forward.py"
       - "research_governance.py"
+      - "research_snapshot.py"
+      - "tests/test_research_snapshot.py"
       - "tests/test_strategy_family_lab.py"
       - "tests/test_strategy_family_evaluator.py"
       - "tests/test_strategy_family_runner.py"
@@ -39,7 +41,6 @@ jobs:
       - name: Evaluate strategy universe on chronological holdout
         run: |
           python - <<'PY'
-          import hashlib
           import json
           import os
           from datetime import datetime, timezone
@@ -49,6 +50,7 @@ jobs:
           from strategy_family_runner import run_strategy_universe
           from strategy_family_lab import build_strategy_signals
           from rolling_walk_forward import evaluate_rolling_walk_forward
+          from research_snapshot import canonical_json_bytes, gzip_snapshot_bytes, sha256_bytes
           from strategy_lab import _market_regime_diagnostics
 
           # Public Coinbase spot data only. No paper account, monitor, cache,
@@ -56,8 +58,9 @@ jobs:
           candles = load_two_year_candles(days=1500)
           if len(candles) < 1000:
               raise RuntimeError(f"Insufficient hourly history: {len(candles)} candles")
-          dataset_payload = json.dumps(candles, sort_keys=True, separators=(",", ":"), allow_nan=False).encode("utf-8")
-          dataset_sha256 = hashlib.sha256(dataset_payload).hexdigest()
+          dataset_payload = canonical_json_bytes(candles)
+          dataset_sha256 = sha256_bytes(dataset_payload)
+          Path("btc_hourly_dataset.json.gz").write_bytes(gzip_snapshot_bytes(dataset_payload))
           split_index = int(len(candles) * 0.70)
           if split_index < 250 or len(candles) - split_index < 32:
               raise RuntimeError("Insufficient train/OOS observations for the declared evaluation protocol")
@@ -149,6 +152,7 @@ jobs:
               "run_id": os.environ["GITHUB_RUN_ID"],
               "source": "Coinbase public BTC-USD hourly spot candles",
               "dataset_sha256": dataset_sha256,
+              "dataset_snapshot_file": "btc_hourly_dataset.json.gz",
               "candle_count": len(candles),
               "first_timestamp_utc": first_timestamp_utc,
               "last_timestamp_utc": last_timestamp_utc,
@@ -179,6 +183,7 @@ jobs:
               "# WHJ multi-strategy BTC historical research", "",
               f"- Generated UTC: {generated}",
               f"- Dataset SHA-256: `{dataset_sha256}`",
+              "- Dataset snapshot: `btc_hourly_dataset.json.gz` (gzip-compressed canonical JSON; hash applies to decompressed bytes)",
               f"- Hourly candles: {len(candles)}; OOS candles: {len(candles)-split_index}",
               f"- Date range: {first_timestamp_utc} to {last_timestamp_utc}",
               f"- Imputed hourly candles: {imputed_hourly_candles}",
@@ -263,5 +268,6 @@ jobs:
             btc_strategy_universe_report.md
             btc_strategy_trial_manifest.json
             btc_walk_forward_trial_manifest.json
+            btc_hourly_dataset.json.gz
           if-no-files-found: error
           retention-days: 30
