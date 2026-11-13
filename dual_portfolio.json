@@ -3,7 +3,7 @@
   "status": "BTC_AND_GOLD_PAPER_ONLY",
   "paper_only": true,
   "live_trading_enabled": false,
-  "updated_at": "2026-11-13T00:42:08+00:00",
+  "updated_at": "2026-11-13T00:43:00+00:00",
   "btc": {
     "asset": "BTC",
     "symbol": "BTC/USD",
@@ -34,7 +34,7 @@
     "processed_new_candles": 0,
     "data_quality": {
       "quality": "HEALTHY",
-      "latest_closed_candle_age_minutes": 42.13,
+      "latest_closed_candle_age_minutes": 42.99,
       "total_hourly_candles": 7200,
       "observed_hourly_candles": 7195,
       "imputed_hourly_candles": 5,
@@ -54,7 +54,7 @@
     "max_drawdown_pct": 0.0,
     "feed_status": "STANDARD_BULLION_UNAVAILABLE",
     "status": "FEED_BLOCKED_NO_NEW_TRADES",
-    "last_error": "At least 200 real 15-minute gold closes are required",
+    "last_error": "At least 200 completed real 15-minute gold candles are required",
     "processed_new_candles": 0,
     "new_trades": []
   },
@@ -85,7 +85,7 @@
   "risk_decision": "PAPER_ACTIVE_WAITING_NEXT_CLOSED_CANDLE",
   "notes": [
     "BTC and XAUUSD are independent $10 forward-only paper ledgers.",
-    "Gold uses Standard Bullion's own wholesale bid/ask quote and 15-minute reference history; provider prices are not the user's broker execution prices.",
+    "Gold uses biquote's MT5-sourced XAUUSD bid/ask and 15-minute OHLC feed; this is a third-party broker feed, not the user's own broker quote.",
     "Gold transaction costs conservatively model half the latest observed spread, 0.05% slippage and 0.10% fee per side.",
     "Gold strategy is exploratory and has not passed a forward-sample approval gate.",
     "Historical candles warm indicators only; no historical trades or PnL are counted.",
