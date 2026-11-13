@@ -46,6 +46,26 @@ class OhlcExecutionLabTests(unittest.TestCase):
             result["max_close_to_close_drawdown_pct"],
         )
 
+    def test_realized_stop_loss_is_in_intrabar_drawdown(self):
+        result = simulate_ohlc_risk(
+            [100, 100, 100], [101, 101, 101], [99, 90, 99],
+            [100, 100, 100], [True, False, False], [False, False, False],
+            fee=0, slippage=0, stop_loss_pct=0.05, take_profit_pct=0.5,
+        )
+        self.assertEqual(result["exit_events"][0]["reason"], "stop_loss")
+        self.assertAlmostEqual(
+            result["max_intrabar_ohlc_envelope_drawdown_pct"], 1.25, places=4
+        )
+
+    def test_next_open_signal_exit_loss_is_in_intrabar_drawdown(self):
+        result = simulate_ohlc_risk(
+            [100, 100, 90], [101, 101, 91], [99, 99, 89],
+            [100, 100, 90], [True, False, False], [False, True, False],
+            fee=0, slippage=0, stop_loss_pct=0.5, take_profit_pct=0.5,
+        )
+        self.assertEqual(result["exit_events"][0]["reason"], "signal_exit_at_next_open")
+        self.assertGreater(result["max_intrabar_ohlc_envelope_drawdown_pct"], 0.0)
+
     def test_allocation_cap_and_ohlc_validation_fail_closed(self):
         args = dict(
             opens=[100, 100], highs=[101, 101], lows=[99, 99],
