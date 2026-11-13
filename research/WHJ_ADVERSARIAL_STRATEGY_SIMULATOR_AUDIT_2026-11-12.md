@@ -140,6 +140,22 @@ Passing these gates permits only an isolated paper review. It does not authorize
 12. Test regime gating as a separately named ablation against the ungated strategy.
 13. Keep every candidate in isolated research until independently reviewed.
 
+## 2026-11-13 follow-up re-audit
+
+### F9 — OHLC drawdown omitted realized exits (high)
+
+A focused re-read of `ohlc_execution_lab.py` found that `max_intrabar_ohlc_envelope_drawdown_pct` was updated only while a position remained open at the end of the candle. A stop-loss, stop-gap, or next-open signal exit closes the position before that mark, so the realized loss could be omitted from the intrabar drawdown field even while close-to-close drawdown reflected it.
+
+**Research-branch fix:** `close_position()` now records post-exit cash against the preceding intrabar equity peak immediately after every realized exit. This preserves stop/gap execution assumptions and does not change allocation, stop distance, fees, slippage, signals, or any paper account.
+
+Regression coverage:
+- A 5% stop on a 25%-allocated position must report a 1.25% realized intrabar drawdown on a flat-price fixture.
+- A loss on a next-open signal exit must also contribute to intrabar drawdown.
+
+Commits: source fix `b8667fc95f5b880a8447775c18a52b157f99269c`; regression tests `f4b4fa3e67bf4fb984ee6f0c2877e7f15d226a86`.
+
+Validation is pending the latest research-branch CI run. The patch is research-only and does not read or write paper ledgers, change risk limits or schedules, or enable execution.
+
 ## Safety invariants
 
 - Do not invoke the historical research entry point if it can mutate existing paper state.
