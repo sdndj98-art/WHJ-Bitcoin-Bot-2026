@@ -17,6 +17,7 @@ from paper_account import seed_forward_paper_account, update_paper_account
 STATE = Path("state/xauusd_10usd_ema_trend.json")
 SNAPSHOT = Path("dual_portfolio.json")
 INITIAL_CASH = 10.0
+COMPOUND_ALLOCATION_FRACTION = 0.10
 STRATEGY = "ema_trend"
 QUOTE_URL = "https://biquote.io/api/XAUUSD?allowStale=false"
 HISTORY_URL = "https://biquote.io/api/XAUUSD/ohlc?interval=1h&limit=1000"
@@ -154,7 +155,8 @@ def main():
         seed = seed_forward_paper_account(rows[-50:], STATE, initial_cash=INITIAL_CASH, strategy=STRATEGY)
         result = update_paper_account(
             rows, state_path=str(STATE), initial_cash=INITIAL_CASH,
-            fee_rate=0.001, slippage_rate=slippage, allocation_fraction=0.10,
+            fee_rate=0.001, slippage_rate=slippage,
+            allocation_fraction=COMPOUND_ALLOCATION_FRACTION,
             max_drawdown_fraction=0.10, daily_loss_fraction=0.03,
             max_consecutive_losses=3, strategy=STRATEGY,
         )
@@ -202,6 +204,9 @@ def main():
         "status": "BTC_AND_GOLD_PAPER_ONLY",
         "paper_only": True,
         "live_trading_enabled": False,
+        "compounding_enabled": True,
+        "sizing_mode": "COMPOUND_CURRENT_EQUITY_FRACTION",
+        "allocation_fraction": COMPOUND_ALLOCATION_FRACTION,
         "updated_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
         "gold": gold,
     })
@@ -221,6 +226,7 @@ def main():
         "Gold uses biquote's MT5-sourced XAUUSD bid/ask and hourly OHLC feed; this is a third-party broker feed, not the user's own broker quote.",
         "Gold transaction costs conservatively model half the latest observed spread, 0.05% slippage and 0.10% fee per side.",
         "Gold strategy is exploratory and has not passed a forward-sample approval gate.",
+        "Each new Gold entry sizes at 10% of current realized equity (compounding).",
         "Historical candles warm indicators only; no historical trades or PnL are counted.",
         "No real orders are sent.",
     ]

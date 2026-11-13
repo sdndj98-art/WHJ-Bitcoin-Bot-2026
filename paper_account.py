@@ -518,7 +518,10 @@ def update_paper_account(candles, state_path="paper_account_state.json",
                 not require_entry_confirmation or confirmation_matches
             )
             if want_long and state["btc"] == 0 and not paused and entry_permitted:
-                equity = state["cash"]
+                # Compound sizing: each new entry uses a fixed fraction of the latest
+                # realized account equity (cash while flat), so prior net PnL changes
+                # the next order size automatically. Never borrow or exceed available cash.
+                equity = max(0.0, float(state["cash"]))
                 allocation = min(state["cash"], equity * allocation_fraction)
                 if allocation > 0:
                     fee = allocation * fee_rate
@@ -608,6 +611,9 @@ def update_paper_account(candles, state_path="paper_account_state.json",
     return {
         "mode": "PERSISTENT_PAPER_ONLY",
         "strategy": strategy,
+        "sizing_mode": "COMPOUND_CURRENT_EQUITY_FRACTION",
+        "compounding_enabled": True,
+        "allocation_fraction": round(allocation_fraction, 4),
         "processed_new_candles": processed,
         "last_processed_timestamp": state.get("last_timestamp"),
         "initial_cash_usd": round(initial, 2),
