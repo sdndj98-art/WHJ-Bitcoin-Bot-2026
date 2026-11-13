@@ -13,6 +13,8 @@ on:
       - "historical_research.py"
       - "forward_paper_monitor.py"
       - "dual_portfolio.json"
+      - "index.html"
+      - "dual_portfolio_dashboard.html"
       - ".github/workflows/btc-10usd-paper.yml"
 permissions:
   contents: write
