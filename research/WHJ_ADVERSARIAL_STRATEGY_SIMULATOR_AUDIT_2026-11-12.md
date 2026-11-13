@@ -163,3 +163,22 @@ Validation is pending the latest research-branch CI run. The patch is research-o
 - Do not alter existing risk limits, schedules, or live-order pathways.
 - No exchange credentials, live orders, or real funds.
 - Any failed data-quality or risk-control check must fail closed and be reported, not silently repaired.
+
+
+## 2026-11-14 follow-up — exact dataset replay
+
+### F10 — a dataset hash without the normalized payload cannot reproduce a historical run (high)
+
+The BTC 17-strategy, slow-momentum, and GC=F artifacts recorded source labels, row counts, and SHA-256 fingerprints, but did not include the exact normalized market-data rows. Public candle endpoints can revise or backfill history; a hash detects a change but cannot reconstruct the input that produced a report.
+
+**Research-branch remediation:**
+- Added `research_snapshot.py` with canonical JSON serialization (`sort_keys`, compact separators, non-finite values rejected), SHA-256 over the canonical uncompressed bytes, and deterministic gzip compression.
+- The isolated 17-strategy BTC workflow now uploads `btc_hourly_dataset.json.gz`.
+- The isolated slow-momentum workflow now uploads `btc_daily_dataset.json.gz`.
+- The GC=F futures-reference workflow now uploads `gc_f_daily_dataset.json.gz`.
+- Each report identifies its snapshot filename; the reported dataset hash is the hash of the decompressed canonical JSON bytes.
+- Snapshots contain only public normalized market-data rows. They do not contain accounts, paper ledgers, credentials, or order data.
+
+Commits: helper `ba2c38a6c4313d2a5bf357f4fbe59017230f0ef1`; tests `be224fd7b5caa28e452d1866599433b96920cd03`; BTC workflow `78b78d1a79f9d08273ab78d397c14d977de8cb97`; slow-momentum workflow `d8f9753b85c14cf32ac4fefccf4f0e688434a16e`; GC=F workflow `b920858d64778e6aa5d2971bef7e49e27a308086`.
+
+Local focused validation: 5 snapshot tests passed and both new Python files compiled. GitHub Actions validation and fresh artifact inspection are pending. The broker-specific XAUUSD path still requires a non-secret bid/ask export and broker session/cost specifications; the GC=F snapshot is not a substitute.
