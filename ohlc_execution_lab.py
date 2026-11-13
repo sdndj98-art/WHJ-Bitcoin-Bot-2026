@@ -69,11 +69,20 @@ def simulate_ohlc_risk(
         return cash + gross * (1.0 - fee)
 
     def close_position(raw_price, reason, index, gap=False):
-        nonlocal cash, units, entry_cash, stop_price, target_price
+        nonlocal cash, units, entry_cash, stop_price, target_price, max_intrabar_dd
         fill = raw_price * (1.0 - slippage)
         proceeds = units * fill * (1.0 - fee)
         pnl = proceeds - entry_cash
         cash += proceeds
+        # A realized exit can close the position before the normal OHLC
+        # high/low mark below. Record its post-exit equity against the
+        # preceding intrabar peak so stopped/gap exits cannot disappear
+        # from the intrabar drawdown metric.
+        if peak_equity > 0:
+            max_intrabar_dd = max(
+                max_intrabar_dd,
+                (peak_equity - cash) / peak_equity * 100.0,
+            )
         closed_pnls.append(pnl)
         exits.append({
             "index": index, "reason": reason,
