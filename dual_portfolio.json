@@ -6,7 +6,7 @@
   "compounding_enabled": true,
   "sizing_mode": "COMPOUND_CURRENT_EQUITY_FRACTION",
   "allocation_fraction": 0.1,
-  "updated_at": "2026-11-13T21:28:19+00:00",
+  "updated_at": "2026-11-13T22:11:48+00:00",
   "btc": {
     "asset": "BTC",
     "symbol": "BTC/USD",
@@ -19,8 +19,8 @@
     "max_drawdown_pct": 0.0,
     "feed_status": "COINBASE_BTC_USD_HOURLY_HEALTHY",
     "status": "PAPER_RUNNING",
-    "last_price_usd": 68838.87,
-    "last_processed_timestamp": 1794600000,
+    "last_price_usd": 68319.04,
+    "last_processed_timestamp": 1794603600,
     "open_position": false,
     "btc_units": 0.0,
     "cash_usd": 10.0,
@@ -37,7 +37,7 @@
     "processed_new_candles": 1,
     "data_quality": {
       "quality": "HEALTHY",
-      "latest_closed_candle_age_minutes": 28.32,
+      "latest_closed_candle_age_minutes": 11.79,
       "total_hourly_candles": 7200,
       "observed_hourly_candles": 7195,
       "imputed_hourly_candles": 5,
@@ -55,46 +55,11 @@
     "closed_trades": 0,
     "fees_usd": 0.0,
     "max_drawdown_pct": 0.0,
-    "feed_status": "BIQUOTE_MT5_XAUUSD_BID_ASK_FRESH",
-    "status": "PAPER_RUNNING",
-    "bid_usd_oz": 3876.82,
-    "ask_usd_oz": 3876.988,
-    "mid_usd_oz": 3876.904,
-    "spread_usd_oz": 0.1679999999996653,
-    "xau_ounces": 0.0,
-    "cash_usd": 10.0,
-    "open_position": false,
-    "strategy": "ema_trend",
-    "last_processed_timestamp": 1794600000,
-    "processed_new_candles": 1,
-    "new_trades": [],
-    "risk_pause_reasons": [],
-    "risk_limits": {
-      "max_drawdown_pct": 10.0,
-      "daily_loss_pause_pct": 3.0,
-      "max_consecutive_losses": 3,
-      "allocation_pct": 10.0
-    },
-    "warmup_seed_created": false,
-    "data_quality": {
-      "provider": "biquote \u00b7 MT5 broker feed",
-      "source": "MetaTrader 5 (Broker 1)",
-      "quote_timestamp": "2026-11-13T21:28:19Z",
-      "quote_age_seconds": 0.0,
-      "bid_usd_oz": 3876.82,
-      "ask_usd_oz": 3876.988,
-      "mid_usd_oz": 3876.904,
-      "spread_usd_oz": 0.1679999999996653,
-      "half_spread_pct": 0.00217,
-      "history_interval": "1h",
-      "history_bars": 168,
-      "recent_gap_count": 1,
-      "max_recent_gap_hours": 2.0,
-      "latest_closed_bar": "2026-11-13T20:00:00+00:00",
-      "latest_closed_bar_age_minutes": 28.32,
-      "quality": "HEALTHY"
-    },
-    "execution_model": "1h completed MT5 OHLC; buy/sell cost includes half current bid/ask spread + 0.05% slippage and 0.10% fee per side. No live orders."
+    "feed_status": "BIQUOTE_MT5_UNAVAILABLE",
+    "status": "FEED_BLOCKED_NO_NEW_TRADES",
+    "last_error": "HTTP Error 404: Not Found",
+    "processed_new_candles": 0,
+    "new_trades": []
   },
   "strategies": [
     {
@@ -115,7 +80,7 @@
       "closed_trades": 0,
       "fees_usd": 0.0,
       "max_drawdown_pct": 0.0,
-      "status": "PAPER_RUNNING"
+      "status": "FEED_BLOCKED_NO_NEW_TRADES"
     }
   ],
   "bull_summary": "RSI14 mean-reversion exploratory paper test; not approved for live use.",
