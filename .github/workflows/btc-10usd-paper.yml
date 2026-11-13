@@ -53,13 +53,13 @@ jobs:
         id: restore-gold-ledger
         uses: actions/cache/restore@v4
         with:
-          path: state/xauusd_10usd_rsi14_mean_reversion.json
+          path: state/xauusd_10usd_ema_trend.json
           key: whj-xau10-ledger-${{ github.run_id }}-${{ github.run_attempt }}
           restore-keys: |
             whj-xau10-ledger-
       - name: Refuse silent Gold ledger reset
         run: |
-          if [ ! -f state/xauusd_10usd_rsi14_mean_reversion.json ] && [ "$(cat state/xauusd_paper_initialized.json)" = "INITIALIZED" ]; then
+          if [ ! -f state/xauusd_10usd_ema_trend.json ] && [ "$(cat state/xauusd_paper_initialized.json)" = "INITIALIZED" ]; then
             echo "::error::Persistent $10 XAUUSD paper ledger cache is missing. Refusing to reset."
             exit 1
           fi
@@ -72,10 +72,10 @@ jobs:
       - name: Run XAUUSD forward paper engine
         run: python gold_paper_runner.py
       - name: Save independent Gold ledger
-        if: success() && hashFiles('state/xauusd_10usd_rsi14_mean_reversion.json') != ''
+        if: success() && hashFiles('state/xauusd_10usd_ema_trend.json') != ''
         uses: actions/cache/save@v4
         with:
-          path: state/xauusd_10usd_rsi14_mean_reversion.json
+          path: state/xauusd_10usd_ema_trend.json
           key: whj-xau10-ledger-${{ github.run_id }}-${{ github.run_attempt }}
       - name: Save independent BTC ledger
         if: success()
@@ -89,7 +89,7 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add dual_portfolio.json
-          if [ -f state/xauusd_10usd_rsi14_mean_reversion.json ] && [ "$(cat state/xauusd_paper_initialized.json)" != "INITIALIZED" ]; then
+          if [ -f state/xauusd_10usd_ema_trend.json ] && [ "$(cat state/xauusd_paper_initialized.json)" != "INITIALIZED" ]; then
             echo "INITIALIZED" > state/xauusd_paper_initialized.json
             git add state/xauusd_paper_initialized.json
           fi
@@ -123,6 +123,6 @@ jobs:
           path: |
             dual_portfolio.json
             state/btc_10usd_rsi14_mean_reversion.json
-            state/xauusd_10usd_rsi14_mean_reversion.json
+            state/xauusd_10usd_ema_trend.json
           if-no-files-found: warn
           retention-days: 30
