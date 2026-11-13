@@ -99,24 +99,26 @@ async function refreshXauSpot() {
   const priceEl = document.getElementById('xau-spot-price');
   const metaEl = document.getElementById('xau-spot-meta');
   try {
-    const response = await fetch('https://xaus.com/api/v1/spot?compact=1', { cache: 'no-store' });
+    const response = await fetch('https://standardbullion.com/spot-prices.json', { cache: 'no-store' });
     if (!response.ok) throw new Error('HTTP ' + response.status);
-    const quote = await response.json();
-    const price = Number(quote?.xau?.price ?? quote?.spot_usd_oz);
-    const updated = Date.parse(quote?.updated_at || quote?.data_state?.as_of || '');
-    const age = Number(quote?.data_state?.age_seconds);
-    const observedAge = Number.isFinite(updated) ? (Date.now() - updated) / 1000 : Infinity;
-    if (!Number.isFinite(price) || price <= 0) throw new Error('invalid price');
-    if (quote?.data_state?.status !== 'fresh' || !Number.isFinite(age) || age > 180 || observedAge > 180 || observedAge < -30) {
-      throw new Error('stale or unverified quote');
-    }
-    priceEl.textContent = price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-    metaEl.textContent = 'تحديث ' + new Date(updated).toLocaleString('ar-IQ') + ' · XAUS · سعر استرشادي غير قابل للتنفيذ';
-    document.getElementById('gold-status').textContent = 'SPOT_FEED_FRESH · PAPER ENGINE NOT ENABLED';
+    const data = await response.json();
+    const gold = (data.metals || []).find(item => item.symbol === 'XAU');
+    const bid = Number(gold?.bid);
+    const ask = Number(gold?.ask);
+    const updated = Date.parse(data.updated || '');
+    const age = (Date.now() - updated) / 1000;
+    if (!Number.isFinite(bid) || !Number.isFinite(ask) || bid <= 0 || ask < bid) throw new Error('invalid bid/ask');
+    if (!Number.isFinite(age) || age < -30 || age > 180) throw new Error('stale or future-dated quote');
+    const mid = (bid + ask) / 2;
+    priceEl.textContent = mid.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    metaEl.textContent = 'Bid ' + bid.toFixed(2) + ' · Ask ' + ask.toFixed(2) +
+      ' USD/oz · ' + new Date(updated).toLocaleString('ar-IQ') + ' · Standard Bullion';
+    const account = window.__whjGoldAccountStatus || 'PAPER_STATUS_FROM_LEDGER';
+    document.getElementById('gold-status').textContent = 'BID_ASK_FEED_FRESH · ' + account;
   } catch (error) {
     priceEl.textContent = 'غير متاح';
-    metaEl.textContent = 'السعر غير متاح أو قديم: ' + String(error.message || error);
-    document.getElementById('gold-status').textContent = 'SPOT_FEED_UNAVAILABLE';
+    metaEl.textContent = 'تعذر التحقق من سعري الشراء والبيع: ' + String(error.message || error);
+    document.getElementById('gold-status').textContent = 'GOLD_BID_ASK_FEED_BLOCKED';
   }
 }
 
