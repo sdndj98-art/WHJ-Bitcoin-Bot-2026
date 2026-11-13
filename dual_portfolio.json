@@ -3,7 +3,7 @@
   "status": "BTC_AND_GOLD_PAPER_ONLY",
   "paper_only": true,
   "live_trading_enabled": false,
-  "updated_at": "2026-11-13T00:46:33+00:00",
+  "updated_at": "2026-11-13T00:48:20+00:00",
   "btc": {
     "asset": "BTC",
     "symbol": "BTC/USD",
@@ -34,7 +34,7 @@
     "processed_new_candles": 0,
     "data_quality": {
       "quality": "HEALTHY",
-      "latest_closed_candle_age_minutes": 46.54,
+      "latest_closed_candle_age_minutes": 48.32,
       "total_hourly_candles": 7200,
       "observed_hourly_candles": 7195,
       "imputed_hourly_candles": 5,
@@ -52,11 +52,46 @@
     "closed_trades": 0,
     "fees_usd": 0.0,
     "max_drawdown_pct": 0.0,
-    "feed_status": "BIQUOTE_MT5_UNAVAILABLE",
-    "status": "FEED_BLOCKED_NO_NEW_TRADES",
-    "last_error": "Recent gold hourly history has gaps; execution blocked",
+    "feed_status": "BIQUOTE_MT5_XAUUSD_BID_ASK_FRESH",
+    "status": "PAPER_ACTIVE_WAITING_NEXT_1H_CANDLE",
+    "bid_usd_oz": 3887.747,
+    "ask_usd_oz": 3887.915,
+    "mid_usd_oz": 3887.831,
+    "spread_usd_oz": 0.16800000000012005,
+    "xau_ounces": 0.0,
+    "cash_usd": 10.0,
+    "open_position": false,
+    "strategy": "ema_trend",
+    "last_processed_timestamp": 1794524400,
     "processed_new_candles": 0,
-    "new_trades": []
+    "new_trades": [],
+    "risk_pause_reasons": [],
+    "risk_limits": {
+      "max_drawdown_pct": 10.0,
+      "daily_loss_pause_pct": 3.0,
+      "max_consecutive_losses": 3,
+      "allocation_pct": 10.0
+    },
+    "warmup_seed_created": false,
+    "data_quality": {
+      "provider": "biquote \u00b7 MT5 broker feed",
+      "source": "MetaTrader 5 (Broker 1)",
+      "quote_timestamp": "2026-11-13T00:48:19Z",
+      "quote_age_seconds": 0.0,
+      "bid_usd_oz": 3887.747,
+      "ask_usd_oz": 3887.915,
+      "mid_usd_oz": 3887.831,
+      "spread_usd_oz": 0.16800000000012005,
+      "half_spread_pct": 0.00216,
+      "history_interval": "1h",
+      "history_bars": 168,
+      "recent_gap_count": 2,
+      "max_recent_gap_hours": 2.0,
+      "latest_closed_bar": "2026-11-12T23:00:00+00:00",
+      "latest_closed_bar_age_minutes": 48.32,
+      "quality": "HEALTHY"
+    },
+    "execution_model": "1h completed MT5 OHLC; buy/sell cost includes half current bid/ask spread + 0.05% slippage and 0.10% fee per side. No live orders."
   },
   "strategies": [
     {
@@ -77,7 +112,7 @@
       "closed_trades": 0,
       "fees_usd": 0.0,
       "max_drawdown_pct": 0.0,
-      "status": "FEED_BLOCKED_NO_NEW_TRADES"
+      "status": "PAPER_ACTIVE_WAITING_NEXT_1H_CANDLE"
     }
   ],
   "bull_summary": "RSI14 mean-reversion exploratory paper test; not approved for live use.",
