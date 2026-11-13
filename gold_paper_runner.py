@@ -1,6 +1,6 @@
 """Forward-only $10 XAUUSD paper sleeve using live MT5-sourced biquote two-way quotes.
 
-The history endpoint supplies completed 15-minute OHLC bars. Entry/exit costs
+The history endpoint supplies completed hourly OHLC bars. Entry/exit costs
 conservatively include half the currently observed dealer bid/ask spread plus
 5 bps slippage and a 10 bps fee per side. No live orders are possible.
 """
@@ -19,8 +19,8 @@ SNAPSHOT = Path("dual_portfolio.json")
 INITIAL_CASH = 10.0
 STRATEGY = "rsi14_mean_reversion"
 QUOTE_URL = "https://biquote.io/api/XAUUSD?allowStale=false"
-HISTORY_URL = "https://biquote.io/api/XAUUSD/ohlc?interval=15m&limit=1000"
-BAR_SECONDS = 900
+HISTORY_URL = "https://biquote.io/api/XAUUSD/ohlc?interval=1h&limit=1000"
+BAR_SECONDS = 3600
 
 
 def get_json(url):
@@ -82,7 +82,7 @@ def load_market():
         raise ValueError("Gold bid/ask spread exceeds the 0.50% safety ceiling")
 
     history_data = get_json(HISTORY_URL)
-    if history_data.get("symbol") != "XAUUSD" or history_data.get("interval") != "15m":
+    if history_data.get("symbol") != "XAUUSD" or history_data.get("interval") != "1h":
         raise ValueError("Gold OHLC response symbol or interval is invalid")
     source_bars = history_data.get("bars")
     if not isinstance(source_bars, list):
@@ -119,7 +119,7 @@ def load_market():
     if any(b["timestamp"] - a["timestamp"] != BAR_SECONDS for a, b in zip(recent, recent[1:])):
         raise ValueError("Recent gold 15-minute history has gaps; execution blocked")
     history_age = now - (bars[-1]["timestamp"] + BAR_SECONDS)
-    if history_age < -60 or history_age > 30 * 60:
+    if history_age < -60 or history_age > 90 * 60:
         raise ValueError("Latest completed gold 15-minute candle is stale")
     return bars, {
         "provider": "biquote · MT5 broker feed",
@@ -131,7 +131,7 @@ def load_market():
         "mid_usd_oz": mid,
         "spread_usd_oz": spread,
         "half_spread_pct": round(half_spread_fraction * 100, 5),
-        "history_interval": "15m",
+        "history_interval": "1h",
         "history_bars": len(bars),
         "latest_closed_bar": datetime.fromtimestamp(bars[-1]["timestamp"], timezone.utc).isoformat(),
         "latest_closed_bar_age_minutes": round(history_age / 60, 2),
@@ -164,7 +164,7 @@ def main():
             "equity_usd": round(equity, 4), "pnl_usd": round(equity - INITIAL_CASH, 4),
             "return_pct": round((equity / INITIAL_CASH - 1.0) * 100.0, 4),
             "closed_trades": result["completed_trades"], "fees_usd": result["fees_paid_usd"],
-            "max_drawdown_pct": result["max_drawdown_pct"], "feed_status": "STANDARD_BULLION_BID_ASK_FRESH",
+            "max_drawdown_pct": result["max_drawdown_pct"], "feed_status": "BIQUOTE_MT5_XAUUSD_BID_ASK_FRESH",
             "status": status, "bid_usd_oz": market["bid_usd_oz"], "ask_usd_oz": market["ask_usd_oz"],
             "mid_usd_oz": market["mid_usd_oz"], "spread_usd_oz": market["spread_usd_oz"],
             "xau_ounces": round(units, 10), "cash_usd": round(cash, 4),
@@ -185,7 +185,7 @@ def main():
         gold.setdefault("pnl_usd", 0.0)
         gold.setdefault("return_pct", 0.0)
         gold.setdefault("closed_trades", 0)
-        gold["feed_status"] = "STANDARD_BULLION_UNAVAILABLE"
+        gold["feed_status"] = "BIQUOTE_MT5_UNAVAILABLE"
         gold["status"] = "FEED_BLOCKED_NO_NEW_TRADES"
         gold["last_error"] = str(exc)
         gold["processed_new_candles"] = 0
