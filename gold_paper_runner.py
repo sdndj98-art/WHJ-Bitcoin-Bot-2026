@@ -14,7 +14,7 @@ from urllib.request import Request, urlopen
 
 from paper_account import seed_forward_paper_account, update_paper_account
 
-STATE = Path("state/xauusd_10usd_rsi14_mean_reversion.json")
+STATE = Path("state/xauusd_10usd_ema_trend.json")
 SNAPSHOT = Path("dual_portfolio.json")
 INITIAL_CASH = 10.0
 STRATEGY = "ema_trend"
@@ -111,8 +111,8 @@ def load_market():
     for bar in bars:
         unique[bar["timestamp"]] = bar
     bars = list(unique.values())
-    if len(bars) < 200:
-        raise ValueError("Insufficient completed hourly gold candles: " + str(len(bars)) + " of " + str(len(source_bars)) + " provider bars after closed-bar validation")
+    if len(bars) < 50:
+        raise ValueError("Insufficient completed hourly gold candles for EMA12/26: " + str(len(bars)) + " of " + str(len(source_bars)) + " provider bars after closed-bar validation")
     if any(bars[i]["timestamp"] >= bars[i + 1]["timestamp"] for i in range(len(bars) - 1)):
         raise ValueError("Gold candle timestamps are not strictly increasing")
     recent = bars[-25:]
