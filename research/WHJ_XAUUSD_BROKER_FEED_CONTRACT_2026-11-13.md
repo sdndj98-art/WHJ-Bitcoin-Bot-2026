@@ -48,25 +48,26 @@ The explicit cost model requires:
 
 Round-trip accounting uses ask for a long entry and bid for a long exit; the short side uses bid entry and ask exit. Actual bid/ask spread is embedded in those executable prices and separately reported as a diagnostic (not subtracted twice). Slippage, two-sided commission, and date-specific rollover financing are reported independently. Triple rollover is applied only on the broker-declared weekday. This is an accounting helper, not a broker execution simulator or an order function.
 
-## Verified existing GC=F evidence
+## Latest verified GC=F evidence (futures reference only)
 
-Artifact: [run 43208411769](https://github.com/sdndj98-art/WHJ-Bitcoin-Bot-2026/actions/runs/43208411769), artifact whj-gc-f-gold-13.
+Artifact: [workflow run 43518326396](https://github.com/sdndj98-art/WHJ-Bitcoin-Bot-2026/actions/runs/43518326396), artifact `whj-gc-f-gold-16`.
 
-- Yahoo Finance GC=F, daily, 2,514 bars, 2016-11-14 through 2026-11-11.
-- Dataset SHA-256: 6b1561ab63f51393cfed9f3930f36f081f9558521b169448272bf31ed086c9b1.
-- Three chronological OOS folds: 2022-05-13–2023-11-10, 2023-11-13–2025-05-13, and 2025-05-14–2026-11-11.
-- EMA50/EMA200 plus the past-only ATR90 filter produced +0.5878%, +3.3208%, and +0.0987% at 1x costs, versus matched 25% buy-and-hold of +1.7192%, +16.5489%, and +6.3797%.
-- At 2x costs the candidate returned +0.2235%, +3.0204%, and -0.2634%; at 3x it returned -0.1390%, +2.7211%, and -0.6239%.
-- The ATR-filtered candidate closed 23 trades across the three folds; the baseline EMA candidate closed 11. The ATR candidate underperformed matched buy-and-hold in every fold and remains below the 30-trade screening gate.
+- Yahoo Finance GC=F daily, 2,515 bars, 2016-11-14 05:00 UTC through 2026-11-12 05:00 UTC.
+- Dataset SHA-256: `ea20f4e0b37ad59793f94c7c1998f5c182e1301bbfe1af9e8168b8199f9d284b`; the artifact includes `gc_f_daily_dataset.json.gz`, and its decompressed canonical JSON hash was independently verified against the report.
+- Three chronological OOS folds; each fold starts with $1,000. Maximum allocation 25%, 2% stop, 4% target, no leverage.
+- EMA50/EMA200 plus the past-only ATR90 filter returned +0.7495%, +3.3208%, and +0.0987% at 1x costs, versus matched 25% buy-and-hold of +1.6778%, +15.4435%, and +4.8870%.
+- At 2x costs the candidate returned +0.3845%, +3.0204%, and -0.2634%; at 3x it returned +0.0211%, +2.7211%, and -0.6239%.
+- The ATR-filtered candidate closed 23 trades across the three folds; its 1x closed-trade PF values were 1.5594, 4.7491, and 1.0343. It underperformed matched buy-and-hold in every fold and remains below the 30-trade screening gate.
 
-These are GC=F futures-reference results, not XAUUSD spot results. The historical workflow's fixed fee/slippage percentages do not model broker spread, swap, financing, markup, liquidity, market impact, or broker-specific session/holiday rules. No candidate is promoted.
+These are GC=F futures-reference results, not XAUUSD spot results. Fixed fee/slippage percentages do not model broker spread, swap, financing, markup, liquidity, market impact, or broker-specific session/holiday rules. No candidate is promoted.
 
 ## Validation and blockers
 
-- Local isolated contract test run: 10 tests passed against the committed module/test design.
-- Existing GC=F workflow run 43208411769: all four test groups passed (4 + 4 + 9 + 3 = 20 tests), historical evaluation completed, artifact uploaded.
-- The latest workflow revision adds the XAUUSD contract test to the gold workflow. A completed GitHub Actions result for that new revision has not yet been verified; do not report it as CI-green.
-- No broker-exported XAUUSD bid/ask dataset, broker session calendar, contract-size specification, commission schedule, slippage observations, or long/short swap schedule is present in the repository. Therefore no XAUUSD spot backtest, strategy ranking, or forward result is claimed.
+- Gold workflow run 43518326396 completed successfully: 31 tests passed across five groups (11 XAUUSD broker-contract, 4 gold market-data, 4 regime/EMA OHLC, 9 gold shadow, and 3 shadow-runner tests).
+- The XAUUSD broker-contract group specifically passed all 11 tests, including rejection of non-USD quote currency and negative commission/slippage.
+- The same run completed the GC=F historical evaluation and uploaded artifact `whj-gc-f-gold-16`; the 2,515-row compressed dataset snapshot hash was verified against the report.
+- The current module is an ingestion/validation and round-trip cost-accounting helper, not yet a multi-bar XAUUSD portfolio/strategy evaluator.
+- No broker-exported XAUUSD bid/ask dataset, broker session calendar, contract-size specification, commission schedule, observed slippage, or long/short swap schedule is present in the repository. Therefore no XAUUSD spot backtest, strategy ranking, or forward result is claimed.
 
 ## Next research step
 
