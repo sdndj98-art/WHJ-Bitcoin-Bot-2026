@@ -112,7 +112,7 @@ def load_market():
         unique[bar["timestamp"]] = bar
     bars = list(unique.values())
     if len(bars) < 200:
-        raise ValueError("At least 200 completed real hourly gold candles are required")
+        raise ValueError("Insufficient completed hourly gold candles: " + str(len(bars)) + " of " + str(len(source_bars)) + " provider bars after closed-bar validation")
     if any(bars[i]["timestamp"] >= bars[i + 1]["timestamp"] for i in range(len(bars) - 1)):
         raise ValueError("Gold candle timestamps are not strictly increasing")
     recent = bars[-25:]
@@ -158,7 +158,7 @@ def main():
         cash = float(ledger["cash"])
         equity = cash + units * market["mid_usd_oz"] * (1.0 - slippage) * (1.0 - 0.001)
         status = "RISK_PAUSED" if result["risk_pause_reasons"] else (
-            "PAPER_RUNNING" if result["processed_new_candles"] else "PAPER_ACTIVE_WAITING_NEXT_15M_CANDLE")
+            "PAPER_RUNNING" if result["processed_new_candles"] else "PAPER_ACTIVE_WAITING_NEXT_1H_CANDLE")
         gold = {
             "asset": "XAUUSD", "symbol": "XAU/USD spot", "initial_equity_usd": INITIAL_CASH,
             "equity_usd": round(equity, 4), "pnl_usd": round(equity - INITIAL_CASH, 4),
