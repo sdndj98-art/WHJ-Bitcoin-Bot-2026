@@ -154,7 +154,7 @@ Regression coverage:
 
 Commits: source fix `b8667fc95f5b880a8447775c18a52b157f99269c`; regression tests `f4b4fa3e67bf4fb984ee6f0c2877e7f15d226a86`.
 
-Validation is pending the latest research-branch CI run. The patch is research-only and does not read or write paper ledgers, change risk limits or schedules, or enable execution.
+Validation completed in Termux Repository Audit run 43518359895 on research head 004eb3836b4508f5f55e04e250b12bfdeec3a04f: 554 unit tests passed, tracked Python compilation passed, and whitespace checks passed. Both realized-stop and next-open-exit OHLC drawdown regressions passed. The patch remains research-only and does not read or write paper ledgers, change risk limits or schedules, or enable execution.
 
 ## Safety invariants
 
@@ -181,4 +181,11 @@ The BTC 17-strategy, slow-momentum, and GC=F artifacts recorded source labels, r
 
 Commits: helper `ba2c38a6c4313d2a5bf357f4fbe59017230f0ef1`; tests `be224fd7b5caa28e452d1866599433b96920cd03`; BTC workflow `78b78d1a79f9d08273ab78d397c14d977de8cb97`; slow-momentum workflow `d8f9753b85c14cf32ac4fefccf4f0e688434a16e`; GC=F workflow `b920858d64778e6aa5d2971bef7e49e27a308086`.
 
-Local focused validation: 5 snapshot tests passed and both new Python files compiled. GitHub Actions validation and fresh artifact inspection are pending. The broker-specific XAUUSD path still requires a non-secret bid/ask export and broker session/cost specifications; the GC=F snapshot is not a substitute.
+Validation completed on 2026-11-13:
+- Termux Repository Audit run 43518359895: 554 tests passed; tracked Python compilation and whitespace checks passed.
+- BTC 17-strategy workflow run 43518310574 succeeded and uploaded artifact `whj-multi-strategy-research-32` with `btc_hourly_dataset.json.gz`; decompressed canonical-data SHA-256 matched the report exactly (36,000 rows).
+- Slow-momentum workflow run 43518319267 succeeded and uploaded `btc_daily_dataset.json.gz`; SHA-256 matched exactly (1,499 rows).
+- GC=F workflow run 43518326396 succeeded; its five gold test groups passed (11 + 4 + 4 + 9 + 3 = 31 tests), and `gc_f_daily_dataset.json.gz` matched the report hash (2,515 rows).
+- The five focused snapshot tests passed locally and are included in the 554-test CI run.
+
+The broker-specific XAUUSD path still requires a non-secret bid/ask export and broker session/cost specifications; the GC=F snapshot is not a substitute.
