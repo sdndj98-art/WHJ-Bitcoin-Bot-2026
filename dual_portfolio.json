@@ -3,7 +3,7 @@
   "status": "BTC_AND_GOLD_PAPER_ONLY",
   "paper_only": true,
   "live_trading_enabled": false,
-  "updated_at": "2026-11-13T00:45:33+00:00",
+  "updated_at": "2026-11-13T00:46:33+00:00",
   "btc": {
     "asset": "BTC",
     "symbol": "BTC/USD",
@@ -34,7 +34,7 @@
     "processed_new_candles": 0,
     "data_quality": {
       "quality": "HEALTHY",
-      "latest_closed_candle_age_minutes": 45.54,
+      "latest_closed_candle_age_minutes": 46.54,
       "total_hourly_candles": 7200,
       "observed_hourly_candles": 7195,
       "imputed_hourly_candles": 5,
@@ -54,7 +54,7 @@
     "max_drawdown_pct": 0.0,
     "feed_status": "BIQUOTE_MT5_UNAVAILABLE",
     "status": "FEED_BLOCKED_NO_NEW_TRADES",
-    "last_error": "Insufficient completed hourly gold candles: 168 of 169 provider bars after closed-bar validation",
+    "last_error": "Recent gold hourly history has gaps; execution blocked",
     "processed_new_candles": 0,
     "new_trades": []
   },
