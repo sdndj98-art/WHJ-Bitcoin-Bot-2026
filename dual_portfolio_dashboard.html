@@ -21,6 +21,28 @@ section{margin-top:18px;overflow-x:auto}
 table{width:100%;border-collapse:collapse;min-width:600px}th,td{text-align:right;padding:11px;border-bottom:1px solid #2a3b53;font-size:14px}
 .notice{border-right:3px solid #e6ae4e;background:#2b2418;padding:12px;border-radius:8px;color:#f4d49a;line-height:1.7}
 .ok{color:#8de0b0}.bad{color:#ff9a9a}.small{font-size:12px}
+.tree-panel{position:relative;overflow:hidden}
+.tree-wrap{display:grid;justify-items:center;gap:18px;padding:10px 0 4px}
+.tree-root,.tree-node{border:1px solid #40536f;background:linear-gradient(145deg,#1c2c43,#111c2d);border-radius:14px;padding:13px 16px;text-align:center;box-shadow:0 8px 26px #0004;min-width:190px}
+.tree-root{border-color:#62b7df;min-width:240px;position:relative}
+.tree-root:after{content:"";position:absolute;top:100%;left:50%;height:19px;border-left:2px solid #4a88ad}
+.tree-root strong,.tree-node strong{display:block;font-size:14px}
+.tree-root small,.tree-node small{display:block;color:#9fb0c6;margin-top:5px;font-size:11px}
+.tree-branches{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:26px;width:min(760px,100%);position:relative;padding-top:18px}
+.tree-branches:before{content:"";position:absolute;top:0;left:25%;right:25%;border-top:2px solid #4a88ad}
+.tree-branch{display:grid;justify-items:center;gap:12px;position:relative}
+.tree-branch:before{content:"";position:absolute;top:-18px;height:18px;border-left:2px solid #4a88ad}
+.tree-node{width:100%;min-width:0;position:relative}
+.tree-node.feed{border-color:#4f9b83}
+.tree-node.strategy{border-color:#a68bd9}
+.tree-node.risk{border-color:#c69a4c}
+.tree-node.account{border-color:#4f9b83}
+.tree-state{font-size:11px;color:#9fb0c6;overflow-wrap:anywhere}
+.tree-state.active{color:#8de0b0}
+.tree-branch .tree-node:not(:first-child):before{content:"";position:absolute;bottom:100%;left:50%;height:13px;border-left:2px solid #4a88ad}
+.tree-foot{color:#9fb0c6;font-size:11px;text-align:center}
+@media(max-width:600px){.tree-branches{gap:10px}.tree-root{min-width:200px}.tree-node{padding:11px 8px}.tree-node strong{font-size:12px}.tree-node small{font-size:10px}}
+
 </style></head>
 <body>
 <header><div><h1>WHJ Dual Portfolio</h1><div class="muted">لوحة متابعة محفظتي البيتكوين والذهب — تداول ورقي فقط</div></div><span class="pill" id="overall">CONFIGURED · NOT ACTIVE</span></header>
@@ -39,6 +61,26 @@ table{width:100%;border-collapse:collapse;min-width:600px}th,td{text-align:right
 <div class="metrics"><div class="metric"><span>الربح / الخسارة</span><strong id="gold-pnl">—</strong></div><div class="metric"><span>العائد</span><strong id="gold-return">—</strong></div><div class="metric"><span>الصفقات المغلقة</span><strong id="gold-trades">0</strong></div><div class="metric"><span>حالة البيانات</span><strong id="gold-status">بانتظار تغذية XAUUSD</strong></div></div>
 </article>
 </div>
+<section class="tree-panel"><h2>الشجرة العصبية للتداول</h2>
+<p class="muted small">مسار القرار من مصدر السعر إلى الاستراتيجية ثم حارس المخاطر والمحفظة. لا يُنفذ أمر إلا بعد إغلاق شمعة وتحقق الشروط.</p>
+<div class="tree-wrap">
+<div class="tree-root"><strong>WHJ · Neural Decision Core</strong><small id="tree-core-state">مراقبة تدفق السوق · تداول ورقي فقط</small></div>
+<div class="tree-branches">
+<div class="tree-branch">
+<div class="tree-node feed"><strong>BTC / USD Feed</strong><small id="tree-btc-feed">Coinbase · Hourly</small><div class="tree-state" id="tree-btc-feed-state">بانتظار التحديث</div></div>
+<div class="tree-node strategy"><strong>RSI14 Mean Reversion</strong><small>مؤشر استكشافي · شمعة ساعة مغلقة</small><div class="tree-state" id="tree-btc-signal">بانتظار إشارة</div></div>
+<div class="tree-node risk"><strong>Risk Judge · BTC</strong><small id="tree-btc-risk">حد تراجع 10% · خسارة يومية 3%</small><div class="tree-state" id="tree-btc-risk-state">لا يوجد إيقاف مخاطر</div></div>
+<div class="tree-node account"><strong>محفظة BTC · $10</strong><small id="tree-btc-equity">الرصيد $10.00</small><div class="tree-state" id="tree-btc-account-state">0 صفقات · لا مركز مفتوح</div></div>
+</div>
+<div class="tree-branch">
+<div class="tree-node feed"><strong>XAUUSD · MT5 Feed</strong><small id="tree-gold-feed">biquote · Bid / Ask</small><div class="tree-state" id="tree-gold-feed-state">بانتظار التحديث</div></div>
+<div class="tree-node strategy"><strong>EMA12 / EMA26</strong><small>استراتيجية استكشافية · شمعة ساعة مغلقة</small><div class="tree-state" id="tree-gold-signal">بانتظار إشارة</div></div>
+<div class="tree-node risk"><strong>Risk Judge · Gold</strong><small id="tree-gold-risk">حد تراجع 10% · خسارة يومية 3%</small><div class="tree-state" id="tree-gold-risk-state">لا يوجد إيقاف مخاطر</div></div>
+<div class="tree-node account"><strong>محفظة Gold · $10</strong><small id="tree-gold-equity">الرصيد $10.00</small><div class="tree-state" id="tree-gold-account-state">0 صفقات · لا مركز مفتوح</div></div>
+</div>
+</div>
+<div class="tree-foot">كل فرع مستقل؛ فشل تغذية أصل واحد لا يوقف دفتر الأصل الآخر. LIVE TRADING DISABLED.</div>
+</div></section>
 <section><h2>مقارنة الاستراتيجيات</h2><p class="muted small">كل أصل يُقيّم منفصلاً. لن تُرتب الاستراتيجيات قبل وجود نتائج ورقية موثقة.</p>
 <table><thead><tr><th>الأصل</th><th>الاستراتيجية</th><th>الرصيد</th><th>العائد</th><th>الصفقات</th><th>الرسوم</th><th>أقصى تراجع</th><th>الحالة</th></tr></thead><tbody id="strategies"><tr><td colspan="8" class="muted">لا توجد نتائج تنفيذ ورقي بعد — CONFIGURED_NOT_ACTIVE</td></tr></tbody></table></section>
 <section><h2>مراجعة العقول</h2><div class="grid"><div class="metric"><span>Bull Brain</span><strong id="bull">بانتظار أول تحليل</strong></div><div class="metric"><span>Bear Brain</span><strong id="bear">بانتظار أول تحليل</strong></div><div class="metric"><span>Risk Judge</span><strong id="risk">لم يصدر قراراً بعد</strong></div><div class="metric"><span>آخر تحديث</span><strong id="updated">لم يبدأ التشغيل</strong></div></div></section>
@@ -94,6 +136,24 @@ async function refreshPortfolio() {
   }
   document.getElementById('updated').textContent = data.updated_at ? String(data.updated_at) : 'لم يبدأ التشغيل';
   document.getElementById('overall').textContent = String(data.status ?? 'UNKNOWN');
+  const btc = data.btc || {}, gold = data.gold || {};
+  const setText = (id, value) => { const node = document.getElementById(id); if (node) node.textContent = String(value ?? '—'); };
+  const setState = (id, value, active=false) => { const node=document.getElementById(id); if(node){node.textContent=String(value ?? '—');node.classList.toggle('active',!!active);} };
+  setText('tree-core-state', 'آخر تحديث: ' + (data.updated_at || 'غير متاح') + ' · ورقي فقط');
+  setText('tree-btc-feed', 'Coinbase · Hourly · ' + (btc.last_price_usd ? money(btc.last_price_usd) : 'السعر غير متاح'));
+  setState('tree-btc-feed-state', btc.feed_status || 'FEED_UNKNOWN', String(btc.feed_status || '').includes('HEALTHY'));
+  setState('tree-btc-signal', btc.processed_new_candles ? ('تمت معالجة ' + btc.processed_new_candles + ' شمعة جديدة') : 'لا توجد شمعة مغلقة جديدة بعد', !!btc.processed_new_candles);
+  setText('tree-btc-risk', 'حد تراجع ' + (btc.risk_limits?.max_drawdown_pct ?? 10) + '% · خسارة يومية ' + (btc.risk_limits?.daily_loss_pause_pct ?? 3) + '%');
+  setState('tree-btc-risk-state', Array.isArray(btc.risk_pause_reasons) && btc.risk_pause_reasons.length ? btc.risk_pause_reasons.join(' · ') : 'PASS · لا يوجد إيقاف', !(btc.risk_pause_reasons||[]).length);
+  setText('tree-btc-equity', 'الرصيد ' + money(btc.equity_usd));
+  setState('tree-btc-account-state', (btc.closed_trades ?? 0) + ' صفقات مغلقة · ' + (btc.open_position ? 'مركز مفتوح' : 'لا مركز مفتوح'), true);
+  setText('tree-gold-feed', 'biquote · MT5 · ' + (gold.bid_usd_oz && gold.ask_usd_oz ? ('Bid ' + Number(gold.bid_usd_oz).toFixed(2) + ' / Ask ' + Number(gold.ask_usd_oz).toFixed(2)) : 'Bid / Ask غير متاح'));
+  setState('tree-gold-feed-state', gold.feed_status || 'FEED_UNKNOWN', String(gold.feed_status || '').includes('FRESH'));
+  setState('tree-gold-signal', gold.processed_new_candles ? ('تمت معالجة ' + gold.processed_new_candles + ' شمعة جديدة') : 'لا توجد شمعة مغلقة جديدة بعد', !!gold.processed_new_candles);
+  setText('tree-gold-risk', 'حد تراجع ' + (gold.risk_limits?.max_drawdown_pct ?? 10) + '% · خسارة يومية ' + (gold.risk_limits?.daily_loss_pause_pct ?? 3) + '%');
+  setState('tree-gold-risk-state', Array.isArray(gold.risk_pause_reasons) && gold.risk_pause_reasons.length ? gold.risk_pause_reasons.join(' · ') : 'PASS · لا يوجد إيقاف', !(gold.risk_pause_reasons||[]).length);
+  setText('tree-gold-equity', 'الرصيد ' + money(gold.equity_usd));
+  setState('tree-gold-account-state', (gold.closed_trades ?? 0) + ' صفقات مغلقة · ' + (gold.open_position ? 'مركز مفتوح' : 'لا مركز مفتوح'), true);
 }
 
 async function refreshXauSpot() {
