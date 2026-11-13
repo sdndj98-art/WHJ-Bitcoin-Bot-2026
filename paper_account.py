@@ -216,8 +216,17 @@ def seed_forward_paper_account(
         if not timestamp_value.is_integer() or close <= 0:
             raise ValueError("Candle timestamps must be whole seconds and closes positive")
         normalized.append((int(timestamp_value), close))
-    if len(normalized) < 200:
-        raise ValueError("At least 200 completed candles are required to warm forward strategies")
+    required_history = (
+        200 if strategy in (
+            "sma200_regime", "ema50_200_regime",
+            "bollinger_mean_reversion", "rsi14_mean_reversion",
+        ) else 50
+    )
+    if len(normalized) < required_history:
+        raise ValueError(
+            "At least " + str(required_history)
+            + " completed candles are required to warm " + strategy
+        )
     timestamps = [row[0] for row in normalized]
     if timestamps != sorted(timestamps) or len(set(timestamps)) != len(timestamps):
         raise ValueError("Candle timestamps must be strictly increasing and unique")
