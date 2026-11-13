@@ -1,6 +1,6 @@
-"""Forward-only $10 XAUUSD paper sleeve using Standard Bullion two-way quotes.
+"""Forward-only $10 XAUUSD paper sleeve using live MT5-sourced biquote two-way quotes.
 
-The history endpoint supplies 15-minute reference closes. Entry/exit costs
+The history endpoint supplies completed 15-minute OHLC bars. Entry/exit costs
 conservatively include half the currently observed dealer bid/ask spread plus
 5 bps slippage and a 10 bps fee per side. No live orders are possible.
 """
