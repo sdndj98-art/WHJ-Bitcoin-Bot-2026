@@ -11,6 +11,8 @@ on:
       - "slow_momentum_lab.py"
       - "historical_research.py"
       - "research_governance.py"
+      - "research_snapshot.py"
+      - "tests/test_research_snapshot.py"
       - "tests/test_research_governance.py"
       - "tests/test_slow_momentum_lab.py"
       - ".github/workflows/slow-momentum-isolated-research.yml"
@@ -34,7 +36,6 @@ jobs:
       - name: Evaluate isolated daily-close momentum
         run: |
           python - <<'PY'
-          import hashlib
           import json
           import os
           from datetime import datetime, timezone
@@ -47,6 +48,7 @@ jobs:
               trade_concentration_diagnostic,
           )
           from slow_momentum_lab import evaluate_slow_momentum, momentum_signals, periodic_net_returns
+          from research_snapshot import canonical_json_bytes, gzip_snapshot_bytes, sha256_bytes
 
           # Read-only market-data loader and isolated evaluator only.
           # No paper account functions, monitors, caches, or order pathways.
@@ -54,8 +56,9 @@ jobs:
           daily = aggregate_candles(hourly, 24)
           closes = [float(row["close"]) for row in daily]
           report = evaluate_slow_momentum(closes)
-          dataset_payload = json.dumps(daily, sort_keys=True, separators=(",", ":"), allow_nan=False).encode("utf-8")
-          dataset_sha256 = hashlib.sha256(dataset_payload).hexdigest()
+          dataset_payload = canonical_json_bytes(daily)
+          dataset_sha256 = sha256_bytes(dataset_payload)
+          Path("btc_daily_dataset.json.gz").write_bytes(gzip_snapshot_bytes(dataset_payload))
           generated_at = datetime.now(timezone.utc).isoformat()
           trial_manifest = [
               build_trial_manifest(
@@ -124,6 +127,7 @@ jobs:
           )
           report.update({
               "generated_at_utc": datetime.now(timezone.utc).isoformat(),
+              "dataset_snapshot_file": "btc_daily_dataset.json.gz",
               "source": "Coinbase public BTC-USD hourly candles aggregated to complete UTC daily bars",
               "hourly_candle_count": len(hourly),
               "daily_candle_count": len(daily),
@@ -143,6 +147,7 @@ jobs:
               "# WHJ isolated slow-momentum historical research", "",
               f"- Generated UTC: {report['generated_at_utc']}",
               f"- Daily observations: {len(daily)}",
+              "- Dataset snapshot: `btc_daily_dataset.json.gz` (gzip-compressed canonical JSON; hash applies to decompressed bytes)",
               f"- Date range: {report['daily_start_utc']} to {report['daily_end_utc']}",
               f"- Imputed hourly candles: {report['imputed_hourly_candles']}",
               f"- Declared candidate trials: {report['trial_governance']['trial_count']}",
@@ -183,5 +188,6 @@ jobs:
             slow_momentum_historical_report.json
             slow_momentum_historical_report.md
             slow_momentum_trial_manifest.json
+            btc_daily_dataset.json.gz
           if-no-files-found: error
           retention-days: 30
