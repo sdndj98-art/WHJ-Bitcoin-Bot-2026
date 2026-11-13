@@ -51,6 +51,7 @@ async function refreshPortfolio() {
   const response = await fetch('./dual_portfolio.json', { cache: 'no-store' });
   if (!response.ok) throw new Error('portfolio snapshot unavailable');
   const data = await response.json();
+  window.__whjGoldAccountStatus = data.gold?.status ?? 'UNKNOWN';
 
   for (const key of ['btc', 'gold']) {
     const account = data[key];
