@@ -116,8 +116,11 @@ def load_market():
     if any(bars[i]["timestamp"] >= bars[i + 1]["timestamp"] for i in range(len(bars) - 1)):
         raise ValueError("Gold candle timestamps are not strictly increasing")
     recent = bars[-25:]
-    if any(b["timestamp"] - a["timestamp"] != BAR_SECONDS for a, b in zip(recent, recent[1:])):
-        raise ValueError("Recent gold hourly history has gaps; execution blocked")
+    recent_gaps = [b["timestamp"] - a["timestamp"] for a, b in zip(recent, recent[1:])]
+    # XAUUSD has scheduled daily session breaks; permit gaps up to four hours,
+    # but never fabricate missing candles or accept a longer unexplained outage.
+    if any(gap > 4 * BAR_SECONDS for gap in recent_gaps):
+        raise ValueError("Recent gold history contains a gap longer than the 4-hour session-break allowance")
     history_age = now - (bars[-1]["timestamp"] + BAR_SECONDS)
     if history_age < -60 or history_age > 90 * 60:
         raise ValueError("Latest completed gold hourly candle is stale")
@@ -133,6 +136,8 @@ def load_market():
         "half_spread_pct": round(half_spread_fraction * 100, 5),
         "history_interval": "1h",
         "history_bars": len(bars),
+        "recent_gap_count": sum(1 for gap in recent_gaps if gap > BAR_SECONDS),
+        "max_recent_gap_hours": round(max(recent_gaps, default=BAR_SECONDS) / 3600, 2),
         "latest_closed_bar": datetime.fromtimestamp(bars[-1]["timestamp"], timezone.utc).isoformat(),
         "latest_closed_bar_age_minutes": round(history_age / 60, 2),
         "quality": "HEALTHY",
