@@ -117,24 +117,36 @@ def simulate_ohlc_risk(
             elif opens[i] >= target_price:
                 close_position(opens[i], "take_profit_gap", i)
             else:
+                # The position survived the opening-gap checks. Mark the bar
+                # high before resolving an intrabar stop/target so a same-bar
+                # peak cannot disappear merely because the stop closes first.
+                high_equity = liquidation_at(highs[i])
+                peak_equity = max(peak_equity, high_equity)
                 stop_hit = lows[i] <= stop_price
                 target_hit = highs[i] >= target_price
                 if stop_hit:
+                    # The stop fill is the liquidation trough once triggered;
+                    # do not mark a lower post-exit wick as if still exposed.
                     # If both are touched, pessimistically assume stop first.
                     close_position(stop_price, "stop_loss_adverse_order" if target_hit
                                    else "stop_loss", i)
                 elif target_hit:
+                    low_equity = liquidation_at(lows[i])
+                    if peak_equity > 0:
+                        max_intrabar_dd = max(
+                            max_intrabar_dd,
+                            (peak_equity - low_equity) / peak_equity * 100.0,
+                        )
                     close_position(target_price, "take_profit", i)
+                else:
+                    low_equity = liquidation_at(lows[i])
+                    if peak_equity > 0:
+                        max_intrabar_dd = max(
+                            max_intrabar_dd,
+                            (peak_equity - low_equity) / peak_equity * 100.0,
+                        )
 
         if units > 0:
-            high_equity = liquidation_at(highs[i])
-            low_equity = liquidation_at(lows[i])
-            peak_equity = max(peak_equity, high_equity)
-            if peak_equity > 0:
-                max_intrabar_dd = max(
-                    max_intrabar_dd,
-                    (peak_equity - low_equity) / peak_equity * 100.0,
-                )
             close_equity = liquidation_at(closes[i])
         else:
             peak_equity = max(peak_equity, cash)
