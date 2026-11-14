@@ -4,6 +4,7 @@ from research_governance import (
     build_trial_manifest,
     canonical_manifest_json,
     cscv_probability_of_backtest_overfitting,
+    cscv_probability_of_backtest_overfitting_with_tail_trim,
     moving_block_bootstrap_return_ci,
     trade_concentration_diagnostic,
 )
@@ -48,6 +49,42 @@ class ResearchGovernanceTests(unittest.TestCase):
         self.assertEqual(result["split_count"], 35)
         self.assertGreaterEqual(result["pbo_estimate"], 0)
         self.assertLessEqual(result["pbo_estimate"], 1)
+
+    def test_cscv_tail_trim_is_explicit_aligned_and_reproducible(self):
+        series = {
+            f"candidate-{index}": [
+                ((bar + index) % 11 - 5) / 10000
+                for bar in range(19)
+            ]
+            for index in range(17)
+        }
+        result = cscv_probability_of_backtest_overfitting_with_tail_trim(
+            series, partitions=8
+        )
+        expected = cscv_probability_of_backtest_overfitting(
+            {name: values[:16] for name, values in series.items()},
+            partitions=8,
+        )
+        self.assertEqual(result["pbo_estimate"], expected["pbo_estimate"])
+        self.assertEqual(result["split_count"], 35)
+        self.assertEqual(result["trial_count"], 17)
+        self.assertEqual(result["original_observations"], 19)
+        self.assertEqual(result["observations_used"], 16)
+        self.assertEqual(result["trimmed_tail_observations"], 3)
+        self.assertEqual(result["selection_metric"], "in_sample_sharpe")
+        self.assertEqual(result["tail_trim_policy"],
+                         "drop_newest_trailing_observations_only_to_form_equal_contiguous_partitions")
+        self.assertEqual(len(series["candidate-0"]), 19)
+
+    def test_cscv_tail_trim_rejects_insufficient_or_misaligned_series(self):
+        with self.assertRaises(ValueError):
+            cscv_probability_of_backtest_overfitting_with_tail_trim(
+                {"a": [0.01] * 7, "b": [0.02] * 7}, partitions=8
+            )
+        with self.assertRaises(ValueError):
+            cscv_probability_of_backtest_overfitting_with_tail_trim(
+                {"a": [0.01] * 16, "b": [0.02] * 15}, partitions=8
+            )
 
     def test_cscv_rejects_misaligned_or_too_short_series(self):
         with self.assertRaises(ValueError):

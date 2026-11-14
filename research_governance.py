@@ -168,6 +168,35 @@ def cscv_probability_of_backtest_overfitting(return_series, partitions=8):
     }
 
 
+
+def cscv_probability_of_backtest_overfitting_with_tail_trim(return_series, partitions=8):
+    """Run CSCV/PBO after dropping only the newest remainder needed for equal blocks.
+
+    This preserves chronological contiguous partitions and aligned candidate
+    intervals. The returned diagnostics disclose the exact number of trailing
+    observations omitted. Selection inside each split is maximum in-sample
+    Sharpe, matching cscv_probability_of_backtest_overfitting().
+    """
+    if (isinstance(partitions, bool) or not isinstance(partitions, int)
+            or partitions < 4 or partitions % 2):
+        raise ValueError("partitions must be an even integer >= 4")
+    trials = _validated_return_series(return_series)
+    original_count = len(next(iter(trials.values())))
+    used_count = original_count - (original_count % partitions)
+    if used_count < partitions:
+        raise ValueError("Not enough aligned observations for the requested partitions")
+    trimmed = {name: values[:used_count] for name, values in trials.items()}
+    result = cscv_probability_of_backtest_overfitting(trimmed, partitions=partitions)
+    result.update({
+        "selection_metric": "in_sample_sharpe",
+        "original_observations": original_count,
+        "observations_used": used_count,
+        "trimmed_tail_observations": original_count - used_count,
+        "tail_trim_policy": "drop_newest_trailing_observations_only_to_form_equal_contiguous_partitions",
+    })
+    return result
+
+
 def moving_block_bootstrap_return_ci(
     periodic_returns, block_length=7, bootstrap_samples=2000,
     confidence_level=0.95, seed=20261112,

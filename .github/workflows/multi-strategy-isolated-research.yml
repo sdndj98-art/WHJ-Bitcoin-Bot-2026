@@ -46,7 +46,7 @@ jobs:
           from datetime import datetime, timezone
           from pathlib import Path
           from historical_research import load_two_year_candles
-          from research_governance import (build_trial_manifest, cscv_probability_of_backtest_overfitting, moving_block_bootstrap_return_ci)
+          from research_governance import (build_trial_manifest, cscv_probability_of_backtest_overfitting_with_tail_trim, moving_block_bootstrap_return_ci)
           from strategy_family_runner import run_strategy_universe
           from strategy_family_lab import build_strategy_signals
           from rolling_walk_forward import evaluate_rolling_walk_forward
@@ -98,8 +98,15 @@ jobs:
           )
           return_matrix = {name: item["net_returns"] for name, item in base["results"].items()}
           count = len(next(iter(return_matrix.values())))
-          partitions = next((n for n in (8, 6, 4) if count >= 8 and count % n == 0), None)
-          pbo = cscv_probability_of_backtest_overfitting(return_matrix, partitions=partitions) if partitions else None
+          # Use eight equal contiguous blocks. If the OOS count is not divisible
+          # by eight, the helper drops only the newest remainder and records it.
+          # Require at least 100 observations per block to avoid a tiny-sample PBO.
+          pbo = (
+              cscv_probability_of_backtest_overfitting_with_tail_trim(
+                  return_matrix, partitions=8
+              )
+              if count >= 800 else None
+          )
           # Conditional uncertainty diagnostic for the five descriptive OOS leaders.
           # This is not selection-adjusted and is not a substitute for an untouched final holdout.
           bootstrap_ci = {}
@@ -170,7 +177,8 @@ jobs:
               "rolling_walk_forward_trial_manifest": walk_forward_manifests,
               "cscv_pbo": pbo,
               "top_five_moving_block_bootstrap_95pct_ci": bootstrap_ci,
-              "pbo_scope_warning": "CSCV/PBO is a selection-bias diagnostic across only the 17 declared candidates on this single OOS segment; not a future-profit probability, not a global trial census, and not a replacement for an untouched final holdout.",
+              "cscv_pbo_status": "COMPUTED_DIAGNOSTIC_ONLY" if pbo is not None else "NOT_COMPUTED_INSUFFICIENT_OOS_PARTITION_SIZE",
+              "pbo_scope_warning": "CSCV/PBO uses maximum in-sample Sharpe across only the 17 declared candidates on this single OOS segment. Eight equal contiguous partitions are used; only the newest remainder is trimmed and the exact count is reported. This is not a future-profit probability, not a global trial census, and not a replacement for an untouched final holdout.",
               "trial_manifest": manifests,
               "promotion_status": "NO_CANDIDATE_PROMOTED",
               "live_orders": False,
@@ -189,7 +197,7 @@ jobs:
               f"- Imputed hourly candles: {imputed_hourly_candles}",
               f"- Candidate count: {base['candidate_count']}",
               f"- Research allocation: {base['allocation_fraction']:.0%} (hard cap {base['allocation_cap_fraction']:.0%})",
-              f"- CSCV/PBO: {pbo if pbo is not None else 'not computed (partition constraints)'}",
+              (f"- CSCV/PBO: {pbo['pbo_estimate']:.4f}; {pbo['split_count']} splits; {pbo['observations_used']}/{pbo['original_observations']} OOS bars used; trimmed {pbo['trimmed_tail_observations']} newest bars; selection metric: in-sample Sharpe" if pbo is not None else "- CSCV/PBO: not computed (insufficient OOS partition size)"),
               "- Status: RESEARCH ONLY — NO CANDIDATE PROMOTED", "",
               "| Candidate | OOS net return | Matched B&H | Excess | Max DD | PF (periodic) | Exposure | Trades closed |",
               "|---|---:|---:|---:|---:|---:|---:|---:|",
