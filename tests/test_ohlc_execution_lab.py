@@ -48,13 +48,31 @@ class OhlcExecutionLabTests(unittest.TestCase):
 
     def test_realized_stop_loss_is_in_intrabar_drawdown(self):
         result = simulate_ohlc_risk(
-            [100, 100, 100], [101, 101, 101], [99, 90, 99],
+            [100, 100, 100], [100, 100, 100], [99, 90, 99],
             [100, 100, 100], [True, False, False], [False, False, False],
             fee=0, slippage=0, stop_loss_pct=0.05, take_profit_pct=0.5,
         )
         self.assertEqual(result["exit_events"][0]["reason"], "stop_loss")
         self.assertAlmostEqual(
             result["max_intrabar_ohlc_envelope_drawdown_pct"], 1.25, places=4
+        )
+
+
+    def test_same_bar_high_peak_is_counted_before_realized_stop_exit(self):
+        result = simulate_ohlc_risk(
+            [100, 100, 100], [101, 101, 120], [99, 99, 95],
+            [100, 100, 100], [True, False, False], [False, False, False],
+            fee=0, slippage=0, stop_loss_pct=0.05, take_profit_pct=0.04,
+        )
+        self.assertEqual(
+            result["exit_events"][0]["reason"], "stop_loss_adverse_order"
+        )
+        # 25% of $1,000 buys 2.5 units: bar high marks $1,050,
+        # and the 5% stop exits at $987.50. The envelope DD is peak-to-fill.
+        self.assertAlmostEqual(
+            result["max_intrabar_ohlc_envelope_drawdown_pct"],
+            (1050.0 - 987.5) / 1050.0 * 100.0,
+            places=4,
         )
 
     def test_next_open_signal_exit_loss_is_in_intrabar_drawdown(self):
