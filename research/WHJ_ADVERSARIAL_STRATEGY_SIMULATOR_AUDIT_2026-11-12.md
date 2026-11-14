@@ -189,3 +189,24 @@ Validation completed on 2026-11-13:
 - The five focused snapshot tests passed locally and are included in the 554-test CI run.
 
 The broker-specific XAUUSD path still requires a non-secret bid/ask export and broker session/cost specifications; the GC=F snapshot is not a substitute.
+
+## 2026-11-14 follow-up re-audit — same-bar peak before stop exit
+
+### F11 — OHLC drawdown could omit the current bar's high when a stop closed the position (high)
+
+A further source-level review found that the simulator resolved an intrabar stop before marking the current candle's high. The realized-exit fix in F9 compared post-exit cash with the prior bar's peak, but a large same-bar high could still be omitted from the conservative OHLC envelope whenever the stop closed the position before the normal high/low mark.
+
+**Research-branch fix:**
+- For a position that survives opening-gap checks, mark the current bar's high as a possible equity peak before resolving intrabar stop/target touches.
+- On a stop hit, use the actual stop fill (including configured adverse slippage and fee) as the liquidation trough; do not count a lower wick that may have occurred after the position was stopped out.
+- On a target-only exit or a bar that remains open, retain the bar-low liquidation mark.
+- Opening-gap exits and next-open signal exits remain processed at the open before the subsequent bar range; execution, allocation, stop/target levels, fees, slippage, and account state are unchanged.
+
+Regression coverage:
+- A flat-price stop fixture still reports the 1.25% realized loss for a 5% stop on 25% allocation.
+- A same-bar high of 120 followed by a 5% stop fill at 95 records the $1,050 envelope peak and $987.50 stop liquidation, or 5.9524% peak-to-fill drawdown.
+- The stop/target collision remains stop-first.
+
+Commits: source 8e8829e1f78c1c71d59336d4adb88bb1daceacb3; regression test d0d00ff42435ba31d0e2d0e792688ae97818d72b; audit documentation commit recorded below.
+
+Validation: source review and deterministic test were added on the research branch. CI for these new commits has not yet been observed; no pass is claimed here.
