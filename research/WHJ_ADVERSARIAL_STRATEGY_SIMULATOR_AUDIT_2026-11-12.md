@@ -210,3 +210,48 @@ Regression coverage:
 Commits: source 8e8829e1f78c1c71d59336d4adb88bb1daceacb3; regression test d0d00ff42435ba31d0e2d0e792688ae97818d72b; audit documentation commit recorded below.
 
 Validation: source review and deterministic test were added on the research branch. CI for these new commits has not yet been observed; no pass is claimed here.
+
+## 2026-11-15 follow-up — validation, CSCV coverage, and rolling-window instability
+
+### F11 validation closure
+
+The same-bar high-before-stop OHLC envelope correction and its regression fixtures are now covered by the latest repository audit:
+- Latest audit run: [43629280670](https://github.com/sdndj98-art/WHJ-Bitcoin-Bot-2026/actions/runs/43629280670), commit `74d9a15c51571765b19c227506e1662b74a08007`.
+- A later repository audit on the research follow-up commit [43649648829](https://github.com/sdndj98-art/WHJ-Bitcoin-Bot-2026/actions/runs/43649648829), commit `c110b7f330425c894f968eaca066efe88780f8b5`, passed **557 unit tests**, tracked Python compilation, and `git diff --check`.
+- The F11 tests are included in that 557-test suite. The prior “CI pending” statement above is superseded by these successful runs.
+
+### F12 — PBO was skipped only because the OOS length was not divisible by the partition count (medium)
+
+The BTC 17-candidate OOS stream contained 10,799 aligned hourly returns, so the original strict CSCV helper skipped PBO for 8, 6, and 4 equal partitions. A reproducible helper was added to trim only the newest remainder and disclose the exact omission:
+- Helper: `cscv_probability_of_backtest_overfitting_with_tail_trim()`.
+- Eight equal contiguous partitions, 1,349 observations each.
+- 10,792 of 10,799 OOS returns used; seven newest observations trimmed.
+- 35 complementary CSCV splits across the 17 declared candidates.
+- Selection metric inside each split: maximum in-sample Sharpe.
+- Result: PBO diagnostic **0.085714**, median logit rank 1.757858.
+- The diagnostic is limited to this 17-candidate set and this already-used OOS segment. It is not a future-profit probability, not a global experiment census, and not an untouched final holdout.
+
+Implementation and tests: commit [c110b7f](https://github.com/sdndj98-art/WHJ-Bitcoin-Bot-2026/commit/c110b7f330425c894f968eaca066efe88780f8b5). The updated isolated BTC workflow completed successfully as run [43649648836](https://github.com/sdndj98-art/WHJ-Bitcoin-Bot-2026/actions/runs/43649648836), artifact `whj-multi-strategy-research-33`. The 36,000-row gzip snapshot was downloaded, decompressed, and its SHA-256 matched the report exactly: `110e96bd167f93c0bef58fe3385f71acab9d2da96142ff687f4b4a679a10ee9a`.
+
+### F13 — expanding-window candidate selection is unstable to a one-day rolling data-window shift (high)
+
+Two consecutive 36,000-hour Coinbase snapshots were compared. The newer 1,500-day window shifted forward by one day while the evaluator and walk-forward code remained unchanged:
+- Run 32, snapshot `4d0c0345…`: fold 3 selected RSI14; its training excess score was -65.97% versus SMA200 -66.33% (gap about 0.36 percentage points). Fold-3 OOS return was -1.11% on four closed trades.
+- Run 33, snapshot `110e96bd…`: fold 3 selected SMA200; its training excess score was -64.01% versus RSI14 -64.26% (gap about 0.25 percentage points). Fold-3 OOS return was -13.17% on 80 closed trades.
+- The aggregate stitched walk-forward 1x result moved from -12.89% to -23.29%; 2x moved from -21.98% to -35.01%; 3x moved from -30.14% to -44.95%.
+
+This is a sensitivity finding, not proof that one fold is correct. The near-tie in training selection led to a materially different OOS result after a one-day window shift. Do not tune the selection rule post hoc; preregister a stability/abstention rule and test it on a later untouched period.
+
+### Latest isolated slow-momentum refresh
+
+Run [43649648867](https://github.com/sdndj98-art/WHJ-Bitcoin-Bot-2026/actions/runs/43649648867), artifact `whj-isolated-slow-momentum-21`, succeeded on the same code commit. Its 1,499-row daily snapshot hash matched the report: `9b3f47270eef545e813e0e73837dad322ac88291b7f5cc4720e31b44fb2793ea`.
+- 56-day: -2.95% OOS, 15 closed trades, PF 0.6253, close-to-close DD 8.40%, 95% block-bootstrap CI [-16.46%, +13.74%].
+- Matched 25% buy-and-hold: -9.88%.
+- 56-day stress: -4.03% at 2x and -5.09% at 3x.
+- Three-variant CSCV/PBO: 0.50 over 10 splits and six partitions. This is only a small-universe diagnostic.
+- No slow-momentum candidate is promoted; the 15-trade sample remains below the 30-trade screening gate.
+
+### PR scope safety review — do not merge as currently composed
+
+PR #122 also contains `.github/workflows/btc-10usd-paper.yml`, which schedules an hourly paper runner, restores/saves a persistent paper ledger, commits a portfolio snapshot, and deploys GitHub Pages. It also contains `.github/workflows/deploy-dashboard-pages.yml`, which deploys the research-branch dashboard on matching pushes or manual dispatch. Neither workflow was run or modified during this research session. Keep the PR unmerged until these paper-ledger, schedule, and deployment changes are explicitly separated and reviewed against the project's safety constraints.
+
