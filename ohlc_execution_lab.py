@@ -24,9 +24,10 @@ def simulate_ohlc_risk(
     stop price. Exit signals from the previous completed bar execute at next
     open before that bar's intraday range is considered.
 
-    Intrabar drawdown is a conservative OHLC envelope: the bar high marks a
-    possible equity peak and the bar low marks a possible liquidation trough.
-    It is not a tick-level path reconstruction.
+    Intrabar drawdown is a conservative OHLC envelope, not a tick-level
+    path reconstruction. For a bar that survives opening-gap checks, the high
+    marks a possible peak; the low marks a trough while still exposed, while a
+    triggered stop uses its actual adverse fill as the trough.
     """
     arrays = (opens, highs, lows, closes, entry_signals, exit_signals)
     if any(not isinstance(x, (list, tuple)) for x in arrays):
