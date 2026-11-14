@@ -6,7 +6,7 @@
   "compounding_enabled": true,
   "sizing_mode": "COMPOUND_CURRENT_EQUITY_FRACTION",
   "allocation_fraction": 0.1,
-  "updated_at": "2026-11-14T11:09:14+00:00",
+  "updated_at": "2026-11-14T11:45:21+00:00",
   "btc": {
     "asset": "BTC",
     "symbol": "BTC/USD",
@@ -18,7 +18,7 @@
     "fees_usd": 0.0,
     "max_drawdown_pct": 0.0,
     "feed_status": "COINBASE_BTC_USD_HOURLY_HEALTHY",
-    "status": "PAPER_RUNNING",
+    "status": "PAPER_ACTIVE_WAITING_NEXT_CLOSED_CANDLE",
     "last_price_usd": 67230.54,
     "last_processed_timestamp": 1794650400,
     "open_position": false,
@@ -34,10 +34,10 @@
     },
     "new_trades": [],
     "warmup_seed_created": false,
-    "processed_new_candles": 1,
+    "processed_new_candles": 0,
     "data_quality": {
       "quality": "HEALTHY",
-      "latest_closed_candle_age_minutes": 9.24,
+      "latest_closed_candle_age_minutes": 45.35,
       "total_hourly_candles": 7200,
       "observed_hourly_candles": 7195,
       "imputed_hourly_candles": 5,
@@ -70,7 +70,7 @@
       "closed_trades": 0,
       "fees_usd": 0.0,
       "max_drawdown_pct": 0.0,
-      "status": "PAPER_RUNNING"
+      "status": "PAPER_ACTIVE_WAITING_NEXT_CLOSED_CANDLE"
     },
     {
       "asset": "XAUUSD",
@@ -85,7 +85,7 @@
   ],
   "bull_summary": "RSI14 mean-reversion exploratory paper test; not approved for live use.",
   "bear_summary": "No entry unless a completed candle satisfies the strategy rule.",
-  "risk_decision": "PAPER_RUNNING",
+  "risk_decision": "PAPER_ACTIVE_WAITING_NEXT_CLOSED_CANDLE",
   "notes": [
     "BTC and XAUUSD are independent $10 forward-only paper ledgers.",
     "Gold uses biquote's MT5-sourced XAUUSD bid/ask and hourly OHLC feed; this is a third-party broker feed, not the user's own broker quote.",
