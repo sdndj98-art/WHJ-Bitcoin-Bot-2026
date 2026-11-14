@@ -255,3 +255,15 @@ Run [43649648867](https://github.com/sdndj98-art/WHJ-Bitcoin-Bot-2026/actions/ru
 
 PR #122 also contains `.github/workflows/btc-10usd-paper.yml`, which schedules an hourly paper runner, restores/saves a persistent paper ledger, commits a portfolio snapshot, and deploys GitHub Pages. It also contains `.github/workflows/deploy-dashboard-pages.yml`, which deploys the research-branch dashboard on matching pushes or manual dispatch. Neither workflow was run or modified during this research session. Keep the PR unmerged until these paper-ledger, schedule, and deployment changes are explicitly separated and reviewed against the project's safety constraints.
 
+
+
+### F14 — several BTC candidate names imply entry/exit systems that the signal library does not fully implement (high)
+
+A source-level semantics review of `strategy_family_lab.py` found that the current 17-candidate report evaluates boolean long/flat signal states, not necessarily canonical textbook trading systems:
+- `donchian_20_10_breakout` only checks whether the current close is above the prior 20-bar high; there is no separate 10-bar-low exit rule.
+- `donchian_55_20_breakout` only checks the prior 55-bar high; there is no separate 20-bar-low exit rule.
+- `stochastic_reversal` is a one-bar event (`previous_k < 20 <= k`), while the common evaluator interprets booleans as persistent position state. The resulting 683 closed trades and 1.58% exposure therefore describe a one-interval pulse rule, not a conventional stochastic system with an explicit exit.
+- `volatility_squeeze_breakout` and `volume_confirmed_breakout` also place compression/volume confirmation inside the position-state condition, so a trade can exit when the entry filter ceases to hold even if a separate exit rule would not have fired.
+
+No code was changed for this finding. The current ranking remains valid only for the exact implemented signal-state definitions and must not be presented as a definitive test of the canonical Donchian 20/10, Turtle 55/20, or full stochastic/volume/squeeze systems. Before the next final candidate evaluation, define explicit entry and exit streams (or rename these candidates as signal proxies), add state-transition tests, freeze the definitions, and rerun all 17 on a new untouched protocol. Do not retrofit exits to the existing OOS report and call the changed rules the same experiment.
+
