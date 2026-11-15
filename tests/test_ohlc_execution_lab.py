@@ -133,5 +133,18 @@ class OhlcExecutionLabTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "intrabar_stop_fill_policy"):
             simulate_ohlc_risk(**args, intrabar_stop_fill_policy="best_case")
 
+    def test_bar_low_worst_case_applies_fee_and_adverse_slippage(self):
+        result = simulate_ohlc_risk(
+            [100, 100, 100], [101, 101, 102], [99, 99, 90],
+            [100, 100, 95], [True, False, False], [False, False, False],
+            fee=0.001, slippage=0.002, stop_loss_pct=0.05, take_profit_pct=0.5,
+            intrabar_stop_fill_policy="bar_low_worst_case",
+        )
+        event = result["exit_events"][0]
+        self.assertEqual(event["raw_reference_price"], 90.0)
+        self.assertAlmostEqual(event["fill_price_after_slippage"], 89.82, places=6)
+        self.assertAlmostEqual(result["final_net_liquidation_equity_usd"], 973.6538, places=4)
+        self.assertAlmostEqual(result["return_pct"], -2.6346, places=4)
+
 if __name__ == "__main__":
     unittest.main()
