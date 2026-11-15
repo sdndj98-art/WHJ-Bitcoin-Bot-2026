@@ -72,3 +72,15 @@ These are GC=F futures-reference results, not XAUUSD spot results. Fixed fee/sli
 ## Next research step
 
 Obtain a non-secret broker-exported XAUUSD bid/ask OHLC sample plus its contract, session, commission, and swap specification. Validate the source and DST-specific session segments first. Only then build a separate XAUUSD OHLC evaluator with next-bar execution, spread-aware fills, slippage/commission/swap accounting, matched cash and buy-and-hold baselines, chronological OOS folds, and 1x/2x/3x cost stress. Keep the entire path disconnected from all paper and live order systems.
+
+## 2026-11-16 provenance refresh — GC=F reference only
+
+- Workflow: [run 43771360299](https://github.com/sdndj98-art/WHJ-Bitcoin-Bot-2026/actions/runs/43771360299).
+- Code commit: `3acea79e56bf0748b94b9d4203fe8f31e2673b88`.
+- Artifact: `whj-gc-f-gold-17` (artifact ID `14184397840`).
+- Validation: 31 tests passed across the five groups (11 XAUUSD broker contract, 4 gold market-data, 4 regime/EMA OHLC, 9 gold shadow, 3 shadow-runner); GC=F historical evaluation and artifact upload succeeded.
+- Snapshot: 2,514 daily bars, 2016-11-15 05:00 UTC through 2026-11-12 05:00 UTC; SHA-256 `b64ced282d8a0119c9752d5f66eee0beb5ea4593cb52e50adedc004082ee7337`. The decompressed snapshot hash was independently recomputed and matched the report.
+- Compared with the prior 2,515-row snapshot, the 2016-11-14 first row rolled out of the 10-year source window. One overlapping row (2026-11-12) had volume revised from 132,437 to 229,442 while OHLC stayed identical. The strategy fold metrics were unchanged. This is a concrete reason to retain immutable snapshots, not rely on a rolling Yahoo endpoint.
+- EMA50/EMA200 + past-only ATR90 returns remain +0.7495%, +3.3208%, +0.0987% at 1x versus matched buy-and-hold +1.6778%, +15.4435%, +4.8870%; 23 closed trades total. At 2x the third fold is -0.2634%; at 3x it is -0.6239%. The candidate still underperforms buy-and-hold in every fold and remains below the 30-trade screening gate.
+
+This refresh improves report provenance only. It does not turn GC=F into XAUUSD spot, does not access a broker feed, and does not read or write a paper ledger.
