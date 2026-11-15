@@ -51,6 +51,7 @@ jobs:
         run: |
           python - <<'PY'
           import json
+          import os
           from datetime import datetime, timezone
           from pathlib import Path
           from gold_market_data import load_gold_daily
@@ -83,6 +84,8 @@ jobs:
               "source": "Yahoo Finance chart API",
               "timeframe": "1d",
               "generated_at_utc": datetime.now(timezone.utc).isoformat(),
+              "code_commit_sha": os.environ["GITHUB_SHA"],
+              "run_id": os.environ["GITHUB_RUN_ID"],
               "candle_count": n,
               "first_timestamp_utc": datetime.fromtimestamp(bars[0]["timestamp"] / 1000, timezone.utc).isoformat(),
               "last_timestamp_utc": datetime.fromtimestamp(bars[-1]["timestamp"] / 1000, timezone.utc).isoformat(),
@@ -107,6 +110,8 @@ jobs:
           lines = [
               "# WHJ COMEX gold daily research", "",
               f"- Generated UTC: {report['generated_at_utc']}",
+              f"- Code commit SHA: `{report['code_commit_sha']}`",
+              f"- GitHub Actions run ID: `{report['run_id']}`",
               f"- Source: {report['source']} ({report['symbol']})",
               f"- Daily candles: {n}; SHA-256: `{fingerprint}`",
               "- Dataset snapshot: `gc_f_daily_dataset.json.gz` (gzip-compressed canonical JSON; hash applies to decompressed bytes)",
