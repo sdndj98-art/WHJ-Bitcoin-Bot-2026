@@ -267,3 +267,18 @@ A source-level semantics review of `strategy_family_lab.py` found that the curre
 
 No code was changed for this finding. The current ranking remains valid only for the exact implemented signal-state definitions and must not be presented as a definitive test of the canonical Donchian 20/10, Turtle 55/20, or full stochastic/volume/squeeze systems. Before the next final candidate evaluation, define explicit entry and exit streams (or rename these candidates as signal proxies), add state-transition tests, freeze the definitions, and rerun all 17 on a new untouched protocol. Do not retrofit exits to the existing OOS report and call the changed rules the same experiment.
 
+
+
+### F15 — OHLC cannot distinguish an intrabar stop gap from a continuous stop touch (medium/high)
+
+The default OHLC simulator fills a stop touched after the bar opens at the configured stop price. If the candle opens above the stop and later records a low below it, OHLC alone cannot establish whether price crossed the stop continuously or gapped through it. The existing default is therefore a stop-level fill assumption, not a verified conservative fill for every fast-market path.
+
+**Research-only remediation:**
+- Preserve the existing `stop_price` default so earlier baseline results remain comparable.
+- Add an explicit `bar_low_worst_case` sensitivity policy that fills an intrabar stop at that candle's low, then applies the same adverse slippage and fee.
+- Label the low fill as a pessimistic OHLC bound, not as an expected or guaranteed executable price.
+- Keep opening-gap fills at the opening price and retain stop-first ordering when both stop and target are touched.
+
+Regression coverage compares a 5% stop on a 25%-allocated position: the default stop-level fill produces $987.50 final equity, while the candle-low stress at $90 produces $975.00. A separate test rejects unknown policy names.
+
+This changes only the isolated research simulator's optional fill assumption. The default execution model, 25% allocation cap, configured paper risk limits, paper ledgers, schedules, and all order pathways remain unchanged. No strategy is evaluated or promoted by this patch.

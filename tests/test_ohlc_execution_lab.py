@@ -99,5 +99,39 @@ class OhlcExecutionLabTests(unittest.TestCase):
             )
 
 
+    def test_intrabar_gap_worst_case_policy_uses_bar_low_as_stress_bound(self):
+        args = (
+            [100, 100, 100], [101, 101, 102], [99, 99, 90],
+            [100, 100, 95], [True, False, False], [False, False, False],
+        )
+        baseline = simulate_ohlc_risk(
+            *args, fee=0, slippage=0, stop_loss_pct=0.05, take_profit_pct=0.5
+        )
+        stress = simulate_ohlc_risk(
+            *args, fee=0, slippage=0, stop_loss_pct=0.05, take_profit_pct=0.5,
+            intrabar_stop_fill_policy="bar_low_worst_case",
+        )
+        self.assertEqual(baseline["exit_events"][0]["raw_reference_price"], 95.0)
+        self.assertEqual(stress["exit_events"][0]["raw_reference_price"], 90.0)
+        self.assertAlmostEqual(baseline["final_net_liquidation_equity_usd"], 987.5)
+        self.assertAlmostEqual(stress["final_net_liquidation_equity_usd"], 975.0)
+        self.assertGreater(
+            stress["max_intrabar_ohlc_envelope_drawdown_pct"],
+            baseline["max_intrabar_ohlc_envelope_drawdown_pct"],
+        )
+        self.assertEqual(
+            stress["assumptions"]["intrabar_stop_fill_policy"],
+            "bar_low_worst_case",
+        )
+
+    def test_rejects_unknown_intrabar_stop_fill_policy(self):
+        args = dict(
+            opens=[100, 100], highs=[101, 101], lows=[99, 99],
+            closes=[100, 100], entry_signals=[False, False],
+            exit_signals=[False, False],
+        )
+        with self.assertRaisesRegex(ValueError, "intrabar_stop_fill_policy"):
+            simulate_ohlc_risk(**args, intrabar_stop_fill_policy="best_case")
+
 if __name__ == "__main__":
     unittest.main()

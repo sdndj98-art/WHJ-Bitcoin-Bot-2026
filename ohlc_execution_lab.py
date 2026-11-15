@@ -15,6 +15,7 @@ def simulate_ohlc_risk(
     opens, highs, lows, closes, entry_signals, exit_signals,
     fee=0.001, slippage=0.0005, allocation_fraction=0.25,
     stop_loss_pct=0.02, take_profit_pct=0.04,
+    intrabar_stop_fill_policy="stop_price",
 ):
     """Simulate long/cash entries at next open with conservative OHLC stops.
 
@@ -26,8 +27,11 @@ def simulate_ohlc_risk(
 
     Intrabar drawdown is a conservative OHLC envelope, not a tick-level
     path reconstruction. For a bar that survives opening-gap checks, the high
-    marks a possible peak; the low marks a trough while still exposed, while a
-    triggered stop uses its actual adverse fill as the trough.
+    marks a possible peak and the low marks a trough while still exposed.
+    The default "stop_price" policy assumes a touched stop fills at its stop
+    level; OHLC cannot reveal an intrabar gap. The optional
+    "bar_low_worst_case" policy fills a touched stop at that candle's low as a
+    pessimistic sensitivity bound, not as a predicted or guaranteed fill.
     """
     arrays = (opens, highs, lows, closes, entry_signals, exit_signals)
     if any(not isinstance(x, (list, tuple)) for x in arrays):
@@ -50,6 +54,10 @@ def simulate_ohlc_risk(
         raise ValueError("Allocation may not exceed the 25% research cap")
     if not (0 < stop_loss_pct < 1 and 0 < take_profit_pct < 10):
         raise ValueError("Stop and target percentages are outside valid bounds")
+    if intrabar_stop_fill_policy not in ("stop_price", "bar_low_worst_case"):
+        raise ValueError(
+            "intrabar_stop_fill_policy must be 'stop_price' or 'bar_low_worst_case'"
+        )
 
     cash = INITIAL_EQUITY
     units = 0.0
@@ -129,8 +137,15 @@ def simulate_ohlc_risk(
                     # The stop fill is the liquidation trough once triggered;
                     # do not mark a lower post-exit wick as if still exposed.
                     # If both are touched, pessimistically assume stop first.
-                    close_position(stop_price, "stop_loss_adverse_order" if target_hit
-                                   else "stop_loss", i)
+                    stop_fill_reference = (
+                        lows[i] if intrabar_stop_fill_policy == "bar_low_worst_case"
+                        else stop_price
+                    )
+                    close_position(
+                        stop_fill_reference,
+                        "stop_loss_adverse_order" if target_hit else "stop_loss",
+                        i,
+                    )
                 elif target_hit:
                     low_equity = liquidation_at(lows[i])
                     if peak_equity > 0:
@@ -192,6 +207,11 @@ def simulate_ohlc_risk(
             "signal_execution": "next_bar_open",
             "same_bar_stop_target_collision": "stop_first",
             "gap_through_stop": "fill_at_open_plus_adverse_slippage",
+            "intrabar_stop_fill_policy": intrabar_stop_fill_policy,
+            "intrabar_gap_limitation": (
+                "OHLC cannot identify intrabar gap path; stop_price assumes stop-level fill, "
+                "bar_low_worst_case is a pessimistic candle-low sensitivity bound"
+            ),
             "fees": "fixed_fraction_per_side",
             "slippage": "fixed_fraction_per_side",
             "max_allocation_fraction": 0.25,
