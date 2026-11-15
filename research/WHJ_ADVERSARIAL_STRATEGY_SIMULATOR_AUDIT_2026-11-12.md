@@ -282,3 +282,14 @@ The default OHLC simulator fills a stop touched after the bar opens at the confi
 Regression coverage compares a 5% stop on a 25%-allocated position: the default stop-level fill produces $987.50 final equity, while the candle-low stress at $90 produces $975.00. A separate test rejects unknown policy names.
 
 This changes only the isolated research simulator's optional fill assumption. The default execution model, 25% allocation cap, configured paper risk limits, paper ledgers, schedules, and all order pathways remain unchanged. No strategy is evaluated or promoted by this patch.
+
+### F15 validation closure — 2026-11-16
+
+The optional intrabar stop-gap sensitivity policy and its fee/slippage accounting now have regression coverage on the research branch:
+
+- Test commit: `594a241d26855027fb35f1f2a53e8cfd1f52fc3f`.
+- Fixture: a 25%-allocated long enters at 100; the `bar_low_worst_case` policy references the candle low of 90; 0.20% adverse slippage produces a fill of 89.82; 0.10% fee per side produces final net-liquidation equity of $973.6538 (return -2.6346%).
+- Repository audit: [run 43771208255](https://github.com/sdndj98-art/WHJ-Bitcoin-Bot-2026/actions/runs/43771208255) completed successfully on that commit: **560 unit tests passed in 4.455 seconds**, tracked Python compilation passed, and `git diff --check` passed.
+- This validates deterministic accounting for the explicit OHLC stress policy only. It does not validate expected broker fills, tick-level paths, or any strategy's market performance.
+
+The latest BTC and slow-momentum historical artifacts remain tied to code commit `c110b7f330425c894f968eaca066efe88780f8b5`. The three commits after that evaluation changed only `ohlc_execution_lab.py`, its tests, and this audit; the BTC strategy signal/evaluator and slow-momentum strategy/evaluator files were unchanged. The historical results therefore remain reproducible for their recorded source commit, but are not a new evaluation on the current branch head.
