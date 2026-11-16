@@ -92,3 +92,18 @@ The evaluator still requires a full repository test run and a historical dataset
 - CSCV/PBO 0.0 over 35 splits is a relative ranking diagnostic only, not evidence of profitability.
 - Expanding walk-forward selected SMA200 in all four folds but returned -16.79% at 1x versus +39.09% matched buy-and-hold; 2x -42.87%, 3x -60.78%.
 - This independent venue run does not share the Coinbase OOS calendar window and does not close F14: these remain boolean signal-state proxies, not canonical entry/exit systems. No candidate was promoted; no paper state or live execution was accessed.
+
+
+## Exact same-calendar Coinbase–Bitstamp comparison
+
+The first Bitstamp 70/30 full-history OOS split was longer than the Coinbase run-33 window. A second, exact overlap was therefore added and frozen to Coinbase run 43649648836:
+
+- Workflow [43968648454](https://github.com/sdndj98-art/WHJ-Bitcoin-Bot-2026/actions/runs/43968648454), artifact [14276514574](https://github.com/sdndj98-art/WHJ-Bitcoin-Bot-2026/actions/runs/43968648454/artifacts/14276514574).
+- Same calendar: 2025-08-21T22:00Z through 2026-11-14T21:00Z; 10,799 open-to-open returns.
+- Matched Bitstamp slice SHA-256: `2d695ceb526a69a9816b85ed1f2d7dbe5bd13072eaf2062ab8bdf97a1784e9f6`.
+- The 17-candidate rank correlation across feeds is Spearman **0.992647** and Pearson **0.996070**; mean absolute return difference is 0.5268 percentage points.
+- The top five remain RSI14 (-1.3451%), Bollinger (-8.5148%), Z-Score20 (-11.1827%), Donchian55/20 (-12.3974%), and Volatility Squeeze (-13.4058%) on Bitstamp. All 17 remain negative at 1x, 2x and 3x; matched buy-and-hold is -11.14%.
+- PBO is 0.085714 on both same-date feeds (35 splits, 8 partitions); this is a relative ranking diagnostic, not a profitability probability.
+- A no-lookahead regression test changes all Bitstamp rows after the frozen endpoint and verifies the matched ranking and slice hash do not change.
+
+This is a strict same-calendar price-feed comparison, unlike the separate full-history Bitstamp 70/30 OOS result. The cost assumptions are still fixed proxies, not measured Bitstamp fees/spread. Candidate definitions remain signal-state proxies (F14 open); no candidate is promoted.
