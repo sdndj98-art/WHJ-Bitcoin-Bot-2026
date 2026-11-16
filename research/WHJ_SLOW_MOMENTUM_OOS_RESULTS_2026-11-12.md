@@ -52,3 +52,50 @@ The three chronological OOS slices returned -3.60%, -4.17%, and +4.89%, with 7, 
 **NO CANDIDATE PROMOTED.** The 56-day candidate is a relative benchmark-beater in this particular falling/volatile OOS sample, but it is not profitable in absolute terms, has a low profit factor, few trades, highly concentrated winners, and a bootstrap interval spanning substantial losses and gains. Do not connect it to paper or live execution. Further evaluation requires an independently sourced venue replication, a predeclared untouched holdout, realistic spread/liquidity costs, and more forward-only observations.
 
 This workflow used public historical data and an isolated evaluator. It did not read or write paper ledgers and did not place live orders.
+
+
+## Latest verified refresh — 2026-11-14, run #21
+
+The earlier run above is retained as historical evidence. The latest dedicated workflow artifact was downloaded and inspected directly; these values supersede the older run-17 table for the newer immutable snapshot.
+
+- Workflow: [WHJ Isolated Slow Momentum Historical Research #21](https://github.com/sdndj98-art/WHJ-Bitcoin-Bot-2026/actions/runs/43649648867)
+- Artifact: [whj-isolated-slow-momentum-21](https://github.com/sdndj98-art/WHJ-Bitcoin-Bot-2026/actions/runs/43649648867/artifacts/14135087494)
+- Code commit: `c110b7f330425c894f968eaca066efe88780f8b5`
+- Generated: 2026-11-14T22:45:14Z
+- Source: Coinbase public BTC-USD hourly spot, aggregated into complete UTC daily candles.
+- Sample: 36,000 hourly candles → 1,499 daily candles; 2022-10-07 through 2026-11-13.
+- Imputed hourly observations: 13 (explicitly marked).
+- Dataset SHA-256: `9b3f47270eef545e813e0e73837dad322ac88291b7f5cc4720e31b44fb2793ea`
+- Chronological split: 70%/30%; OOS daily index 1,049 onward. This remains a historical OOS segment, not a rolling retraining test or an untouched final holdout.
+- Execution: completed daily-close signal, next daily close fill; 25% allocation; 0.10% fee and 0.05% slippage per side.
+
+### Latest normal-cost OOS results
+
+| Lookback | Net return | Matched 25% buy-and-hold | Excess | Close-to-close DD | Closed trades | Closed-trade PF |
+|---:|---:|---:|---:|---:|---:|---:|
+| 56 days | -2.9508% | -9.8791% | +6.9283 pp | 8.4002% | 15 | 0.6253 |
+| 84 days | -8.0912% | -9.8791% | +1.7879 pp | 10.2742% | 7 | 0.0207 |
+| 112 days | -9.9203% | -9.8791% | -0.0412 pp | 12.2350% | 11 | 0.0616 |
+
+### Latest cost sensitivity
+
+| Lookback | 2x return | 2x PF | 3x return | 3x PF |
+|---:|---:|---:|---:|---:|
+| 56 days | -4.0295% | 0.5335 | -5.0945% | 0.4600 |
+| 84 days | -8.5548% | 0.0111 | -9.0153% | 0.0024 |
+| 112 days | -10.7060% | 0.0271 | -11.4837% | 0.0070 |
+
+Matched buy-and-hold returned -9.92% at 2x and -9.97% at 3x. Relative outperformance by the 56-day candidate does not change its negative absolute return.
+
+### Latest uncertainty and fragility
+
+- 56-day 95% circular moving-block bootstrap CI: **-16.4635% to +13.7391%** (7-day blocks, 2,000 resamples).
+- 84-day CI: **-19.9606% to +4.7972%**.
+- 112-day CI: **-21.4315% to +2.1616%**.
+- CSCV/PBO across only these three declared variants: **0.50**, 6 partitions, 10 splits, 75 observations per partition. This is a narrow selection-bias diagnostic, not a future-profit probability or an untouched holdout.
+- 56-day top winner contributed 89.3424% of gross winning P&L; its top five winners contributed 100%. Net P&L excluding those five winners was -$78.7581.
+- 84-day top winner contributed 100% of gross winning P&L; 112-day top winner contributed 41.7121%.
+- The 112-day candidate ended with one open position and -$25.2177 unrealized net-liquidation P&L; its total reported return includes this mark-to-market value.
+- The 56-day OOS slices were -3.6419%, -3.7134%, and +4.8931%, with 7, 4, and 4 closed trades. These are chronological slices, not rolling walk-forward retraining.
+
+**Decision remains NO CANDIDATE PROMOTED.** The 56-day variant is less negative than the matched benchmark in this sample, but still loses money, has only 15 closed trades, PF below 1, highly concentrated winners, and a bootstrap interval spanning large losses and gains. Do not connect it to paper or live execution.
