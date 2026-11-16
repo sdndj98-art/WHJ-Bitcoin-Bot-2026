@@ -76,3 +76,19 @@ This is a new evaluator implementation, not a completed historical BTC result. I
 - Drawdown is open-to-open equity drawdown, not intrabar OHLC drawdown.
 
 The evaluator still requires a full repository test run and a historical dataset run before its metrics can be treated as empirical evidence. It does not model variable spread, order-book depth, impact, latency, or tick-level execution; no candidate is promoted.
+
+
+## Independent Bitstamp replication of all 17 declared signal-state candidates (2026-11-16)
+
+- Evaluator: `bitstamp_strategy_family_research.py`.
+- Workflow: [WHJ Bitstamp 17-Candidate Independent Research, run 43967507369](https://github.com/sdndj98-art/WHJ-Bitcoin-Bot-2026/actions/runs/43967507369).
+- Artifact: [whj-bitstamp-17-strategy-research-3](https://github.com/sdndj98-art/WHJ-Bitcoin-Bot-2026/actions/runs/43967507369/artifacts/14276064048).
+- Source: Bitstamp public BTCUSD hourly OHLC; 72,000 gap-free bars, 2018-08-30 through 2026-11-16; no imputation.
+- Dataset SHA-256: `b0113cfd54fe0aa29da724c534a2f6deb241a0ee123aa3efe7a0b59426361fb2`.
+- 70/30 chronological split: 21,600 OOS candles / 21,599 open-to-open returns; 17 candidates.
+- Same fixed fee/slippage rates as the Coinbase experiment were retained to isolate the venue price series. They are not Bitstamp account-specific costs.
+- Every candidate was negative at 1x/2x/3x and every candidate underperformed the matched 25% buy-and-hold benchmark (+3.56% at 1x).
+- Best net-return candidate: RSI14 at -3.38% (max DD 3.43%, periodic PF 0.452, Sharpe -1.895, 37 closed trades); worst: Stochastic at -65.40%.
+- CSCV/PBO 0.0 over 35 splits is a relative ranking diagnostic only, not evidence of profitability.
+- Expanding walk-forward selected SMA200 in all four folds but returned -16.79% at 1x versus +39.09% matched buy-and-hold; 2x -42.87%, 3x -60.78%.
+- This independent venue run does not share the Coinbase OOS calendar window and does not close F14: these remain boolean signal-state proxies, not canonical entry/exit systems. No candidate was promoted; no paper state or live execution was accessed.
