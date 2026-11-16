@@ -48,6 +48,17 @@ def simulate_ohlc_risk(
             raise ValueError("Invalid OHLC candle at index %d" % i)
     if any(type(x) is not bool for seq in (entry_signals, exit_signals) for x in seq):
         raise ValueError("Signals must contain booleans")
+    numeric_parameters = {
+        "fee": fee,
+        "slippage": slippage,
+        "allocation_fraction": allocation_fraction,
+        "stop_loss_pct": stop_loss_pct,
+        "take_profit_pct": take_profit_pct,
+    }
+    for name, value in numeric_parameters.items():
+        if (isinstance(value, bool) or not isinstance(value, (int, float))
+                or not math.isfinite(value)):
+            raise ValueError("%s must be a finite numeric value" % name)
     if not (0 <= fee < 1 and 0 <= slippage < 1):
         raise ValueError("Fee and slippage must be in [0, 1)")
     if not (0 < allocation_fraction <= 0.25):
