@@ -67,6 +67,7 @@ class BitstampStrategyFamilyResearchTests(unittest.TestCase):
             code_commit_sha="b" * 40,
             generated_at_utc="2026-11-17T00:00:00+00:00",
             bootstrap_samples=100,
+            reference_window=None,
         )
         one = report["cost_stress"]["1x"]["results"]
         two = report["cost_stress"]["2x"]["results"]
@@ -89,6 +90,7 @@ class BitstampStrategyFamilyResearchTests(unittest.TestCase):
             code_commit_sha="c" * 40,
             generated_at_utc="2026-11-17T00:00:00+00:00",
             bootstrap_samples=100,
+            reference_window=None,
         )
         regime_report = report["market_regime_attribution"]["candidate_attribution"]
         for name, regimes in regime_report.items():
