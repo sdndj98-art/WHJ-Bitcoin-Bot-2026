@@ -146,5 +146,29 @@ class OhlcExecutionLabTests(unittest.TestCase):
         self.assertAlmostEqual(result["final_net_liquidation_equity_usd"], 973.6538, places=4)
         self.assertAlmostEqual(result["return_pct"], -2.6346, places=4)
 
+    def test_rejects_boolean_and_non_numeric_execution_parameters(self):
+        args = dict(
+            opens=[100, 100], highs=[101, 101], lows=[99, 99],
+            closes=[100, 100], entry_signals=[False, False],
+            exit_signals=[False, False],
+        )
+        invalid = (
+            ("fee", False),
+            ("slippage", False),
+            ("allocation_fraction", True),
+            ("stop_loss_pct", True),
+            ("take_profit_pct", True),
+            ("fee", "0.001"),
+            ("slippage", float("nan")),
+            ("allocation_fraction", float("inf")),
+            ("stop_loss_pct", float("nan")),
+            ("take_profit_pct", float("inf")),
+        )
+        for name, value in invalid:
+            with self.subTest(parameter=name, value=value):
+                with self.assertRaisesRegex(ValueError, name):
+                    simulate_ohlc_risk(**args, **{name: value})
+
+
 if __name__ == "__main__":
     unittest.main()
