@@ -306,3 +306,16 @@ Python treats booleans as integers. The OHLC simulator's range checks therefore 
 - Add regression coverage for boolean, string, NaN, and infinite parameter values.
 
 This is input-contract hardening only. It does not change configured paper risk limits, account balances, ledgers, schedules, trading pathways, or strategy behavior.
+
+
+### F16 validation closure — 2026-11-16
+
+The numeric-parameter contract hardening is covered by the repository-wide audit on the subsequent research head:
+
+- Source fix: [commit 2ad50d0](https://github.com/sdndj98-art/WHJ-Bitcoin-Bot-2026/commit/2ad50d0e6c99bbdb8455a2af75b8e7f7ac51508b).
+- Regression tests: [commit b3f8afe](https://github.com/sdndj98-art/WHJ-Bitcoin-Bot-2026/commit/b3f8afedd9b85c28a007e4d3cc0b7451210c61a7).
+- Latest full repository audit including those tests: [run 43967507318](https://github.com/sdndj98-art/WHJ-Bitcoin-Bot-2026/actions/runs/43967507318), research head `3874d78df39299effd49e626f31cd3f6bc94144d).
+- Result: **565 unit tests passed in 6.918 seconds**; tracked Python compilation and `git diff --check` passed.
+- The new tests reject booleans, strings, NaN and infinity for fee, slippage, allocation, stop and target parameters. Valid numeric execution behavior and the 25% research cap remain unchanged.
+
+This closes the input-validation finding only. It does not validate market fills, the OHLC path model, or any strategy's profitability.
