@@ -87,8 +87,7 @@ class BitstampStrategyFamilyResearchTests(unittest.TestCase):
         regime_report = report["market_regime_attribution"]["candidate_attribution"]
         for name, regimes in regime_report.items():
             attributed_log = sum(
-                math.log1p(item["strategy_attributed_compounded_return_pct"] / 100.0)
-                for item in regimes.values()
+                item["strategy_log_growth"] for item in regimes.values()
             )
             expected_log = math.log1p(
                 report["cost_stress"]["1x"]["results"][name]["strategy"]["net_return"]
