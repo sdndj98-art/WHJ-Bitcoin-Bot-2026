@@ -29,6 +29,14 @@ ALLOCATION_FRACTION = 0.25
 BASE_FEE_PER_SIDE = 0.001
 BASE_SLIPPAGE_PER_SIDE = 0.0005
 BARS_PER_YEAR = 24 * 365
+COINBASE_REFERENCE_WINDOW = {
+    "run_id": "43649648836",
+    "code_commit_sha": "c110b7f330425c894f968eaca066efe88780f8b5",
+    "dataset_sha256": "110e96bd167f93c0bef58fe3385f71acab9d2da96142ff687f4b4a679a10ee9a",
+    "first_oos_open_timestamp_utc": "2025-08-21T22:00:00+00:00",
+    "last_candle_timestamp_utc": "2026-11-14T21:00:00+00:00",
+    "open_to_open_returns": 10799,
+}
 
 
 def _validate_gap_free_hourly_candles(candles):
@@ -184,12 +192,170 @@ def _ranking_rows(base_report, cost_reports):
     return rows
 
 
+def build_matched_calendar_overlap_report(
+    candles,
+    reference_window,
+    run_id,
+    code_commit_sha,
+    generated_at_utc,
+    bootstrap_samples=1000,
+):
+    """Evaluate Bitstamp over the exact Coinbase run-33 OOS calendar window.
+
+    The first OOS signal is the completed candle immediately before the
+    reference first-open timestamp; the last candle is the reference endpoint.
+    Only the Bitstamp prefix through that endpoint is used, preventing future
+    rows from influencing this matched-date comparison.
+    """
+    _validate_gap_free_hourly_candles(candles)
+    if not isinstance(reference_window, dict):
+        raise ValueError("reference_window must be a mapping")
+    required = (
+        "run_id", "code_commit_sha", "dataset_sha256",
+        "first_oos_open_timestamp_utc", "last_candle_timestamp_utc",
+        "open_to_open_returns",
+    )
+    if any(key not in reference_window for key in required):
+        raise ValueError("reference_window is missing required provenance fields")
+    if isinstance(reference_window["open_to_open_returns"], bool) or not isinstance(
+        reference_window["open_to_open_returns"], int
+    ) or reference_window["open_to_open_returns"] < 8:
+        raise ValueError("reference open-to-open return count must be an integer >= 8")
+
+    def to_timestamp_ms(value):
+        if not isinstance(value, str) or not value.strip():
+            raise ValueError("reference timestamps must be non-empty ISO strings")
+        parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
+        if parsed.tzinfo is None:
+            raise ValueError("reference timestamps must include a timezone")
+        return int(parsed.timestamp() * 1000)
+
+    timestamp_index = {row["timestamp"]: index for index, row in enumerate(candles)}
+    first_ms = to_timestamp_ms(reference_window["first_oos_open_timestamp_utc"])
+    last_ms = to_timestamp_ms(reference_window["last_candle_timestamp_utc"])
+    if first_ms not in timestamp_index or last_ms not in timestamp_index:
+        raise ValueError("Bitstamp history does not contain both exact reference timestamps")
+    start_index = timestamp_index[first_ms]
+    end_index = timestamp_index[last_ms]
+    expected_returns = reference_window["open_to_open_returns"]
+    if start_index < 1 or end_index - start_index != expected_returns:
+        raise ValueError("Bitstamp reference timestamps do not span the exact reference return count")
+
+    matched_candles = candles[:end_index + 1]
+    matched_oos_slice = candles[start_index - 1:end_index + 1]
+    matched_slice_sha256 = sha256_bytes(canonical_json_bytes(matched_oos_slice))
+    cost_levels = {
+        "1x": (BASE_FEE_PER_SIDE, BASE_SLIPPAGE_PER_SIDE),
+        "2x": (BASE_FEE_PER_SIDE * 2, BASE_SLIPPAGE_PER_SIDE * 2),
+        "3x": (BASE_FEE_PER_SIDE * 3, BASE_SLIPPAGE_PER_SIDE * 3),
+    }
+    cost_reports = {
+        level: run_strategy_universe(
+            matched_candles,
+            fee_rate=fee,
+            slippage_rate=slippage,
+            bars_per_year=BARS_PER_YEAR,
+            evaluation_start_index=start_index,
+            allocation_fraction=ALLOCATION_FRACTION,
+        )
+        for level, (fee, slippage) in cost_levels.items()
+    }
+    base = cost_reports["1x"]
+    return_matrix = {
+        name: item["net_returns"]
+        for name, item in base["results"].items()
+    }
+    return_count = len(next(iter(return_matrix.values())))
+    if return_count != expected_returns:
+        raise ValueError("Matched Bitstamp OOS return count does not equal the Coinbase reference")
+    pbo = None
+    pbo_status = "INSUFFICIENT_OOS_OBSERVATIONS"
+    if return_count >= 800:
+        pbo = cscv_probability_of_backtest_overfitting_with_tail_trim(
+            return_matrix, partitions=8
+        )
+        pbo_status = "COMPUTED_DIAGNOSTIC_ONLY"
+
+    ranking = _ranking_rows(base, cost_reports)
+    bootstrap_ci = {}
+    for index, row in enumerate(ranking[:5]):
+        bootstrap_ci[row["candidate"]] = moving_block_bootstrap_return_ci(
+            base["results"][row["candidate"]]["net_returns"],
+            block_length=min(24, return_count),
+            bootstrap_samples=bootstrap_samples,
+            confidence_level=0.95,
+            seed=20261121 + index,
+        )
+    matched_signals = build_strategy_signals(matched_candles)
+    return {
+        "status": "COMPUTED_EXACT_CALENDAR_OVERLAP",
+        "source": SOURCE,
+        "symbol": SYMBOL,
+        "reference": {
+            "source": "Coinbase public BTC-USD hourly spot",
+            "run_id": reference_window["run_id"],
+            "code_commit_sha": reference_window["code_commit_sha"],
+            "dataset_sha256": reference_window["dataset_sha256"],
+            "first_oos_open_timestamp_utc": reference_window["first_oos_open_timestamp_utc"],
+            "last_candle_timestamp_utc": reference_window["last_candle_timestamp_utc"],
+            "open_to_open_returns": expected_returns,
+        },
+        "bitstamp": {
+            "code_commit_sha": code_commit_sha,
+            "run_id": run_id,
+            "start_index": start_index,
+            "end_index_inclusive": end_index,
+            "first_oos_open_timestamp_utc": datetime.fromtimestamp(first_ms / 1000, timezone.utc).isoformat(),
+            "last_candle_timestamp_utc": datetime.fromtimestamp(last_ms / 1000, timezone.utc).isoformat(),
+            "matched_oos_candle_count_including_prior_signal_and_endpoint": len(matched_oos_slice),
+            "open_to_open_returns": return_count,
+            "matched_oos_slice_sha256": matched_slice_sha256,
+        },
+        "protocol": {
+            "allocation_fraction": ALLOCATION_FRACTION,
+            "fee_per_side_1x": BASE_FEE_PER_SIDE,
+            "slippage_per_side_1x": BASE_SLIPPAGE_PER_SIDE,
+            "cost_multipliers": ["1x", "2x", "3x"],
+            "signal_timing": "completed close; position changes at next open",
+            "return_interval": "next open to following open",
+            "benchmark": "matched 25% buy-and-hold on the exact same calendar intervals",
+            "cost_warning": "The fixed fee/slippage assumptions match the Coinbase experiment for controlled comparison; they are not actual Bitstamp fees, spread, or measured execution costs.",
+        },
+        "candidate_count": len(base["results"]),
+        "ranking_by_net_return": ranking,
+        "cost_stress": {
+            level: {
+                name: {
+                    "strategy": result["strategy"],
+                    "buy_and_hold": result["buy_and_hold"],
+                    "excess_return": result["excess_return"],
+                }
+                for name, result in report["results"].items()
+            }
+            for level, report in cost_reports.items()
+        },
+        "cscv_pbo": pbo,
+        "cscv_pbo_status": pbo_status,
+        "cscv_pbo_scope_warning": "Diagnostic across only these 17 fixed signal-state proxies on this exact matched calendar segment; not a future-profit probability or a global experiment census.",
+        "top_five_conditional_moving_block_bootstrap_95pct_ci": bootstrap_ci,
+        "market_regime_attribution": _regime_return_attribution(
+            matched_candles, matched_signals, start_index, base
+        ),
+        "candidate_semantics": "Same predeclared boolean long/flat signal-state proxies as the Coinbase reference; no rules or parameters were changed.",
+        "promotion_status": "NO_CANDIDATE_PROMOTED",
+        "paper_state_touched": False,
+        "live_orders_enabled": False,
+        "execution_enabled": False,
+    }
+
+
 def build_bitstamp_strategy_report(
     candles,
     run_id,
     code_commit_sha,
     generated_at_utc=None,
     bootstrap_samples=1000,
+    reference_window=COINBASE_REFERENCE_WINDOW,
 ):
     """Build a complete independent-venue report for all 17 existing BTC proxies."""
     _validate_gap_free_hourly_candles(candles)
@@ -221,6 +387,16 @@ def build_bitstamp_strategy_report(
         for level, (fee, slippage) in cost_levels.items()
     }
     base = cost_reports["1x"]
+    matched_calendar_overlap = None
+    if reference_window is not None:
+        matched_calendar_overlap = build_matched_calendar_overlap_report(
+            candles,
+            reference_window,
+            run_id=run_id,
+            code_commit_sha=code_commit_sha,
+            generated_at_utc=generated,
+            bootstrap_samples=bootstrap_samples,
+        )
     signals = build_strategy_signals(candles)
     initial_train_bars = int(len(candles) * 0.55)
     test_bars = max(32, int(len(candles) * 0.10))
@@ -365,6 +541,7 @@ def build_bitstamp_strategy_report(
         "market_regime_attribution": _regime_return_attribution(candles, signals, split_index, base),
         "rolling_walk_forward": walk_forward,
         "rolling_walk_forward_selection_margins": selection_margins,
+        "matched_calendar_overlap": matched_calendar_overlap,
         "cscv_pbo": pbo,
         "cscv_pbo_status": pbo_status,
         "cscv_pbo_scope_warning": "CSCV/PBO covers only these 17 predeclared signal-state proxies on this Bitstamp OOS segment. It is a selection-bias diagnostic, not a future-profit probability, not a global experiment census, and not an untouched final holdout.",
@@ -426,6 +603,35 @@ def render_markdown_report(report):
             f"{row['max_open_to_open_drawdown_pct']:.2f}% | {pf_text} | {sharpe_text} | "
             f"{row['closed_trades']} | {row['return_2x_pct']:.2f}% | {row['return_3x_pct']:.2f}% |"
         )
+    matched = report.get("matched_calendar_overlap")
+    if matched:
+        reference = matched["reference"]
+        lines.extend([
+            "",
+            "## Exact calendar overlap with Coinbase run 33",
+            "",
+            f"- Reference: Coinbase run {reference['run_id']} ({reference['first_oos_open_timestamp_utc']} through {reference['last_candle_timestamp_utc']}).",
+            f"- Bitstamp matched returns: {matched['bitstamp']['open_to_open_returns']}; matched slice SHA-256: `{matched['bitstamp']['matched_oos_slice_sha256']}`.",
+            f"- CSCV/PBO: {matched['cscv_pbo']['pbo_estimate'] if matched['cscv_pbo'] else 'not computed'} ({matched['cscv_pbo_status']}).",
+            "",
+            "| Rank | Candidate | 1x net | Matched B&H | Excess | Max DD | Period PF | Sharpe | Trades | 2x | 3x |",
+            "|---:|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|",
+        ])
+        for row in matched["ranking_by_net_return"]:
+            pf = row["periodic_profit_factor"]
+            pf_text = pf if isinstance(pf, str) else (f"{pf:.3f}" if pf is not None else "—")
+            sharpe = row["period_sharpe"]
+            sharpe_text = f"{sharpe:.3f}" if sharpe is not None else "—"
+            lines.append(
+                f"| {row['rank_by_net_return']} | {row['candidate']} | {row['net_return_pct']:.2f}% | "
+                f"{row['matched_buy_and_hold_pct']:.2f}% | {row['excess_vs_buy_and_hold_pp']:+.2f} pp | "
+                f"{row['max_open_to_open_drawdown_pct']:.2f}% | {pf_text} | {sharpe_text} | "
+                f"{row['closed_trades']} | {row['return_2x_pct']:.2f}% | {row['return_3x_pct']:.2f}% |"
+            )
+        lines.extend([
+            "",
+            "This segment exactly matches the Coinbase run-33 OOS calendar and return count. It isolates the venue price series more cleanly than the separate full-history 70/30 split; costs are still fixed proxies, not actual Bitstamp fees or spread.",
+        ])
     lines.extend(["", "## Expanding-window walk-forward", ""])
     for level, metrics in report["rolling_walk_forward"]["aggregate_oos_cost_scenarios"].items():
         strategy = metrics["strategy"]
