@@ -428,10 +428,12 @@ def render_markdown_report(report):
     for level, metrics in report["rolling_walk_forward"]["aggregate_oos_cost_scenarios"].items():
         strategy = metrics["strategy"]
         benchmark = metrics["buy_and_hold"]
+        sharpe = strategy["period_sharpe"]
+        sharpe_text = f"{sharpe:.3f}" if sharpe is not None else "—"
         lines.append(
             f"- {level}: strategy {strategy['net_return']*100:.2f}%, matched B&H "
             f"{benchmark['net_return']*100:.2f}%, DD {abs(strategy['max_open_to_open_drawdown'])*100:.2f}%, "
-            f"Sharpe {strategy['period_sharpe']:.3f}, closed trades {strategy['closed_trades']}."
+            f"Sharpe {sharpe_text}, closed trades {strategy['closed_trades']}."
         )
     lines.extend(["", "## Fold selections", ""])
     for fold in report["rolling_walk_forward_selection_margins"]:
