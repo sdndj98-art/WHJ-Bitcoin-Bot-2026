@@ -130,6 +130,8 @@ def _regime_return_attribution(candles, signals, evaluation_start_index, base_re
             attribution[regime] = {
                 "bars": count,
                 "active_signal_bars": bucket["active_signal_bars"],
+                "strategy_log_growth": round(strategy_log, 12),
+                "benchmark_log_growth": round(benchmark_log, 12),
                 "strategy_attributed_compounded_return_pct": round(math.expm1(strategy_log) * 100, 4),
                 "matched_benchmark_attributed_compounded_return_pct": round(math.expm1(benchmark_log) * 100, 4),
                 "excess_log_growth_percentage_points": round((strategy_log - benchmark_log) * 100, 4),
