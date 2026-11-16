@@ -293,3 +293,16 @@ The optional intrabar stop-gap sensitivity policy and its fee/slippage accountin
 - This validates deterministic accounting for the explicit OHLC stress policy only. It does not validate expected broker fills, tick-level paths, or any strategy's market performance.
 
 The latest BTC and slow-momentum historical artifacts remain tied to code commit `c110b7f330425c894f968eaca066efe88780f8b5`. The three commits after that evaluation changed only `ohlc_execution_lab.py`, its tests, and this audit; the BTC strategy signal/evaluator and slow-momentum strategy/evaluator files were unchanged. The historical results therefore remain reproducible for their recorded source commit, but are not a new evaluation on the current branch head.
+
+
+### F16 — OHLC simulator accepted booleans as numeric execution parameters (low/medium)
+
+Python treats booleans as integers. The OHLC simulator's range checks therefore accepted fee=False and slippage=False as zero-cost settings, and accepted take_profit_pct=True as a 100% target. Non-numeric values could also raise a raw TypeError instead of the simulator's documented validation error.
+
+**Research-only remediation:**
+- Validate fee, slippage, allocation, stop percentage, and target percentage as finite numeric values before applying their existing bounds.
+- Reject booleans explicitly, even though bool subclasses int.
+- Preserve the existing fee/slippage defaults, 25% allocation cap, stop/target defaults, and execution behavior for valid numeric inputs.
+- Add regression coverage for boolean, string, NaN, and infinite parameter values.
+
+This is input-contract hardening only. It does not change configured paper risk limits, account balances, ledgers, schedules, trading pathways, or strategy behavior.
