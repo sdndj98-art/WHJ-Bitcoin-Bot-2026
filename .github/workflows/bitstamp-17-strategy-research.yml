@@ -1,0 +1,78 @@
+name: WHJ Bitstamp 17-Candidate Independent Research
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [research/global-evidence-strategy-lab-20261112]
+    paths:
+      - "bitstamp_strategy_family_research.py"
+      - "strategy_family_lab.py"
+      - "strategy_family_evaluator.py"
+      - "strategy_family_runner.py"
+      - "rolling_walk_forward.py"
+      - "research_governance.py"
+      - "research_snapshot.py"
+      - "ema_adx_cross_exchange_lab.py"
+      - "tests/test_bitstamp_strategy_family_research.py"
+      - "tests/test_strategy_family_lab.py"
+      - "tests/test_strategy_family_evaluator.py"
+      - "tests/test_strategy_family_runner.py"
+      - "tests/test_rolling_walk_forward.py"
+      - "tests/test_research_governance.py"
+      - "tests/test_research_snapshot.py"
+      - "tests/test_ema_adx_cross_exchange_lab.py"
+      - ".github/workflows/bitstamp-17-strategy-research.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: whj-bitstamp-17-strategy-research-${{ github.run_id }}
+  cancel-in-progress: false
+
+jobs:
+  independent-bitstamp-17-candidates:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      PYTHONUNBUFFERED: "1"
+    steps:
+      - name: Checkout research branch
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Test independent Bitstamp report and regime attribution
+        run: python -m unittest discover -s tests -p 'test_bitstamp_strategy_family_research.py' -v
+
+      - name: Test the shared 17-candidate signal/evaluator/runner contract
+        run: |
+          python -m unittest discover -s tests -p 'test_strategy_family_lab.py' -v
+          python -m unittest discover -s tests -p 'test_strategy_family_evaluator.py' -v
+          python -m unittest discover -s tests -p 'test_strategy_family_runner.py' -v
+          python -m unittest discover -s tests -p 'test_rolling_walk_forward.py' -v
+          python -m unittest discover -s tests -p 'test_research_governance.py' -v
+          python -m unittest discover -s tests -p 'test_research_snapshot.py' -v
+          python -m unittest discover -s tests -p 'test_ema_adx_cross_exchange_lab.py' -v
+
+      - name: Compile isolated research modules
+        run: |
+          python -m py_compile bitstamp_strategy_family_research.py strategy_family_lab.py strategy_family_evaluator.py strategy_family_runner.py rolling_walk_forward.py research_governance.py research_snapshot.py ema_adx_cross_exchange_lab.py
+
+      - name: Evaluate all 17 candidates on independent Bitstamp hourly history
+        timeout-minutes: 35
+        run: python bitstamp_strategy_family_research.py
+
+      - name: Upload Bitstamp research report and immutable dataset snapshot
+        uses: actions/upload-artifact@v4
+        with:
+          name: whj-bitstamp-17-strategy-research-${{ github.run_number }}
+          path: |
+            btc_bitstamp_strategy_universe_report.json
+            btc_bitstamp_strategy_universe_report.md
+            btc_bitstamp_hourly_dataset.json.gz
+          if-no-files-found: error
+          retention-days: 30
