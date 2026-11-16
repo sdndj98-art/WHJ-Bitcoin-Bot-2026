@@ -1,8 +1,13 @@
 import json
 import math
 import unittest
+from datetime import datetime, timezone
 
-from bitstamp_strategy_family_research import build_bitstamp_strategy_report
+from bitstamp_strategy_family_research import (
+    build_bitstamp_strategy_report,
+    build_matched_calendar_overlap_report,
+)
+from research_snapshot import canonical_json_bytes, sha256_bytes
 
 
 class BitstampStrategyFamilyResearchTests(unittest.TestCase):
@@ -36,6 +41,7 @@ class BitstampStrategyFamilyResearchTests(unittest.TestCase):
             code_commit_sha="a" * 40,
             generated_at_utc="2026-11-17T00:00:00+00:00",
             bootstrap_samples=100,
+            reference_window=None,
         )
         self.assertEqual(report["candidate_count"], 17)
         self.assertEqual(report["source"], "Bitstamp public BTCUSD spot OHLC")
@@ -93,6 +99,110 @@ class BitstampStrategyFamilyResearchTests(unittest.TestCase):
                 report["cost_stress"]["1x"]["results"][name]["strategy"]["net_return"]
             )
             self.assertAlmostEqual(attributed_log, expected_log, places=8)
+
+    def test_exact_coinbase_calendar_overlap_is_aligned_and_reconciles(self):
+        candles = self.candles()
+        start_index = 500
+        return_count = 800
+        end_index = start_index + return_count
+        reference = {
+            "run_id": "coinbase-reference-test",
+            "code_commit_sha": "e" * 40,
+            "dataset_sha256": "f" * 64,
+            "first_oos_open_timestamp_utc": datetime.fromtimestamp(
+                candles[start_index]["timestamp"] / 1000, timezone.utc
+            ).isoformat(),
+            "last_candle_timestamp_utc": datetime.fromtimestamp(
+                candles[end_index]["timestamp"] / 1000, timezone.utc
+            ).isoformat(),
+            "open_to_open_returns": return_count,
+        }
+        report = build_matched_calendar_overlap_report(
+            candles,
+            reference,
+            run_id="bitstamp-matched-test",
+            code_commit_sha="a" * 40,
+            generated_at_utc="2026-11-17T00:00:00+00:00",
+            bootstrap_samples=100,
+        )
+        self.assertEqual(report["status"], "COMPUTED_EXACT_CALENDAR_OVERLAP")
+        self.assertEqual(report["candidate_count"], 17)
+        self.assertEqual(report["bitstamp"]["start_index"], start_index)
+        self.assertEqual(report["bitstamp"]["end_index_inclusive"], end_index)
+        self.assertEqual(report["bitstamp"]["open_to_open_returns"], return_count)
+        self.assertEqual(
+            report["bitstamp"]["matched_oos_candle_count_including_prior_signal_and_endpoint"],
+            return_count + 2,
+        )
+        expected_hash = sha256_bytes(canonical_json_bytes(candles[start_index - 1:end_index + 1]))
+        self.assertEqual(report["bitstamp"]["matched_oos_slice_sha256"], expected_hash)
+        self.assertEqual(report["cscv_pbo_status"], "COMPUTED_DIAGNOSTIC_ONLY")
+        self.assertEqual(set(report["cost_stress"]), {"1x", "2x", "3x"})
+        self.assertFalse(report["paper_state_touched"])
+        self.assertFalse(report["live_orders_enabled"])
+
+    def test_matched_calendar_evaluation_ignores_rows_after_reference_endpoint(self):
+        candles = self.candles()
+        start_index = 500
+        return_count = 800
+        end_index = start_index + return_count
+        reference = {
+            "run_id": "coinbase-reference-test",
+            "code_commit_sha": "e" * 40,
+            "dataset_sha256": "f" * 64,
+            "first_oos_open_timestamp_utc": datetime.fromtimestamp(
+                candles[start_index]["timestamp"] / 1000, timezone.utc
+            ).isoformat(),
+            "last_candle_timestamp_utc": datetime.fromtimestamp(
+                candles[end_index]["timestamp"] / 1000, timezone.utc
+            ).isoformat(),
+            "open_to_open_returns": return_count,
+        }
+        original = build_matched_calendar_overlap_report(
+            candles, reference, "bitstamp-matched-test", "a" * 40,
+            "2026-11-17T00:00:00+00:00", bootstrap_samples=100,
+        )
+        changed = [dict(row) for row in candles]
+        for row in changed[end_index + 1:]:
+            row["open"] *= 1.7
+            row["high"] *= 1.7
+            row["low"] *= 1.7
+            row["close"] *= 1.7
+            row["volume"] *= 2.0
+        altered = build_matched_calendar_overlap_report(
+            changed, reference, "bitstamp-matched-test", "a" * 40,
+            "2026-11-17T00:00:00+00:00", bootstrap_samples=100,
+        )
+        self.assertEqual(
+            original["ranking_by_net_return"],
+            altered["ranking_by_net_return"],
+        )
+        self.assertEqual(
+            original["bitstamp"]["matched_oos_slice_sha256"],
+            altered["bitstamp"]["matched_oos_slice_sha256"],
+        )
+
+    def test_rejects_reference_window_with_wrong_return_count(self):
+        candles = self.candles()
+        start_index = 500
+        end_index = 1300
+        reference = {
+            "run_id": "coinbase-reference-test",
+            "code_commit_sha": "e" * 40,
+            "dataset_sha256": "f" * 64,
+            "first_oos_open_timestamp_utc": datetime.fromtimestamp(
+                candles[start_index]["timestamp"] / 1000, timezone.utc
+            ).isoformat(),
+            "last_candle_timestamp_utc": datetime.fromtimestamp(
+                candles[end_index]["timestamp"] / 1000, timezone.utc
+            ).isoformat(),
+            "open_to_open_returns": 799,
+        }
+        with self.assertRaisesRegex(ValueError, "exact reference return count"):
+            build_matched_calendar_overlap_report(
+                candles, reference, "bitstamp-matched-test", "a" * 40,
+                "2026-11-17T00:00:00+00:00", bootstrap_samples=100,
+            )
 
     def test_rejects_missing_or_duplicate_hourly_bars_instead_of_imputing(self):
         candles = self.candles()
