@@ -377,3 +377,51 @@ Matched 25% buy-and-hold returned **+3.56%** at 1x. Every one of the 17 candidat
 The Coinbase 70/30 run ranked RSI14 at -1.36% versus a -11.14% matched benchmark; the Bitstamp run ranked the same proxy at -3.38% versus a +3.56% benchmark. These OOS windows are not the same calendar interval, so this is not a strict same-date venue spread comparison. It nevertheless shows that relative ranking is highly sample/regime dependent; the absolute RSI14 return was negative on both datasets.
 
 **F17 is closed as an evaluation-pipeline milestone, not as a strategy approval. F14 remains open:** Donchian and Stochastic (and other state proxies) still require explicit, frozen entry/exit semantics before the 17 candidates can be described as canonical trading systems. The cross-exchange run is historical research, not forward paper trading. No candidate is promoted.
+
+
+### F18 exact same-calendar Coinbase–Bitstamp comparison — 2026-11-16
+
+The full-history Bitstamp 70/30 split above begins earlier than the Coinbase OOS window. To remove that date-window confound, the evaluator now also freezes an exact same-calendar comparison against Coinbase multi-strategy run #33.
+
+- Code: [commit f749a0e](https://github.com/sdndj98-art/WHJ-Bitcoin-Bot-2026/commit/f749a0e820a343fceb0fee1e7464c9618cadeef4).
+- Workflow: [WHJ Bitstamp 17-Candidate Independent Research, run 43968648454](https://github.com/sdndj98-art/WHJ-Bitcoin-Bot-2026/actions/runs/43968648454).
+- Artifact: [whj-bitstamp-17-strategy-research-6, ID 14276514574](https://github.com/sdndj98-art/WHJ-Bitcoin-Bot-2026/actions/runs/43968648454/artifacts/14276514574).
+- Reference: Coinbase run [43649648836](https://github.com/sdndj98-art/WHJ-Bitcoin-Bot-2026/actions/runs/43649648836), code `c110b7f`, dataset SHA `110e96bd167f93c0bef58fe3385f71acab9d2da96142ff687f4b4a679a10ee9a`.
+- Exact OOS open window: **2025-08-21T22:00:00Z through 2026-11-14T21:00:00Z**; 10,799 open-to-open returns, 10,801 Bitstamp rows including the prior completed signal candle and final endpoint.
+- Bitstamp matched-slice SHA-256: `2d695ceb526a69a9816b85ed1f2d7dbe5bd13072eaf2062ab8bdf97a1784e9f6`. The slice was recomputed from the downloaded 72,000-row snapshot and matched. Full Bitstamp dataset SHA remains `b0113cfd54fe0aa29da724c534a2f6deb241a0ee123aa3efe7a0b59426361fb2`; the downloaded ZIP digest also matched GitHub's artifact digest.
+- The report explicitly truncates Bitstamp data at the reference endpoint; a regression test changes every later OHLCV row and verifies the matched results and slice hash remain identical. This guards against future-row leakage in the matched comparison.
+- Cost assumptions are identical to Coinbase (0.10% fee + 0.05% slippage per side at 1x; 2x/3x stress) to isolate the price series. They remain fixed proxies, not Bitstamp's account-specific fee schedule, spread, or market impact.
+
+#### Same-date 1x comparison
+
+| Rank | Candidate | Coinbase | Bitstamp | Bitstamp DD | Period PF | Sharpe | Trades | Bitstamp 2x | Bitstamp 3x |
+|---:|---|---:|---:|---:|---:|---:|---:|---:|---:|
+| 1 | RSI14 | -1.3633% | -1.3451% | 1.39% | 0.355 | -1.873 | 11 | -2.16% | -2.96% |
+| 2 | Bollinger | -8.5147% | -8.5148% | 8.51% | 0.281 | -4.632 | 84 | -14.10% | -19.35% |
+| 3 | Z-Score20 | -10.6427% | -11.1827% | 11.18% | 0.437 | -4.910 | 146 | -20.40% | -28.66% |
+| 4 | Donchian55/20 | -12.3917% | -12.3974% | 12.74% | 0.436 | -4.909 | 194 | -24.27% | -34.53% |
+| 5 | Volatility Squeeze | -12.6200% | -13.4058% | 13.41% | 0.358 | -6.644 | 203 | -25.64% | -36.15% |
+| 6 | Volume Breakout | -12.1569% | -14.2490% | 14.59% | 0.505 | -4.409 | 254 | -29.13% | -41.43% |
+| 7 | SMA200 | -14.4767% | -14.7792% | 17.14% | 0.909 | -2.002 | 182 | -25.66% | -35.15% |
+| 8 | ROC60 | -15.7099% | -16.0788% | 16.69% | 0.881 | -2.422 | 231 | -29.44% | -40.67% |
+| 9 | ROC120 | -16.4685% | -16.2513% | 18.69% | 0.885 | -2.379 | 198 | -27.81% | -37.78% |
+| 10 | RSI2 | -16.7561% | -17.1736% | 17.17% | 0.343 | -7.178 | 229 | -30.25% | -41.27% |
+| 11 | ATR Channel | -18.1666% | -18.2922% | 18.59% | 0.480 | -5.385 | 322 | -35.83% | -49.61% |
+| 12 | Donchian20/10 | -19.7443% | -19.9192% | 20.21% | 0.486 | -5.677 | 354 | -38.60% | -52.93% |
+| 13 | ROC20 | -20.1493% | -19.9646% | 20.71% | 0.828 | -3.307 | 335 | -37.76% | -51.60% |
+| 14 | SMA20/50 | -25.0615% | -24.9688% | 26.72% | 0.788 | -4.272 | 370 | -43.16% | -56.94% |
+| 15 | EMA12/26 | -26.4535% | -26.7095% | 26.88% | 0.824 | -3.994 | 375 | -44.69% | -58.26% |
+| 16 | OBV | -35.3842% | -33.0747% | 33.23% | 0.762 | -5.324 | 533 | -55.14% | -69.93% |
+| 17 | Stochastic | -39.4443% | -40.5080% | 40.51% | 0.273 | -12.154 | 710 | -65.08% | -79.51% |
+
+The matched 25% buy-and-hold benchmark was **-11.14%** on both feeds. All 17 candidates lost money at 1x, 2x and 3x. RSI14 and Bollinger beat the benchmark only in relative terms; both still lost capital, had negative Sharpe and PF below 1.
+
+Across the 17 candidate net returns on this exact calendar window:
+- Spearman rank correlation: **0.992647**.
+- Pearson return correlation: **0.996070**.
+- Mean absolute cross-feed return difference: **0.5268 percentage points**; maximum absolute difference: **2.3095 pp** (OBV).
+- Candidate order differs only among ranks 4–6; the other 14 ranks match.
+- CSCV/PBO: **0.085714** on both feeds (8 partitions, 35 splits, 1,349 observations per partition, 10,792/10,799 used; 7 trailing observations trimmed). This is a relative selection diagnostic, not a profitability probability.
+- Conditional 24-hour block-bootstrap 95% intervals for the Bitstamp top five were all below zero; RSI14's interval was -3.1265% to -0.0540%. These intervals are not adjusted for selecting the top five on the same OOS sample.
+
+**F18 closes the same-calendar cross-exchange comparison milestone. It does not close F14 or approve a strategy.** The very high rank/return correlations confirm that the poor results are not just a Coinbase-specific price-feed artifact for this window. The candidates remain the same long/flat signal-state proxies; their entry/exit semantics still require frozen canonical definitions. No forward-paper result or live profitability is claimed.
