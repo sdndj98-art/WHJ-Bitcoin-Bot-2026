@@ -319,3 +319,61 @@ The numeric-parameter contract hardening is covered by the repository-wide audit
 - The new tests reject booleans, strings, NaN and infinity for fee, slippage, allocation, stop and target parameters. Valid numeric execution behavior and the 25% research cap remain unchanged.
 
 This closes the input-validation finding only. It does not validate market fills, the OHLC path model, or any strategy's profitability.
+
+
+### F17 independent 17-candidate Bitstamp replication — 2026-11-16
+
+A new research-only workflow evaluates the same 17 predeclared boolean long/flat signal-state proxies on a separate Bitstamp BTCUSD hourly history. It does not alter any candidate rules and does not access paper state.
+
+- Evaluator: `bitstamp_strategy_family_research.py`; workflow: [WHJ Bitstamp 17-Candidate Independent Research](https://github.com/sdndj98-art/WHJ-Bitcoin-Bot-2026/actions/runs/43967507369).
+- Code commit: [3874d78](https://github.com/sdndj98-art/WHJ-Bitcoin-Bot-2026/commit/3874d78df39299effd49e626f31cd3f6bc94144d).
+- Artifact: [whj-bitstamp-17-strategy-research-3, ID 14276064048](https://github.com/sdndj98-art/WHJ-Bitcoin-Bot-2026/actions/runs/43967507369/artifacts/14276064048).
+- Workflow result: **success**. Four new report/regime tests passed; all shared strategy/evaluator/rolling/PBO/snapshot/Bitstamp-loader test suites passed; isolated modules compiled; all 17-candidate evaluation and artifact upload succeeded.
+- Dataset: 72,000 hourly bars, 2018-08-30T22:00Z through 2026-11-16T21:00Z; gap-free, zero imputed bars, zero duplicate timestamps.
+- Canonical dataset SHA-256: `b0113cfd54fe0aa29da724c534a2f6deb241a0ee123aa3efe7a0b59426361fb2`. The downloaded gzip snapshot was decompressed and its canonical bytes re-hashed; it matched the report. The downloaded artifact ZIP digest also matched GitHub's `d4ffea7d4885724d78e98a8b7a05e34085d25d88532078b5f327c18f9dbd2562`.
+- Chronological 70/30 split: 50,400 training candles; 21,600 OOS candles and 21,599 OOS open-to-open returns (2024-05-30T22:00Z through 2026-11-16T21:00Z).
+- Fixed costs: 0.10% fee + 0.05% slippage per side at 1x; both multiplied by 2x/3x. These match the Coinbase research assumptions to isolate price-series sensitivity; they are **not** Bitstamp account-specific fees, quoted spread, measured slippage or market impact.
+
+#### Bitstamp OOS ranking at 1x
+
+| Rank | Candidate | Net return | Max DD | Period PF | Sharpe | Closed trades | 2x | 3x |
+|---:|---|---:|---:|---:|---:|---:|---:|---:|
+| 1 | RSI14 | -3.38% | 3.43% | 0.452 | -1.895 | 37 | -6.03% | -8.60% |
+| 2 | Bollinger | -16.84% | 16.88% | 0.370 | -4.418 | 209 | -28.91% | -39.23% |
+| 3 | SMA200 | -22.31% | 27.89% | 0.941 | -1.329 | 381 | -41.63% | -56.15% |
+| 4 | Z-Score20 | -23.23% | 23.30% | 0.492 | -4.891 | 358 | -41.32% | -55.15% |
+| 5 | ROC60 | -25.84% | 32.27% | 0.915 | -1.771 | 481 | -48.31% | -63.97% |
+| 6 | ROC120 | -27.10% | 31.77% | 0.918 | -1.767 | 437 | -47.48% | -62.17% |
+| 7 | Donchian55/20 | -27.86% | 28.09% | 0.422 | -5.239 | 428 | -47.68% | -62.06% |
+| 8 | Volatility Squeeze | -28.44% | 28.44% | 0.350 | -6.312 | 426 | -48.02% | -62.24% |
+| 9 | Volume Breakout | -30.71% | 30.93% | 0.457 | -5.098 | 524 | -53.24% | -68.45% |
+| 10 | RSI2 | -31.53% | 31.55% | 0.406 | -6.449 | 512 | -53.37% | -68.25% |
+| 11 | ATR Channel | -39.44% | 39.58% | 0.425 | -6.447 | 684 | -63.75% | -78.31% |
+| 12 | SMA20/50 | -40.50% | 41.88% | 0.825 | -3.476 | 744 | -65.95% | -80.52% |
+| 13 | ROC20 | -41.93% | 42.82% | 0.828 | -3.520 | 765 | -67.29% | -81.58% |
+| 14 | EMA12/26 | -43.20% | 43.21% | 0.857 | -3.224 | 817 | -69.23% | -83.34% |
+| 15 | Donchian20/10 | -44.18% | 44.31% | 0.418 | -7.087 | 769 | -68.66% | -82.40% |
+| 16 | OBV | -55.40% | 55.40% | 0.788 | -4.751 | 1,105 | -80.54% | -91.51% |
+| 17 | Stochastic | -65.40% | 65.40% | 0.280 | -12.168 | 1,446 | -88.31% | -96.05% |
+
+Matched 25% buy-and-hold returned **+3.56%** at 1x. Every one of the 17 candidates lost money at 1x, 2x and 3x; every candidate also underperformed the matched benchmark at 1x. The best candidate's conditional 24-hour block-bootstrap 95% interval was -5.96% to -1.24% (1,000 resamples); all top-five conditional intervals were below zero, but these intervals are not multiple-testing adjusted.
+
+#### Independent expanding-window walk-forward
+
+- Initial training: 39,600 bars; four contiguous test folds of 7,200 bars each; total 28,800 OOS returns; 3,599 newest bars unused.
+- SMA200 was selected in all four folds using training-only excess return.
+- Aggregate 1x: strategy **-16.79%**, matched buy-and-hold **+39.09%**, max open-to-open DD **26.58%**, periodic PF **0.971**, Sharpe **-0.640**, 501 closed trades, 13.05% exposure.
+- 2x: **-42.87%**; 3x: **-60.78%**.
+- Fold 1/2/3/4 strategy returns: -1.13%, +5.04%, -7.62%, -13.34%; matched benchmarks: +20.17%, +14.03%, +16.09%, -12.67%.
+
+#### CSCV/PBO and regime diagnostics
+
+- CSCV/PBO = **0.000000**, 8 contiguous partitions, 35 splits, 2,699 observations per partition, 21,592/21,599 observations used; 7 newest observations trimmed. This means the in-sample selected candidate did not fall below the median relative OOS rank in these splits. It does **not** mean the candidates are profitable or free of overfitting; every candidate's net OOS return is negative.
+- OOS regime bars: bearish 8,401; bullish 8,500; sideways/transition 4,698. Regime values are log-return attribution by the regime known at the prior close, not separate regime portfolios.
+- SMA200 attributed return: +10.28% in bullish bars, -24.64% in sideways/transition bars, -6.53% in bearish bars; total -22.31%. This illustrates substantial regime dependence despite its repeated training selection.
+
+#### Cross-exchange interpretation
+
+The Coinbase 70/30 run ranked RSI14 at -1.36% versus a -11.14% matched benchmark; the Bitstamp run ranked the same proxy at -3.38% versus a +3.56% benchmark. These OOS windows are not the same calendar interval, so this is not a strict same-date venue spread comparison. It nevertheless shows that relative ranking is highly sample/regime dependent; the absolute RSI14 return was negative on both datasets.
+
+**F17 is closed as an evaluation-pipeline milestone, not as a strategy approval. F14 remains open:** Donchian and Stochastic (and other state proxies) still require explicit, frozen entry/exit semantics before the 17 candidates can be described as canonical trading systems. The cross-exchange run is historical research, not forward paper trading. No candidate is promoted.
