@@ -4,6 +4,7 @@ import unittest
 from slow_momentum_lab import (
     _attach_matched_benchmark,
     _simulate,
+    evaluate_cost_stress,
     evaluate_slow_momentum,
     momentum_signals,
     periodic_net_returns,
@@ -144,6 +145,52 @@ class SlowMomentumLabTests(unittest.TestCase):
             momentum_signals([100.0, 101.0], True)
         with self.assertRaises(ValueError):
             evaluate_slow_momentum([100.0 + i for i in range(200)], lookbacks=(0,))
+
+    def test_evaluator_rejects_boolean_string_and_non_finite_costs(self):
+        closes = [100.0 + index * 0.1 for index in range(220)]
+        invalid_values = (False, "0.001", float("nan"), float("inf"), float("-inf"))
+        for parameter in ("fee", "slippage"):
+            for value in invalid_values:
+                with self.subTest(parameter=parameter, value=repr(value)):
+                    with self.assertRaises(ValueError):
+                        evaluate_slow_momentum(closes, **{parameter: value})
+
+    def test_periodic_returns_rejects_invalid_costs_and_allocations(self):
+        closes = [100.0] * 220
+        signals = [False] * 220
+        invalid_costs = (False, "0.001", float("nan"), float("inf"), float("-inf"))
+        for parameter in ("fee", "slippage"):
+            for value in invalid_costs:
+                with self.subTest(parameter=parameter, value=repr(value)):
+                    with self.assertRaises(ValueError):
+                        periodic_net_returns(
+                            closes, signals, 154, 220, **{parameter: value}
+                        )
+        invalid_allocations = (
+            False, True, "0.1", float("nan"), float("inf"), float("-inf")
+        )
+        for value in invalid_allocations:
+            with self.subTest(allocation_fraction=repr(value)):
+                with self.assertRaises(ValueError):
+                    periodic_net_returns(
+                        closes, signals, 154, 220, allocation_fraction=value
+                    )
+
+    def test_cost_stress_rejects_invalid_multiplier_and_cost_inputs(self):
+        closes = [100.0 + index * 0.1 for index in range(220)]
+        invalid_multipliers = (
+            True, "2", float("nan"), float("inf"), float("-inf"), 0.5
+        )
+        for value in invalid_multipliers:
+            with self.subTest(multiplier=repr(value)):
+                with self.assertRaises(ValueError):
+                    evaluate_cost_stress(
+                        closes, 0.001, 0.0005, (56, 84, 112), multiplier=value
+                    )
+        with self.assertRaises(ValueError):
+            evaluate_cost_stress(
+                closes, False, 0.0005, (56, 84, 112), multiplier=2.0
+            )
 
 
 if __name__ == "__main__":

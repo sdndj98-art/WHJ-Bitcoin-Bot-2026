@@ -23,6 +23,12 @@ def momentum_signals(closes, lookback):
     return signals
 
 
+def _validate_cost_fraction(name, value):
+    if (isinstance(value, bool) or not isinstance(value, (int, float))
+            or not math.isfinite(value) or not 0 <= value < 1):
+        raise ValueError("%s must be finite and in [0, 1)" % name)
+
+
 def _validate(closes, fee, slippage, lookbacks):
     if not isinstance(closes, (list, tuple)) or len(closes) < 160:
         raise ValueError("At least 160 daily closes are required")
@@ -31,8 +37,8 @@ def _validate(closes, fee, slippage, lookbacks):
             raise ValueError("Prices must be numeric")
         if not math.isfinite(price) or price <= 0:
             raise ValueError("Prices must be finite and positive")
-    if not 0 <= fee < 1 or not 0 <= slippage < 1:
-        raise ValueError("Fee and slippage must be between 0 and 1")
+    _validate_cost_fraction("fee", fee)
+    _validate_cost_fraction("slippage", slippage)
     if not lookbacks or len(set(lookbacks)) != len(lookbacks):
         raise ValueError("lookbacks must be non-empty and unique")
     if any(isinstance(x, bool) or not isinstance(x, int) or x < 1 for x in lookbacks):
@@ -139,10 +145,13 @@ def periodic_net_returns(closes, signals, start, end, fee=0.001, slippage=0.0005
         raise ValueError("start must be an integer >= 1")
     if isinstance(end, bool) or not isinstance(end, int) or end > len(closes) or end <= start:
         raise ValueError("end must be an integer greater than start and <= data length")
-    if not (0 <= fee < 1 and 0 <= slippage < 1):
-        raise ValueError("fee and slippage must be between 0 and 1")
-    if not (0 < allocation_fraction <= ALLOCATION_FRACTION):
-        raise ValueError("allocation may not exceed the incumbent research cap")
+    _validate_cost_fraction("fee", fee)
+    _validate_cost_fraction("slippage", slippage)
+    if (isinstance(allocation_fraction, bool)
+            or not isinstance(allocation_fraction, (int, float))
+            or not math.isfinite(allocation_fraction)
+            or not 0 < allocation_fraction <= ALLOCATION_FRACTION):
+        raise ValueError("allocation_fraction must be finite and in (0, 0.25]")
 
     cash = INITIAL_EQUITY
     units = 0.0
@@ -275,8 +284,12 @@ def evaluate_slow_momentum(closes, fee=0.001, slippage=0.0005,
 
 def evaluate_cost_stress(closes, fee, slippage, lookbacks, multiplier=2.0):
     """Re-run candidates and matched buy-and-hold at multiplied costs."""
-    if isinstance(multiplier, bool) or not isinstance(multiplier, (int, float)) or multiplier < 1:
-        raise ValueError("cost multiplier must be a number >= 1")
+    _validate_cost_fraction("fee", fee)
+    _validate_cost_fraction("slippage", slippage)
+    if (isinstance(multiplier, bool)
+            or not isinstance(multiplier, (int, float))
+            or not math.isfinite(multiplier) or multiplier < 1):
+        raise ValueError("cost multiplier must be finite and >= 1")
     stressed_fee = min(fee * multiplier, 0.999999)
     stressed_slippage = min(slippage * multiplier, 0.999999)
     split = int(len(closes) * 0.70)

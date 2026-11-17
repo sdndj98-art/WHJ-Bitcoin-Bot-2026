@@ -425,3 +425,16 @@ Across the 17 candidate net returns on this exact calendar window:
 - Conditional 24-hour block-bootstrap 95% intervals for the Bitstamp top five were all below zero; RSI14's interval was -3.1265% to -0.0540%. These intervals are not adjusted for selecting the top five on the same OOS sample.
 
 **F18 closes the same-calendar cross-exchange comparison milestone. It does not close F14 or approve a strategy.** The very high rank/return correlations confirm that the poor results are not just a Coinbase-specific price-feed artifact for this window. The candidates remain the same long/flat signal-state proxies; their entry/exit semantics still require frozen canonical definitions. No forward-paper result or live profitability is claimed.
+
+
+### F19 — slow-momentum cost-input validation
+
+A source review found that the isolated slow-momentum evaluator reused Python's numeric comparisons without rejecting boolean and non-finite inputs first. In particular, `fee=False` and `slippage=False` were accepted as zero-cost assumptions; NaN could pass the range comparisons, and non-numeric strings could raise a raw `TypeError`. The periodic-return helper had the same cost-input weakness, and the public cost-stress helper did not reject non-finite multipliers.
+
+**Research-only remediation:**
+- Require fee and slippage to be finite non-boolean numeric fractions in `[0, 1)` in the evaluator, periodic-return helper, and direct cost-stress helper.
+- Require periodic allocation to be a finite non-boolean numeric value in `(0, 0.25]`; the incumbent research cap is unchanged.
+- Require the cost multiplier to be finite, non-boolean, numeric, and at least 1.
+- Add regression cases for booleans, strings, NaN, positive/negative infinity, and sub-unit multipliers.
+
+This is input-contract hardening only. It does not alter signal definitions, execution timing, normal cost assumptions, allocation, strategy results, paper ledgers, schedules, or trading pathways. The existing isolated slow-momentum workflow path filters include both the source and its test file, so a push of this change should trigger its public-data research job; no new historical result is claimed until that run and artifact complete.
