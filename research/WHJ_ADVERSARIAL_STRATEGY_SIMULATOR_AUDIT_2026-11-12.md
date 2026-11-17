@@ -473,3 +473,45 @@ A source review found that strategy_family_lab._rows() trusted the caller's row 
 - Independent Bitstamp research workflow on the corrected head: https://github.com/sdndj98-art/WHJ-Bitcoin-Bot-2026/actions/runs/44189928739; shared strategy/evaluator tests and module compilation passed before the historical evaluation step. Final run conclusion is tracked separately.
 
 This guard prevents silent chronological reordering at the signal-library boundary; it does not validate exchange session calendars, detect missing intervals by itself, change any signal or exit rule, or establish performance. No historical result is re-labelled and no candidate is promoted.
+
+
+### Verified 17-candidate refresh — 2026-11-17
+
+#### Coinbase run 35
+
+- Workflow: https://github.com/sdndj98-art/WHJ-Bitcoin-Bot-2026/actions/runs/44189928803
+- Artifact: https://github.com/sdndj98-art/WHJ-Bitcoin-Bot-2026/actions/runs/44189928803/artifacts/14375693324
+- Artifact ZIP SHA-256: 775f5e30b1c9f14c2a46f2aacfa23367ca7b15a36f1a45a02d5a5a294d4c8cc2
+- Dataset SHA-256 (recomputed from decompressed immutable snapshot): 2c3b21e004f0460b0f2647d995f5204d088811f700c94e95bbec67c31f0cb57e
+- Code commit: 4808ab87dd5919f5aa63b47e761a74986341225e; run ID 44189928803.
+- 36,000 hourly Coinbase BTC-USD candles; 2022-10-09T22:00Z through 2026-11-17T21:00Z; 25,200 training candles and 10,800 OOS candles (10,799 open-to-open returns); 13 hourly observations explicitly marked imputed.
+- All 17 candidates remain negative at 1x, 2x, and 3x. At 1x the descriptive ranking starts RSI14 -1.3633%, Bollinger -8.5147%, Z-Score20 -10.6427%, Volume Breakout -12.1543%, Donchian55/20 -12.3891%; it ends OBV -35.4078%, Stochastic -39.7727%. The matched 25% buy-and-hold return was -11.4733%.
+- RSI14: max open-to-open DD 1.4107%, periodic PF 0.3497, annualized hourly Sharpe -1.8879, 11 closed trades, 0.058% exposure. Its 1x/2x/3x returns were -1.3633%/-2.1741%/-2.9786%; low exposure and only 11 trades make relative outperformance weak evidence.
+- CSCV/PBO 0.085714 across 17 fixed signal-state candidates, 8 contiguous partitions, 35 splits; 10,792/10,799 observations used and 7 newest observations trimmed. This remains a narrow diagnostic, not a future-profit probability or final holdout.
+- The top-five conditional moving-block bootstrap 95% intervals all remained below zero: RSI14 [-3.1427%, -0.0027%], Bollinger [-12.1768%, -5.2190%], Z-Score20 [-14.5668%, -6.9280%], Volume Breakout [-16.9754%, -7.0383%], Donchian55/20 [-16.1004%, -8.6152%].
+- Expanding-window walk-forward: four contiguous 3,600-return folds, 14,400 OOS returns, 223 closed trades. Adaptive portfolio -22.8438% at 1x, -34.7329% at 2x, -44.7935% at 3x; matched benchmark -0.7516%/-0.7888%/-0.8260%; 1x max DD 25.3867%, Sharpe -2.4771. Folds selected SMA200 three times and RSI14 once. This is a separate adaptive process, not a fixed-candidate backtest.
+
+#### Independent Bitstamp run 8
+
+- Workflow: https://github.com/sdndj98-art/WHJ-Bitcoin-Bot-2026/actions/runs/44189928739
+- Artifact: https://github.com/sdndj98-art/WHJ-Bitcoin-Bot-2026/actions/runs/44189928739/artifacts/14375209983
+- Artifact ZIP SHA-256: 6855f7c1a5fd2413a5649c2dfcfcb4cb28485d40a361e0fe1c54464f15a5dbff
+- Dataset SHA-256 (recomputed from decompressed immutable snapshot): 38f9785f46f041ab4103beef984b0850971c35fa67601581f978088470818626
+- Code commit: 4808ab87dd5919f5aa63b47e761a74986341225e; run ID 44189928739.
+- 72,000 hourly Bitstamp BTCUSD candles; 2018-08-31T22:00Z through 2026-11-17T21:00Z; 50,400 training candles and 21,600 OOS candles (21,599 open-to-open returns); zero duplicate timestamps, zero hourly gaps, zero imputed candles.
+- Full-history 70/30 OOS matched buy-and-hold returned +3.4502%, while all 17 strategy candidates were negative. Ranking starts RSI14 -3.3822% (DD 3.4275%, PF 0.4518, Sharpe -1.8949, 37 trades), Bollinger -16.8386%, SMA200 -22.0246%, Z-Score20 -23.2287%, ROC60 -25.5616%; it ends OBV -55.5558% and Stochastic -65.4366%.
+- RSI14 cost stress: -3.3822%/-6.0280%/-8.6022% at 1x/2x/3x. All 17 candidates remain negative under every cost multiplier.
+- Important cost caveat: the fixed 0.10% fee and 0.05% slippage per side deliberately match Coinbase to isolate price-series sensitivity. They are not Bitstamp account-specific fees, measured spread, order-book depth, impact, latency, or realized slippage.
+- Full-history CSCV/PBO was 0.0 across 17 candidates, 8 partitions and 35 splits (21,592/21,599 returns used; 7 newest observations trimmed). This is only a ranking-selection diagnostic on this fixed universe and sample.
+- Expanding-window walk-forward selected SMA200 in all four folds: adaptive portfolio -16.794% at 1x, -42.868% at 2x, -60.777% at 3x, versus matched benchmark +39.677%/+39.625%/+39.572%; 1x max DD 26.584%, Sharpe -0.640, 501 closed trades over 28,800 OOS returns. The four folds are stitched OOS, with a 3,600-bar unused tail.
+
+#### Exact-date cross-exchange refresh
+
+The Bitstamp run 8 matched-calendar section still referenced Coinbase run 33 (ending 2026-11-14), not the newer Coinbase run 35. The reference was therefore updated, without changing candidate rules or cost assumptions, to pin Coinbase run 35:
+- run 44189928803, commit 4808ab87dd5919f5aa63b47e761a74986341225e;
+- dataset SHA-256 2c3b21e004f0460b0f2647d995f5204d088811f700c94e95bbec67c31f0cb57e;
+- OOS first open 2025-08-24T22:00:00Z, last candle 2026-11-17T21:00:00Z, 10,799 open-to-open returns.
+- Reference update and pinning regression test: https://github.com/sdndj98-art/WHJ-Bitcoin-Bot-2026/commit/97ffc720584362cc6c52603862effbbb435e020a.
+- The resulting Bitstamp run 9 was still executing at this report revision; do not treat its same-calendar result as completed until its artifact is uploaded and checked.
+
+**Current promotion decision remains NO CANDIDATE PROMOTED.** Historical OOS and walk-forward results are not forward paper trading. No candidate has sufficient evidence for production use.
