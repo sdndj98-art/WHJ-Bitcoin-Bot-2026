@@ -515,3 +515,25 @@ The Bitstamp run 8 matched-calendar section still referenced Coinbase run 33 (en
 - The resulting Bitstamp run 9 was still executing at this report revision; do not treat its same-calendar result as completed until its artifact is uploaded and checked.
 
 **Current promotion decision remains NO CANDIDATE PROMOTED.** Historical OOS and walk-forward results are not forward paper trading. No candidate has sufficient evidence for production use.
+
+
+### F21 — latest exact-calendar Coinbase/Bitstamp replication closed — 2026-11-17
+
+The updated reference to Coinbase run 35 completed successfully on Bitstamp run 9. This is now the exact same OOS calendar window on both exchanges, not the older run-33 reference.
+
+- Bitstamp workflow: https://github.com/sdndj98-art/WHJ-Bitcoin-Bot-2026/actions/runs/44190499641.
+- Artifact: https://github.com/sdndj98-art/WHJ-Bitcoin-Bot-2026/actions/runs/44190499641/artifacts/14377350619.
+- Artifact ZIP SHA-256: 2aeace368b2a1e9fab5149691bf74c71896e328e68a29fc9414759a062773bcd.
+- Artifact dataset SHA-256: 38f9785f46f041ab4103beef984b0850971c35fa67601581f978088470818626 (recomputed from decompressed snapshot; matches report).
+- Bitstamp dataset: 72,000 hourly candles, 2018-08-31T22:00Z through 2026-11-17T21:00Z; 0 duplicate timestamps, 0 hourly gaps, 0 imputed candles.
+- Coinbase reference: run 44189928803, commit 4808ab87dd5919f5aa63b47e761a74986341225e, dataset SHA-256 2c3b21e004f0460b0f2647d995f5204d088811f700c94e95bbec67c31f0cb57e.
+- Exact shared OOS window: 2025-08-24T22:00Z through 2026-11-17T21:00Z; 10,799 open-to-open returns. The matched Bitstamp slice contains 10,801 candles including the prior signal bar and endpoint; slice SHA-256 6f2a6aa261a12626a7ac948fdad202cf61d41c50059a8b91fb1a64ff46f0cd5a.
+- Matched buy-and-hold: Coinbase -11.4733%; Bitstamp -11.4888%.
+- Across the 17 candidates' cumulative net returns on this same calendar, Spearman rank correlation = **0.985294**, Pearson correlation = **0.997105**, mean absolute return difference = **0.4672 percentage points**, maximum absolute difference = **2.0931 percentage points**; 13 of 17 ordinal positions are identical.
+- The matched ranking still has every candidate negative at 1x/2x/3x. Best five Bitstamp 1x: RSI14 -1.3451%, Bollinger -8.5148%, Z-Score20 -11.1827%, Donchian55/20 -12.3958%, Volatility Squeeze -13.4058%. Worst: Stochastic -40.8298%.
+- Matched-window CSCV/PBO = 0.114286 across 17 fixed candidates, 8 contiguous partitions and 35 splits; 10,792/10,799 returns used, 7 newest observations trimmed. This remains a narrow selection diagnostic only.
+- Full Bitstamp-history 70/30 results and walk-forward remain as recorded in the run-8 section above; the run-9 change only refreshes the exact Coinbase reference window and matched-calendar diagnostics.
+
+**Execution/test evidence:** Bitstamp run 9 completed successfully. It ran 57 tests across the isolated report and shared contracts, compiled the research modules, evaluated all 17 candidates, and uploaded the artifact. Full repository audit run 1676 on commit 32e0b9c passed **576 tests in 7.130 seconds**, with tracked Python compilation and git diff --check successful: https://github.com/sdndj98-art/WHJ-Bitcoin-Bot-2026/actions/runs/44190910372.
+
+This closes the exact-calendar cross-exchange replication task for the current fixed signal-state definitions. It does not close F14 (entry/exit semantics), actual venue-specific spread/fees/impact, an untouched final holdout, or forward paper validation. It is evidence that the negative candidate ranking is not a Coinbase-only artifact; it is not evidence that any candidate is profitable.
