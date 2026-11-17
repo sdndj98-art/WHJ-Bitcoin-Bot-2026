@@ -30,11 +30,11 @@ BASE_FEE_PER_SIDE = 0.001
 BASE_SLIPPAGE_PER_SIDE = 0.0005
 BARS_PER_YEAR = 24 * 365
 COINBASE_REFERENCE_WINDOW = {
-    "run_id": "43649648836",
-    "code_commit_sha": "c110b7f330425c894f968eaca066efe88780f8b5",
-    "dataset_sha256": "110e96bd167f93c0bef58fe3385f71acab9d2da96142ff687f4b4a679a10ee9a",
-    "first_oos_open_timestamp_utc": "2025-08-21T22:00:00+00:00",
-    "last_candle_timestamp_utc": "2026-11-14T21:00:00+00:00",
+    "run_id": "44189928803",
+    "code_commit_sha": "4808ab87dd5919f5aa63b47e761a74986341225e",
+    "dataset_sha256": "2c3b21e004f0460b0f2647d995f5204d088811f700c94e95bbec67c31f0cb57e",
+    "first_oos_open_timestamp_utc": "2025-08-24T22:00:00+00:00",
+    "last_candle_timestamp_utc": "2026-11-17T21:00:00+00:00",
     "open_to_open_returns": 10799,
 }
 

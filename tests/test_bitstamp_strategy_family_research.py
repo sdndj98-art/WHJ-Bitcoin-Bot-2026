@@ -4,6 +4,7 @@ import unittest
 from datetime import datetime, timezone
 
 from bitstamp_strategy_family_research import (
+    COINBASE_REFERENCE_WINDOW,
     build_bitstamp_strategy_report,
     build_matched_calendar_overlap_report,
 )
@@ -217,6 +218,26 @@ class BitstampStrategyFamilyResearchTests(unittest.TestCase):
                 bootstrap_samples=100,
             )
 
+
+    def test_coinbase_reference_window_pins_latest_verified_run_35(self):
+        self.assertEqual(COINBASE_REFERENCE_WINDOW["run_id"], "44189928803")
+        self.assertEqual(
+            COINBASE_REFERENCE_WINDOW["code_commit_sha"],
+            "4808ab87dd5919f5aa63b47e761a74986341225e",
+        )
+        self.assertEqual(
+            COINBASE_REFERENCE_WINDOW["dataset_sha256"],
+            "2c3b21e004f0460b0f2647d995f5204d088811f700c94e95bbec67c31f0cb57e",
+        )
+        self.assertEqual(
+            COINBASE_REFERENCE_WINDOW["first_oos_open_timestamp_utc"],
+            "2025-08-24T22:00:00+00:00",
+        )
+        self.assertEqual(
+            COINBASE_REFERENCE_WINDOW["last_candle_timestamp_utc"],
+            "2026-11-17T21:00:00+00:00",
+        )
+        self.assertEqual(COINBASE_REFERENCE_WINDOW["open_to_open_returns"], 10799)
 
 if __name__ == "__main__":
     unittest.main()
