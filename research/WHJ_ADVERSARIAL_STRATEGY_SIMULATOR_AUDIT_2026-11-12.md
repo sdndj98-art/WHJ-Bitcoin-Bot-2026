@@ -451,3 +451,25 @@ This is input-contract hardening only. It does not alter signal definitions, exe
 - The artifact explicitly reports research-only execution disabled, no live orders, and no paper ledgers read or written.
 
 This closes F19's input-validation and CI-verification task. It does not close the OHLC fill-realism findings, establish realistic spread/depth/market impact, create a rolling or untouched holdout, or validate profitability. The new historical results remain negative in absolute terms and no candidate is promoted.
+
+
+### F20 — chronological timestamp integrity in the 17-signal input contract
+
+A source review found that strategy_family_lab._rows() trusted the caller's row order and ignored timestamps on mapping-shaped candles. Duplicate or out-of-order rows could therefore be accepted by the standalone 17-candidate signal builder, even though the downstream Bitstamp data loader independently enforces hourly continuity.
+
+**Research-only remediation:**
+- When timestamps are supplied, require finite numeric, non-boolean values.
+- Require timestamps to be present on every row or omitted on every mapping row; reject mixed timestamp coverage.
+- Require strictly increasing timestamps, rejecting duplicates and out-of-order bars before indicators are calculated.
+- Do not impose a universal gap-free interval in the signal library: timeframe/session-specific gap policy remains the responsibility of each source loader.
+
+**Regression coverage:** four tests cover duplicate and out-of-order sequences, boolean/string/NaN/infinite timestamps, mixed mapping timestamp presence, valid mapping timestamps, and the documented all-omitted mapping case.
+
+**Commits and validation:**
+- Source guard and initial tests: https://github.com/sdndj98-art/WHJ-Bitcoin-Bot-2026/commit/53c27dbbf28aef950aa4a4a6e72d45375f5c7b40.
+- Test-fixture correction (the first fixture removed a required positional timestamp instead of creating a mixed mapping): https://github.com/sdndj98-art/WHJ-Bitcoin-Bot-2026/commit/4808ab87dd5919f5aa63b47e761a74986341225e.
+- First validation on 53c27db correctly exposed that test-fixture mistake: 575 tests ran with one assertion failure; the source guard itself and all other tests passed.
+- Corrected full repository audit on 4808ab8: https://github.com/sdndj98-art/WHJ-Bitcoin-Bot-2026/actions/runs/44189928767, **575 tests passed in 6.104 seconds**; compile-all-tracked-Python and git diff --check steps succeeded.
+- Independent Bitstamp research workflow on the corrected head: https://github.com/sdndj98-art/WHJ-Bitcoin-Bot-2026/actions/runs/44189928739; shared strategy/evaluator tests and module compilation passed before the historical evaluation step. Final run conclusion is tracked separately.
+
+This guard prevents silent chronological reordering at the signal-library boundary; it does not validate exchange session calendars, detect missing intervals by itself, change any signal or exit rule, or establish performance. No historical result is re-labelled and no candidate is promoted.
