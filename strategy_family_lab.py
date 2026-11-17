@@ -1,8 +1,9 @@
 """
 Expanded, isolated BTC strategy-family signal library.
 
-Signals are computed only from completed OHLCV bars. A consumer must execute
-no earlier than the next bar; this module contains no orders, account state,
+Signals are computed only from completed OHLCV bars. Supplied timestamps must be
+finite and strictly increasing; gap policy remains the data loader's responsibility.
+A consumer must execute no earlier than the next bar; this module contains no orders, account state,
 position sizing, exchange access, or performance claims.
 """
 import math
@@ -10,13 +11,26 @@ from statistics import median
 
 def _rows(candles):
     result = []
+    timestamps = []
     for row in candles:
         if isinstance(row, dict):
+            has_timestamp = "timestamp" in row
+            timestamp = row.get("timestamp")
             values = [row[k] for k in ("open", "high", "low", "close", "volume")]
         else:
-            if len(row) < 6:
+            if not isinstance(row, (list, tuple)) or len(row) < 6:
                 raise ValueError("OHLCV rows must contain timestamp, open, high, low, close, volume")
+            has_timestamp = True
+            timestamp = row[0]
             values = row[1:6]
+        if has_timestamp:
+            if (isinstance(timestamp, bool)
+                    or not isinstance(timestamp, (int, float))
+                    or not math.isfinite(timestamp)):
+                raise ValueError("timestamps must be finite numeric values")
+            timestamps.append(float(timestamp))
+        else:
+            timestamps.append(None)
         if any(isinstance(v, bool) or not isinstance(v, (int, float)) or not math.isfinite(v) for v in values):
             raise ValueError("OHLCV values must be finite numbers")
         o, h, l, c, v = map(float, values)
@@ -25,6 +39,11 @@ def _rows(candles):
         result.append((o, h, l, c, v))
     if len(result) < 3:
         raise ValueError("At least three OHLCV candles are required")
+    if any(value is None for value in timestamps) and any(value is not None for value in timestamps):
+        raise ValueError("timestamps must be present on every candle or omitted from every candle")
+    if timestamps and timestamps[0] is not None:
+        if any(current <= previous for previous, current in zip(timestamps, timestamps[1:])):
+            raise ValueError("timestamps must be strictly increasing; duplicate or out-of-order candles are not allowed")
     return result
 
 def _sma(values, period):

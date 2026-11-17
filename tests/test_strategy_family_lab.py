@@ -65,6 +65,62 @@ class StrategyFamilyLabTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             build_strategy_signals(candles)
 
+    def test_duplicate_and_out_of_order_timestamps_are_rejected(self):
+        duplicate = self.candles()
+        duplicate[100][0] = duplicate[99][0]
+        with self.assertRaisesRegex(ValueError, "strictly increasing"):
+            build_strategy_signals(duplicate)
+
+        out_of_order = self.candles()
+        out_of_order[100][0] = out_of_order[99][0] - 1
+        with self.assertRaisesRegex(ValueError, "strictly increasing"):
+            build_strategy_signals(out_of_order)
+
+    def test_timestamp_values_must_be_finite_numeric_and_consistent(self):
+        import math
+
+        for invalid in (True, "100", math.nan, math.inf, -math.inf):
+            rows = self.candles()
+            rows[10][0] = invalid
+            with self.subTest(timestamp=invalid):
+                with self.assertRaisesRegex(ValueError, "timestamps must be finite numeric"):
+                    build_strategy_signals(rows)
+
+        rows = self.candles()
+        rows[10] = rows[10][1:]
+        with self.assertRaisesRegex(ValueError, "timestamps must be present"):
+            build_strategy_signals(rows)
+
+    def test_dictionary_timestamps_are_validated_when_supplied(self):
+        rows = [
+            {
+                "timestamp": index,
+                "open": 100.0 + index,
+                "high": 101.0 + index,
+                "low": 99.0 + index,
+                "close": 100.5 + index,
+                "volume": 1000.0,
+            }
+            for index in range(260)
+        ]
+        self.assertEqual(len(build_strategy_signals(rows)["sma200_regime"]), 260)
+        rows[200]["timestamp"] = rows[199]["timestamp"]
+        with self.assertRaisesRegex(ValueError, "strictly increasing"):
+            build_strategy_signals(rows)
+
+    def test_dictionary_timestamps_may_be_omitted_consistently(self):
+        rows = [
+            {
+                "open": 100.0 + index,
+                "high": 101.0 + index,
+                "low": 99.0 + index,
+                "close": 100.5 + index,
+                "volume": 1000.0,
+            }
+            for index in range(260)
+        ]
+        self.assertEqual(len(build_strategy_signals(rows)["sma200_regime"]), 260)
+
     def test_strategy_universe_labels_unimplemented_data_families(self):
         universe = strategy_universe()
         self.assertEqual(universe["promotion_status"], "RESEARCH_ONLY_NOT_EVALUATED")
