@@ -437,4 +437,17 @@ A source review found that the isolated slow-momentum evaluator reused Python's 
 - Require the cost multiplier to be finite, non-boolean, numeric, and at least 1.
 - Add regression cases for booleans, strings, NaN, positive/negative infinity, and sub-unit multipliers.
 
-This is input-contract hardening only. It does not alter signal definitions, execution timing, normal cost assumptions, allocation, strategy results, paper ledgers, schedules, or trading pathways. The existing isolated slow-momentum workflow path filters include both the source and its test file, so a push of this change should trigger its public-data research job; no new historical result is claimed until that run and artifact complete.
+This is input-contract hardening only. It does not alter signal definitions, execution timing, normal cost assumptions, allocation, strategy results, paper ledgers, schedules, or trading pathways. The existing isolated slow-momentum workflow path filters include both the source and its test file. The push triggered the dedicated public-data workflow on 2026-11-17; its completed run and artifact are recorded in the validation closure below.
+
+
+### F19 validation closure — 2026-11-17
+
+- Research fix: [commit 63a82b8](https://github.com/sdndj98-art/WHJ-Bitcoin-Bot-2026/commit/63a82b8bf9768ba85bca14c2b00eb08e8567daf4).
+- Full repository validation: [Termux Repository Audit run 44151979255](https://github.com/sdndj98-art/WHJ-Bitcoin-Bot-2026/actions/runs/44151979255), exact head `63a82b8bf9768ba85bca14c2b00eb08e8567daf4).
+- Result: **571 tests passed in 7.751 seconds**; the three new F19 regression methods are present in the log and pass. Tracked Python compilation and `git diff --check` also passed.
+- Dedicated slow-momentum workflow: [run 44151979400](https://github.com/sdndj98-art/WHJ-Bitcoin-Bot-2026/actions/runs/44151979400), conclusion `success`, exact same code head.
+- Artifact: `whj-isolated-slow-momentum-22`, ID `14359971027`; ZIP digest `3d640f573cab6412447b9d8e2885ac9450018bc8fe5d37aac710fe07055deab3`.
+- The artifact's decompressed daily dataset hash was independently recomputed and matched the JSON report and trial manifests: `5feba5d5f2f97eaec192ae058b2a689d09556717a7dabc686e1715a470f765db`.
+- The artifact explicitly reports research-only execution disabled, no live orders, and no paper ledgers read or written.
+
+This closes F19's input-validation and CI-verification task. It does not close the OHLC fill-realism findings, establish realistic spread/depth/market impact, create a rolling or untouched holdout, or validate profitability. The new historical results remain negative in absolute terms and no candidate is promoted.
