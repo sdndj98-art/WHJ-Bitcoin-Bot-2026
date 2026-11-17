@@ -86,8 +86,18 @@ class StrategyFamilyLabTests(unittest.TestCase):
                 with self.assertRaisesRegex(ValueError, "timestamps must be finite numeric"):
                     build_strategy_signals(rows)
 
-        rows = self.candles()
-        rows[10] = rows[10][1:]
+        rows = [
+            {
+                "timestamp": index,
+                "open": 100.0 + index,
+                "high": 101.0 + index,
+                "low": 99.0 + index,
+                "close": 100.5 + index,
+                "volume": 1000.0,
+            }
+            for index in range(260)
+        ]
+        del rows[10]["timestamp"]
         with self.assertRaisesRegex(ValueError, "timestamps must be present"):
             build_strategy_signals(rows)
 
