@@ -119,7 +119,11 @@ class WhjAgentsTests(unittest.TestCase):
                 "BTC": {"review_status": "COLLECTING_SAMPLE", "next_action": "CONTINUE_PAPER_TEST", "closed_trades": 2},
                 "XAUUSD": {"review_status": "COLLECTING_SAMPLE", "next_action": "CONTINUE_PAPER_TEST", "closed_trades": 1},
             },
-            "governance": {"strategy_auto_changes": False, "orders_submitted": False},
+            "governance": {
+                "strategy_auto_changes": False, "ledger_mutation": False,
+                "risk_limit_changes": False, "dashboard_modified": False,
+                "orders_submitted": False,
+            },
         }
         state = build_agent_state(healthy_snapshot(), research_report=report)
         advisory = state["unified_decision"]["research_advisory"]
@@ -135,9 +139,33 @@ class WhjAgentsTests(unittest.TestCase):
             "markets": {"BTC": {}, "XAUUSD": {}},
             "governance": {"strategy_auto_changes": True, "orders_submitted": False},
         }
+        report["live_trading_enabled"] = False
+        report["governance"].update({
+            "strategy_auto_changes": False, "ledger_mutation": True,
+            "risk_limit_changes": False, "dashboard_modified": False,
+        })
         state = build_agent_state(healthy_snapshot(), research_report=report)
         self.assertEqual(state["unified_decision"]["research_advisory"]["status"], "REJECTED_UNSAFE_REPORT")
         self.assertEqual(state["unified_decision"]["portfolio_decision"], "HOLD")
+
+    def test_malformed_comparison_is_rejected(self):
+        report = {
+            "mode": "READ_ONLY_PAPER_RESEARCH",
+            "paper_only": True,
+            "live_trading_enabled": False,
+            "comparison": [],
+            "markets": {"BTC": {}, "XAUUSD": {}},
+            "governance": {
+                "strategy_auto_changes": False, "ledger_mutation": False,
+                "risk_limit_changes": False, "dashboard_modified": False,
+                "orders_submitted": False,
+            },
+        }
+        state = build_agent_state(healthy_snapshot(), research_report=report)
+        self.assertEqual(
+            state["unified_decision"]["research_advisory"]["status"],
+            "INVALID_REPORT",
+        )
 
     def test_atomic_output_is_valid_json(self):
         with tempfile.TemporaryDirectory() as folder:
