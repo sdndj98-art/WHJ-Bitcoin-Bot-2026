@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       head_branch:
-        description: "Existing reviewed proposal branch (must start with whj-proposal/)"
+        description: "Existing proposal branch; must start with whj-proposal/"
         required: true
         type: string
 
@@ -52,7 +52,7 @@ jobs:
             echo "Rejected: proposal branch has no changes"
             exit 1
           fi
-          if grep -E '^(index\.html|dual_portfolio\.json|paper_account\.py|whj_agents\.py|btc_paper_runner\.py|gold_paper_runner\.py|.*paper.*ledger.*)$' changed-files.txt; then
+          if grep -E '^(index\\.html|dual_portfolio\\.json|paper_account\\.py|whj_agents\\.py|btc_paper_runner\\.py|gold_paper_runner\\.py|.*paper.*ledger.*)$' changed-files.txt; then
             echo "Rejected: proposal touches protected dashboard or trading-safety files"
             exit 1
           fi
@@ -62,23 +62,10 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           HEAD_BRANCH: ${{ inputs.head_branch }}
         run: |
-          if gh pr list --base main --head "$HEAD_BRANCH" --state open --json number --jq 'length' | grep -qv '^0$'; then
+          existing=$(gh pr list --base main --head "$HEAD_BRANCH" --state open --json number --jq 'length')
+          if [ "$existing" != "0" ]; then
             echo "An open pull request already exists for this branch."
             exit 0
           fi
-          gh pr create \
-            --draft \
-            --base main \
-            --head "$HEAD_BRANCH" \
-            --title "WHJ proposal: ${HEAD_BRANCH#whj-proposal/}" \
-            --body "## WHJ reviewed proposal
-
-This is a draft for human review only.
-
-- Created only after a person prepared the proposal branch and manually dispatched this workflow.
-- Automated validation rejects changes to the dashboard, portfolio configuration, paper account, consensus, and BTC/Gold runners.
-- Review the diff and run all repository tests before approval.
-- No automatic merge is enabled.
-- Paper Trading remains the only permitted mode; live trading must remain disabled.
-
-Close this draft if the change is unsafe or unnecessary."
+          title="WHJ proposal: ${HEAD_BRANCH#whj-proposal/}"
+          gh pr create --draft --base main --head "$HEAD_BRANCH" --title "$title" --body "Draft for human review only. Dashboard and protected trading files are blocked. Run all tests and review the diff before approval. No automatic merge. Paper Trading only; live trading must remain disabled."
