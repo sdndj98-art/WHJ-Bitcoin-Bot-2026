@@ -7,6 +7,7 @@ from bitstamp_strategy_family_research import (
     COINBASE_REFERENCE_WINDOW,
     build_bitstamp_strategy_report,
     build_matched_calendar_overlap_report,
+    render_markdown_report,
 )
 from research_snapshot import canonical_json_bytes, sha256_bytes
 
@@ -238,6 +239,47 @@ class BitstampStrategyFamilyResearchTests(unittest.TestCase):
             "2026-11-17T21:00:00+00:00",
         )
         self.assertEqual(COINBASE_REFERENCE_WINDOW["open_to_open_returns"], 10799)
+
+
+    def test_coinbase_reference_window_is_pinned_to_latest_verified_run_40(self):
+        self.assertEqual(COINBASE_REFERENCE_WINDOW, {
+            "run_id": "44414511120",
+            "code_commit_sha": "f71f2427ffbb211d9b44aae2f2bd657bff4c88c8",
+            "dataset_sha256": "3b1d145f79f21e8e2a84d94e6d1f64b5845fc3c5557cc7d93a806f9cca043804",
+            "first_oos_open_timestamp_utc": "2025-08-25T22:00:00+00:00",
+            "last_candle_timestamp_utc": "2026-11-18T21:00:00+00:00",
+            "open_to_open_returns": 10799,
+        })
+
+    def test_markdown_uses_reference_run_and_dataset_hash_not_stale_literal(self):
+        candles = self.candles()
+        start_index = 500
+        return_count = 800
+        end_index = start_index + return_count
+        reference = {
+            "run_id": "coinbase-reference-test",
+            "code_commit_sha": "e" * 40,
+            "dataset_sha256": "f" * 64,
+            "first_oos_open_timestamp_utc": datetime.fromtimestamp(
+                candles[start_index]["timestamp"] / 1000, timezone.utc
+            ).isoformat(),
+            "last_candle_timestamp_utc": datetime.fromtimestamp(
+                candles[end_index]["timestamp"] / 1000, timezone.utc
+            ).isoformat(),
+            "open_to_open_returns": return_count,
+        }
+        report = build_bitstamp_strategy_report(
+            candles,
+            run_id="bitstamp-markdown-test",
+            code_commit_sha="a" * 40,
+            generated_at_utc="2026-11-18T00:00:00+00:00",
+            bootstrap_samples=100,
+            reference_window=reference,
+        )
+        markdown = render_markdown_report(report)
+        self.assertIn("Coinbase run coinbase-reference-test", markdown)
+        self.assertIn(reference["dataset_sha256"], markdown)
+        self.assertNotIn("run-33", markdown)
 
 if __name__ == "__main__":
     unittest.main()

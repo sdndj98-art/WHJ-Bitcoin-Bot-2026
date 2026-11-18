@@ -30,11 +30,11 @@ BASE_FEE_PER_SIDE = 0.001
 BASE_SLIPPAGE_PER_SIDE = 0.0005
 BARS_PER_YEAR = 24 * 365
 COINBASE_REFERENCE_WINDOW = {
-    "run_id": "44189928803",
-    "code_commit_sha": "4808ab87dd5919f5aa63b47e761a74986341225e",
-    "dataset_sha256": "2c3b21e004f0460b0f2647d995f5204d088811f700c94e95bbec67c31f0cb57e",
-    "first_oos_open_timestamp_utc": "2025-08-24T22:00:00+00:00",
-    "last_candle_timestamp_utc": "2026-11-17T21:00:00+00:00",
+    "run_id": "44414511120",
+    "code_commit_sha": "f71f2427ffbb211d9b44aae2f2bd657bff4c88c8",
+    "dataset_sha256": "3b1d145f79f21e8e2a84d94e6d1f64b5845fc3c5557cc7d93a806f9cca043804",
+    "first_oos_open_timestamp_utc": "2025-08-25T22:00:00+00:00",
+    "last_candle_timestamp_utc": "2026-11-18T21:00:00+00:00",
     "open_to_open_returns": 10799,
 }
 
@@ -200,7 +200,7 @@ def build_matched_calendar_overlap_report(
     generated_at_utc,
     bootstrap_samples=1000,
 ):
-    """Evaluate Bitstamp over the exact Coinbase run-33 OOS calendar window.
+    """Evaluate Bitstamp over the exact pinned Coinbase OOS calendar window.
 
     The first OOS signal is the completed candle immediately before the
     reference first-open timestamp; the last candle is the reference endpoint.
@@ -608,9 +608,10 @@ def render_markdown_report(report):
         reference = matched["reference"]
         lines.extend([
             "",
-            "## Exact calendar overlap with Coinbase run 33",
+            "## Exact calendar overlap with Coinbase",
             "",
             f"- Reference: Coinbase run {reference['run_id']} ({reference['first_oos_open_timestamp_utc']} through {reference['last_candle_timestamp_utc']}).",
+            f"- Reference dataset SHA-256: `{reference['dataset_sha256']}`.
             f"- Bitstamp matched returns: {matched['bitstamp']['open_to_open_returns']}; matched slice SHA-256: `{matched['bitstamp']['matched_oos_slice_sha256']}`.",
             f"- CSCV/PBO: {matched['cscv_pbo']['pbo_estimate'] if matched['cscv_pbo'] else 'not computed'} ({matched['cscv_pbo_status']}).",
             "",
@@ -630,7 +631,7 @@ def render_markdown_report(report):
             )
         lines.extend([
             "",
-            "This segment exactly matches the Coinbase run-33 OOS calendar and return count. It isolates the venue price series more cleanly than the separate full-history 70/30 split; costs are still fixed proxies, not actual Bitstamp fees or spread.",
+            "This segment exactly matches the referenced Coinbase OOS calendar and return count. It isolates the venue price series more cleanly than the separate full-history 70/30 split; costs are still fixed proxies, not actual Bitstamp fees or spread.",
         ])
     lines.extend(["", "## Expanding-window walk-forward", ""])
     for level, metrics in report["rolling_walk_forward"]["aggregate_oos_cost_scenarios"].items():
