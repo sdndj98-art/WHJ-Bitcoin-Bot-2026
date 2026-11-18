@@ -527,10 +527,15 @@ def update_paper_account(candles, state_path="paper_account_state.json",
                 "risk_paused": bool(paused),
                 "allocation_pct": round(allocation_fraction * 100.0, 4),
             }
-            consensus_approved = (
-                entry_gate(entry_context) is True if entry_gate is not None else True
+            entry_candidate = bool(
+                want_long and state["btc"] == 0 and not paused and entry_permitted
             )
-            if want_long and state["btc"] == 0 and not paused and entry_permitted and consensus_approved:
+            consensus_approved = (
+                entry_gate(entry_context) is True
+                if entry_candidate and entry_gate is not None
+                else entry_gate is None
+            )
+            if entry_candidate and consensus_approved:
                 # Compound sizing: each new entry uses a fixed fraction of the latest
                 # realized account equity (cash while flat), so prior net PnL changes
                 # the next order size automatically. Never borrow or exceed available cash.
