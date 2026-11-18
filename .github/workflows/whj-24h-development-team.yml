@@ -1,0 +1,38 @@
+name: WHJ 24x7 Development Team
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 * * * *"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: whj-24h-development-team
+  cancel-in-progress: false
+
+jobs:
+  hourly-development-qa:
+    name: Hourly repository development and quality audit
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Run WHJ development team
+        run: python whj_24h_development_team.py
+      - name: Upload development report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: whj-development-team-${{ github.run_number }}
+          path: research/development_team/
+          if-no-files-found: warn
+          retention-days: 30
