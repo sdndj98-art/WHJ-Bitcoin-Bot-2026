@@ -147,8 +147,9 @@ class StrategyFamilyLabTests(unittest.TestCase):
     def test_candidate_rules_v1_cover_all_17_and_disclose_proxy_exits(self):
         signals = build_strategy_signals(self.candles())
         universe = strategy_universe()
-        rules = universe["candidate_rules_v1"]
-        self.assertEqual(universe["candidate_rules_version"], "v1_boolean_long_flat_state_proxy")
+        semantics = universe["signal_semantics"]
+        rules = semantics["candidate_rules_v1"]
+        self.assertEqual(semantics["candidate_rules_version"], "v1_boolean_long_flat_state_proxy")
         self.assertEqual(set(rules), set(signals))
         self.assertEqual(len(rules), 17)
         allowed_kinds = {"persistent_state", "regime_state", "one_bar_event"}
