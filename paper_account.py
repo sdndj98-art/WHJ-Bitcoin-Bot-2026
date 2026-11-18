@@ -319,7 +319,8 @@ def update_paper_account(candles, state_path="paper_account_state.json",
                          strategy_health_drawdown_fraction=0.08,
                          require_entry_confirmation=False,
                          entry_confirmation_timestamp=None,
-                         entry_confirmation_available=False):
+                         entry_confirmation_available=False,
+                         entry_gate=None):
     """Process each newly closed hourly candle once and persist the simulated account."""
     initial_cash = _number(initial_cash, "initial_cash", 0)
     if initial_cash <= 0:
@@ -337,6 +338,8 @@ def update_paper_account(candles, state_path="paper_account_state.json",
         raise ValueError("require_entry_confirmation must be boolean")
     if not isinstance(entry_confirmation_available, bool):
         raise ValueError("entry_confirmation_available must be boolean")
+    if entry_gate is not None and not callable(entry_gate):
+        raise ValueError("entry_gate must be callable when provided")
     if entry_confirmation_timestamp is not None and (
         isinstance(entry_confirmation_timestamp, bool)
         or not isinstance(entry_confirmation_timestamp, int)
@@ -517,7 +520,17 @@ def update_paper_account(candles, state_path="paper_account_state.json",
             entry_permitted = (
                 not require_entry_confirmation or confirmation_matches
             )
-            if want_long and state["btc"] == 0 and not paused and entry_permitted:
+            entry_context = {
+                "signal": "BUY",
+                "timestamp": timestamp,
+                "price": close,
+                "risk_paused": bool(paused),
+                "allocation_pct": round(allocation_fraction * 100.0, 4),
+            }
+            consensus_approved = (
+                entry_gate(entry_context) is True if entry_gate is not None else True
+            )
+            if want_long and state["btc"] == 0 and not paused and entry_permitted and consensus_approved:
                 # Compound sizing: each new entry uses a fixed fraction of the latest
                 # realized account equity (cash while flat), so prior net PnL changes
                 # the next order size automatically. Never borrow or exceed available cash.
