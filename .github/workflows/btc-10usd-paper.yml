@@ -97,7 +97,8 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add dual_portfolio.json state/whj_agents.json
+          git add dual_portfolio.json
+          git add -f state/whj_agents.json
           if [ -f state/xauusd_10usd_ema_trend.json ] && [ "$(cat state/xauusd_paper_initialized.json)" != "INITIALIZED" ]; then
             echo "INITIALIZED" > state/xauusd_paper_initialized.json
             git add -f state/xauusd_paper_initialized.json
