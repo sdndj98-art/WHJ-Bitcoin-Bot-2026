@@ -18,6 +18,14 @@ class StrategyFamilyRunnerTests(unittest.TestCase):
         self.assertEqual(result["promotion_status"], "NO_CANDIDATE_PROMOTED")
         self.assertEqual(result["allocation_fraction"], 0.25)
         self.assertEqual(result["allocation_cap_fraction"], 0.25)
+        self.assertEqual(
+            result["signal_semantics"]["representation"],
+            "boolean_long_flat_state_proxy",
+        )
+        self.assertIn(
+            "stochastic_reversal",
+            result["signal_semantics"]["named_proxy_limitations"],
+        )
         for candidate in result["results"].values():
             self.assertEqual(candidate["protocol"], "completed_close_signal_next_open_fill_open_to_open_return")
             self.assertEqual(candidate["strategy"]["bars"], candidate["buy_and_hold"]["bars"])
