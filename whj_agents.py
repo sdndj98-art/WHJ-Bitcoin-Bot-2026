@@ -211,9 +211,14 @@ def build_agent_state(snapshot, generated_at=None):
          "closed_trades": closed},
     )
 
-    unified_decision = build_unified_decision(\n        sleeves, healthy, safety_ok, risk_ok, sizing_ok\n    )\n\n    return {
+    unified_decision = build_unified_decision(
+        sleeves, healthy, safety_ok, risk_ok, sizing_ok
+    )
+
+    return {
         "schema_version": 2,
-        "generated_at_utc": generated_at or datetime.now(timezone.utc).isoformat(),\n        "unified_decision": unified_decision,
+        "generated_at_utc": generated_at or datetime.now(timezone.utc).isoformat(),
+        "unified_decision": unified_decision,
         "source_updated_at": snapshot.get("updated_at"),
         "mode": "PAPER_ONLY" if safety_ok else "SAFETY_BLOCKED",
         "live_trading_enabled": False,
