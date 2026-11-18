@@ -101,6 +101,30 @@ def build_unified_decision(sleeves, healthy, safety_ok, risk_ok, sizing_ok):
     }
 
 
+def authorize_paper_entry(market, feed_healthy, context):
+    """Return True only when the six-agent paper consensus approves a BUY entry."""
+    if not isinstance(context, dict) or context.get("signal") != "BUY":
+        return False
+    allocation_pct = context.get("allocation_pct")
+    risk_paused = context.get("risk_paused") is True
+    sleeve = {
+        "strategy_signal": "BUY",
+        "feed_status": "PAPER_FEED_HEALTHY" if feed_healthy else "FEED_BLOCKED",
+        "status": "PAPER_RUNNING" if feed_healthy else "FEED_BLOCKED",
+        "data_quality": {"quality": "HEALTHY" if feed_healthy else "UNHEALTHY"},
+        "risk_pause_reasons": ["RISK_PAUSE_ACTIVE"] if risk_paused else [],
+        "risk_limits": {"allocation_pct": allocation_pct},
+    }
+    safety_ok = True
+    healthy = {market: bool(feed_healthy)}
+    risk_ok = bool(feed_healthy) and not risk_paused
+    sizing_ok = _finite_number(allocation_pct) and 0 < allocation_pct <= 10
+    decision = build_unified_decision(
+        {market: sleeve}, healthy, safety_ok, risk_ok, sizing_ok
+    )
+    return decision["market_decisions"][market]["approved_by_consensus"] is True
+
+
 def build_agent_state(snapshot, generated_at=None):
     """Build six agent statuses from the latest dual-paper portfolio snapshot."""
     if not isinstance(snapshot, dict):
