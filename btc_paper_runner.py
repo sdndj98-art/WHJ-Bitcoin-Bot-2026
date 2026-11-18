@@ -5,6 +5,7 @@ from pathlib import Path
 from historical_research import load_two_year_candles
 from forward_paper_monitor import validate_hourly_feed
 from paper_account import seed_forward_paper_account, update_paper_account
+from whj_agents import authorize_paper_entry
 
 STATE = Path("state/btc_10usd_rsi14_mean_reversion.json")
 CASH = 10.0
@@ -30,11 +31,14 @@ def main():
         return [[int(r["timestamp"]//1000), r["open"], r["high"], r["low"], r["close"], r["volume"]] for r in rows]
     seed = seed_forward_paper_account(convert(candles[-200:]), STATE,
         initial_cash=CASH, strategy=STRATEGY)
+    entry_gate = lambda context: authorize_paper_entry(
+        "BTC", quality.get("quality") == "HEALTHY", context
+    )
     result = update_paper_account(convert(candles), state_path=str(STATE),
         initial_cash=CASH, fee_rate=0.001, slippage_rate=0.0005,
         allocation_fraction=COMPOUND_ALLOCATION_FRACTION, max_drawdown_fraction=0.10,
         daily_loss_fraction=0.03, max_consecutive_losses=3,
-        strategy=STRATEGY)
+        strategy=STRATEGY, entry_gate=entry_gate)
     equity = result["equity_after_estimated_exit_costs_usd"]
     status = "RISK_PAUSED" if result["risk_pause_reasons"] else (
         "PAPER_RUNNING" if result["processed_new_candles"] else "PAPER_ACTIVE_WAITING_NEXT_CLOSED_CANDLE")
