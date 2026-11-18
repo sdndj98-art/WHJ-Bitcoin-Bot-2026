@@ -591,3 +591,34 @@ The previous Bitstamp run 13/14 artifacts still carried the Coinbase run-35 cale
 - The 17 candidates remain boolean long/flat signal-state proxies, not fully specified canonical entry/exit systems (F14 remains open). Costs are still fixed 0.10% fee + 0.05% slippage per side for controlled cross-venue comparison, not measured Bitstamp fees/spread/impact. There is still no untouched final holdout or sufficient forward-paper evidence.
 
 **NO CANDIDATE PROMOTED.** This refresh corrects the exact-calendar reference and strengthens replication evidence; it does not establish profitability or justify paper/live promotion.
+
+
+### F24 — Coinbase run 44 refresh and pending Bitstamp exact-calendar replay — 2026-11-19
+
+The current Coinbase isolated research artifact is newer than the Bitstamp matched-calendar artifact previously cited in F23. This section records the exact state and prevents the older Bitstamp overlap from being described as a run-44 replication.
+
+**Coinbase run 44 — verified artifact**
+- Workflow: [Coinbase multi-strategy run 44](https://github.com/sdndj98-art/WHJ-Bitcoin-Bot-2026/actions/runs/44420240828).
+- Artifact: [whj-multi-strategy-research-44](https://github.com/sdndj98-art/WHJ-Bitcoin-Bot-2026/actions/runs/44420240828/artifacts/14481148261); ZIP SHA-256 `58464cdb5f28c43781ffb9a5479ff82451a19bc4cde68b721230d1bd3b2bbc05`.
+- Code commit: `b53c64f38c193f42f87e3b3af41791fcab3393f0`; run completed successfully.
+- 36,000 Coinbase BTC-USD hourly candles; 25,200 training candles; 10,800 OOS candles / 10,799 open-to-open returns. OOS begins at `2025-08-25T23:00:00+00:00`; final candle is `2026-11-18T22:00:00+00:00`.
+- 13 hourly observations are explicitly marked imputed. The canonical decompressed snapshot SHA-256 was independently recomputed from the artifact and matches `ac79d7b801559e74af89e242606b78ebbf35318a1374f98da0bd8cf28972a908`.
+- All 17 V1 boolean long/flat proxies lose at 1x, 2x, and 3x fixed costs. Best by 1x net return is RSI14: `-1.3633%`, open-to-open DD `1.4107%`, periodic PF `0.3497`, annualized hourly Sharpe `-1.8879`, 11 closed trades; 2x `-2.1741%`, 3x `-2.9786%`. Matched 25% buy-and-hold is `-11.4976%`.
+- CSCV/PBO is `0.085714` across 17 fixed candidates, 35 splits, 8 partitions; 10,792 of 10,799 returns used and seven newest observations trimmed. This is a narrow selection diagnostic, not a future-profit probability.
+- Expanding-window four-fold adaptive selection: 14,400 stitched OOS bars; strategy `-22.2890%` versus matched buy-and-hold `-1.0830%`, DD `25.3867%`, periodic PF `0.8805`, Sharpe `-2.3939`, 223 closed trades. Cost-stressed strategy returns: 2x `-34.2636%`, 3x `-44.3966%`.
+
+**Independent Bitstamp run 17 — valid full-history result, stale matched-calendar reference**
+- Workflow: [Bitstamp 17-candidate run 17](https://github.com/sdndj98-art/WHJ-Bitcoin-Bot-2026/actions/runs/44415730207).
+- Artifact: [whj-bitstamp-17-strategy-research-17](https://github.com/sdndj98-art/WHJ-Bitcoin-Bot-2026/actions/runs/44415730207/artifacts/14479033160); ZIP SHA-256 `2365639fdafadee4f9de00dcffa358bc89d8a3e4df85203e7a0b85864152babb`.
+- Code commit: `631e35ea22ef1a9f15086cc8dd4dd9115dd0383a`; run completed successfully with 62 tests across eight test groups, module compilation, 17-candidate evaluation, and artifact upload.
+- 72,000 Bitstamp BTCUSD hourly candles; 50,400 training candles; 21,600 OOS candles / 21,599 open-to-open returns; zero duplicates, gaps, or imputed bars. Canonical snapshot SHA-256 recomputed from the artifact matches `5e9d2343b3ba8484aa1430b5d3055965259ac4298d4a49e0ab2cf380004c054a`.
+- Full-history 70/30 OOS benchmark: `+2.8254%`; all 17 candidates are negative at 1x/2x/3x. Best RSI14: `-3.3822%`, DD `3.4275%`, periodic PF `0.4518`, Sharpe `-1.8949`, 37 closed trades.
+- Its embedded matched-calendar block still references Coinbase run 40, not run 44: first OOS open `2025-08-25T22:00:00+00:00`, last Bitstamp candle `2026-11-18T21:00:00+00:00`. It must not be cited as the exact-calendar replication of Coinbase run 44, whose window begins one hour later and ends at 22:00 UTC.
+
+**Current branch reference and validation blocker**
+- The research source `bitstamp_strategy_family_research.py` and its regression test now pin Coinbase run 44, commit `b53c64f38c193f42f87e3b3af41791fcab3393f0`, and its dataset hash/window. The latest branch commit `6009c675dffce2206c797b64a9919024717a85e9` updates the reference-pin test.
+- The Bitstamp workflow path filter includes `tests/test_bitstamp_strategy_family_research.py`, so the commit is eligible to trigger a fresh Bitstamp run. However, the available GitHub connector exposes only PR-triggered runs for a commit and returns no run for this push-triggered commit; the combined commit-status endpoint also returns no status entries. The latest observable Bitstamp artifact remains run 17 on the older code commit. Therefore the run-44 Bitstamp replay and CI for commit `6009c675dffce2206c797b64a9919024717a85e9` are **not verified in this audit**. Do not claim that the refreshed exact-calendar comparison passed until a new Bitstamp artifact and its job logs are retrieved.
+- The attempted direct public Git clone was blocked by unavailable DNS/network access in the execution container. GitHub file/artifact reads succeeded; no local repository test run is claimed.
+- No strategy is promoted. No paper ledger, balance, schedule, risk limit, exchange secret, Telegram path, or live order path was accessed or changed.
+
+**Decision:** keep PR #122 open and unmerged. The next concrete step is to retrieve the Bitstamp workflow run triggered by commit `6009c675dffce2206c797b64a9919024717a85e9`, verify its artifact digest and recomputed data/slice hashes, then compare all 17 candidates on the exact run-44 calendar. If that workflow did not trigger or failed, rerun only the isolated Bitstamp research workflow after confirming its head commit; never run the paper or deployment workflows.
