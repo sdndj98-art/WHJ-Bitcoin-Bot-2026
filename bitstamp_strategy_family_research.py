@@ -611,7 +611,7 @@ def render_markdown_report(report):
             "## Exact calendar overlap with Coinbase",
             "",
             f"- Reference: Coinbase run {reference['run_id']} ({reference['first_oos_open_timestamp_utc']} through {reference['last_candle_timestamp_utc']}).",
-            f"- Reference dataset SHA-256: `{reference['dataset_sha256']}`.
+            f"- Reference dataset SHA-256: `{reference['dataset_sha256']}`.",
             f"- Bitstamp matched returns: {matched['bitstamp']['open_to_open_returns']}; matched slice SHA-256: `{matched['bitstamp']['matched_oos_slice_sha256']}`.",
             f"- CSCV/PBO: {matched['cscv_pbo']['pbo_estimate'] if matched['cscv_pbo'] else 'not computed'} ({matched['cscv_pbo_status']}).",
             "",
