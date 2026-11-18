@@ -144,6 +144,26 @@ class StrategyFamilyLabTests(unittest.TestCase):
         self.assertIn("combined entry condition", limitations["volume_confirmed_breakout"]["exit_limitation"])
         self.assertIn("combined entry condition", limitations["volatility_squeeze_breakout"]["exit_limitation"])
 
+    def test_candidate_rules_v1_cover_all_17_and_disclose_proxy_exits(self):
+        signals = build_strategy_signals(self.candles())
+        universe = strategy_universe()
+        rules = universe["candidate_rules_v1"]
+        self.assertEqual(universe["candidate_rules_version"], "v1_boolean_long_flat_state_proxy")
+        self.assertEqual(set(rules), set(signals))
+        self.assertEqual(len(rules), 17)
+        allowed_kinds = {"persistent_state", "regime_state", "one_bar_event"}
+        for name, rule in rules.items():
+            with self.subTest(candidate=name):
+                self.assertIn(rule["signal_kind"], allowed_kinds)
+                self.assertEqual(rule["status"], "PROXY_ONLY_NOT_CANONICAL")
+                self.assertTrue(rule["entry_condition"].strip())
+                self.assertTrue(rule["exit_condition"].strip())
+                self.assertTrue(rule["known_limitations"])
+        self.assertIn("prior 10-bar-low exit", rules["donchian_20_10_breakout"]["known_limitations"][0])
+        self.assertIn("prior 20-bar-low exit", rules["donchian_55_20_breakout"]["known_limitations"][0])
+        self.assertEqual(rules["stochastic_reversal"]["signal_kind"], "one_bar_event")
+        self.assertIn("%D crossover", rules["stochastic_reversal"]["known_limitations"][0])
+
     def test_strategy_universe_labels_unimplemented_data_families(self):
         universe = strategy_universe()
         self.assertEqual(universe["promotion_status"], "RESEARCH_ONLY_NOT_EVALUATED")

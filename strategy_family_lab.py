@@ -214,7 +214,129 @@ def strategy_universe():
                     "exit_limitation": "position becomes flat when the combined entry condition ceases to hold",
                 },
             },
-            "warning": "Historical performance describes these exact boolean signal-state proxies, not canonical textbook entry/exit systems.",
+            "candidate_rules_version": "v1_boolean_long_flat_state_proxy",
+        "candidate_rules_v1": {
+            "sma_20_50_trend": {
+                "signal_kind": "persistent_state",
+                "entry_condition": "close[t] > SMA20[t] > SMA50[t]",
+                "exit_condition": "At completed close t, state is false when close[t] <= SMA20[t] or SMA20[t] <= SMA50[t]; flatten at next open.",
+                "status": "PROXY_ONLY_NOT_CANONICAL",
+                "known_limitations": ["No independent stop, target, or hysteresis; exit is the entry state becoming false."]
+            },
+            "ema_12_26_trend": {
+                "signal_kind": "persistent_state",
+                "entry_condition": "EMA12[t] > EMA26[t] and close[t] > EMA26[t]",
+                "exit_condition": "At completed close t, state is false when EMA12[t] <= EMA26[t] or close[t] <= EMA26[t]; flatten at next open.",
+                "status": "PROXY_ONLY_NOT_CANONICAL",
+                "known_limitations": ["No independent stop, target, or hysteresis; exit is the entry state becoming false."]
+            },
+            "sma200_regime": {
+                "signal_kind": "regime_state",
+                "entry_condition": "close[t] > SMA200[t]",
+                "exit_condition": "At completed close t, close[t] <= SMA200[t]; flatten at next open.",
+                "status": "PROXY_ONLY_NOT_CANONICAL",
+                "known_limitations": ["This is a long/flat regime filter, not a complete entry/exit system."]
+            },
+            "roc_20_momentum": {
+                "signal_kind": "persistent_state",
+                "entry_condition": "close[t] > close[t-20] and close[t] > SMA200[t]",
+                "exit_condition": "At completed close t, either momentum or the SMA200 regime condition becomes false; flatten at next open.",
+                "status": "PROXY_ONLY_NOT_CANONICAL",
+                "known_limitations": ["No independent stop, target, or trailing exit."]
+            },
+            "roc_60_momentum": {
+                "signal_kind": "persistent_state",
+                "entry_condition": "close[t] > close[t-60] and close[t] > SMA200[t]",
+                "exit_condition": "At completed close t, either momentum or the SMA200 regime condition becomes false; flatten at next open.",
+                "status": "PROXY_ONLY_NOT_CANONICAL",
+                "known_limitations": ["No independent stop, target, or trailing exit."]
+            },
+            "roc_120_momentum": {
+                "signal_kind": "persistent_state",
+                "entry_condition": "close[t] > close[t-120] and close[t] > SMA200[t]",
+                "exit_condition": "At completed close t, either momentum or the SMA200 regime condition becomes false; flatten at next open.",
+                "status": "PROXY_ONLY_NOT_CANONICAL",
+                "known_limitations": ["No independent stop, target, or trailing exit."]
+            },
+            "donchian_20_10_breakout": {
+                "signal_kind": "persistent_state",
+                "entry_condition": "close[t] > max(high[t-20:t]) using the prior 20 completed bars",
+                "exit_condition": "At completed close t, state becomes false when close[t] <= the prior 20-bar high; flatten at next open.",
+                "status": "PROXY_ONLY_NOT_CANONICAL",
+                "known_limitations": ["The named 20/10 system does not implement a separate prior 10-bar-low exit."]
+            },
+            "donchian_55_20_breakout": {
+                "signal_kind": "persistent_state",
+                "entry_condition": "close[t] > max(high[t-55:t]) using the prior 55 completed bars",
+                "exit_condition": "At completed close t, state becomes false when close[t] <= the prior 55-bar high; flatten at next open.",
+                "status": "PROXY_ONLY_NOT_CANONICAL",
+                "known_limitations": ["The named 55/20 system does not implement a separate prior 20-bar-low exit."]
+            },
+            "atr_channel_breakout": {
+                "signal_kind": "persistent_state",
+                "entry_condition": "close[t] > max(high[t-20:t]) + 0.1 * ATR14[t]",
+                "exit_condition": "At completed close t, state becomes false when close[t] is no longer above the prior-20-bar-high plus 0.1*ATR14 threshold; flatten at next open.",
+                "status": "PROXY_ONLY_NOT_CANONICAL",
+                "known_limitations": ["No independent channel exit, stop, or target."]
+            },
+            "rsi2_mean_reversion": {
+                "signal_kind": "persistent_state",
+                "entry_condition": "RSI2[t] < 10 and close[t] > SMA200[t]",
+                "exit_condition": "At completed close t, RSI2[t] >= 10 or close[t] <= SMA200[t]; flatten at next open.",
+                "status": "PROXY_ONLY_NOT_CANONICAL",
+                "known_limitations": ["No separate mean-reversion target, time stop, or volatility stop."]
+            },
+            "rsi14_mean_reversion": {
+                "signal_kind": "persistent_state",
+                "entry_condition": "RSI14[t] < 30 and close[t] > SMA200[t]",
+                "exit_condition": "At completed close t, RSI14[t] >= 30 or close[t] <= SMA200[t]; flatten at next open.",
+                "status": "PROXY_ONLY_NOT_CANONICAL",
+                "known_limitations": ["No separate mean-reversion target, time stop, or volatility stop."]
+            },
+            "bollinger_mean_reversion": {
+                "signal_kind": "persistent_state",
+                "entry_condition": "close[t] < mean20[t] - 2*std20[t] and (SMA200 is unavailable or close[t] > SMA200[t])",
+                "exit_condition": "At completed close t, the lower-band or optional SMA200 condition becomes false; flatten at next open.",
+                "status": "PROXY_ONLY_NOT_CANONICAL",
+                "known_limitations": ["No middle-band exit, upper-band target, or independent stop."]
+            },
+            "zscore20_mean_reversion": {
+                "signal_kind": "persistent_state",
+                "entry_condition": "zscore20[t] < -1.5 and (SMA200 is unavailable or close[t] > SMA200[t])",
+                "exit_condition": "At completed close t, the z-score or optional SMA200 condition becomes false; flatten at next open.",
+                "status": "PROXY_ONLY_NOT_CANONICAL",
+                "known_limitations": ["No zero-z-score exit, target, or independent stop."]
+            },
+            "volume_confirmed_breakout": {
+                "signal_kind": "persistent_state",
+                "entry_condition": "close[t] > prior-20-bar high and volume[t] >= 1.5 * mean(prior-20-bar volume)",
+                "exit_condition": "At completed close t, either the breakout or volume confirmation becomes false; flatten at next open.",
+                "status": "PROXY_ONLY_NOT_CANONICAL",
+                "known_limitations": ["Breakout and volume confirmation are one combined state; there is no independent post-entry exit."]
+            },
+            "obv_trend_confirmation": {
+                "signal_kind": "persistent_state",
+                "entry_condition": "close[t] > SMA50[t] and OBV[t] > EMA20(OBV)[t]",
+                "exit_condition": "At completed close t, either the price/SMA50 or OBV/EMA20 condition becomes false; flatten at next open.",
+                "status": "PROXY_ONLY_NOT_CANONICAL",
+                "known_limitations": ["OBV is derived from close direction and volume; no independent exit or volume-quality validation is applied."]
+            },
+            "volatility_squeeze_breakout": {
+                "signal_kind": "persistent_state",
+                "entry_condition": "mean(ATR14/close over current 20 bars) < median(ATR14/close over prior 100 bars) and close[t] > prior-20-bar high",
+                "exit_condition": "At completed close t, either compression or breakout condition becomes false; flatten at next open.",
+                "status": "PROXY_ONLY_NOT_CANONICAL",
+                "known_limitations": ["Compression and breakout are one combined state; there is no separate squeeze-release or post-entry exit rule."]
+            },
+            "stochastic_reversal": {
+                "signal_kind": "one_bar_event",
+                "entry_condition": "previous %K < 20 and current %K >= 20",
+                "exit_condition": "The pulse is false on the next signal bar; the evaluator exits at the next open, so the usual position lasts one return interval.",
+                "status": "PROXY_ONLY_NOT_CANONICAL",
+                "known_limitations": ["No %D crossover, overbought exit, time stop, or independent risk exit."]
+            }
+        },
+        "warning": "Historical performance describes these exact boolean signal-state proxies, not canonical textbook entry/exit systems.",
         },
         "promotion_status": "RESEARCH_ONLY_NOT_EVALUATED",
     }
