@@ -44,7 +44,10 @@ class PaperLearningTests(unittest.TestCase):
 
     def test_human_review_gate_requires_ten_trades_in_both_markets(self):
         enough = [1.0, -0.25] * 5
-        report = build_report(snapshot(), ledger(enough), ledger(enough))
+        sample_snapshot = snapshot()
+        sample_snapshot["btc"]["equity_usd"] = 13.75
+        sample_snapshot["gold"]["equity_usd"] = 13.75
+        report = build_report(sample_snapshot, ledger(enough), ledger(enough))
         self.assertTrue(report["comparison"]["both_markets_have_minimum_sample"])
         self.assertEqual(report["comparison"]["status"], "DESCRIPTIVE_SAMPLE_AVAILABLE")
         self.assertEqual(report["markets"]["BTC"]["next_action"], "HUMAN_REVIEW_ONLY")
