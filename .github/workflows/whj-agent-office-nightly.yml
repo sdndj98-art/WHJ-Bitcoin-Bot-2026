@@ -53,17 +53,11 @@ jobs:
           fi
       - name: Run free deterministic workers (always on)
         run: python whj_free_worker.py run --output-dir research/agent_office
-      - name: Run Grok workers only when explicitly enabled
-        env:
-          XAI_API_KEY: ${{ secrets.XAI_API_KEY }}
-          WHJ_AGENT_AUTORUN: ${{ vars.WHJ_AGENT_AUTORUN }}
-          WHJ_AGENT_BUDGET_USD: "0.50"
+      - name: Enforce free-only office mode
         run: |
-          if [ "$WHJ_AGENT_AUTORUN" = "true" ] && [ -n "$XAI_API_KEY" ]; then
-            python whj_grok_worker.py run --budget-usd "$WHJ_AGENT_BUDGET_USD"
-          else
-            echo "Grok execution disabled: explicit repository variable and API secret are both required."
-          fi
+          echo "FREE_ONLY=true"
+          echo "No paid model provider is called. No API key or paid secret is read."
+          echo "The nightly office runs deterministic local audits, validation, planning, and paper-status reporting only."
       - name: Upload nightly office outputs
         uses: actions/upload-artifact@v4
         with:
