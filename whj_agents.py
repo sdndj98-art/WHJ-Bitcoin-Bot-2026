@@ -45,6 +45,62 @@ def _agent(name, status, detail, metrics=None):
     }
 
 
+def _market_signal(sleeve):
+    """Read only an explicit, already-computed strategy signal; never invent one."""
+    for key in ("strategy_signal", "entry_signal", "signal"):
+        value = sleeve.get(key)
+        if isinstance(value, str) and value.upper() in ("BUY", "SELL", "HOLD"):
+            return value.upper()
+    return "HOLD"
+
+
+def build_unified_decision(sleeves, healthy, safety_ok, risk_ok, sizing_ok):
+    """One central decision per market, gated by all six agent responsibilities."""
+    market_decisions = {}
+    for symbol, sleeve in sleeves.items():
+        signal = _market_signal(sleeve)
+        reasons = []
+        if not safety_ok:
+            reasons.append("PAPER_ONLY_SAFETY_GATE_FAILED")
+        if not healthy.get(symbol, False):
+            reasons.append("MARKET_DATA_NOT_HEALTHY")
+        if sleeve.get("risk_pause_reasons"):
+            reasons.append("RISK_PAUSE_ACTIVE")
+        allocation = (sleeve.get("risk_limits") or {}).get("allocation_pct")
+        if not _finite_number(allocation) or not 0 < allocation <= 10:
+            reasons.append("POSITION_SIZE_INVALID")
+        if not risk_ok:
+            reasons.append("GLOBAL_RISK_GATE_FAILED")
+        if not sizing_ok:
+            reasons.append("GLOBAL_SIZING_GATE_FAILED")
+        if signal == "HOLD":
+            reasons.append("NO_EXPLICIT_BUY_OR_SELL_SIGNAL")
+        decision = signal if not reasons else "HOLD"
+        market_decisions[symbol] = {
+            "decision": decision,
+            "strategy_signal": signal,
+            "reason_codes": sorted(set(reasons)),
+            "approved_by_consensus": decision in ("BUY", "SELL"),
+            "execution_mode": "PAPER_ONLY",
+            "live_orders_enabled": False,
+        }
+    values = [item["decision"] for item in market_decisions.values()]
+    portfolio_decision = (
+        "HOLD" if not values or all(value == "HOLD" for value in values)
+        else "ACTION_REQUIRED"
+    )
+    return {
+        "model": "SIX_AGENT_UNIFIED_CONSENSUS",
+        "portfolio_decision": portfolio_decision,
+        "market_decisions": market_decisions,
+        "agent_roles": list(AGENT_NAMES),
+        "rule": "Any failed safety, data, risk, or sizing gate forces HOLD for that market.",
+        "paper_only": True,
+        "live_trading_enabled": False,
+        "orders_submitted": False,
+    }
+
+
 def build_agent_state(snapshot, generated_at=None):
     """Build six agent statuses from the latest dual-paper portfolio snapshot."""
     if not isinstance(snapshot, dict):
@@ -155,9 +211,9 @@ def build_agent_state(snapshot, generated_at=None):
          "closed_trades": closed},
     )
 
-    return {
-        "schema_version": 1,
-        "generated_at_utc": generated_at or datetime.now(timezone.utc).isoformat(),
+    unified_decision = build_unified_decision(\n        sleeves, healthy, safety_ok, risk_ok, sizing_ok\n    )\n\n    return {
+        "schema_version": 2,
+        "generated_at_utc": generated_at or datetime.now(timezone.utc).isoformat(),\n        "unified_decision": unified_decision,
         "source_updated_at": snapshot.get("updated_at"),
         "mode": "PAPER_ONLY" if safety_ok else "SAFETY_BLOCKED",
         "live_trading_enabled": False,
