@@ -69,6 +69,33 @@ class WhjAgentsTests(unittest.TestCase):
         self.assertEqual(equity["equity_usd"], 20.0)
         self.assertEqual(equity["pnl_usd"], 0.0)
 
+    def test_unified_consensus_emits_one_safe_decision_per_market(self):
+        state = build_agent_state(healthy_snapshot())
+        consensus = state["unified_decision"]
+        self.assertEqual(consensus["model"], "SIX_AGENT_UNIFIED_CONSENSUS")
+        self.assertEqual(consensus["portfolio_decision"], "HOLD")
+        self.assertEqual(consensus["market_decisions"]["BTC"]["decision"], "HOLD")
+        self.assertEqual(consensus["market_decisions"]["XAUUSD"]["decision"], "HOLD")
+        self.assertFalse(consensus["orders_submitted"])
+
+    def test_unified_consensus_accepts_explicit_signal_only_when_all_gates_pass(self):
+        snapshot = healthy_snapshot()
+        snapshot["btc"]["strategy_signal"] = "BUY"
+        state = build_agent_state(snapshot)
+        decision = state["unified_decision"]["market_decisions"]["BTC"]
+        self.assertEqual(decision["decision"], "BUY")
+        self.assertTrue(decision["approved_by_consensus"])
+        self.assertFalse(decision["live_orders_enabled"])
+
+    def test_unified_consensus_forces_hold_when_any_gate_fails(self):
+        snapshot = healthy_snapshot()
+        snapshot["btc"]["strategy_signal"] = "BUY"
+        snapshot["btc"]["risk_pause_reasons"] = ["daily loss limit"]
+        state = build_agent_state(snapshot)
+        decision = state["unified_decision"]["market_decisions"]["BTC"]
+        self.assertEqual(decision["decision"], "HOLD")
+        self.assertIn("RISK_PAUSE_ACTIVE", decision["reason_codes"])
+
     def test_atomic_output_is_valid_json(self):
         with tempfile.TemporaryDirectory() as folder:
             path = Path(folder) / "state" / "agents.json"
