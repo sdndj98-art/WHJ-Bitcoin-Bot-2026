@@ -131,6 +131,19 @@ class StrategyFamilyLabTests(unittest.TestCase):
         ]
         self.assertEqual(len(build_strategy_signals(rows)["sma200_regime"]), 260)
 
+    def test_strategy_universe_discloses_noncanonical_signal_state_semantics(self):
+        semantics = strategy_universe()["signal_semantics"]
+        self.assertEqual(semantics["representation"], "boolean_long_flat_state_proxy")
+        self.assertFalse(semantics["canonical_entry_exit_systems_verified"])
+        self.assertIn("True means long", semantics["evaluator_interpretation"])
+        limitations = semantics["named_proxy_limitations"]
+        self.assertIn("prior-10-bar-low", limitations["donchian_20_10_breakout"]["exit_condition"])
+        self.assertIn("prior-20-bar-low", limitations["donchian_55_20_breakout"]["exit_condition"])
+        self.assertIn("one-bar event", limitations["stochastic_reversal"]["signal_condition"])
+        self.assertIn("one-interval long pulse", limitations["stochastic_reversal"]["evaluator_effect"])
+        self.assertIn("combined entry condition", limitations["volume_confirmed_breakout"]["exit_limitation"])
+        self.assertIn("combined entry condition", limitations["volatility_squeeze_breakout"]["exit_limitation"])
+
     def test_strategy_universe_labels_unimplemented_data_families(self):
         universe = strategy_universe()
         self.assertEqual(universe["promotion_status"], "RESEARCH_ONLY_NOT_EVALUATED")
