@@ -5,8 +5,8 @@ on:
   push:
     branches: [main]
     paths:
-      - "whj_24h_development_team.py"
-      - "tests/test_whj_24h_development_team.py"
+      - "whj_24h_development_team.py"\n      - "whj_repair_advisor.py"
+      - "tests/test_whj_24h_development_team.py"\n      - "tests/test_whj_repair_advisor.py"
       - ".github/workflows/whj-24h-development-team.yml"
       - "dual_portfolio.json"
       - "index.html"
@@ -36,7 +36,7 @@ jobs:
           python-version: "3.12"
       - name: Run WHJ development team
         run: python whj_24h_development_team.py
-      - name: Upload development report
+      - name: Generate safe repair proposals\n        if: always()\n        run: python whj_repair_advisor.py\n      - name: Upload development report
         if: always()
         uses: actions/upload-artifact@v4
         with:
