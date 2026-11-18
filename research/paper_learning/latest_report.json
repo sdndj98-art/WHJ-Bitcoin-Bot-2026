@@ -1,0 +1,60 @@
+{
+  "schema_version": 1,
+  "generated_at_utc": "2026-11-18T01:15:26.603765+00:00",
+  "mode": "READ_ONLY_PAPER_RESEARCH",
+  "paper_only": true,
+  "live_trading_enabled": false,
+  "minimum_trades_for_human_review": 10,
+  "markets": {
+    "BTC": {
+      "market": "BTC",
+      "strategy": "rsi14_mean_reversion",
+      "status": "PAPER_RUNNING",
+      "closed_trades": 0,
+      "wins": 0,
+      "losses": 0,
+      "win_rate_pct": null,
+      "gross_profit_usd": 0,
+      "gross_loss_usd": 0,
+      "net_closed_trade_pnl_usd": 0,
+      "profit_factor": null,
+      "equity_usd": 10.0,
+      "initial_equity_usd": 10.0,
+      "return_pct": 0.0,
+      "max_drawdown_pct": 0.0,
+      "review_status": "COLLECTING_SAMPLE",
+      "next_action": "CONTINUE_PAPER_TEST"
+    },
+    "XAUUSD": {
+      "market": "XAUUSD",
+      "strategy": "ema_trend",
+      "status": "PAPER_RUNNING",
+      "closed_trades": 0,
+      "wins": 0,
+      "losses": 0,
+      "win_rate_pct": null,
+      "gross_profit_usd": 0,
+      "gross_loss_usd": 0,
+      "net_closed_trade_pnl_usd": 0,
+      "profit_factor": null,
+      "equity_usd": 10.0,
+      "initial_equity_usd": 10.0,
+      "return_pct": 0.0,
+      "max_drawdown_pct": 0.0,
+      "review_status": "COLLECTING_SAMPLE",
+      "next_action": "CONTINUE_PAPER_TEST"
+    }
+  },
+  "comparison": {
+    "status": "INSUFFICIENT_FORWARD_SAMPLE",
+    "both_markets_have_minimum_sample": false,
+    "note": "BTC and XAUUSD use different instruments and strategies. Metrics are shown side by side; this report does not declare a winner or infer future performance."
+  },
+  "governance": {
+    "strategy_auto_changes": false,
+    "ledger_mutation": false,
+    "risk_limit_changes": false,
+    "dashboard_modified": false,
+    "orders_submitted": false
+  }
+}

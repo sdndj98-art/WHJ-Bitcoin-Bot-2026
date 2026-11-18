@@ -71,12 +71,12 @@
       "status": "TRACKING"
     }
   ],
-  "generated_at_utc": "2026-11-18T00:27:21.101244+00:00",
+  "generated_at_utc": "2026-11-18T01:15:26.702021+00:00",
   "live_trading_enabled": false,
   "mode": "PAPER_ONLY",
   "portfolio_status": "BTC_AND_GOLD_PAPER_ONLY",
   "schema_version": 2,
-  "source_updated_at": "2026-11-18T00:27:20+00:00",
+  "source_updated_at": "2026-11-18T01:15:26+00:00",
   "summary": {
     "agent_count": 6,
     "markets": [
@@ -122,6 +122,30 @@
     "orders_submitted": false,
     "paper_only": true,
     "portfolio_decision": "HOLD",
+    "research_advisory": {
+      "changes_strategy": false,
+      "execution_authority": false,
+      "markets": {
+        "BTC": {
+          "closed_trades": 0,
+          "max_drawdown_pct": 0.0,
+          "next_action": "CONTINUE_PAPER_TEST",
+          "profit_factor": null,
+          "return_pct": 0.0,
+          "review_status": "COLLECTING_SAMPLE"
+        },
+        "XAUUSD": {
+          "closed_trades": 0,
+          "max_drawdown_pct": 0.0,
+          "next_action": "CONTINUE_PAPER_TEST",
+          "profit_factor": null,
+          "return_pct": 0.0,
+          "review_status": "COLLECTING_SAMPLE"
+        }
+      },
+      "note": "Research advisory only. It cannot override live signal, risk, feed, sizing, or paper consensus gates.",
+      "status": "INSUFFICIENT_FORWARD_SAMPLE"
+    },
     "rule": "Any failed safety, data, risk, or sizing gate forces HOLD for that market."
   }
 }
