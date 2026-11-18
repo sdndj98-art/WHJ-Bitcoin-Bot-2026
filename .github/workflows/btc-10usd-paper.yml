@@ -77,13 +77,13 @@ jobs:
         run: python btc_paper_runner.py
       - name: Run XAUUSD forward paper engine
         run: python gold_paper_runner.py
-      - name: Run six-agent decision office on fresh BTC and Gold results
+      - name: Generate read-only paper learning comparison
+        run: python paper_learning.py
+      - name: Run six-agent decision office with research advisory
         run: |
           python -m py_compile whj_agents.py
           python -m unittest discover -s tests -p 'test_whj_agents.py' -v
-          python whj_agents.py --input dual_portfolio.json --output state/whj_agents.json
-      - name: Generate read-only paper learning comparison
-        run: python paper_learning.py
+          python whj_agents.py --input dual_portfolio.json --research-report research/paper_learning/latest_report.json --output state/whj_agents.json
       - name: Save independent Gold ledger
         if: success() && hashFiles('state/xauusd_10usd_ema_trend.json') != ''
         uses: actions/cache/save@v4
