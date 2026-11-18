@@ -96,7 +96,7 @@ def write_plan(report_path: Path = REPORT, output_dir: Path = OUTPUT) -> dict:
     plan = build_repair_plan(report)
     output_dir.mkdir(parents=True, exist_ok=True)
     (output_dir / "repair_proposals.json").write_text(
-        json.dumps(plan, indent=2, ensure_ascii=False) + "\\n", encoding="utf-8"
+        json.dumps(plan, indent=2, ensure_ascii=False) + "\n", encoding="utf-8"
     )
     lines = [
         "# WHJ Repair Advisor",
@@ -125,7 +125,7 @@ def write_plan(report_path: Path = REPORT, output_dir: Path = OUTPUT) -> dict:
         "No pull request is created by this advisor. No source, dashboard, paper ledger, risk limit, or trading setting is modified.",
         "",
     ]
-    (output_dir / "repair_proposals.md").write_text("\\n".join(lines), encoding="utf-8")
+    (output_dir / "repair_proposals.md").write_text("\n".join(lines), encoding="utf-8")
     return plan
 
 
