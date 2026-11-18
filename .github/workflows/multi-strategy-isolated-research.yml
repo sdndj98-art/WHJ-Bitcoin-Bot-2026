@@ -171,6 +171,7 @@ jobs:
           "allocation_fraction": base["allocation_fraction"],
           "allocation_cap_fraction": base["allocation_cap_fraction"],
               "candidate_names": list(base["results"]),
+              "signal_semantics": base["signal_semantics"],
               "cost_stress": reports,
               "rolling_walk_forward": walk_forward,
               "market_regime_diagnostics": regime_diagnostics,
@@ -201,6 +202,26 @@ jobs:
               "- Status: RESEARCH ONLY — NO CANDIDATE PROMOTED", "",
               "| Candidate | OOS net return | Matched B&H | Excess | Max DD | PF (periodic) | Exposure | Trades closed |",
               "|---|---:|---:|---:|---:|---:|---:|---:|",
+          ]
+          semantics = base["signal_semantics"]
+          lines += [
+              "## Candidate rules V1 — explicit entry/exit semantics",
+              "",
+              f"- Version: `{semantics['candidate_rules_version']}`",
+              "- These are long/flat signal-state proxies, not canonical textbook systems or order instructions.",
+              "",
+              "| Candidate | Kind | Entry condition | Exit condition | Known limitations |",
+              "|---|---|---|---|---|",
+          ]
+          for candidate_name, rule in semantics["candidate_rules_v1"].items():
+              entry = rule["entry_condition"].replace("|", "/")
+              exit_rule = rule["exit_condition"].replace("|", "/")
+              limitations = "; ".join(rule["known_limitations"]).replace("|", "/")
+              lines.append(f"| {candidate_name} | {rule['signal_kind']} | {entry} | {exit_rule} | {limitations} |")
+          lines += [
+              "",
+              "Historical V1 metrics remain attached to these exact proxy definitions. Canonical V2 rules require new candidate IDs and a fresh predeclared evaluation.",
+              "",
           ]
           ranked = base['descriptive_ranking_by_terminal_excess_equity']
           for name in ranked:

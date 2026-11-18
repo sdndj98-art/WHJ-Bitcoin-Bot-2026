@@ -46,6 +46,14 @@ class BitstampStrategyFamilyResearchTests(unittest.TestCase):
             reference_window=None,
         )
         self.assertEqual(report["candidate_count"], 17)
+        semantics = report["signal_semantics"]
+        self.assertEqual(semantics["candidate_rules_version"], "v1_boolean_long_flat_state_proxy")
+        self.assertFalse(semantics["canonical_entry_exit_systems_verified"])
+        self.assertEqual(len(semantics["candidate_rules_v1"]), 17)
+        self.assertEqual(set(semantics["candidate_rules_v1"]), set(report["ranking_by_net_return"][i]["candidate"] for i in range(17)))
+        markdown = render_markdown_report(report)
+        self.assertIn("Candidate rules V1", markdown)
+        self.assertIn("stochastic_reversal", markdown)
         self.assertEqual(report["source"], "Bitstamp public BTCUSD spot OHLC")
         self.assertEqual(report["symbol"], "BTCUSD")
         self.assertEqual(report["promotion_status"], "NO_CANDIDATE_PROMOTED")

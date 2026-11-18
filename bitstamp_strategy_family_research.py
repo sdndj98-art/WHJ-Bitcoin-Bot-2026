@@ -517,6 +517,7 @@ def build_bitstamp_strategy_report(
         },
         "candidate_count": len(base["results"]),
         "candidate_semantics": "The 17 candidates are the exact predeclared boolean long/flat signal-state proxies in strategy_family_lab.py. This is not a canonical textbook entry/exit implementation for every named family; see F14 in the adversarial audit. No rule was changed for this independent venue replication.",
+        "signal_semantics": base["signal_semantics"],
         "protocol": {
             "train_fraction": 0.70,
             "out_of_sample_fraction": 0.30,
@@ -592,6 +593,29 @@ def render_markdown_report(report):
         "| Rank | Candidate | 1x net | Matched B&H | Excess | Max DD | Period PF | Sharpe | Trades | 2x | 3x |",
         "|---:|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|",
     ]
+    semantics = report["signal_semantics"]
+    lines.extend([
+        "",
+        "## Candidate rules V1 — explicit entry/exit semantics",
+        "",
+        f"- Version: `{semantics['candidate_rules_version']}`",
+        "- These are long/flat signal-state proxies, not canonical textbook systems or order instructions.",
+        "",
+        "| Candidate | Kind | Entry condition | Exit condition | Known limitations |",
+        "|---|---|---|---|---|",
+    ])
+    for candidate_name, rule in semantics["candidate_rules_v1"].items():
+        entry = rule["entry_condition"].replace("|", "/")
+        exit_rule = rule["exit_condition"].replace("|", "/")
+        limitations = "; ".join(rule["known_limitations"]).replace("|", "/")
+        lines.append(
+            f"| {candidate_name} | {rule['signal_kind']} | {entry} | {exit_rule} | {limitations} |"
+        )
+    lines.extend([
+        "",
+        "Historical V1 metrics remain attached to these exact proxy definitions. Canonical V2 rules require new candidate IDs and a fresh predeclared evaluation.",
+        "",
+    ])
     for row in report["ranking_by_net_return"]:
         pf = row["periodic_profit_factor"]
         pf_text = pf if isinstance(pf, str) else (f"{pf:.3f}" if pf is not None else "—")
