@@ -3,7 +3,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from whj_agents import build_agent_state, atomic_write_json
+from whj_agents import build_agent_state, atomic_write_json, authorize_paper_entry
 
 
 def healthy_snapshot():
@@ -95,6 +95,19 @@ class WhjAgentsTests(unittest.TestCase):
         decision = state["unified_decision"]["market_decisions"]["BTC"]
         self.assertEqual(decision["decision"], "HOLD")
         self.assertIn("RISK_PAUSE_ACTIVE", decision["reason_codes"])
+
+    def test_six_agent_gate_approves_only_valid_paper_buy(self):
+        context = {
+            "signal": "BUY", "timestamp": 100, "price": 50000,
+            "risk_paused": False, "allocation_pct": 10.0,
+        }
+        self.assertTrue(authorize_paper_entry("BTC", True, context))
+        self.assertFalse(authorize_paper_entry("BTC", False, context))
+        blocked = dict(context, risk_paused=True)
+        self.assertFalse(authorize_paper_entry("BTC", True, blocked))
+        oversized = dict(context, allocation_pct=10.01)
+        self.assertFalse(authorize_paper_entry("BTC", True, oversized))
+        self.assertFalse(authorize_paper_entry("BTC", True, dict(context, signal="SELL")))
 
     def test_atomic_output_is_valid_json(self):
         with tempfile.TemporaryDirectory() as folder:
