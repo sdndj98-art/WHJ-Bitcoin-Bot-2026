@@ -2,6 +2,14 @@ name: WHJ 24x7 Development Team
 
 on:
   workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - "whj_24h_development_team.py"
+      - "tests/test_whj_24h_development_team.py"
+      - ".github/workflows/whj-24h-development-team.yml"
+      - "dual_portfolio.json"
+      - "index.html"
   schedule:
     - cron: "0 * * * *"
 
