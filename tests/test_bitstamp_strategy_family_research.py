@@ -35,6 +35,16 @@ class BitstampStrategyFamilyResearchTests(unittest.TestCase):
             price = close
         return rows
 
+    def test_pinned_coinbase_reference_has_complete_immutable_provenance(self):
+        reference = COINBASE_REFERENCE_WINDOW
+        self.assertTrue(reference["run_id"].isdigit())
+        self.assertEqual(len(reference["code_commit_sha"]), 40)
+        self.assertEqual(len(reference["dataset_sha256"]), 64)
+        self.assertEqual(reference["open_to_open_returns"], 10799)
+        first = datetime.fromisoformat(reference["first_oos_open_timestamp_utc"])
+        last = datetime.fromisoformat(reference["last_candle_timestamp_utc"])
+        self.assertLess(first, last)
+
     def test_all_17_candidates_have_matched_cost_stress_and_walk_forward(self):
         candles = self.candles()
         report = build_bitstamp_strategy_report(
