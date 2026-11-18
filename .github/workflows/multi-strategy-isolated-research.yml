@@ -203,6 +203,12 @@ jobs:
               "| Candidate | OOS net return | Matched B&H | Excess | Max DD | PF (periodic) | Exposure | Trades closed |",
               "|---|---:|---:|---:|---:|---:|---:|---:|",
           ]
+          ranked = base['descriptive_ranking_by_terminal_excess_equity']
+          for name in ranked:
+              item = base['results'][name]
+              m, b = item['strategy'], item['buy_and_hold']
+              pf = m['profit_factor'] if m['profit_factor'] is not None else '—'
+              lines.append(f"| {name} | {m['net_return']*100:.2f}% | {b['net_return']*100:.2f}% | {(m['net_return']-b['net_return'])*100:.2f} pp | {m['max_drawdown']*100:.2f}% | {pf} | {m['exposure']*100:.1f}% | {m['closed_trades']} |")
           semantics = base["signal_semantics"]
           lines += [
               "## Candidate rules V1 — explicit entry/exit semantics",
@@ -223,12 +229,6 @@ jobs:
               "Historical V1 metrics remain attached to these exact proxy definitions. Canonical V2 rules require new candidate IDs and a fresh predeclared evaluation.",
               "",
           ]
-          ranked = base['descriptive_ranking_by_terminal_excess_equity']
-          for name in ranked:
-              item = base['results'][name]
-              m, b = item['strategy'], item['buy_and_hold']
-              pf = m['profit_factor'] if m['profit_factor'] is not None else '—'
-              lines.append(f"| {name} | {m['net_return']*100:.2f}% | {b['net_return']*100:.2f}% | {(m['net_return']-b['net_return'])*100:.2f} pp | {m['max_drawdown']*100:.2f}% | {pf} | {m['exposure']*100:.1f}% | {m['closed_trades']} |")
           lines += ["", "## Top-five moving-block bootstrap uncertainty", ""]
           lines.append("| Candidate | Observed OOS return | 95% conditional interval | Block (hours) | Samples |")
           lines.append("|---|---:|---:|---:|---:|")

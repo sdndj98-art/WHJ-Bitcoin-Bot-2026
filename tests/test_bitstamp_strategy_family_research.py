@@ -54,6 +54,7 @@ class BitstampStrategyFamilyResearchTests(unittest.TestCase):
         markdown = render_markdown_report(report)
         self.assertIn("Candidate rules V1", markdown)
         self.assertIn("stochastic_reversal", markdown)
+        self.assertGreater(markdown.index("## Candidate rules V1"), markdown.index("| 17 |"))
         self.assertEqual(report["source"], "Bitstamp public BTCUSD spot OHLC")
         self.assertEqual(report["symbol"], "BTCUSD")
         self.assertEqual(report["promotion_status"], "NO_CANDIDATE_PROMOTED")

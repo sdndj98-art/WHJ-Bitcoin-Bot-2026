@@ -593,6 +593,17 @@ def render_markdown_report(report):
         "| Rank | Candidate | 1x net | Matched B&H | Excess | Max DD | Period PF | Sharpe | Trades | 2x | 3x |",
         "|---:|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|",
     ]
+    for row in report["ranking_by_net_return"]:
+        pf = row["periodic_profit_factor"]
+        pf_text = pf if isinstance(pf, str) else (f"{pf:.3f}" if pf is not None else "—")
+        sharpe = row["period_sharpe"]
+        sharpe_text = f"{sharpe:.3f}" if sharpe is not None else "—"
+        lines.append(
+            f"| {row['rank_by_net_return']} | {row['candidate']} | {row['net_return_pct']:.2f}% | "
+            f"{row['matched_buy_and_hold_pct']:.2f}% | {row['excess_vs_buy_and_hold_pp']:+.2f} pp | "
+            f"{row['max_open_to_open_drawdown_pct']:.2f}% | {pf_text} | {sharpe_text} | "
+            f"{row['closed_trades']} | {row['return_2x_pct']:.2f}% | {row['return_3x_pct']:.2f}% |"
+        )
     semantics = report["signal_semantics"]
     lines.extend([
         "",
@@ -616,17 +627,6 @@ def render_markdown_report(report):
         "Historical V1 metrics remain attached to these exact proxy definitions. Canonical V2 rules require new candidate IDs and a fresh predeclared evaluation.",
         "",
     ])
-    for row in report["ranking_by_net_return"]:
-        pf = row["periodic_profit_factor"]
-        pf_text = pf if isinstance(pf, str) else (f"{pf:.3f}" if pf is not None else "—")
-        sharpe = row["period_sharpe"]
-        sharpe_text = f"{sharpe:.3f}" if sharpe is not None else "—"
-        lines.append(
-            f"| {row['rank_by_net_return']} | {row['candidate']} | {row['net_return_pct']:.2f}% | "
-            f"{row['matched_buy_and_hold_pct']:.2f}% | {row['excess_vs_buy_and_hold_pp']:+.2f} pp | "
-            f"{row['max_open_to_open_drawdown_pct']:.2f}% | {pf_text} | {sharpe_text} | "
-            f"{row['closed_trades']} | {row['return_2x_pct']:.2f}% | {row['return_3x_pct']:.2f}% |"
-        )
     matched = report.get("matched_calendar_overlap")
     if matched:
         reference = matched["reference"]
