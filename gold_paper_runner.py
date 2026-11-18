@@ -154,9 +154,18 @@ def main():
         slippage = spread_cost + 0.0005
         rows = [[bar["timestamp"], bar["open"], bar["high"], bar["low"], bar["close"], 0.0] for bar in bars]
         seed = seed_forward_paper_account(rows[-50:], STATE, initial_cash=INITIAL_CASH, strategy=STRATEGY)
-        entry_gate = lambda context: authorize_paper_entry(
-            "XAUUSD", market.get("quality") == "HEALTHY", context
-        )
+        entry_audit = {"strategy_signal": "HOLD", "approved_by_consensus": False}
+        def entry_gate(context):
+            approved = authorize_paper_entry(
+                "XAUUSD", market.get("quality") == "HEALTHY", context
+            )
+            entry_audit.update({
+                "strategy_signal": context.get("signal", "HOLD"),
+                "approved_by_consensus": approved,
+                "timestamp": context.get("timestamp"),
+                "reason": "SIX_AGENT_CONSENSUS_APPROVED" if approved else "SIX_AGENT_CONSENSUS_VETO",
+            })
+            return approved
         result = update_paper_account(
             rows, state_path=str(STATE), initial_cash=INITIAL_CASH,
             fee_rate=0.001, slippage_rate=slippage,
@@ -186,6 +195,8 @@ def main():
             "new_trades": result["new_trades"], "risk_pause_reasons": result["risk_pause_reasons"],
             "risk_limits": result["risk_limits"], "warmup_seed_created": seed["created"],
             "data_quality": market,
+            "strategy_signal": entry_audit["strategy_signal"],
+            "entry_consensus": entry_audit,
             "execution_model": "1h completed MT5 OHLC; buy/sell cost includes half current bid/ask spread + 0.05% slippage and 0.10% fee per side. No live orders.",
         }
     except Exception as exc:
