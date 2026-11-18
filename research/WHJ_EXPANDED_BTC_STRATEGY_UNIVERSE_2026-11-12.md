@@ -107,3 +107,17 @@ The first Bitstamp 70/30 full-history OOS split was longer than the Coinbase run
 - A no-lookahead regression test changes all Bitstamp rows after the frozen endpoint and verifies the matched ranking and slice hash do not change.
 
 This is a strict same-calendar price-feed comparison, unlike the separate full-history Bitstamp 70/30 OOS result. The cost assumptions are still fixed proxies, not measured Bitstamp fees/spread. Candidate definitions remain signal-state proxies (F14 open); no candidate is promoted.
+
+
+## Signal-state semantics and named proxy limitations (2026-11-18)
+
+The common evaluator consumes boolean long/flat states: `True` means remain long and `False` means flat, with state changes applied at the next open. The machine-readable `strategy_universe()["signal_semantics"]` metadata is included in the batch runner output so downstream research reports can preserve this interpretation.
+
+The following names are descriptive proxies, not complete canonical entry/exit systems:
+
+- `donchian_20_10_breakout`: entry is close above the prior 20-bar high; there is no separate prior-10-bar-low exit.
+- `donchian_55_20_breakout`: entry is close above the prior 55-bar high; there is no separate prior-20-bar-low exit.
+- `stochastic_reversal`: a one-bar %K threshold-crossing event is interpreted as a one-interval long pulse; no %K/%D crossover or overbought exit is implemented.
+- `volume_confirmed_breakout` and `volatility_squeeze_breakout`: entry confirmation is embedded in the boolean state, so the common evaluator exits when the combined condition becomes false.
+
+This metadata does not change signals, historical metrics, or candidate definitions. Existing Coinbase/Bitstamp results remain results for the exact proxy states used in those runs. Any canonical entry/exit redesign must use new candidate IDs, new trial manifests, and a new predeclared evaluation window; do not relabel prior results.
