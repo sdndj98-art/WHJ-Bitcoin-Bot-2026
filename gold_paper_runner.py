@@ -13,6 +13,7 @@ from pathlib import Path
 from urllib.request import Request, urlopen
 
 from paper_account import seed_forward_paper_account, update_paper_account
+from whj_agents import authorize_paper_entry
 
 STATE = Path("state/xauusd_10usd_ema_trend.json")
 SNAPSHOT = Path("dual_portfolio.json")
@@ -153,12 +154,16 @@ def main():
         slippage = spread_cost + 0.0005
         rows = [[bar["timestamp"], bar["open"], bar["high"], bar["low"], bar["close"], 0.0] for bar in bars]
         seed = seed_forward_paper_account(rows[-50:], STATE, initial_cash=INITIAL_CASH, strategy=STRATEGY)
+        entry_gate = lambda context: authorize_paper_entry(
+            "XAUUSD", market.get("quality") == "HEALTHY", context
+        )
         result = update_paper_account(
             rows, state_path=str(STATE), initial_cash=INITIAL_CASH,
             fee_rate=0.001, slippage_rate=slippage,
             allocation_fraction=COMPOUND_ALLOCATION_FRACTION,
             max_drawdown_fraction=0.10, daily_loss_fraction=0.03,
             max_consecutive_losses=3, strategy=STRATEGY,
+            entry_gate=entry_gate,
         )
         ledger = json.loads(STATE.read_text(encoding="utf-8"))
         units = float(ledger["btc"])
