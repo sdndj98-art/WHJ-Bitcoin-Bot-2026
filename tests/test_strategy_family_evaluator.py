@@ -70,5 +70,35 @@ class StrategyFamilyEvaluatorTests(unittest.TestCase):
                 with self.assertRaises(ValueError):
                     evaluate_candidate(rows, [False]*4, allocation_fraction=allocation)
 
+
+    def test_duplicate_and_out_of_order_timestamps_are_rejected(self):
+        for invalid_timestamp in (1, 0):
+            with self.subTest(invalid_timestamp=invalid_timestamp):
+                rows = self.candles([100, 101, 102, 103])
+                rows[2][0] = invalid_timestamp
+                with self.assertRaisesRegex(ValueError, "strictly increasing"):
+                    evaluate_candidate(rows, [False] * 4)
+
+    def test_boolean_and_nonfinite_timestamps_are_rejected(self):
+        for invalid_timestamp in (True, float("nan"), float("inf")):
+            with self.subTest(invalid_timestamp=invalid_timestamp):
+                rows = self.candles([100, 101, 102, 103])
+                rows[2][0] = invalid_timestamp
+                with self.assertRaisesRegex(ValueError, "finite numeric"):
+                    evaluate_candidate(rows, [False] * 4)
+
+    def test_mapping_timestamps_must_be_all_present_or_all_absent(self):
+        source_rows = self.candles([100, 101, 102, 103])
+        rows = [
+            {"open": row[1], "high": row[2], "low": row[3], "close": row[4], "volume": row[5]}
+            for row in source_rows
+        ]
+        result = evaluate_candidate(rows, [False] * 4, 0, 0, 1)
+        self.assertEqual(result["strategy"]["net_return"], 0.0)
+
+        rows[0]["timestamp"] = 0
+        with self.assertRaisesRegex(ValueError, "present on every candle"):
+            evaluate_candidate(rows, [False] * 4)
+
 if __name__ == "__main__":
     unittest.main()

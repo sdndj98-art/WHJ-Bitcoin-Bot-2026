@@ -20,16 +20,41 @@ def _validate(candles, signals, fee_rate, slippage_rate, bars_per_year, allocati
     if isinstance(allocation_fraction, bool) or not isinstance(allocation_fraction, (int, float)) or not math.isfinite(allocation_fraction) or not 0 < allocation_fraction <= 1:
         raise ValueError("allocation_fraction must be finite and in (0, 1]")
     opens = []
+    timestamp_presence = []
+    timestamps = []
     for row in candles:
         if isinstance(row, dict):
-            value = row["open"]
-        else:
+            has_timestamp = "timestamp" in row
+            timestamp = row.get("timestamp")
+            value = row.get("open")
+        elif isinstance(row, (list, tuple)):
             if len(row) < 6:
                 raise ValueError("OHLCV rows must contain timestamp, open, high, low, close, volume")
+            has_timestamp = True
+            timestamp = row[0]
             value = row[1]
+        else:
+            raise ValueError("each candle must be an OHLCV mapping or sequence")
+
+        timestamp_presence.append(has_timestamp)
+        if has_timestamp:
+            if (isinstance(timestamp, bool)
+                    or not isinstance(timestamp, (int, float))
+                    or not math.isfinite(timestamp)):
+                raise ValueError("timestamps must be finite numeric values")
+            timestamps.append(float(timestamp))
+        else:
+            timestamps.append(None)
+
         if isinstance(value, bool) or not isinstance(value, (int, float)) or not math.isfinite(value) or value <= 0:
             raise ValueError("open prices must be positive finite numbers")
         opens.append(float(value))
+
+    if any(timestamp_presence) and not all(timestamp_presence):
+        raise ValueError("timestamps must be present on every candle or omitted from every candle")
+    if timestamp_presence and all(timestamp_presence):
+        if any(current <= previous for previous, current in zip(timestamps, timestamps[1:])):
+            raise ValueError("timestamps must be strictly increasing; duplicate or out-of-order candles are not allowed")
     if any(type(signal) is not bool for signal in signals):
         raise ValueError("signals must contain only bool values")
     return opens
