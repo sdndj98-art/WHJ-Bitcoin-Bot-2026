@@ -1,0 +1,38 @@
+name: WHJ Strategy Opportunity Research
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "30 2 * * 1"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: whj-strategy-opportunity-research
+  cancel-in-progress: false
+
+jobs:
+  research:
+    name: Read-only BTC and Gold strategy comparison
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Run historical opportunity research
+        run: python strategy_opportunity_research.py
+      - name: Upload research report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: whj-strategy-opportunities-${{ github.run_number }}
+          path: research/strategy_opportunities/
+          if-no-files-found: warn
+          retention-days: 30
