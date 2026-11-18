@@ -8,6 +8,8 @@ on:
     paths:
       - "btc_paper_runner.py"
       - "gold_paper_runner.py"
+      - "whj_agents.py"
+      - "tests/test_whj_agents.py"
       - "state/xauusd_paper_initialized.json"
       - "paper_account.py"
       - "historical_research.py"
@@ -73,6 +75,11 @@ jobs:
         run: python btc_paper_runner.py
       - name: Run XAUUSD forward paper engine
         run: python gold_paper_runner.py
+      - name: Run six-agent decision office on fresh BTC and Gold results
+        run: |
+          python -m py_compile whj_agents.py
+          python -m unittest discover -s tests -p 'test_whj_agents.py' -v
+          python whj_agents.py --input dual_portfolio.json --output state/whj_agents.json
       - name: Save independent Gold ledger
         if: success() && hashFiles('state/xauusd_10usd_ema_trend.json') != ''
         uses: actions/cache/save@v4
@@ -90,7 +97,7 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add dual_portfolio.json
+          git add dual_portfolio.json state/whj_agents.json
           if [ -f state/xauusd_10usd_ema_trend.json ] && [ "$(cat state/xauusd_paper_initialized.json)" != "INITIALIZED" ]; then
             echo "INITIALIZED" > state/xauusd_paper_initialized.json
             git add -f state/xauusd_paper_initialized.json
@@ -109,6 +116,7 @@ jobs:
           cp index.html _site/index.html
           cp dual_portfolio_dashboard.html _site/dual_portfolio_dashboard.html
           cp dual_portfolio.json _site/dual_portfolio.json
+          cp state/whj_agents.json _site/whj_agents.json
       - name: Upload dashboard
         if: success()
         uses: actions/upload-pages-artifact@v3
@@ -126,5 +134,6 @@ jobs:
             dual_portfolio.json
             state/btc_10usd_rsi14_mean_reversion.json
             state/xauusd_10usd_ema_trend.json
+            state/whj_agents.json
           if-no-files-found: warn
           retention-days: 30
