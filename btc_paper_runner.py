@@ -31,9 +31,18 @@ def main():
         return [[int(r["timestamp"]//1000), r["open"], r["high"], r["low"], r["close"], r["volume"]] for r in rows]
     seed = seed_forward_paper_account(convert(candles[-200:]), STATE,
         initial_cash=CASH, strategy=STRATEGY)
-    entry_gate = lambda context: authorize_paper_entry(
-        "BTC", quality.get("quality") == "HEALTHY", context
-    )
+    entry_audit = {"strategy_signal": "HOLD", "approved_by_consensus": False}
+    def entry_gate(context):
+        approved = authorize_paper_entry(
+            "BTC", quality.get("quality") == "HEALTHY", context
+        )
+        entry_audit.update({
+            "strategy_signal": context.get("signal", "HOLD"),
+            "approved_by_consensus": approved,
+            "timestamp": context.get("timestamp"),
+            "reason": "SIX_AGENT_CONSENSUS_APPROVED" if approved else "SIX_AGENT_CONSENSUS_VETO",
+        })
+        return approved
     result = update_paper_account(convert(candles), state_path=str(STATE),
         initial_cash=CASH, fee_rate=0.001, slippage_rate=0.0005,
         allocation_fraction=COMPOUND_ALLOCATION_FRACTION, max_drawdown_fraction=0.10,
@@ -54,6 +63,7 @@ def main():
         "risk_pause_reasons":result["risk_pause_reasons"],"risk_limits":result["risk_limits"],
         "new_trades":result["new_trades"],"warmup_seed_created":seed["created"],
         "processed_new_candles":result["processed_new_candles"],"data_quality":quality,
+        "strategy_signal":entry_audit["strategy_signal"],"entry_consensus":entry_audit,
         "execution_model":"Newly closed hourly candles; 0.10% fee and 0.05% slippage per side; no live orders."}
     gold={"asset":"XAUUSD","symbol":"XAU/USD spot","initial_equity_usd":10.0,
         "equity_usd":10.0,"pnl_usd":0.0,"return_pct":0.0,"closed_trades":0,
