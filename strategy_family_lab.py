@@ -187,5 +187,34 @@ def strategy_universe():
             "advanced": ["regime_hmm", "supervised_ml", "reinforcement_learning"],
         },
         "execution_contract": "Signals use completed bars only; earliest simulated fill is the next bar. This module has no execution or account integration.",
+        "signal_semantics": {
+            "representation": "boolean_long_flat_state_proxy",
+            "evaluator_interpretation": "True means long exposure; False means flat. State changes are applied at the next open by the common evaluator.",
+            "canonical_entry_exit_systems_verified": False,
+            "named_proxy_limitations": {
+                "donchian_20_10_breakout": {
+                    "entry_condition": "close above the prior 20-bar high",
+                    "exit_condition": "state becomes false; no separate prior-10-bar-low exit is implemented",
+                },
+                "donchian_55_20_breakout": {
+                    "entry_condition": "close above the prior 55-bar high",
+                    "exit_condition": "state becomes false; no separate prior-20-bar-low exit is implemented",
+                },
+                "stochastic_reversal": {
+                    "signal_condition": "one-bar event: previous %K below 20 and current %K at or above 20",
+                    "evaluator_effect": "one-interval long pulse; False on the next signal bar exits to cash",
+                    "missing_rules": "no %K/%D crossover exit or separate overbought exit is implemented",
+                },
+                "volume_confirmed_breakout": {
+                    "state_condition": "breakout and volume confirmation are combined in one boolean state",
+                    "exit_limitation": "position becomes flat when the combined entry condition ceases to hold",
+                },
+                "volatility_squeeze_breakout": {
+                    "state_condition": "volatility compression and breakout are combined in one boolean state",
+                    "exit_limitation": "position becomes flat when the combined entry condition ceases to hold",
+                },
+            },
+            "warning": "Historical performance describes these exact boolean signal-state proxies, not canonical textbook entry/exit systems.",
+        },
         "promotion_status": "RESEARCH_ONLY_NOT_EVALUATED",
     }
