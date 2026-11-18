@@ -210,6 +210,12 @@ def main():
         gold.setdefault("closed_trades", 0)
         gold["feed_status"] = "BIQUOTE_MT5_UNAVAILABLE"
         gold["status"] = "FEED_BLOCKED_NO_NEW_TRADES"
+        gold["strategy_signal"] = "HOLD"
+        gold["entry_consensus"] = {
+            "strategy_signal": "HOLD",
+            "approved_by_consensus": False,
+            "reason": "MARKET_FEED_UNAVAILABLE",
+        }
         gold["last_error"] = str(exc)
         gold["processed_new_candles"] = 0
         gold["new_trades"] = []
