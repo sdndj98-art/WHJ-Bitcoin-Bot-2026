@@ -121,3 +121,59 @@ The following names are descriptive proxies, not complete canonical entry/exit s
 - `volume_confirmed_breakout` and `volatility_squeeze_breakout`: entry confirmation is embedded in the boolean state, so the common evaluator exits when the combined condition becomes false.
 
 This metadata does not change signals, historical metrics, or candidate definitions. Existing Coinbase/Bitstamp results remain results for the exact proxy states used in those runs. Any canonical entry/exit redesign must use new candidate IDs, new trial manifests, and a new predeclared evaluation window; do not relabel prior results.
+
+## Latest verified exact-calendar refresh — Coinbase run 40 / Bitstamp run 17 (2026-11-19)
+
+This section supersedes the older run-33/run-35 exact-calendar figures above. The previous Bitstamp run 13/14 artifact still referenced Coinbase run 35; the current reference is now pinned to the immutable Coinbase run 40 snapshot and was re-evaluated on Bitstamp run 17.
+
+### Reproducibility and sample sizes
+
+- Coinbase workflow [run 40](https://github.com/sdndj98-art/WHJ-Bitcoin-Bot-2026/actions/runs/44414511120), code commit `f71f2427ffbb211d9b44aae2f2bd657bff4c88c8`, artifact [14479701180](https://github.com/sdndj98-art/WHJ-Bitcoin-Bot-2026/actions/runs/44414511120/artifacts/14479701180).
+- Coinbase: 36,000 BTC-USD hourly candles, 25,200 train candles, 10,800 OOS candles / 10,799 OOS open-to-open returns; 13 hourly imputations are explicitly marked. Dataset SHA-256: `3b1d145f79f21e8e2a84d94e6d1f64b5845fc3c5557cc7d93a806f9cca043804` (recomputed from the decompressed snapshot and matched the report).
+- Bitstamp workflow [run 17](https://github.com/sdndj98-art/WHJ-Bitcoin-Bot-2026/actions/runs/44415730207), code commit `631e35ea22ef1a9f15086cc8dd4dd9115dd0383a`, artifact [14479033160](https://github.com/sdndj98-art/WHJ-Bitcoin-Bot-2026/actions/runs/44415730207/artifacts/14479033160).
+- Bitstamp: 72,000 BTCUSD hourly candles, 50,400 train candles, 21,600 OOS candles / 21,599 OOS open-to-open returns; zero duplicates, gaps, or imputed bars. Dataset SHA-256: `5e9d2343b3ba8484aa1430b5d3055965259ac4298d4a49e0ab2cf380004c054a` (recomputed and matched the report).
+- Both reports evaluated the same 17 predeclared boolean long/flat signal-state proxies. No candidate rule was changed.
+
+### Exact shared OOS calendar
+
+- Both venues: 2025-08-25T22:00:00Z through 2026-11-18T21:00:00Z; 10,799 open-to-open returns.
+- Coinbase matched 25% buy-and-hold: -11.3461%; Bitstamp: -11.3554%.
+- Bitstamp matched-slice SHA-256: `1130c7411933db15e716e84cca132fc15e5303e3ac6cbff4d641028cc681d675`.
+- Across the 17 candidate cumulative net returns: Spearman rank correlation 0.985294; Pearson 0.997082; mean absolute return difference 0.4702 percentage points; maximum difference 2.0931 percentage points; 13/17 ordinal ranks identical.
+
+### Matched-calendar ranking — Bitstamp
+
+Costs are 0.10% fee + 0.05% slippage per side at 1x; both are multiplied at 2x/3x. These are controlled comparison assumptions, not measured Bitstamp fees, spread, depth, or market impact.
+
+| Rank | Candidate | 1x net | 2x net | 3x net | Max DD | Period PF | Sharpe | Closed trades |
+|---:|---|---:|---:|---:|---:|---:|---:|---:|
+| 1 | RSI14 mean reversion | -1.3451% | -2.1561% | -2.9608% | 1.3945% | 0.3548 | -1.8731 | 11 |
+| 2 | Bollinger mean reversion | -8.5148% | -14.1036% | -19.3529% | 8.5148% | 0.2807 | -4.6322 | 84 |
+| 3 | Z-Score20 mean reversion | -11.1827% | -20.3995% | -28.6628% | 11.1827% | 0.4368 | -4.9100 | 146 |
+| 4 | Donchian 55/20 | -12.3958% | -24.2076% | -34.4304% | 12.6666% | 0.4340 | -4.9130 | 193 |
+| 5 | Volatility Squeeze | -13.4058% | -25.6416% | -36.1521% | 13.4058% | 0.3583 | -6.6442 | 203 |
+| 6 | SMA200 regime | -14.1413% | -24.8205% | -34.1747% | 17.1380% | 0.9125 | -1.9092 | 177 |
+| 7 | Volume Breakout | -14.2474% | -29.0760% | -41.3445% | 14.5747% | 0.5035 | -4.4114 | 253 |
+| 8 | ROC60 momentum | -15.4507% | -28.6398% | -39.7754% | 16.6895% | 0.8855 | -2.3215 | 226 |
+| 9 | ROC120 momentum | -15.7731% | -27.1842% | -37.0528% | 18.6893% | 0.8884 | -2.3025 | 194 |
+| 10 | RSI2 mean reversion | -17.0451% | -30.0905% | -41.0882% | 17.0451% | 0.3447 | -7.1281 | 228 |
+| 11 | ATR Channel | -18.2907% | -35.7821% | -49.5337% | 18.5883% | 0.4789 | -5.3876 | 321 |
+| 12 | ROC20 momentum | -19.5083% | -37.2120% | -51.0264% | 20.1801% | 0.8315 | -3.2269 | 331 |
+| 13 | Donchian 20/10 | -19.9177% | -38.5542% | -52.8583% | 20.2094% | 0.4853 | -5.6793 | 353 |
+| 14 | SMA20/50 trend | -25.1407% | -43.2898% | -57.0432% | 26.4076% | 0.7860 | -4.3013 | 370 |
+| 15 | EMA12/26 trend | -27.2551% | -45.1803% | -58.6929% | 27.2551% | 0.8196 | -4.0860 | 377 |
+| 16 | OBV trend confirmation | -34.1308% | -56.0438% | -70.6714% | 34.3257% | 0.7547 | -5.5217 | 539 |
+| 17 | Stochastic reversal | -40.7810% | -65.3970% | -79.7848% | 40.7810% | 0.2733 | -12.2545 | 716 |
+
+All 17 candidates are negative at all three cost levels. The best-ranked RSI14 proxy is not profitable: only 11 closed trades, PF below 1, and negative Sharpe. Its 25 active signal bars in this matched window all occur in the bullish regime bucket; regime figures are bar-level attribution, not independent regime portfolios.
+
+### Full-history Bitstamp and walk-forward cross-check
+
+- Full-history 70/30 OOS matched buy-and-hold: +2.83%; all 17 candidates negative at 1x/2x/3x.
+- Full-history best RSI14: -3.3822%, DD 3.4275%, PF 0.4518, Sharpe -1.8949, 37 trades; 2x -6.0280%, 3x -8.6022%.
+- Full-history PBO 0.0 and exact-window PBO 0.085714, each over 35 CSCV splits. Both are narrow ranking-selection diagnostics only.
+- Expanding walk-forward selected SMA200 in all four folds. Stitched 28,800-bar adaptive OOS: -16.7937% at 1x versus +42.4975% benchmark, DD 26.5845%, Sharpe -0.6396, 501 closed trades; 2x -42.8682%, 3x -60.7772%.
+
+### Decision
+
+The exact-calendar replication supports the conclusion that the negative ranking is not a Coinbase-only price-series artifact. It does not validate the proxy semantics (F14 remains open), actual venue-specific execution costs, an untouched final holdout, or forward profitability. **NO CANDIDATE PROMOTED.**
