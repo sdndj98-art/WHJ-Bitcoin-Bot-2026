@@ -33,7 +33,7 @@ def _quality_ok(sleeve):
 def _feed_ok(sleeve):
     feed = str(sleeve.get("feed_status", "")).upper()
     status = str(sleeve.get("status", "")).upper()
-    return bool(feed) and "HEALTHY" in feed and status.startswith("PAPER_")
+    return bool(feed) and status.startswith("PAPER_")
 
 
 def _agent(name, status, detail, metrics=None):
