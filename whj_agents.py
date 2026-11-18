@@ -14,6 +14,7 @@ from pathlib import Path
 
 DEFAULT_INPUT = Path("dual_portfolio.json")
 DEFAULT_OUTPUT = Path("state/whj_agents.json")
+DEFAULT_RESEARCH_REPORT = Path("research/paper_learning/latest_report.json")
 AGENT_NAMES = ("SCANNER", "RUG CHECK", "SIZER", "EXECUTOR", "LOGGER", "EQUITY")
 
 
@@ -125,7 +126,56 @@ def authorize_paper_entry(market, feed_healthy, context):
     return decision["market_decisions"][market]["approved_by_consensus"] is True
 
 
-def build_agent_state(snapshot, generated_at=None):
+def _research_advisory(report):
+    """Accept only a correctly marked, read-only paper report; never trade from it."""
+    if report is None:
+        return {"status": "NOT_PROVIDED", "markets": {}, "changes_strategy": False}
+    if not isinstance(report, dict):
+        return {"status": "INVALID_REPORT", "markets": {}, "changes_strategy": False}
+    governance = report.get("governance")
+    if (report.get("mode") != "READ_ONLY_PAPER_RESEARCH"
+            or report.get("paper_only") is not True
+            or report.get("live_trading_enabled") is not False
+            or not isinstance(governance, dict)
+            or governance.get("strategy_auto_changes") is not False
+            or governance.get("ledger_mutation") is not False
+            or governance.get("risk_limit_changes") is not False
+            or governance.get("dashboard_modified") is not False
+            or governance.get("orders_submitted") is not False):
+        return {"status": "REJECTED_UNSAFE_REPORT", "markets": {},
+                "changes_strategy": False}
+    markets = report.get("markets")
+    if not isinstance(markets, dict):
+        return {"status": "INVALID_REPORT", "markets": {},
+                "changes_strategy": False}
+    comparison = report.get("comparison")
+    if not isinstance(comparison, dict):
+        return {"status": "INVALID_REPORT", "markets": {},
+                "changes_strategy": False}
+    selected = {}
+    for symbol in ("BTC", "XAUUSD"):
+        item = markets.get(symbol)
+        if not isinstance(item, dict):
+            return {"status": "INCOMPLETE_REPORT", "markets": {},
+                    "changes_strategy": False}
+        selected[symbol] = {
+            "review_status": item.get("review_status", "UNKNOWN"),
+            "next_action": item.get("next_action", "HUMAN_REVIEW_ONLY"),
+            "closed_trades": item.get("closed_trades", 0),
+            "return_pct": item.get("return_pct"),
+            "profit_factor": item.get("profit_factor"),
+            "max_drawdown_pct": item.get("max_drawdown_pct"),
+        }
+    return {
+        "status": comparison.get("status", "UNKNOWN"),
+        "markets": selected,
+        "changes_strategy": False,
+        "execution_authority": False,
+        "note": "Research advisory only. It cannot override live signal, risk, feed, sizing, or paper consensus gates.",
+    }
+
+
+def build_agent_state(snapshot, generated_at=None, research_report=None):
     """Build six agent statuses from the latest dual-paper portfolio snapshot."""
     if not isinstance(snapshot, dict):
         raise ValueError("Portfolio snapshot must be a JSON object")
@@ -238,6 +288,7 @@ def build_agent_state(snapshot, generated_at=None):
     unified_decision = build_unified_decision(
         sleeves, healthy, safety_ok, risk_ok, sizing_ok
     )
+    unified_decision["research_advisory"] = _research_advisory(research_report)
 
     return {
         "schema_version": 2,
@@ -283,9 +334,13 @@ def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--input", type=Path, default=DEFAULT_INPUT)
     parser.add_argument("--output", type=Path, default=DEFAULT_OUTPUT)
+    parser.add_argument("--research-report", type=Path, default=DEFAULT_RESEARCH_REPORT)
     args = parser.parse_args(argv)
     snapshot = json.loads(args.input.read_text(encoding="utf-8"))
-    result = build_agent_state(snapshot)
+    research_report = None
+    if args.research_report.exists():
+        research_report = json.loads(args.research_report.read_text(encoding="utf-8"))
+    result = build_agent_state(snapshot, research_report=research_report)
     atomic_write_json(args.output, result)
     print(json.dumps(result["summary"], sort_keys=True))
 

@@ -9,6 +9,8 @@ on:
       - "btc_paper_runner.py"
       - "gold_paper_runner.py"
       - "whj_agents.py"
+      - "paper_learning.py"
+      - "tests/test_paper_learning.py"
       - "tests/test_whj_agents.py"
       - "state/xauusd_paper_initialized.json"
       - "paper_account.py"
@@ -69,17 +71,19 @@ jobs:
           fi
       - name: Compile and run focused tests
         run: |
-          python -m py_compile btc_paper_runner.py gold_paper_runner.py paper_account.py historical_research.py forward_paper_monitor.py
+          python -m py_compile btc_paper_runner.py gold_paper_runner.py paper_account.py historical_research.py forward_paper_monitor.py paper_learning.py
           python -m unittest discover -s tests -v
       - name: Run BTC forward paper engine
         run: python btc_paper_runner.py
       - name: Run XAUUSD forward paper engine
         run: python gold_paper_runner.py
-      - name: Run six-agent decision office on fresh BTC and Gold results
+      - name: Generate read-only paper learning comparison
+        run: python paper_learning.py
+      - name: Run six-agent decision office with research advisory
         run: |
           python -m py_compile whj_agents.py
           python -m unittest discover -s tests -p 'test_whj_agents.py' -v
-          python whj_agents.py --input dual_portfolio.json --output state/whj_agents.json
+          python whj_agents.py --input dual_portfolio.json --research-report research/paper_learning/latest_report.json --output state/whj_agents.json
       - name: Save independent Gold ledger
         if: success() && hashFiles('state/xauusd_10usd_ema_trend.json') != ''
         uses: actions/cache/save@v4
@@ -99,6 +103,7 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add dual_portfolio.json
           git add -f state/whj_agents.json
+          git add research/paper_learning/latest_report.json
           if [ -f state/xauusd_10usd_ema_trend.json ] && [ "$(cat state/xauusd_paper_initialized.json)" != "INITIALIZED" ]; then
             echo "INITIALIZED" > state/xauusd_paper_initialized.json
             git add -f state/xauusd_paper_initialized.json
@@ -136,5 +141,6 @@ jobs:
             state/btc_10usd_rsi14_mean_reversion.json
             state/xauusd_10usd_ema_trend.json
             state/whj_agents.json
+            research/paper_learning/latest_report.json
           if-no-files-found: warn
           retention-days: 30
