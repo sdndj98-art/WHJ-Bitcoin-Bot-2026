@@ -69,7 +69,7 @@ jobs:
           fi
       - name: Compile and run focused tests
         run: |
-          python -m py_compile btc_paper_runner.py gold_paper_runner.py paper_account.py historical_research.py forward_paper_monitor.py
+          python -m py_compile btc_paper_runner.py gold_paper_runner.py paper_account.py historical_research.py forward_paper_monitor.py paper_learning.py
           python -m unittest discover -s tests -v
       - name: Run BTC forward paper engine
         run: python btc_paper_runner.py
