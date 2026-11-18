@@ -220,36 +220,26 @@ class BitstampStrategyFamilyResearchTests(unittest.TestCase):
             )
 
 
-    def test_coinbase_reference_window_pins_latest_verified_run_35(self):
-        self.assertEqual(COINBASE_REFERENCE_WINDOW["run_id"], "44189928803")
+    def test_coinbase_reference_window_pins_latest_verified_run_40(self):
+        self.assertEqual(COINBASE_REFERENCE_WINDOW["run_id"], "44414511120")
         self.assertEqual(
             COINBASE_REFERENCE_WINDOW["code_commit_sha"],
-            "4808ab87dd5919f5aa63b47e761a74986341225e",
+            "f71f2427ffbb211d9b44aae2f2bd657bff4c88c8",
         )
         self.assertEqual(
             COINBASE_REFERENCE_WINDOW["dataset_sha256"],
-            "2c3b21e004f0460b0f2647d995f5204d088811f700c94e95bbec67c31f0cb57e",
+            "3b1d145f79f21e8e2a84d94e6d1f64b5845fc3c5557cc7d93a806f9cca043804",
         )
         self.assertEqual(
             COINBASE_REFERENCE_WINDOW["first_oos_open_timestamp_utc"],
-            "2025-08-24T22:00:00+00:00",
+            "2025-08-25T22:00:00+00:00",
         )
         self.assertEqual(
             COINBASE_REFERENCE_WINDOW["last_candle_timestamp_utc"],
-            "2026-11-17T21:00:00+00:00",
+            "2026-11-18T21:00:00+00:00",
         )
         self.assertEqual(COINBASE_REFERENCE_WINDOW["open_to_open_returns"], 10799)
 
-
-    def test_coinbase_reference_window_is_pinned_to_latest_verified_run_40(self):
-        self.assertEqual(COINBASE_REFERENCE_WINDOW, {
-            "run_id": "44414511120",
-            "code_commit_sha": "f71f2427ffbb211d9b44aae2f2bd657bff4c88c8",
-            "dataset_sha256": "3b1d145f79f21e8e2a84d94e6d1f64b5845fc3c5557cc7d93a806f9cca043804",
-            "first_oos_open_timestamp_utc": "2025-08-25T22:00:00+00:00",
-            "last_candle_timestamp_utc": "2026-11-18T21:00:00+00:00",
-            "open_to_open_returns": 10799,
-        })
 
     def test_markdown_uses_reference_run_and_dataset_hash_not_stale_literal(self):
         candles = self.candles()
