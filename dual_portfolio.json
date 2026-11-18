@@ -6,7 +6,7 @@
   "compounding_enabled": true,
   "sizing_mode": "COMPOUND_CURRENT_EQUITY_FRACTION",
   "allocation_fraction": 0.1,
-  "updated_at": "2026-11-18T00:25:22+00:00",
+  "updated_at": "2026-11-18T00:27:20+00:00",
   "btc": {
     "asset": "BTC",
     "symbol": "BTC/USD",
@@ -37,11 +37,16 @@
     "processed_new_candles": 0,
     "data_quality": {
       "quality": "HEALTHY",
-      "latest_closed_candle_age_minutes": 25.35,
+      "latest_closed_candle_age_minutes": 27.33,
       "total_hourly_candles": 7200,
       "observed_hourly_candles": 7195,
       "imputed_hourly_candles": 5,
       "imputed_hourly_pct": 0.0694
+    },
+    "strategy_signal": "HOLD",
+    "entry_consensus": {
+      "strategy_signal": "HOLD",
+      "approved_by_consensus": false
     },
     "execution_model": "Newly closed hourly candles; 0.10% fee and 0.05% slippage per side; no live orders."
   },
@@ -57,9 +62,9 @@
     "max_drawdown_pct": 0.0,
     "feed_status": "BIQUOTE_MT5_XAUUSD_BID_ASK_FRESH",
     "status": "PAPER_ACTIVE_WAITING_NEXT_1H_CANDLE",
-    "bid_usd_oz": 3833.268,
-    "ask_usd_oz": 3833.436,
-    "mid_usd_oz": 3833.352,
+    "bid_usd_oz": 3831.959,
+    "ask_usd_oz": 3832.127,
+    "mid_usd_oz": 3832.0429999999997,
     "spread_usd_oz": 0.16800000000012005,
     "xau_ounces": 0.0,
     "cash_usd": 10.0,
@@ -79,11 +84,11 @@
     "data_quality": {
       "provider": "biquote \u00b7 MT5 broker feed",
       "source": "MetaTrader 5 (Broker 1)",
-      "quote_timestamp": "2026-11-18T00:25:21Z",
-      "quote_age_seconds": 0.0,
-      "bid_usd_oz": 3833.268,
-      "ask_usd_oz": 3833.436,
-      "mid_usd_oz": 3833.352,
+      "quote_timestamp": "2026-11-18T00:27:19Z",
+      "quote_age_seconds": 1.0,
+      "bid_usd_oz": 3831.959,
+      "ask_usd_oz": 3832.127,
+      "mid_usd_oz": 3832.0429999999997,
       "spread_usd_oz": 0.16800000000012005,
       "half_spread_pct": 0.00219,
       "history_interval": "1h",
@@ -91,8 +96,13 @@
       "recent_gap_count": 2,
       "max_recent_gap_hours": 2.0,
       "latest_closed_bar": "2026-11-17T23:00:00+00:00",
-      "latest_closed_bar_age_minutes": 25.35,
+      "latest_closed_bar_age_minutes": 27.33,
       "quality": "HEALTHY"
+    },
+    "strategy_signal": "HOLD",
+    "entry_consensus": {
+      "strategy_signal": "HOLD",
+      "approved_by_consensus": false
     },
     "execution_model": "1h completed MT5 OHLC; buy/sell cost includes half current bid/ask spread + 0.05% slippage and 0.10% fee per side. No live orders."
   },
