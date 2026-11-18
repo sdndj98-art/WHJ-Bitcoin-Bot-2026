@@ -148,7 +148,7 @@ def write_report(snapshot_path=SNAPSHOT, btc_path=LEDGERS["BTC"],
         ) as handle:
             temporary = handle.name
             json.dump(report, handle, indent=2, ensure_ascii=False, allow_nan=False)
-            handle.write("\\n")
+            handle.write("\n")
             handle.flush()
             os.fsync(handle.fileno())
         os.replace(temporary, target)
