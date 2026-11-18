@@ -1,0 +1,89 @@
+{
+  "agents": [
+    {
+      "detail": "Both BTC and XAUUSD feeds passed their snapshot quality checks.",
+      "metrics": {
+        "healthy_markets": [
+          "BTC",
+          "XAUUSD"
+        ],
+        "markets": [
+          "BTC",
+          "XAUUSD"
+        ]
+      },
+      "name": "SCANNER",
+      "status": "READY"
+    },
+    {
+      "detail": "Paper-only guardrails, feed quality, and portfolio risk pauses checked.",
+      "metrics": {
+        "live_trading_disabled": true,
+        "paper_only": true,
+        "risk_pause_reasons": {
+          "BTC": [],
+          "XAUUSD": []
+        }
+      },
+      "name": "RUG CHECK",
+      "status": "PASS"
+    },
+    {
+      "detail": "Validated per-sleeve allocation caps (maximum 10%); no order is submitted.",
+      "metrics": {
+        "allocation_pct": {
+          "BTC": 10.0,
+          "XAUUSD": 10.0
+        },
+        "maximum_allocation_pct": 10.0
+      },
+      "name": "SIZER",
+      "status": "READY"
+    },
+    {
+      "detail": "Paper ledger only; execution is limited to the existing simulated runners.",
+      "metrics": {
+        "live_orders_enabled": false,
+        "mode": "PAPER_ONLY",
+        "order_submission_by_agent": false
+      },
+      "name": "EXECUTOR",
+      "status": "PAPER_READY"
+    },
+    {
+      "detail": "No new trade events are present in this snapshot.",
+      "metrics": {
+        "new_trade_events": 0
+      },
+      "name": "LOGGER",
+      "status": "WAITING_EVENTS"
+    },
+    {
+      "detail": "Combined paper equity calculated from the BTC and XAUUSD ledgers.",
+      "metrics": {
+        "closed_trades": 0,
+        "equity_usd": 20.0,
+        "initial_equity_usd": 20.0,
+        "pnl_usd": 0.0,
+        "return_pct": 0.0
+      },
+      "name": "EQUITY",
+      "status": "TRACKING"
+    }
+  ],
+  "generated_at_utc": "2026-11-18T00:19:29.244255+00:00",
+  "live_trading_enabled": false,
+  "mode": "PAPER_ONLY",
+  "portfolio_status": "BTC_AND_GOLD_PAPER_ONLY",
+  "schema_version": 1,
+  "source_updated_at": "2026-11-18T00:19:29+00:00",
+  "summary": {
+    "agent_count": 6,
+    "markets": [
+      "BTC/USD",
+      "XAUUSD"
+    ],
+    "paper_only": true,
+    "ready_count": 5
+  }
+}
