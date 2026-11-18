@@ -1,0 +1,45 @@
+name: WHJ Six-Agent Paper Telemetry
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - "whj_agents.py"
+      - "tests/test_whj_agents.py"
+      - ".github/workflows/whj-six-agents-paper.yml"
+  schedule:
+    - cron: "*/15 * * * *"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: whj-six-agent-paper-telemetry
+  cancel-in-progress: false
+
+jobs:
+  agent-telemetry:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout existing WHJ project
+        uses: actions/checkout@v4
+        with:
+          ref: main
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Validate six-agent coordinator
+        run: |
+          python -m py_compile whj_agents.py
+          python -m unittest discover -s tests -p 'test_whj_agents.py' -v
+      - name: Build telemetry from latest committed BTC and Gold paper snapshot
+        run: python whj_agents.py --input dual_portfolio.json --output state/whj_agents.json
+      - name: Upload six-agent telemetry
+        uses: actions/upload-artifact@v4
+        with:
+          name: whj-six-agent-telemetry-${{ github.run_number }}
+          path: state/whj_agents.json
+          if-no-files-found: error
+          retention-days: 30
