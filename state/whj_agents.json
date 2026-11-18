@@ -71,12 +71,12 @@
       "status": "TRACKING"
     }
   ],
-  "generated_at_utc": "2026-11-18T00:19:29.244255+00:00",
+  "generated_at_utc": "2026-11-18T00:25:22.374508+00:00",
   "live_trading_enabled": false,
   "mode": "PAPER_ONLY",
   "portfolio_status": "BTC_AND_GOLD_PAPER_ONLY",
-  "schema_version": 1,
-  "source_updated_at": "2026-11-18T00:19:29+00:00",
+  "schema_version": 2,
+  "source_updated_at": "2026-11-18T00:25:22+00:00",
   "summary": {
     "agent_count": 6,
     "markets": [
@@ -85,5 +85,43 @@
     ],
     "paper_only": true,
     "ready_count": 5
+  },
+  "unified_decision": {
+    "agent_roles": [
+      "SCANNER",
+      "RUG CHECK",
+      "SIZER",
+      "EXECUTOR",
+      "LOGGER",
+      "EQUITY"
+    ],
+    "live_trading_enabled": false,
+    "market_decisions": {
+      "BTC": {
+        "approved_by_consensus": false,
+        "decision": "HOLD",
+        "execution_mode": "PAPER_ONLY",
+        "live_orders_enabled": false,
+        "reason_codes": [
+          "NO_EXPLICIT_BUY_OR_SELL_SIGNAL"
+        ],
+        "strategy_signal": "HOLD"
+      },
+      "XAUUSD": {
+        "approved_by_consensus": false,
+        "decision": "HOLD",
+        "execution_mode": "PAPER_ONLY",
+        "live_orders_enabled": false,
+        "reason_codes": [
+          "NO_EXPLICIT_BUY_OR_SELL_SIGNAL"
+        ],
+        "strategy_signal": "HOLD"
+      }
+    },
+    "model": "SIX_AGENT_UNIFIED_CONSENSUS",
+    "orders_submitted": false,
+    "paper_only": true,
+    "portfolio_decision": "HOLD",
+    "rule": "Any failed safety, data, risk, or sizing gate forces HOLD for that market."
   }
 }
