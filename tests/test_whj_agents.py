@@ -109,6 +109,36 @@ class WhjAgentsTests(unittest.TestCase):
         self.assertFalse(authorize_paper_entry("BTC", True, oversized))
         self.assertFalse(authorize_paper_entry("BTC", True, dict(context, signal="SELL")))
 
+    def test_research_report_is_attached_as_advisory_only(self):
+        report = {
+            "mode": "READ_ONLY_PAPER_RESEARCH",
+            "paper_only": True,
+            "live_trading_enabled": False,
+            "comparison": {"status": "INSUFFICIENT_FORWARD_SAMPLE"},
+            "markets": {
+                "BTC": {"review_status": "COLLECTING_SAMPLE", "next_action": "CONTINUE_PAPER_TEST", "closed_trades": 2},
+                "XAUUSD": {"review_status": "COLLECTING_SAMPLE", "next_action": "CONTINUE_PAPER_TEST", "closed_trades": 1},
+            },
+            "governance": {"strategy_auto_changes": False, "orders_submitted": False},
+        }
+        state = build_agent_state(healthy_snapshot(), research_report=report)
+        advisory = state["unified_decision"]["research_advisory"]
+        self.assertEqual(advisory["status"], "INSUFFICIENT_FORWARD_SAMPLE")
+        self.assertFalse(advisory["changes_strategy"])
+        self.assertFalse(advisory["execution_authority"])
+        self.assertEqual(state["unified_decision"]["market_decisions"]["BTC"]["decision"], "HOLD")
+
+    def test_unsafe_research_report_is_rejected_and_cannot_change_consensus(self):
+        report = {
+            "mode": "READ_ONLY_PAPER_RESEARCH", "paper_only": True,
+            "live_trading_enabled": True,
+            "markets": {"BTC": {}, "XAUUSD": {}},
+            "governance": {"strategy_auto_changes": True, "orders_submitted": False},
+        }
+        state = build_agent_state(healthy_snapshot(), research_report=report)
+        self.assertEqual(state["unified_decision"]["research_advisory"]["status"], "REJECTED_UNSAFE_REPORT")
+        self.assertEqual(state["unified_decision"]["portfolio_decision"], "HOLD")
+
     def test_atomic_output_is_valid_json(self):
         with tempfile.TemporaryDirectory() as folder:
             path = Path(folder) / "state" / "agents.json"
