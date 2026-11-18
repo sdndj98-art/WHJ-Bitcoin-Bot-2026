@@ -537,3 +537,16 @@ The updated reference to Coinbase run 35 completed successfully on Bitstamp run 
 **Execution/test evidence:** Bitstamp run 9 completed successfully. It ran 57 tests across the isolated report and shared contracts, compiled the research modules, evaluated all 17 candidates, and uploaded the artifact. Full repository audit run 1676 on commit 32e0b9c passed **576 tests in 7.130 seconds**, with tracked Python compilation and git diff --check successful: https://github.com/sdndj98-art/WHJ-Bitcoin-Bot-2026/actions/runs/44190910372.
 
 This closes the exact-calendar cross-exchange replication task for the current fixed signal-state definitions. It does not close F14 (entry/exit semantics), actual venue-specific spread/fees/impact, an untouched final holdout, or forward paper validation. It is evidence that the negative candidate ranking is not a Coinbase-only artifact; it is not evidence that any candidate is profitable.
+
+
+### F22 — machine-readable candidate semantics are now carried by the batch runner — 2026-11-18
+
+F14 correctly identified that several candidate names could be mistaken for canonical trading systems. The signal library and common batch runner previously exposed the limitation in prose/audit documentation, but the runner's machine-readable result did not carry the per-proxy caveats.
+
+**Research-only remediation:**
+- `strategy_universe()` now publishes an explicit `signal_semantics` object identifying the common boolean long/flat state interpretation and the known Donchian, stochastic, volume-confirmation, and volatility-squeeze limitations.
+- `run_strategy_universe()` carries this object into its returned report metadata.
+- Regression tests assert the semantics are present and accurately describe the missing exit rules and one-bar stochastic event.
+- No signal calculation, evaluator behavior, historical candidate ID, cost assumption, allocation cap, or paper/live pathway was changed.
+
+This is a reporting-contract correction, not a canonical strategy implementation. Existing historical artifacts remain unchanged and retain their original proxy semantics. A new historical evaluation is not needed solely for this metadata addition; the full repository CI must still validate the code and tests. No candidate is promoted.
