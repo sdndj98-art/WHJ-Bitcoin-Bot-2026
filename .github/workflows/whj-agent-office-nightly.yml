@@ -6,11 +6,13 @@ on:
     branches: [main, research/global-evidence-strategy-lab-20261112]
     paths:
       - "whj_agent_office.py"
+      - "whj_agents.py"
       - "whj_grok_worker.py"
       - "whj_free_worker.py"
       - "tests/test_whj_free_worker.py"
       - "tests/test_whj_agent_office.py"
       - "tests/test_whj_grok_worker.py"
+      - "dual_portfolio.json"
       - ".github/workflows/whj-agent-office-nightly.yml"
   schedule:
     - cron: "0 22,2,6,10,14,18 * * *"
@@ -29,7 +31,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: research/global-evidence-strategy-lab-20261112
+          ref: main
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
@@ -40,6 +42,15 @@ jobs:
           python -m unittest discover -s tests -p 'test_whj_free_worker.py' -v
       - name: Generate nightly research work plan
         run: python whj_agent_office.py plan --output-dir research/agent_office
+      - name: Generate six-agent paper status when portfolio snapshot exists
+        run: |
+          if [ -f dual_portfolio.json ]; then
+            python -m py_compile whj_agents.py
+            python whj_agents.py --input dual_portfolio.json --output research/agent_office/latest_paper_agents.json
+          else
+            echo "No dual portfolio snapshot on main; paper status marked unavailable."
+            printf '{"status":"UNAVAILABLE","reason":"dual_portfolio.json missing on main","live_trading_enabled":false}\n' > research/agent_office/latest_paper_agents.json
+          fi
       - name: Run free deterministic workers (always on)
         run: python whj_free_worker.py run --output-dir research/agent_office
       - name: Run Grok workers only when explicitly enabled
@@ -62,6 +73,7 @@ jobs:
             research/agent_office/latest_plan.md
             research/agent_office/latest_free_worker_results.json
             research/agent_office/latest_free_worker_results.md
+            research/agent_office/latest_paper_agents.json
             research/agent_office/runs/**
           if-no-files-found: error
           retention-days: 30
