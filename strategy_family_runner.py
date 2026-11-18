@@ -1,7 +1,7 @@
 """Run every implemented BTC signal candidate under one matched research protocol."""
 import math
 
-from strategy_family_lab import build_strategy_signals, STRATEGY_FAMILIES
+from strategy_family_lab import build_strategy_signals, STRATEGY_FAMILIES, strategy_universe
 from strategy_family_evaluator import evaluate_candidate
 
 # Research cap inherited from the existing WHJ evaluation contract.
@@ -50,6 +50,7 @@ def run_strategy_universe(
         "evaluation_start_index": evaluation_start_index,
         "signal_warmup_contract": "Signals are calculated on the full history; when an OOS start is supplied, the immediately preceding completed bar is retained as the first signal and the first OOS fill is at the next open.",
         "family_members": family_members,
+        "signal_semantics": strategy_universe()["signal_semantics"],
         "results": results,
         "descriptive_ranking_by_terminal_excess_equity": ranking,
         "ranking_warning": "Descriptive ordering only; no uncertainty, multiple-testing correction, untouched holdout, regime robustness, or forward evidence is implied.",
