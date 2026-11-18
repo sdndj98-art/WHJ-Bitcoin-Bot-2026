@@ -138,11 +138,18 @@ def _research_advisory(report):
             or report.get("live_trading_enabled") is not False
             or not isinstance(governance, dict)
             or governance.get("strategy_auto_changes") is not False
+            or governance.get("ledger_mutation") is not False
+            or governance.get("risk_limit_changes") is not False
+            or governance.get("dashboard_modified") is not False
             or governance.get("orders_submitted") is not False):
         return {"status": "REJECTED_UNSAFE_REPORT", "markets": {},
                 "changes_strategy": False}
     markets = report.get("markets")
     if not isinstance(markets, dict):
+        return {"status": "INVALID_REPORT", "markets": {},
+                "changes_strategy": False}
+    comparison = report.get("comparison")
+    if not isinstance(comparison, dict):
         return {"status": "INVALID_REPORT", "markets": {},
                 "changes_strategy": False}
     selected = {}
@@ -160,7 +167,7 @@ def _research_advisory(report):
             "max_drawdown_pct": item.get("max_drawdown_pct"),
         }
     return {
-        "status": report.get("comparison", {}).get("status", "UNKNOWN"),
+        "status": comparison.get("status", "UNKNOWN"),
         "markets": selected,
         "changes_strategy": False,
         "execution_authority": False,
