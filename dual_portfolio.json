@@ -6,7 +6,7 @@
   "compounding_enabled": true,
   "sizing_mode": "COMPOUND_CURRENT_EQUITY_FRACTION",
   "allocation_fraction": 0.1,
-  "updated_at": "2026-11-19T23:10:24+00:00",
+  "updated_at": "2026-11-19T23:50:58+00:00",
   "btc": {
     "asset": "BTC",
     "symbol": "BTC/USD",
@@ -18,7 +18,7 @@
     "fees_usd": 0.0,
     "max_drawdown_pct": 0.0,
     "feed_status": "COINBASE_BTC_USD_HOURLY_HEALTHY",
-    "status": "PAPER_RUNNING",
+    "status": "PAPER_ACTIVE_WAITING_NEXT_CLOSED_CANDLE",
     "last_price_usd": 62095.04,
     "last_processed_timestamp": 1795125600,
     "open_position": false,
@@ -34,10 +34,10 @@
     },
     "new_trades": [],
     "warmup_seed_created": false,
-    "processed_new_candles": 1,
+    "processed_new_candles": 0,
     "data_quality": {
       "quality": "HEALTHY",
-      "latest_closed_candle_age_minutes": 10.38,
+      "latest_closed_candle_age_minutes": 50.96,
       "total_hourly_candles": 7200,
       "observed_hourly_candles": 7195,
       "imputed_hourly_candles": 5,
@@ -60,51 +60,17 @@
     "closed_trades": 0,
     "fees_usd": 0.0,
     "max_drawdown_pct": 0.0,
-    "feed_status": "BIQUOTE_MT5_XAUUSD_BID_ASK_FRESH",
-    "status": "PAPER_RUNNING",
-    "bid_usd_oz": 3626.688,
-    "ask_usd_oz": 3626.856,
-    "mid_usd_oz": 3626.772,
-    "spread_usd_oz": 0.16800000000012005,
-    "xau_ounces": 0.0,
-    "cash_usd": 10.0,
-    "open_position": false,
-    "strategy": "ema_trend",
-    "last_processed_timestamp": 1795122000,
-    "processed_new_candles": 1,
-    "new_trades": [],
-    "risk_pause_reasons": [],
-    "risk_limits": {
-      "max_drawdown_pct": 10.0,
-      "daily_loss_pause_pct": 3.0,
-      "max_consecutive_losses": 3,
-      "allocation_pct": 10.0
-    },
-    "warmup_seed_created": false,
-    "data_quality": {
-      "provider": "biquote \u00b7 MT5 broker feed",
-      "source": "MetaTrader 5 (Broker 1)",
-      "quote_timestamp": "2026-11-19T23:10:23Z",
-      "quote_age_seconds": 0.0,
-      "bid_usd_oz": 3626.688,
-      "ask_usd_oz": 3626.856,
-      "mid_usd_oz": 3626.772,
-      "spread_usd_oz": 0.16800000000012005,
-      "half_spread_pct": 0.00232,
-      "history_interval": "1h",
-      "history_bars": 168,
-      "recent_gap_count": 1,
-      "max_recent_gap_hours": 2.0,
-      "latest_closed_bar": "2026-11-19T21:00:00+00:00",
-      "latest_closed_bar_age_minutes": 70.38,
-      "quality": "HEALTHY"
-    },
+    "feed_status": "BIQUOTE_MT5_UNAVAILABLE",
+    "status": "FEED_BLOCKED_NO_NEW_TRADES",
     "strategy_signal": "HOLD",
     "entry_consensus": {
       "strategy_signal": "HOLD",
-      "approved_by_consensus": false
+      "approved_by_consensus": false,
+      "reason": "MARKET_FEED_UNAVAILABLE"
     },
-    "execution_model": "1h completed MT5 OHLC; buy/sell cost includes half current bid/ask spread + 0.05% slippage and 0.10% fee per side. No live orders."
+    "last_error": "Latest completed gold hourly candle is stale",
+    "processed_new_candles": 0,
+    "new_trades": []
   },
   "strategies": [
     {
@@ -115,7 +81,7 @@
       "closed_trades": 0,
       "fees_usd": 0.0,
       "max_drawdown_pct": 0.0,
-      "status": "PAPER_RUNNING"
+      "status": "PAPER_ACTIVE_WAITING_NEXT_CLOSED_CANDLE"
     },
     {
       "asset": "XAUUSD",
@@ -125,12 +91,12 @@
       "closed_trades": 0,
       "fees_usd": 0.0,
       "max_drawdown_pct": 0.0,
-      "status": "PAPER_RUNNING"
+      "status": "FEED_BLOCKED_NO_NEW_TRADES"
     }
   ],
   "bull_summary": "RSI14 mean-reversion exploratory paper test; not approved for live use.",
   "bear_summary": "No entry unless a completed candle satisfies the strategy rule.",
-  "risk_decision": "PAPER_RUNNING",
+  "risk_decision": "PAPER_ACTIVE_WAITING_NEXT_CLOSED_CANDLE",
   "notes": [
     "BTC and XAUUSD are independent $10 forward-only paper ledgers.",
     "Gold uses biquote's MT5-sourced XAUUSD bid/ask and hourly OHLC feed; this is a third-party broker feed, not the user's own broker quote.",
