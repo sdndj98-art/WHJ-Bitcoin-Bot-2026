@@ -27,6 +27,78 @@ def _path_summary(returns):
     }
 
 
+
+def _market_regime_labels(candles):
+    """Classify each completed close using only its own and prior closes."""
+    closes = []
+    for row in candles:
+        value = row.get("close") if isinstance(row, dict) else row[4]
+        if isinstance(value, bool) or not isinstance(value, (int, float)):
+            raise ValueError("close prices must be positive finite numbers")
+        try:
+            close = float(value)
+        except (OverflowError, TypeError, ValueError) as exc:
+            raise ValueError("close prices must be positive finite numbers") from exc
+        if not math.isfinite(close) or close <= 0:
+            raise ValueError("close prices must be positive finite numbers")
+        closes.append(close)
+    prefix = [0.0]
+    for close in closes:
+        prefix.append(prefix[-1] + close)
+    def sma_at(index):
+        start = index - 199
+        if start < 0:
+            return None
+        return (prefix[index + 1] - prefix[start]) / 200.0
+    labels = []
+    for index, close in enumerate(closes):
+        current_sma = sma_at(index)
+        prior_sma = sma_at(index - 20) if index >= 219 else None
+        if current_sma is None or prior_sma is None:
+            labels.append("sideways_transition")
+        elif close > current_sma and current_sma > prior_sma:
+            labels.append("bullish")
+        elif close < current_sma and current_sma < prior_sma:
+            labels.append("bearish")
+        else:
+            labels.append("sideways_transition")
+    return labels
+
+
+def _regime_attribution(net_returns, signals, regime_labels, minimum_active_bars=30):
+    """Attribute fixed-candidate net log growth to the regime known at signal close.
+
+    Grouped contributions reconcile to total OOS log growth, but are not
+    independently executable regime portfolios.
+    """
+    if not (len(net_returns) == len(signals) == len(regime_labels)):
+        raise ValueError("regime attribution inputs must have identical lengths")
+    output = {}
+    for regime in ("bullish", "bearish", "sideways_transition"):
+        indices = [i for i, label in enumerate(regime_labels) if label == regime]
+        values = [net_returns[i] for i in indices]
+        active_values = [net_returns[i] for i in indices if signals[i]]
+        if any(value <= -1.0 for value in values):
+            raise ValueError("net returns must be greater than -100% for log attribution")
+        log_growth = sum(math.log1p(value) for value in values)
+        active_count = len(active_values)
+        output[regime] = {
+            "bars": len(indices),
+            "active_signal_bars": active_count,
+            "net_log_contribution_pct": log_growth * 100.0,
+            "conditional_compounded_return_pct": math.expm1(log_growth) * 100.0,
+            "positive_active_net_return_bars": sum(value > 0 for value in active_values),
+            "positive_active_net_return_pct": (
+                sum(value > 0 for value in active_values) / active_count * 100.0
+                if active_count else None
+            ),
+            "evidence_status": (
+                "INSUFFICIENT_SAMPLE" if active_count < minimum_active_bars
+                else "DESCRIPTIVE_ONLY"
+            ),
+        }
+    return output
+
 def evaluate_rolling_walk_forward(
     candles,
     signals_by_candidate,
@@ -71,6 +143,7 @@ def evaluate_rolling_walk_forward(
             raise ValueError("candidate signals must contain only bool values")
 
     folds = []
+    fixed_candidate_fold_results = {name: [] for name in names}
     stitched_oos_signals = [False] * len(candles)
     train_end = initial_train_bars
     while train_end + test_bars + 1 < len(candles):
@@ -112,6 +185,24 @@ def evaluate_rolling_walk_forward(
                 "strategy_net_returns": scenario["net_returns"],
                 "benchmark_net_returns": scenario["benchmark_net_returns"],
             }
+
+        for candidate_name in names:
+            candidate_test = evaluate_candidate(
+                test_rows,
+                signals_by_candidate[candidate_name][train_end - 1:test_end + 1],
+                fee_rate,
+                slippage_rate,
+                bars_per_year,
+                allocation_fraction=allocation_fraction,
+            )
+            fixed_candidate_fold_results[candidate_name].append({
+                "fold": len(folds) + 1,
+                "test_start_index": train_end,
+                "test_end_index_exclusive": test_end,
+                "strategy": candidate_test["strategy"],
+                "buy_and_hold": candidate_test["buy_and_hold"],
+                "excess_return": candidate_test["excess_return"],
+            })
         baseline = cost_scenarios["1x"]
         folds.append({
             "fold": len(folds) + 1,
@@ -166,6 +257,66 @@ def evaluate_rolling_walk_forward(
             "benchmark_entry_cost_charged_once": True,
             "fold_boundary_exposure_is_continuous": True,
         }
+
+    regime_labels = _market_regime_labels(candles)
+    fixed_candidate_results = {}
+    for name in names:
+        candidate_signal_rows = signals_by_candidate[name][initial_train_bars - 1:final_test_end + 1]
+        candidate_cost_scenarios = {}
+        candidate_reports = {}
+        for multiplier in (1, 2, 3):
+            candidate_report = evaluate_candidate(
+                aggregate_rows,
+                candidate_signal_rows,
+                fee_rate * multiplier,
+                slippage_rate * multiplier,
+                bars_per_year,
+                allocation_fraction=allocation_fraction,
+            )
+            candidate_reports[f"{multiplier}x"] = candidate_report
+            candidate_cost_scenarios[f"{multiplier}x"] = {
+                "strategy": candidate_report["strategy"],
+                "buy_and_hold": candidate_report["buy_and_hold"],
+                "excess_return": candidate_report["excess_return"],
+            }
+        base_candidate = candidate_reports["1x"]
+        return_count = len(base_candidate["net_returns"])
+        signal_rows = candidate_signal_rows[:return_count]
+        signal_regimes = regime_labels[
+            initial_train_bars - 1:initial_train_bars - 1 + return_count
+        ]
+        regime_metrics = _regime_attribution(
+            base_candidate["net_returns"], signal_rows, signal_regimes
+        )
+        fixed_candidate_results[name] = {
+            "folds": fixed_candidate_fold_results[name],
+            "aggregate_oos_cost_scenarios": candidate_cost_scenarios,
+            "regime_attribution": regime_metrics,
+        }
+    fixed_candidate_walk_forward = {
+        "protocol": "fixed_candidate_expanding_window_walk_forward_all_candidates",
+        "candidate_count": len(names),
+        "fold_count": len(folds),
+        "initial_train_bars": initial_train_bars,
+        "test_bars": test_bars,
+        "regime_classification": (
+            "Bullish when close is above SMA200 and SMA200 is above its value 20 bars earlier; "
+            "bearish when close is below SMA200 and SMA200 is below its value 20 bars earlier; "
+            "otherwise sideways/transition."
+        ),
+        "regime_measurement": (
+            "Each net open-to-open return is attributed to the regime known at its signal close. "
+            "Regime log contributions reconcile to total OOS log growth; they are descriptive "
+            "conditional contributions, not separately executable regime portfolios."
+        ),
+        "candidates": fixed_candidate_results,
+        "limitations": [
+            "Every fixed candidate is evaluated on the same contiguous OOS folds without per-fold candidate selection.",
+            "Signal builders must remain causal; this routine evaluates but does not prove prefix causality.",
+            "Fixed costs omit spread, depth, impact, latency, and intrabar tick paths.",
+            "Regime contributions are attribution diagnostics, not independent regime portfolios.",
+        ],
+    }
     return {
         "protocol": "expanding_window_rolling_walk_forward_frozen_candidate",
         "fold_count": len(folds),
@@ -176,6 +327,7 @@ def evaluate_rolling_walk_forward(
         "candidate_names": names,
         "folds": folds,
         "aggregate_oos_cost_scenarios": aggregate_cost_scenarios,
+        "fixed_candidate_walk_forward": fixed_candidate_walk_forward,
         "tested_through_index_exclusive": final_test_end + 1,
         "tested_through_open_index": final_test_end,
         "unused_tail_bars": len(candles) - (final_test_end + 1),

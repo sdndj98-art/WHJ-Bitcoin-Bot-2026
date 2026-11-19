@@ -142,5 +142,65 @@ class RollingWalkForwardTests(unittest.TestCase):
             evaluate_rolling_walk_forward(rows, {"a": [True] * 12}, 12, 3)
 
 
+
+    def test_fixed_candidate_walk_forward_evaluates_every_candidate_and_reconciles_regimes(self):
+        rows = []
+        for i in range(280):
+            close = 100.0 + 0.08 * i + 3.0 * math.sin(i / 9.0)
+            rows.append([i, close, close * 1.01, close * 0.99, close, 1000.0])
+        signals = build_strategy_signals(rows)
+        result = evaluate_rolling_walk_forward(
+            rows, signals, initial_train_bars=220, test_bars=30,
+            fee_rate=0.001, slippage_rate=0.0005,
+        )
+        fixed = result["fixed_candidate_walk_forward"]
+        self.assertEqual(fixed["candidate_count"], 17)
+        self.assertEqual(set(fixed["candidates"]), set(signals))
+        self.assertEqual(fixed["fold_count"], result["fold_count"])
+        for candidate in fixed["candidates"].values():
+            self.assertEqual(len(candidate["folds"]), fixed["fold_count"])
+            self.assertEqual(
+                set(candidate["aggregate_oos_cost_scenarios"]), {"1x", "2x", "3x"}
+            )
+            one_x = candidate["aggregate_oos_cost_scenarios"]["1x"]["strategy"]
+            self.assertEqual(
+                one_x["bars"],
+                sum(fold["strategy"]["bars"] for fold in candidate["folds"]),
+            )
+            log_contribution = sum(
+                regime["net_log_contribution_pct"]
+                for regime in candidate["regime_attribution"].values()
+            )
+            expected_log_growth = math.log1p(one_x["net_return"]) * 100.0
+            self.assertAlmostEqual(log_contribution, expected_log_growth, places=8)
+            self.assertIn(
+                candidate["regime_attribution"]["bullish"]["evidence_status"],
+                {"DESCRIPTIVE_ONLY", "INSUFFICIENT_SAMPLE"},
+            )
+
+    def test_fixed_candidate_first_fold_is_independent_of_later_test_rows(self):
+        rows = self.candles(22)
+        signals = {"a": [True] * 22, "b": [False] * 22}
+        original = evaluate_rolling_walk_forward(
+            rows, signals, 8, 4, fee_rate=0, slippage_rate=0, bars_per_year=1,
+        )
+        changed_later = rows[:12] + [
+            [i, 500.0 + i, 501.0 + i, 499.0 + i, 500.0 + i, 1000.0]
+            for i in range(12, len(rows))
+        ]
+        altered = evaluate_rolling_walk_forward(
+            changed_later, signals, 8, 4, fee_rate=0, slippage_rate=0, bars_per_year=1,
+        )
+        original_first = original["fixed_candidate_walk_forward"]["candidates"]["a"]["folds"][0]
+        altered_first = altered["fixed_candidate_walk_forward"]["candidates"]["a"]["folds"][0]
+        self.assertEqual(
+            original_first["strategy"]["net_return"],
+            altered_first["strategy"]["net_return"],
+        )
+        self.assertEqual(
+            original_first["test_start_index"],
+            altered_first["test_start_index"],
+        )
+
 if __name__ == "__main__":
     unittest.main()
