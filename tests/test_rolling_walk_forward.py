@@ -186,7 +186,7 @@ class RollingWalkForwardTests(unittest.TestCase):
         )
         changed_later = rows[:13] + [
             [i, 500.0 + i, 501.0 + i, 499.0 + i, 500.0 + i, 1000.0]
-            for i in range(12, len(rows))
+            for i in range(13, len(rows))
         ]
         altered = evaluate_rolling_walk_forward(
             changed_later, signals, 8, 4, fee_rate=0, slippage_rate=0, bars_per_year=1,
