@@ -1,10 +1,11 @@
 {
   "agents": [
     {
-      "detail": "Waiting for fresh, healthy BTC and XAUUSD feed snapshots.",
+      "detail": "Both BTC and XAUUSD feeds passed their snapshot quality checks.",
       "metrics": {
         "healthy_markets": [
-          "BTC"
+          "BTC",
+          "XAUUSD"
         ],
         "markets": [
           "BTC",
@@ -12,10 +13,10 @@
         ]
       },
       "name": "SCANNER",
-      "status": "WAITING_DATA"
+      "status": "READY"
     },
     {
-      "detail": "Blocked: verify paper-only flags, feed quality, or risk pause reasons.",
+      "detail": "Paper-only guardrails, feed quality, and portfolio risk pauses checked.",
       "metrics": {
         "live_trading_disabled": true,
         "paper_only": true,
@@ -25,28 +26,29 @@
         }
       },
       "name": "RUG CHECK",
-      "status": "BLOCKED"
+      "status": "PASS"
     },
     {
-      "detail": "Position sizing is blocked until risk and allocation limits are valid.",
+      "detail": "Validated per-sleeve allocation caps (maximum 10%); no order is submitted.",
       "metrics": {
         "allocation_pct": {
-          "BTC": 10.0
+          "BTC": 10.0,
+          "XAUUSD": 10.0
         },
         "maximum_allocation_pct": 10.0
       },
       "name": "SIZER",
-      "status": "BLOCKED"
+      "status": "READY"
     },
     {
-      "detail": "No execution: safety, feed, risk, or sizing gate did not pass.",
+      "detail": "Paper ledger only; execution is limited to the existing simulated runners.",
       "metrics": {
         "live_orders_enabled": false,
         "mode": "PAPER_ONLY",
         "order_submission_by_agent": false
       },
       "name": "EXECUTOR",
-      "status": "BLOCKED"
+      "status": "PAPER_READY"
     },
     {
       "detail": "No new trade events are present in this snapshot.",
@@ -69,12 +71,12 @@
       "status": "TRACKING"
     }
   ],
-  "generated_at_utc": "2026-11-19T22:18:12.457433+00:00",
+  "generated_at_utc": "2026-11-19T23:10:24.250107+00:00",
   "live_trading_enabled": false,
   "mode": "PAPER_ONLY",
   "portfolio_status": "BTC_AND_GOLD_PAPER_ONLY",
   "schema_version": 2,
-  "source_updated_at": "2026-11-19T22:18:12+00:00",
+  "source_updated_at": "2026-11-19T23:10:24+00:00",
   "summary": {
     "agent_count": 6,
     "markets": [
@@ -82,7 +84,7 @@
       "XAUUSD"
     ],
     "paper_only": true,
-    "ready_count": 1
+    "ready_count": 5
   },
   "unified_decision": {
     "agent_roles": [
@@ -101,8 +103,6 @@
         "execution_mode": "PAPER_ONLY",
         "live_orders_enabled": false,
         "reason_codes": [
-          "GLOBAL_RISK_GATE_FAILED",
-          "GLOBAL_SIZING_GATE_FAILED",
           "NO_EXPLICIT_BUY_OR_SELL_SIGNAL"
         ],
         "strategy_signal": "HOLD"
@@ -113,11 +113,7 @@
         "execution_mode": "PAPER_ONLY",
         "live_orders_enabled": false,
         "reason_codes": [
-          "GLOBAL_RISK_GATE_FAILED",
-          "GLOBAL_SIZING_GATE_FAILED",
-          "MARKET_DATA_NOT_HEALTHY",
-          "NO_EXPLICIT_BUY_OR_SELL_SIGNAL",
-          "POSITION_SIZE_INVALID"
+          "NO_EXPLICIT_BUY_OR_SELL_SIGNAL"
         ],
         "strategy_signal": "HOLD"
       }
