@@ -39,7 +39,13 @@ def parse_yahoo_chart(payload):
             continue
         o, h, l, c = map(float, values)
         if h < max(o, l, c) or l > min(o, h, c):
-            raise ValueError("Impossible gold OHLC relationship")
+            timestamp_utc = datetime.fromtimestamp(int(stamp), timezone.utc).isoformat()
+            raise ValueError(
+                "Impossible gold OHLC relationship at index {} timestamp {}: "
+                "open={} high={} low={} close={}".format(
+                    i, timestamp_utc, o, h, l, c
+                )
+            )
         timestamp_ms = int(stamp) * 1000
         if timestamp_ms in seen:
             raise ValueError("Duplicate GC=F daily timestamp")

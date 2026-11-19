@@ -715,10 +715,35 @@ No strategy is promoted. No paper ledger, balance, schedule, risk limit, exchang
 - PBO 0.50 across only three declared variants, six partitions, ten splits. Fixed subperiods are not rolling walk-forward; no forward paper evidence exists.
 - This resolves the previous “run22 is latest retrievable artifact” note in the report. The report file was updated with the run24 details.
 
-### F28 — XAUUSD numeric input overflow guard (2026-11-20)
+### F28 — XAUUSD numeric input overflow guard validated (2026-11-20)
 
 - `xauusd_broker_data._finite_number` now catches `OverflowError` as well as `TypeError` and `ValueError`, ensuring oversized Python integers fail closed with a clear `ValueError`.
 - Added regression coverage for both an oversized broker contract-size input and oversized round-trip lots.
+- The Gold Research #18 test step passed these tests; Termux Repository Audit #1776 also passed 592 tests, Python compilation, and `git diff --check`.
 - This is parser/accounting validation only. It does not add a broker feed, change contract or cost assumptions, create a ledger, or execute a trade.
-- Validation is pending the triggered Gold Research and repository audit workflows on the resulting commit.
 
+
+
+### F29 — latest Coinbase/Bitstamp exact-calendar replay (2026-11-20)
+
+- Coinbase reference is now pinned to [run #50](https://github.com/sdndj98-art/WHJ-Bitcoin-Bot-2026/actions/runs/44631838327), code `3406a98eca240a628dabb760debac4982ab2a904`, dataset SHA-256 `25a2ebdce5893d499759b6d990bbe628ee36e52bf22a04277b79e4f9b1f202d1`.
+- [Bitstamp run #31](https://github.com/sdndj98-art/WHJ-Bitcoin-Bot-2026/actions/runs/44632509631) succeeded and produced [artifact 14582333190](https://github.com/sdndj98-art/WHJ-Bitcoin-Bot-2026/actions/runs/44632509631/artifacts/14582333190). Artifact ZIP SHA-256: `42b40b3d6e1ee17b0485a22a0e9233f99d915edc953f40d18303f6ef1d93a024`.
+- Bitstamp full dataset: 72,000 hourly bars, 2018-09-02 22:00 UTC to 2026-11-19 21:00 UTC, zero duplicates, zero gaps, zero imputed bars; recomputed dataset SHA-256 `ac52bfa3ea7e77cf522a16f7b0c217c1bf836d4d7fa962bf604314276e91c6fa`.
+- Exact matched interval: 2025-08-26 22:00 UTC to 2026-11-19 21:00 UTC; 10,801 candles including prior signal and endpoint; 10,799 open-to-open returns. Bitstamp matched-slice SHA-256: `5e764f5a039c0089b68864015b303e1272bd491d24ad8b772e505231d696bb5f`.
+- Across the 17 matched candidate cumulative returns: Pearson `0.997018`, Spearman `0.985294`, Kendall `0.955882`; 13/17 ranks identical; mean absolute venue difference 0.4737 percentage points; maximum difference 2.1447 points.
+- Matched-window PBO: 0.085714 across 35 CSCV splits, eight partitions, 10,792 observations used, seven newest observations trimmed to form equal partitions. This remains a selection diagnostic only.
+- All 17 matched-window candidates were negative at 1x, 2x, and 3x. Best RSI14 returned -1.3633% on Coinbase and -1.3451% on Bitstamp (11 closed trades on each); matched 25%-allocation buy-and-hold returned -11.8554% and -11.8744%, respectively. A less-negative strategy is not a profitable strategy.
+- The full-history fixed-candidate WF ranking remains 0/17 passed on both venues. The exact-calendar comparison confirms high cross-venue rank stability, not profitability.
+
+### F30 — GC=F historical evaluation blocked by malformed Yahoo OHLC (2026-11-20)
+
+- [Gold Research #18](https://github.com/sdndj98-art/WHJ-Bitcoin-Bot-2026/actions/runs/44632921334) ran the gold parser/strategy/shadow tests successfully, but the historical evaluation failed in `gold_market_data.parse_yahoo_chart` with `ValueError: Impossible gold OHLC relationship`.
+- The artifact-upload step was skipped, so no new Gold #18 report or dataset snapshot exists. The previous valid [Gold Research #17 artifact](https://github.com/sdndj98-art/WHJ-Bitcoin-Bot-2026/actions/runs/43771360299/artifacts/14184397840) remains the latest verified historical result.
+- The parser correctly fails closed rather than silently repairing or dropping an impossible bar. The failure is in public Yahoo `GC=F` futures-reference data, not in the XAUUSD broker-cost parser.
+- No broker Bid/Ask XAUUSD history is present. GC=F must not be represented as spot XAUUSD or broker execution evidence.
+
+### F31 — malformed GC=F bar diagnostic context
+
+- `gold_market_data.parse_yahoo_chart` now includes the offending array index, UTC timestamp, and OHLC values in its impossible-OHLC exception.
+- The existing regression test now asserts the diagnostic context. The parser still rejects the bar; no bad row is skipped or altered.
+- Validation is pending the next Gold Research and repository audit runs.

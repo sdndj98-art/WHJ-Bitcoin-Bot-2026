@@ -35,7 +35,7 @@ class GoldMarketDataTests(unittest.TestCase):
     def test_rejects_impossible_ohlc_and_duplicate_timestamps(self):
         data = payload()
         data["chart"]["result"][0]["indicators"]["quote"][0]["high"][20] = 1
-        with self.assertRaises(ValueError):
+        with self.assertRaisesRegex(ValueError, "index 20.*open=.*high=.*low=.*close="):
             parse_yahoo_chart(data)
         data = payload()
         data["chart"]["result"][0]["timestamp"][10] = data["chart"]["result"][0]["timestamp"][9]
