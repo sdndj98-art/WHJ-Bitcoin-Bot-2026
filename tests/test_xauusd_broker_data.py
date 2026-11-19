@@ -155,5 +155,22 @@ class XAUUSDBrokerDataTests(unittest.TestCase):
             )
 
 
+
+    def test_rejects_unrepresentably_large_numeric_inputs(self):
+        oversized = 10 ** 1000
+        with self.assertRaisesRegex(ValueError, "finite number"):
+            validate_xauusd_cost_model({
+                **COSTS,
+                "contract_size_oz_per_lot": oversized,
+            })
+        with self.assertRaisesRegex(ValueError, "finite number"):
+            estimate_xauusd_round_trip(
+                side="long", lots=oversized,
+                entry_bid=2000.0, entry_ask=2000.5,
+                exit_bid=2010.0, exit_ask=2010.5,
+                rollover_dates=[],
+                cost_model=COSTS,
+            )
+
 if __name__ == "__main__":
     unittest.main()

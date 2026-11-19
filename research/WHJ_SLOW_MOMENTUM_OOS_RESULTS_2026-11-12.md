@@ -160,3 +160,30 @@ The latest dedicated slow-momentum artifact retrievable in this review remains r
 On 2026-11-19, F25 added overflow-safe validation for unrepresentably large integer inputs in the slow-momentum evaluator and its direct signal/periodic-return/cost-stress helpers. This is validation-only: it does not change the momentum rule, next-close fill timing, fee/slippage formulas, allocation cap, candidate parameters, or metric calculations. The run-22 performance figures above therefore remain historical evidence from the pre-F25 code commit, not a fresh run of the updated source.
 
 No later slow-momentum artifact was exposed by the available workflow/artifact lookup in this review. The workflow definition currently has `workflow_dispatch` and branch-push triggers but no scheduled trigger. A post-F25 run and its artifact remain pending; no new performance result is claimed.
+
+
+## Verification refresh — 2026-11-20: Slow Momentum run #24
+
+The earlier review note in this file recorded run #22 as the newest retrievable artifact at that time. That was superseded by the successful push-triggered run #24 on commit `632929b296daf7bf7a923c14875774fc29b97b81`.
+
+- Workflow: [Slow Momentum #24](https://github.com/sdndj98-art/WHJ-Bitcoin-Bot-2026/actions/runs/44592930502)
+- Artifact: [whj-isolated-slow-momentum-24](https://github.com/sdndj98-art/WHJ-Bitcoin-Bot-2026/actions/runs/44592930502/artifacts/14564311691)
+- Artifact ZIP SHA-256: `6fc2b8e193863cc80ec37aa12690a84c2c88e597b009b137302bf77ca79d3cd5`
+- Daily dataset SHA-256, recomputed from the decompressed artifact: `aa1003c9bdd6d8addb3c05fc9d27990f5dda4c9fff985b2ff685d12dde716f35`
+- Source: public Coinbase BTC-USD hourly candles aggregated into complete UTC daily bars; 36,000 hourly source bars, 1,499 daily bars, 13 hourly observations explicitly imputed and disclosed
+- Daily interval: 2022-10-12 through 2026-11-18 UTC; 70/30 chronological split at daily index 1,049; 450 daily OOS bars
+- The three-variant manifest records only these slow-momentum trials; it is not a count of all repository experiments
+
+| Lookback | OOS 1x | OOS 2x | OOS 3x | Max DD 1x | PF | Closed trades |
+|---:|---:|---:|---:|---:|---:|---:|
+| 56 days | -2.8041% | -3.8848% | -4.9518% | 7.5232% | 0.6375 | 15 |
+| 84 days | -7.9504% | -8.4150% | -8.8765% | 10.2742% | 0.0211 | 7 |
+| 112 days | -11.3866% | -12.2221% | -13.0484% | 13.8074% | 0.0436 | 12 |
+
+- The 25%-allocation buy-and-hold benchmark returned -10.9571% over the same OOS interval.
+- The 56-day candidate's three fixed OOS subperiods were -4.9049%, -2.5588%, and +4.8931%; it remains negative overall.
+- The 56-day candidate's top winner contributed 89.3424% of its net winning-trade contribution; its dependence-aware moving-block bootstrap 95% return interval was -15.7018% to +13.6967%.
+- The 84-day candidate had only seven closed trades; the 112-day candidate ended with one open position and -$7.161 unrealized net-liquidation P&L.
+- CSCV/PBO was 0.50 across three declared variants, six partitions, ten splits, and 75 observations per partition. This is a selection-bias diagnostic only, not a probability of future profit.
+- These are historical OOS and fixed subperiod results, not rolling walk-forward or forward paper-trading evidence. All three variants remain research-only and unqualified.
+

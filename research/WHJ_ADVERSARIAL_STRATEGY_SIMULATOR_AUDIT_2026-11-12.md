@@ -637,3 +637,88 @@ A reproducible Python edge case remained in the F15/F16 OHLC simulator and the F
 **Validation state:** source and regression tests are committed below. A new repository CI run is required to close F25; no test pass is claimed until the workflow output for the resulting branch commit is inspected. This edge-case fix does not address spread/depth/impact, latency, tick-level path reconstruction, or the pending Coinbase-run-44 exact-calendar Bitstamp replay.
 
 No strategy is promoted. No paper ledger, balance, schedule, risk limit, exchange secret, Telegram path, or order pathway was accessed or changed.
+
+
+### F26 — fixed-candidate walk-forward evaluation and multi-metric ranking for all 17 (2026-11-20)
+
+**Implementation**
+- `rolling_walk_forward.py` now evaluates every fixed candidate on every expanding-window OOS fold, in addition to the existing adaptive fold selector. It emits per-candidate fold metrics, aggregate 1x/2x/3x net results, drawdown, periodic PF, Sharpe, closed trades, and regime attribution.
+- Regimes are classified causally at the signal close using close vs SMA200 and the SMA200 value 20 bars earlier. Per-regime net log contributions reconcile to aggregate OOS log growth. They are explicitly descriptive conditional contributions, not independently executable regime portfolios.
+- `strategy_ranking.py` adds `rank_fixed_candidate_walk_forward`, with a fixed 100-point relative research score: net return 20%, drawdown control 15%, worst fold 15%, positive-fold consistency 10%, risk-adjusted PF/Sharpe 10%, 2x/3x cost robustness 10%, regime robustness 10%, and trade sample size 10%.
+- The strict research screen requires positive 1x/2x/3x returns, max DD <=15%, PF >1, Sharpe >0, at least 30 closed trades, at least 75% positive folds, at least 30 active bars in all three regimes, and positive regime contribution in at least two. A score is not a probability or promotion approval.
+
+**Coinbase run #50**
+- [Workflow #50](https://github.com/sdndj98-art/WHJ-Bitcoin-Bot-2026/actions/runs/44631838327) — success; [artifact](https://github.com/sdndj98-art/WHJ-Bitcoin-Bot-2026/actions/runs/44631838327/artifacts/14581927987).
+- 36,000 hourly BTC-USD candles; 25,200 train candles; 10,800 OOS candles / 10,799 OOS returns; 13 imputed hourly observations disclosed.
+- Dataset SHA-256: `25a2ebdce5893d499759b6d990bbe628ee36e52bf22a04277b79e4f9b1f202d1`; artifact ZIP SHA-256: `d9d0f88c23065d77c7a6802e8065f58295326cb6c80e7a3d55e7c2f5fedecbfa`.
+- Fixed-candidate WF: four contiguous folds of 3,600 returns each; 14,400 aggregate WF returns; all 17 candidates ranked; 0/17 passed the research screen.
+- Best WF score was RSI14 at 46.67, but it had only 18 closed trades, -1.5314% WF return, -2.8525% at 2x, -4.1564% at 3x, one of four positive folds, and active coverage in only one of three regimes. It is not eligible for the next stage.
+- Next highest scores: Bollinger 31.83 (-11.1289% WF), Z-Score20 28.27 (-14.6963%), SMA200 25.29 (-20.9631%), and Volatility Squeeze 24.89 (-17.1504%). No candidate had three positive folds; every candidate was negative at 2x and 3x.
+
+| Rank | Candidate | Score | WF 1x | DD | PF | Sharpe | Trades | WF 2x | WF 3x | Positive folds | Regimes covered |
+|---:|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| 1 | RSI14 | 46.67 | -1.5314% | 1.7848% | 0.4556 | -1.6000 | 18 | -2.8525% | -4.1564% | 1/4 | 1/3 |
+| 2 | Bollinger | 31.83 | -11.1289% | 11.5936% | 0.3543 | -4.3846 | 130 | -19.3893% | -26.8845% | 0/4 | 1/3 |
+| 3 | Z-Score20 | 28.27 | -14.6963% | 15.2298% | 0.5018 | -4.6225 | 227 | -28.0571% | -39.3292% | 0/4 | 1/3 |
+| 4 | SMA200 | 25.29 | -20.9631% | 26.6593% | 0.9150 | -1.9501 | 266 | -35.2893% | -47.0227% | 1/4 | 2/3 |
+| 5 | Volatility Squeeze | 24.89 | -17.1504% | 17.7415% | 0.3982 | -5.3463 | 272 | -32.4470% | -44.9236% | 0/4 | 3/3 |
+| 6 | Donchian55/20 | 23.52 | -18.6213% | 19.1099% | 0.4236 | -5.0379 | 279 | -33.9940% | -46.4670% | 0/4 | 3/3 |
+| 7 | Volume Breakout | 23.51 | -18.6350% | 19.2864% | 0.4967 | -4.4133 | 324 | -36.1965% | -49.9721% | 0/4 | 3/3 |
+| 8 | RSI2 | 19.21 | -22.5325% | 22.9529% | 0.3884 | -6.9758 | 354 | -40.6051% | -54.4660% | 0/4 | 2/3 |
+| 9 | ROC120 | 17.63 | -24.4469% | 29.7175% | 0.8858 | -2.4718 | 313 | -40.2853% | -52.8076% | 0/4 | 2/3 |
+| 10 | ROC60 | 17.16 | -28.5659% | 32.3442% | 0.8565 | -3.0990 | 354 | -45.2514% | -58.0438% | 0/4 | 2/3 |
+| 11 | EMA12/26 | 16.34 | -35.2791% | 38.8803% | 0.8320 | -3.8445 | 549 | -57.1330% | -71.6120% | 0/4 | 3/3 |
+| 12 | ATR Channel | 16.26 | -27.0440% | 27.8969% | 0.4294 | -6.1089 | 444 | -47.7171% | -62.5369% | 0/4 | 3/3 |
+| 13 | Donchian20/10 | 16.08 | -29.7366% | 30.3622% | 0.4323 | -6.5713 | 493 | -51.4646% | -66.4782% | 0/4 | 3/3 |
+| 14 | SMA20/50 | 15.80 | -35.1378% | 38.9688% | 0.7810 | -4.4795 | 522 | -56.1601% | -70.3733% | 0/4 | 3/3 |
+| 15 | ROC20 | 15.72 | -33.3836% | 37.0215% | 0.8037 | -4.1243 | 523 | -55.0251% | -69.6405% | 0/4 | 2/3 |
+| 16 | OBV | 15.01 | -46.1118% | 48.0480% | 0.7575 | -5.6036 | 763 | -69.6031% | -82.8576% | 0/4 | 3/3 |
+| 17 | Stochastic | 14.07 | -49.5913% | 49.6055% | 0.2718 | -12.0113 | 935 | -75.0089% | -87.6135% | 0/4 | 3/3 |
+
+**Bitstamp run #29 (full-history WF; matched-calendar reference subsequently advanced to Coinbase run #50)**
+- [Workflow #29](https://github.com/sdndj98-art/WHJ-Bitcoin-Bot-2026/actions/runs/44631838317) — success; [artifact](https://github.com/sdndj98-art/WHJ-Bitcoin-Bot-2026/actions/runs/44631838317/artifacts/14582531589).
+- 72,000 hourly candles; zero duplicate timestamps, zero gaps, zero imputed bars; dataset SHA-256 `ac52bfa3ea7e77cf522a16f7b0c217c1bf836d4d7fa962bf604314276e91c6fa`; artifact ZIP SHA-256 `71dde03960a8b78e1b93c25ad71ae2057227bc043345f9ec55686f96a43e7d2b`.
+- Fixed-candidate WF: four folds of 7,200 returns each; 28,800 aggregate WF returns; 0/17 passed.
+- Top WF scores: RSI14 42.71 (-4.9881%, 52 trades, 1/3 regimes); SMA200 27.06 (-17.1323%); ROC120 24.43 (-22.4043%); ROC60 19.87 (-24.9181%); Bollinger 19.65 (-22.9339%). All 17 are negative at 2x and 3x.
+
+| Rank | Candidate | Score | WF 1x | DD | PF | Sharpe | Trades | WF 2x | WF 3x | Positive folds | Regimes covered |
+|---:|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| 1 | RSI14 | 42.71 | -4.9881% | 5.1999% | 0.4271 | -1.8534 | 52 | -8.6243% | -12.1225% | 0/4 | 1/3 |
+| 2 | SMA200 | 27.06 | -17.1323% | 26.5845% | 0.9708 | -0.6544 | 503 | -43.1860% | -61.0539% | 1/4 | 2/3 |
+| 3 | ROC120 | 24.43 | -22.4043% | 29.5473% | 0.9553 | -0.9492 | 562 | -49.1045% | -66.6226% | 1/4 | 2/3 |
+| 4 | ROC60 | 19.87 | -24.9181% | 30.0392% | 0.9450 | -1.1347 | 668 | -54.5189% | -72.4548% | 1/4 | 2/3 |
+| 5 | Bollinger | 19.65 | -22.9339% | 23.2782% | 0.4117 | -3.9263 | 297 | -38.3306% | -50.6554% | 0/4 | 2/3 |
+| 6 | Z-Score20 | 16.36 | -32.3156% | 32.3574% | 0.5014 | -4.7297 | 504 | -53.6304% | -68.2374% | 0/4 | 2/3 |
+| 7 | Volatility Squeeze | 15.97 | -34.4332% | 35.1355% | 0.4028 | -5.5870 | 555 | -56.7678% | -71.4989% | 0/4 | 3/3 |
+| 8 | Donchian55/20 | 15.73 | -32.8945% | 33.6314% | 0.4822 | -4.6052 | 555 | -55.7532% | -70.8300% | 0/4 | 3/3 |
+| 9 | RSI2 | 15.34 | -40.9220% | 41.0810% | 0.4159 | -5.9103 | 698 | -65.0100% | -79.2806% | 0/4 | 2/3 |
+| 10 | Volume Breakout | 14.62 | -40.2385% | 40.7338% | 0.4745 | -5.1888 | 731 | -65.4709% | -80.0538% | 0/4 | 3/3 |
+| 11 | EMA12/26 | 14.33 | -49.3810% | 52.4316% | 0.8794 | -2.6954 | 1136 | -78.4264% | -90.8083% | 0/4 | 3/3 |
+| 12 | ATR Channel | 13.95 | -47.5716% | 48.3791% | 0.4644 | -6.0187 | 906 | -73.4358% | -86.5440% | 0/4 | 3/3 |
+| 13 | ROC20 | 13.94 | -45.4083% | 48.6936% | 0.8670 | -2.6669 | 1060 | -75.3584% | -88.8806% | 0/4 | 2/3 |
+| 14 | SMA20/50 | 13.92 | -51.0114% | 54.4801% | 0.8325 | -3.2993 | 1074 | -78.1186% | -90.2294% | 0/4 | 3/3 |
+| 15 | Donchian20/10 | 12.90 | -52.9174% | 53.6426% | 0.4505 | -6.6854 | 1009 | -77.9188% | -89.6471% | 0/4 | 3/3 |
+| 16 | OBV | 12.79 | -61.7577% | 64.0866% | 0.8206 | -3.9686 | 1505 | -87.6389% | -96.0062% | 0/4 | 3/3 |
+| 17 | Stochastic | 11.58 | -76.1655% | 76.2606% | 0.2602 | -12.4834 | 1869 | -94.1374% | -98.5587% | 0/4 | 3/3 |
+
+**Critical protocol caveat**
+- The existing fixed 70/30 OOS and the four-fold 55%-to-95% walk-forward share data. On Coinbase, 9,000 of 10,799 fixed-OOS returns (83.3%) overlap the WF test folds; on Bitstamp, 18,000 of 21,599 (83.3%) overlap. Therefore these two reports are not independent confirmations.
+- The composite score above uses the fixed-candidate WF results only; the 70/30 OOS metrics remain separate diagnostics and are not double-counted.
+- Next protocol step: freeze V1 rules, reserve the final 15% as an untouched holdout, and limit walk-forward to three 10% folds ending at 85%. This will create non-overlapping WF and final-holdout windows. The earlier 70/30 reports remain archived and unchanged.
+
+### F27 — Slow Momentum run #24 artifact independently verified (2026-11-20)
+
+- [Slow Momentum #24](https://github.com/sdndj98-art/WHJ-Bitcoin-Bot-2026/actions/runs/44592930502), successful push-triggered run on `632929b296daf7bf7a923c14875774fc29b97b81`.
+- [Artifact](https://github.com/sdndj98-art/WHJ-Bitcoin-Bot-2026/actions/runs/44592930502/artifacts/14564311691); ZIP SHA-256 `6fc2b8e193863cc80ec37aa12690a84c2c88e597b009b137302bf77ca79d3cd5`.
+- Recomputed daily dataset SHA-256 `aa1003c9bdd6d8addb3c05fc9d27990f5dda4c9fff985b2ff685d12dde716f35`; 36,000 hourly source bars, 1,499 daily bars, 13 imputed hourly bars; 450 daily OOS bars.
+- OOS 1x returns: 56d -2.8041% (15 trades, DD 7.5232%, PF 0.6375), 84d -7.9504% (7 trades, DD 10.2742%, PF 0.0211), 112d -11.3866% (12 trades, DD 13.8074%, PF 0.0436). All three are negative at 2x and 3x.
+- PBO 0.50 across only three declared variants, six partitions, ten splits. Fixed subperiods are not rolling walk-forward; no forward paper evidence exists.
+- This resolves the previous “run22 is latest retrievable artifact” note in the report. The report file was updated with the run24 details.
+
+### F28 — XAUUSD numeric input overflow guard (2026-11-20)
+
+- `xauusd_broker_data._finite_number` now catches `OverflowError` as well as `TypeError` and `ValueError`, ensuring oversized Python integers fail closed with a clear `ValueError`.
+- Added regression coverage for both an oversized broker contract-size input and oversized round-trip lots.
+- This is parser/accounting validation only. It does not add a broker feed, change contract or cost assumptions, create a ledger, or execute a trade.
+- Validation is pending the triggered Gold Research and repository audit workflows on the resulting commit.
+
