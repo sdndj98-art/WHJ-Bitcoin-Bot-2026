@@ -74,8 +74,8 @@ class StrategyRankingTests(unittest.TestCase):
             "aggregate_oos_cost_scenarios": {
                 "1x": {"strategy": {
                     "net_return": return_1x / 100.0,
-                    "max_open_to_open_drawdown": -drawdown / 100.0,
-                    "periodic_profit_factor": profit_factor,
+                    "max_drawdown": -drawdown / 100.0,
+                    "profit_factor": profit_factor,
                     "period_sharpe": sharpe,
                     "closed_trades": trades,
                 }},
@@ -168,7 +168,7 @@ class StrategyRankingTests(unittest.TestCase):
         from strategy_ranking import rank_fixed_candidate_walk_forward
 
         result = rank_fixed_candidate_walk_forward({
-            "no_losses": self.fixed_candidate(profit_factor="infinite")
+            "no_losses": self.fixed_candidate(profit_factor=float("inf"))
         })
         self.assertEqual(
             result["ranked_candidates"][0]["metrics"]["periodic_profit_factor"],

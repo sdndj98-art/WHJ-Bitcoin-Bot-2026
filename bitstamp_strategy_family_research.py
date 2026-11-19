@@ -689,7 +689,7 @@ def render_markdown_report(report):
     ])
     for item in ranking["ranked_candidates"]:
         m = item["metrics"]
-        pf = m["periodic_profit_factor"]
+        pf = m["profit_factor"]
         pf_text = pf if isinstance(pf, str) else (f"{pf:.3f}" if pf is not None else "—")
         sharpe = m["period_sharpe"]
         sharpe_text = f"{sharpe:.3f}" if sharpe is not None else "—"

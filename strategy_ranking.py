@@ -195,16 +195,17 @@ def rank_fixed_candidate_walk_forward(
                 for level in ("1x", "2x", "3x")
             }
             strategy = summaries["1x"]
+            drawdown_value = strategy.get("max_open_to_open_drawdown", strategy.get("max_drawdown"))
             drawdown = abs(_finite_number(
-                strategy.get("max_open_to_open_drawdown"), "max_open_to_open_drawdown"
+                drawdown_value, "max_open_to_open_drawdown"
             )) * 100.0
             sharpe_value = strategy.get("period_sharpe")
             sharpe = (
                 _finite_number(sharpe_value, "period_sharpe")
                 if sharpe_value is not None else None
             )
-            pf_value = strategy.get("periodic_profit_factor")
-            if pf_value == "infinite":
+            pf_value = strategy.get("profit_factor", strategy.get("periodic_profit_factor"))
+            if pf_value == "infinite" or pf_value == math.inf:
                 profit_factor = math.inf
             elif pf_value is None:
                 profit_factor = None
@@ -285,6 +286,9 @@ def rank_fixed_candidate_walk_forward(
                     "net_return_2x_pct": round(returns["2x"], 4),
                     "net_return_3x_pct": round(returns["3x"], 4),
                     "max_drawdown_pct": round(drawdown, 4),
+                    "profit_factor": "infinite" if profit_factor == math.inf else (
+                        round(profit_factor, 4) if profit_factor is not None else None
+                    ),
                     "periodic_profit_factor": "infinite" if profit_factor == math.inf else (
                         round(profit_factor, 4) if profit_factor is not None else None
                     ),
