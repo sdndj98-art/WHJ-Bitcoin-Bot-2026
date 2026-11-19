@@ -285,7 +285,7 @@ def rank_fixed_candidate_walk_forward(
                     "net_return_2x_pct": round(returns["2x"], 4),
                     "net_return_3x_pct": round(returns["3x"], 4),
                     "max_drawdown_pct": round(drawdown, 4),
-                    "periodic_profit_factor": profit_factor if profit_factor == math.inf else (
+                    "periodic_profit_factor": "infinite" if profit_factor == math.inf else (
                         round(profit_factor, 4) if profit_factor is not None else None
                     ),
                     "period_sharpe": round(sharpe, 4) if sharpe is not None else None,

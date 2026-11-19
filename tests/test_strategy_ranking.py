@@ -163,5 +163,17 @@ class StrategyRankingTests(unittest.TestCase):
             result["excluded_candidates"][0]["status"],
             "INVALID_OR_INCOMPLETE_METRICS",
         )
+
+    def test_fixed_candidate_screen_serializes_infinite_profit_factor_safely(self):
+        from strategy_ranking import rank_fixed_candidate_walk_forward
+
+        result = rank_fixed_candidate_walk_forward({
+            "no_losses": self.fixed_candidate(profit_factor="infinite")
+        })
+        self.assertEqual(
+            result["ranked_candidates"][0]["metrics"]["periodic_profit_factor"],
+            "infinite",
+        )
+
 if __name__ == "__main__":
     unittest.main()
