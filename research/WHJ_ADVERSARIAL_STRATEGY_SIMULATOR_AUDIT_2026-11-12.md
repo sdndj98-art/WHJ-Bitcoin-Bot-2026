@@ -622,3 +622,18 @@ The current Coinbase isolated research artifact is newer than the Bitstamp match
 - No strategy is promoted. No paper ledger, balance, schedule, risk limit, exchange secret, Telegram path, or live order path was accessed or changed.
 
 **Decision:** keep PR #122 open and unmerged. The next concrete step is to retrieve the Bitstamp workflow run triggered by commit `6009c675dffce2206c797b64a9919024717a85e9`, verify its artifact digest and recomputed data/slice hashes, then compare all 17 candidates on the exact run-44 calendar. If that workflow did not trigger or failed, rerun only the isolated Bitstamp research workflow after confirming its head commit; never run the paper or deployment workflows.
+
+
+### F25 — overflow-safe numeric validation across isolated evaluators — 2026-11-19
+
+A reproducible Python edge case remained in the F15/F16 OHLC simulator and the F19 slow-momentum evaluator: `math.isfinite(10**1000)` raises `OverflowError` while converting the integer to a float. The validators called `math.isfinite` directly, so this unrepresentable input escaped the modules' documented `ValueError` fail-closed contract.
+
+**Research-only remediation:**
+- Both modules now use a strict finite-number helper: booleans and non-`int`/`float` values are rejected; conversion to float is guarded against `OverflowError` and `ValueError` before the finite check.
+- OHLC candle prices and execution parameters reject unrepresentably large integers with the intended validation error.
+- Slow-momentum evaluator prices, direct signal-helper inputs, periodic-return prices/costs/allocations, and cost-stress multipliers use the same guarded validation.
+- Regression tests cover oversized integers across these entry points. Ordinary in-range numeric behavior, strategy signals, execution assumptions, the 25% research cap, and all paper/live pathways are unchanged.
+
+**Validation state:** source and regression tests are committed below. A new repository CI run is required to close F25; no test pass is claimed until the workflow output for the resulting branch commit is inspected. This edge-case fix does not address spread/depth/impact, latency, tick-level path reconstruction, or the pending Coinbase-run-44 exact-calendar Bitstamp replay.
+
+No strategy is promoted. No paper ledger, balance, schedule, risk limit, exchange secret, Telegram path, or order pathway was accessed or changed.
