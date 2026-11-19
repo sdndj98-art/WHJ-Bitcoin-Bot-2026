@@ -63,6 +63,7 @@ class StrategyRankingTests(unittest.TestCase):
 
 
 
+    @staticmethod
     def fixed_candidate(
         return_1x=8.0, return_2x=6.0, return_3x=4.0,
         drawdown=5.0, profit_factor=1.4, sharpe=1.0, trades=60,
@@ -99,8 +100,8 @@ class StrategyRankingTests(unittest.TestCase):
         from strategy_ranking import rank_fixed_candidate_walk_forward
 
         result = rank_fixed_candidate_walk_forward({
-            "steady": fixed_candidate(),
-            "weak": fixed_candidate(
+            "steady": self.fixed_candidate(),
+            "weak": self.fixed_candidate(
                 return_1x=-5, return_2x=-10, return_3x=-15,
                 drawdown=25, profit_factor=0.8, sharpe=-1, trades=15,
                 fold_returns=(-3, -2, -1, -4), regime_active=10,
@@ -125,7 +126,7 @@ class StrategyRankingTests(unittest.TestCase):
         from strategy_ranking import rank_fixed_candidate_walk_forward
 
         result = rank_fixed_candidate_walk_forward({
-            "cost_fragile": fixed_candidate(return_1x=5, return_2x=-1, return_3x=-4)
+            "cost_fragile": self.fixed_candidate(return_1x=5, return_2x=-1, return_3x=-4)
         })
         candidate = result["ranked_candidates"][0]
         self.assertFalse(candidate["eligible_for_next_stage"])
@@ -136,7 +137,7 @@ class StrategyRankingTests(unittest.TestCase):
         from strategy_ranking import rank_fixed_candidate_walk_forward
 
         result = rank_fixed_candidate_walk_forward({
-            "thin_regimes": fixed_candidate(regime_active=10)
+            "thin_regimes": self.fixed_candidate(regime_active=10)
         })
         self.assertEqual(
             result["ranked_candidates"][0]["screening_status"],
@@ -150,8 +151,8 @@ class StrategyRankingTests(unittest.TestCase):
         from strategy_ranking import rank_fixed_candidate_walk_forward
 
         result = rank_fixed_candidate_walk_forward({
-            "zeta": fixed_candidate(),
-            "alpha": fixed_candidate(),
+            "zeta": self.fixed_candidate(),
+            "alpha": self.fixed_candidate(),
             "missing": {"folds": []},
         })
         self.assertEqual(
