@@ -11,6 +11,16 @@ import math
 INITIAL_EQUITY = 1000.0
 
 
+def _is_finite_numeric(value):
+    """Reject booleans and numeric values that cannot be represented finitely."""
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
+        return False
+    try:
+        return math.isfinite(float(value))
+    except (OverflowError, ValueError):
+        return False
+
+
 def simulate_ohlc_risk(
     opens, highs, lows, closes, entry_signals, exit_signals,
     fee=0.001, slippage=0.0005, allocation_fraction=0.25,
@@ -41,8 +51,7 @@ def simulate_ohlc_risk(
         raise ValueError("OHLC and signal arrays must have equal length >= 2")
     for i, (o, h, l, c) in enumerate(zip(opens, highs, lows, closes)):
         vals = (o, h, l, c)
-        if any(isinstance(v, bool) or not isinstance(v, (int, float))
-               or not math.isfinite(v) or v <= 0 for v in vals):
+        if any(not _is_finite_numeric(v) or v <= 0 for v in vals):
             raise ValueError("OHLC prices must be finite positive numbers")
         if h < max(o, l, c) or l > min(o, h, c):
             raise ValueError("Invalid OHLC candle at index %d" % i)
@@ -56,8 +65,7 @@ def simulate_ohlc_risk(
         "take_profit_pct": take_profit_pct,
     }
     for name, value in numeric_parameters.items():
-        if (isinstance(value, bool) or not isinstance(value, (int, float))
-                or not math.isfinite(value)):
+        if not _is_finite_numeric(value):
             raise ValueError("%s must be a finite numeric value" % name)
     if not (0 <= fee < 1 and 0 <= slippage < 1):
         raise ValueError("Fee and slippage must be in [0, 1)")
