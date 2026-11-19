@@ -11,12 +11,24 @@ INITIAL_EQUITY = 1000.0
 ALLOCATION_FRACTION = 0.25
 
 
+def _is_finite_numeric(value):
+    """Reject booleans and numeric values that cannot be represented finitely."""
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
+        return False
+    try:
+        return math.isfinite(float(value))
+    except (OverflowError, ValueError):
+        return False
+
+
 def momentum_signals(closes, lookback):
     """Long/cash signal: current close exceeds close N daily bars earlier."""
     if isinstance(lookback, bool) or not isinstance(lookback, int) or lookback < 1:
         raise ValueError("lookback must be a positive integer")
     if not isinstance(closes, (list, tuple)) or len(closes) <= lookback:
         raise ValueError("closes must contain more observations than lookback")
+    if any(not _is_finite_numeric(value) for value in closes):
+        raise ValueError("closes must contain finite numeric values")
     signals = [False] * len(closes)
     for i in range(lookback, len(closes)):
         signals[i] = float(closes[i]) > float(closes[i - lookback])
@@ -24,8 +36,7 @@ def momentum_signals(closes, lookback):
 
 
 def _validate_cost_fraction(name, value):
-    if (isinstance(value, bool) or not isinstance(value, (int, float))
-            or not math.isfinite(value) or not 0 <= value < 1):
+    if not _is_finite_numeric(value) or not 0 <= value < 1:
         raise ValueError("%s must be finite and in [0, 1)" % name)
 
 
@@ -33,9 +44,7 @@ def _validate(closes, fee, slippage, lookbacks):
     if not isinstance(closes, (list, tuple)) or len(closes) < 160:
         raise ValueError("At least 160 daily closes are required")
     for price in closes:
-        if isinstance(price, bool) or not isinstance(price, (int, float)):
-            raise ValueError("Prices must be numeric")
-        if not math.isfinite(price) or price <= 0:
+        if not _is_finite_numeric(price) or price <= 0:
             raise ValueError("Prices must be finite and positive")
     _validate_cost_fraction("fee", fee)
     _validate_cost_fraction("slippage", slippage)
@@ -139,7 +148,7 @@ def periodic_net_returns(closes, signals, start, end, fee=0.001, slippage=0.0005
     if any(type(value) is not bool for value in signals):
         raise ValueError("signals must contain booleans")
     for price in closes:
-        if isinstance(price, bool) or not isinstance(price, (int, float)) or not math.isfinite(price) or price <= 0:
+        if not _is_finite_numeric(price) or price <= 0:
             raise ValueError("closes must be finite positive prices")
     if isinstance(start, bool) or not isinstance(start, int) or start < 1:
         raise ValueError("start must be an integer >= 1")
@@ -147,9 +156,7 @@ def periodic_net_returns(closes, signals, start, end, fee=0.001, slippage=0.0005
         raise ValueError("end must be an integer greater than start and <= data length")
     _validate_cost_fraction("fee", fee)
     _validate_cost_fraction("slippage", slippage)
-    if (isinstance(allocation_fraction, bool)
-            or not isinstance(allocation_fraction, (int, float))
-            or not math.isfinite(allocation_fraction)
+    if (not _is_finite_numeric(allocation_fraction)
             or not 0 < allocation_fraction <= ALLOCATION_FRACTION):
         raise ValueError("allocation_fraction must be finite and in (0, 0.25]")
 
@@ -286,9 +293,7 @@ def evaluate_cost_stress(closes, fee, slippage, lookbacks, multiplier=2.0):
     """Re-run candidates and matched buy-and-hold at multiplied costs."""
     _validate_cost_fraction("fee", fee)
     _validate_cost_fraction("slippage", slippage)
-    if (isinstance(multiplier, bool)
-            or not isinstance(multiplier, (int, float))
-            or not math.isfinite(multiplier) or multiplier < 1):
+    if not _is_finite_numeric(multiplier) or multiplier < 1:
         raise ValueError("cost multiplier must be finite and >= 1")
     stressed_fee = min(fee * multiplier, 0.999999)
     stressed_slippage = min(slippage * multiplier, 0.999999)
