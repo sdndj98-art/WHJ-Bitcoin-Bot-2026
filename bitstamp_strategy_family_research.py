@@ -19,6 +19,7 @@ from research_governance import (
 )
 from research_snapshot import canonical_json_bytes, gzip_snapshot_bytes, sha256_bytes
 from rolling_walk_forward import evaluate_rolling_walk_forward
+from strategy_ranking import rank_fixed_candidate_walk_forward
 from strategy_family_lab import build_strategy_signals
 from strategy_family_runner import run_strategy_universe
 
@@ -410,6 +411,9 @@ def build_bitstamp_strategy_report(
         bars_per_year=BARS_PER_YEAR,
         allocation_fraction=ALLOCATION_FRACTION,
     )
+    walk_forward_candidate_ranking = rank_fixed_candidate_walk_forward(
+        walk_forward["fixed_candidate_walk_forward"]["candidates"]
+    )
 
     return_matrix = {
         name: item["net_returns"]
@@ -541,6 +545,7 @@ def build_bitstamp_strategy_report(
         "top_five_conditional_moving_block_bootstrap_95pct_ci": bootstrap_ci,
         "market_regime_attribution": _regime_return_attribution(candles, signals, split_index, base),
         "rolling_walk_forward": walk_forward,
+        "walk_forward_candidate_ranking": walk_forward_candidate_ranking,
         "rolling_walk_forward_selection_margins": selection_margins,
         "matched_calendar_overlap": matched_calendar_overlap,
         "cscv_pbo": pbo,
@@ -674,6 +679,31 @@ def render_markdown_report(report):
             f"- Fold {fold['fold']}: {fold['selected_candidate']}; training excess margin "
             f"{fold['selection_margin']*100:.3f} pp over {fold['runner_up_candidate']}."
         )
+    ranking = report["walk_forward_candidate_ranking"]
+    lines.extend([
+        "", "## Fixed-candidate walk-forward ranking (all 17)", "",
+        f"- Method: {ranking['method']}; weights: {ranking['weights_pct']}",
+        "- Each fixed candidate is evaluated across the same four contiguous OOS folds; this is separate from the adaptive selector.",
+        "| Rank | Candidate | Score | Screen | 1x | DD | PF | Sharpe | Trades | 2x | 3x | Positive folds | Regimes covered |",
+        "|---:|---|---:|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|",
+    ])
+    for item in ranking["ranked_candidates"]:
+        m = item["metrics"]
+        pf = m["periodic_profit_factor"]
+        pf_text = pf if isinstance(pf, str) else (f"{pf:.3f}" if pf is not None else "—")
+        sharpe = m["period_sharpe"]
+        sharpe_text = f"{sharpe:.3f}" if sharpe is not None else "—"
+        lines.append(
+            f"| {item['rank']} | {item['candidate']} | {item['score']:.2f} | {item['screening_status']} | "
+            f"{m['net_return_1x_pct']:.2f}% | {m['max_drawdown_pct']:.2f}% | {pf_text} | {sharpe_text} | "
+            f"{m['closed_trades']} | {m['net_return_2x_pct']:.2f}% | {m['net_return_3x_pct']:.2f}% | "
+            f"{m['positive_folds']}/{len(m['fold_returns_pct'])} | {m['regime_coverage_count']}/3 |"
+        )
+    lines.extend([
+        "",
+        f"- Research screen passed: {ranking['passed_count']}/{ranking['candidate_count']}; no candidate is automatically promoted.",
+        "- Regime contributions are conditional log-growth attribution by the regime known at signal close, not standalone regime portfolios.",
+    ])
     lines.extend([
         "",
         "## Interpretation",

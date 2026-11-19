@@ -10,6 +10,8 @@ on:
       - "strategy_family_evaluator.py"
       - "strategy_family_runner.py"
       - "rolling_walk_forward.py"
+      - "strategy_ranking.py"
+      - "tests/test_strategy_ranking.py"
       - "research_governance.py"
       - "research_snapshot.py"
       - "ema_adx_cross_exchange_lab.py"
@@ -58,9 +60,12 @@ jobs:
           python -m unittest discover -s tests -p 'test_research_snapshot.py' -v
           python -m unittest discover -s tests -p 'test_ema_adx_cross_exchange_lab.py' -v
 
+      - name: Test fixed-candidate walk-forward ranking
+        run: python -m unittest discover -s tests -p 'test_strategy_ranking.py' -v
+
       - name: Compile isolated research modules
         run: |
-          python -m py_compile bitstamp_strategy_family_research.py strategy_family_lab.py strategy_family_evaluator.py strategy_family_runner.py rolling_walk_forward.py research_governance.py research_snapshot.py ema_adx_cross_exchange_lab.py
+          python -m py_compile bitstamp_strategy_family_research.py strategy_family_lab.py strategy_family_evaluator.py strategy_family_runner.py rolling_walk_forward.py strategy_ranking.py research_governance.py research_snapshot.py ema_adx_cross_exchange_lab.py
 
       - name: Evaluate all 17 candidates on independent Bitstamp hourly history
         timeout-minutes: 35

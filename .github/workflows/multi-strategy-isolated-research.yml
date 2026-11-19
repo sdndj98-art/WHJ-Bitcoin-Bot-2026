@@ -13,6 +13,8 @@ on:
       - "strategy_family_evaluator.py"
       - "strategy_family_runner.py"
       - "rolling_walk_forward.py"
+      - "strategy_ranking.py"
+      - "tests/test_strategy_ranking.py"
       - "research_governance.py"
       - "research_snapshot.py"
       - "tests/test_research_snapshot.py"
@@ -38,6 +40,8 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
+      - name: Test multi-metric fixed-candidate ranking
+        run: python -m unittest discover -s tests -p 'test_strategy_ranking.py' -v
       - name: Evaluate strategy universe on chronological holdout
         run: |
           python - <<'PY'
@@ -52,6 +56,7 @@ jobs:
           from rolling_walk_forward import evaluate_rolling_walk_forward
           from research_snapshot import canonical_json_bytes, gzip_snapshot_bytes, sha256_bytes
           from strategy_lab import _market_regime_diagnostics
+          from strategy_ranking import rank_fixed_candidate_walk_forward
 
           # Public Coinbase spot data only. No paper account, monitor, cache,
           # exchange credentials, order route, or live-trading code is invoked.
@@ -89,6 +94,9 @@ jobs:
               slippage_rate=0.0005,
               bars_per_year=24*365,
               allocation_fraction=base["allocation_fraction"],
+          )
+          walk_forward_candidate_ranking = rank_fixed_candidate_walk_forward(
+              walk_forward["fixed_candidate_walk_forward"]["candidates"]
           )
           # Descriptive conditional forward-bar diagnostics only; this is
           # explicitly not strategy PnL, trade PnL, or a promotion metric.
@@ -174,6 +182,7 @@ jobs:
               "signal_semantics": base["signal_semantics"],
               "cost_stress": reports,
               "rolling_walk_forward": walk_forward,
+              "walk_forward_candidate_ranking": walk_forward_candidate_ranking,
               "market_regime_diagnostics": regime_diagnostics,
               "rolling_walk_forward_trial_manifest": walk_forward_manifests,
               "cscv_pbo": pbo,
@@ -256,6 +265,31 @@ jobs:
               baseline_fold = fold["cost_scenarios"]["1x"]
               training_trades = fold["training_closed_trades"][fold["selected_candidate"]]
               lines.append(f"- Fold {fold['fold']}: selected {fold['selected_candidate']}; training ends at {fold['training_end_index_exclusive']}; selected-candidate training trades {training_trades}; OOS open interval {fold['test_return_start_open_index']}→{fold['test_return_end_open_index']}; 1x return {baseline_fold['strategy']['net_return']*100:.2f}%, matched B&H {baseline_fold['buy_and_hold']['net_return']*100:.2f}%, OOS trades {baseline_fold['strategy']['closed_trades']}.")
+          lines += [
+              "", "## Fixed-candidate walk-forward ranking (all 17)", "",
+              f"- Method: {walk_forward_candidate_ranking['method']}; weights: {walk_forward_candidate_ranking['weights_pct']}",
+              "- Each fixed candidate is evaluated across the same four contiguous OOS folds; this is separate from the adaptive selector above.",
+              "| Rank | Candidate | Score | Screen | 1x | DD | PF | Sharpe | Trades | 2x | 3x | Positive folds | Regimes covered |",
+              "|---:|---|---:|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|",
+          ]
+          for item in walk_forward_candidate_ranking["ranked_candidates"]:
+              m = item["metrics"]
+              pf = m["periodic_profit_factor"]
+              pf_text = pf if isinstance(pf, str) else (f"{pf:.3f}" if pf is not None else "—")
+              sharpe = m["period_sharpe"]
+              sharpe_text = f"{sharpe:.3f}" if sharpe is not None else "—"
+              lines.append(
+                  f"| {item['rank']} | {item['candidate']} | {item['score']:.2f} | {item['screening_status']} | "
+                  f"{m['net_return_1x_pct']:.2f}% | {m['max_drawdown_pct']:.2f}% | {pf_text} | {sharpe_text} | "
+                  f"{m['closed_trades']} | {m['net_return_2x_pct']:.2f}% | {m['net_return_3x_pct']:.2f}% | "
+                  f"{m['positive_folds']}/{len(m['fold_returns_pct'])} | {m['regime_coverage_count']}/3 |"
+              )
+          lines += [
+              "",
+              f"- Research screen passed: {walk_forward_candidate_ranking['passed_count']}/{walk_forward_candidate_ranking['candidate_count']}; no candidate is automatically promoted.",
+              "- Regime contributions are conditional log-growth attribution by the regime known at signal close, not standalone regime portfolios.",
+              "",
+          ]
           lines += ["", "## Close-time market regime diagnostics (conditional forward bars, not PnL)", ""]
           lines.append(regime_diagnostics["classification"])
           lines.append(regime_diagnostics["measurement"])
