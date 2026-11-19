@@ -45,6 +45,26 @@ class RollingWalkForwardTests(unittest.TestCase):
             sum(fold["cost_scenarios"]["1x"]["strategy"]["bars"] for fold in result["folds"]),
         )
 
+    def test_max_folds_caps_selection_and_reports_unused_tail_scope(self):
+        rows = self.candles(40)
+        signals = {"always": [True] * 40, "never": [False] * 40}
+        result = evaluate_rolling_walk_forward(
+            rows, signals, initial_train_bars=10, test_bars=5,
+            fee_rate=0, slippage_rate=0, bars_per_year=1, max_folds=3,
+        )
+        self.assertEqual(result["max_folds"], 3)
+        self.assertEqual(result["fold_count"], 3)
+        self.assertEqual(
+            [(fold["test_start_index"], fold["test_end_index_exclusive"])
+             for fold in result["folds"]],
+            [(10, 15), (15, 20), (20, 25)],
+        )
+        self.assertEqual(result["tested_through_index_exclusive"], 26)
+        self.assertEqual(result["unused_tail_start_index"], 26)
+        self.assertEqual(result["unused_tail_bars"], 14)
+        self.assertAlmostEqual(result["unused_tail_fraction"], 14 / 40)
+        self.assertIn("not an untouched holdout", result["unused_tail_scope"])
+
     def test_training_selection_uses_only_past_rows(self):
         rows = self.candles(12)
         first = [True] * 12
@@ -140,6 +160,12 @@ class RollingWalkForwardTests(unittest.TestCase):
             evaluate_rolling_walk_forward(rows, {"a": [True] * 12}, 6, 2)
         with self.assertRaises(ValueError):
             evaluate_rolling_walk_forward(rows, {"a": [True] * 12}, 12, 3)
+        for max_folds in (0, -1, True, 1.5):
+            with self.subTest(max_folds=max_folds):
+                with self.assertRaises(ValueError):
+                    evaluate_rolling_walk_forward(
+                        rows, {"a": [True] * 12}, 6, 3, max_folds=max_folds
+                    )
 
 
 

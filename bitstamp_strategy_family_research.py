@@ -410,6 +410,7 @@ def build_bitstamp_strategy_report(
         slippage_rate=BASE_SLIPPAGE_PER_SIDE,
         bars_per_year=BARS_PER_YEAR,
         allocation_fraction=ALLOCATION_FRACTION,
+        max_folds=3,
     )
     walk_forward_candidate_ranking = rank_fixed_candidate_walk_forward(
         walk_forward["fixed_candidate_walk_forward"]["candidates"]
@@ -545,6 +546,7 @@ def build_bitstamp_strategy_report(
         "top_five_conditional_moving_block_bootstrap_95pct_ci": bootstrap_ci,
         "market_regime_attribution": _regime_return_attribution(candles, signals, split_index, base),
         "rolling_walk_forward": walk_forward,
+        "walk_forward_tail_scope_warning": "The final 15% is excluded from this three-fold walk-forward selector only. It is not an untouched holdout because earlier 70/30 historical OOS reports already included this interval.",
         "walk_forward_candidate_ranking": walk_forward_candidate_ranking,
         "rolling_walk_forward_selection_margins": selection_margins,
         "matched_calendar_overlap": matched_calendar_overlap,
@@ -663,7 +665,17 @@ def render_markdown_report(report):
             "This segment exactly matches the referenced Coinbase OOS calendar and return count. It isolates the venue price series more cleanly than the separate full-history 70/30 split; costs are still fixed proxies, not actual Bitstamp fees or spread.",
         ])
     lines.extend(["", "## Expanding-window walk-forward", ""])
-    for level, metrics in report["rolling_walk_forward"]["aggregate_oos_cost_scenarios"].items():
+    walk_forward = report["rolling_walk_forward"]
+    lines.append(
+        f"- Protocol: {walk_forward['protocol']}; folds: {walk_forward['fold_count']}; "
+        f"initial training bars: {walk_forward['initial_train_bars']}; test bars/fold: {walk_forward['test_bars']}."
+    )
+    lines.append(
+        f"- Unused trailing bars: {walk_forward['unused_tail_bars']} "
+        f"({walk_forward['unused_tail_fraction']:.1%}), excluded from this walk-forward selector only."
+    )
+    lines.append(f"- Holdout scope: {report['walk_forward_tail_scope_warning']}")
+    for level, metrics in walk_forward["aggregate_oos_cost_scenarios"].items():
         strategy = metrics["strategy"]
         benchmark = metrics["buy_and_hold"]
         sharpe = strategy["period_sharpe"]
@@ -683,7 +695,7 @@ def render_markdown_report(report):
     lines.extend([
         "", "## Fixed-candidate walk-forward ranking (all 17)", "",
         f"- Method: {ranking['method']}; weights: {ranking['weights_pct']}",
-        "- Each fixed candidate is evaluated across the same four contiguous OOS folds; this is separate from the adaptive selector.",
+        f"- Each fixed candidate is evaluated across the same {report['rolling_walk_forward']['fold_count']} contiguous OOS folds; this is separate from the adaptive selector.",
         "| Rank | Candidate | Score | Screen | 1x | DD | PF | Sharpe | Trades | 2x | 3x | Positive folds | Regimes covered |",
         "|---:|---|---:|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|",
     ])

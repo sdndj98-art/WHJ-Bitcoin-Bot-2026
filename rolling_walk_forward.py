@@ -108,12 +108,16 @@ def evaluate_rolling_walk_forward(
     slippage_rate=0.0005,
     bars_per_year=24 * 365,
     allocation_fraction=0.25,
+    max_folds=None,
 ):
     """Run expanding training windows followed by contiguous, frozen OOS blocks.
 
     Candidate selection maximizes training excess return versus matched
     buy-and-hold. Ties are resolved alphabetically. No parameter tuning occurs
     here; the candidate definitions and signal streams must be predeclared.
+    max_folds can cap OOS folds and leave a trailing segment unused by this
+    walk-forward calculation. That tail is not automatically an untouched
+    holdout if another report or experiment has already exposed it.
     """
     if not isinstance(candles, (list, tuple)) or len(candles) < 7:
         raise ValueError("at least seven candles are required")
@@ -127,6 +131,9 @@ def evaluate_rolling_walk_forward(
         raise ValueError("training requires >=4 bars and each test block >=3 bars")
     if initial_train_bars >= len(candles):
         raise ValueError("initial training window must leave test data")
+    if (max_folds is not None
+            and (isinstance(max_folds, bool) or not isinstance(max_folds, int) or max_folds < 1)):
+        raise ValueError("max_folds must be a positive integer or None")
     if (isinstance(allocation_fraction, bool)
             or not isinstance(allocation_fraction, (int, float))
             or not math.isfinite(allocation_fraction)
@@ -146,7 +153,8 @@ def evaluate_rolling_walk_forward(
     fixed_candidate_fold_results = {name: [] for name in names}
     stitched_oos_signals = [False] * len(candles)
     train_end = initial_train_bars
-    while train_end + test_bars + 1 < len(candles):
+    while (train_end + test_bars + 1 < len(candles)
+           and (max_folds is None or len(folds) < max_folds)):
         test_end = train_end + test_bars
         training_rows = candles[:train_end]
         training_scores = {}
@@ -297,6 +305,7 @@ def evaluate_rolling_walk_forward(
         "protocol": "fixed_candidate_expanding_window_walk_forward_all_candidates",
         "candidate_count": len(names),
         "fold_count": len(folds),
+        "max_folds": max_folds,
         "initial_train_bars": initial_train_bars,
         "test_bars": test_bars,
         "regime_classification": (
@@ -328,14 +337,22 @@ def evaluate_rolling_walk_forward(
         "folds": folds,
         "aggregate_oos_cost_scenarios": aggregate_cost_scenarios,
         "fixed_candidate_walk_forward": fixed_candidate_walk_forward,
+        "max_folds": max_folds,
         "tested_through_index_exclusive": final_test_end + 1,
         "tested_through_open_index": final_test_end,
+        "unused_tail_start_index": final_test_end + 1,
         "unused_tail_bars": len(candles) - (final_test_end + 1),
+        "unused_tail_fraction": (len(candles) - (final_test_end + 1)) / len(candles),
+        "unused_tail_scope": (
+            "Excluded from this walk-forward calculation only; not an untouched holdout "
+            "if previously exposed by other historical reports or experiments."
+            if len(candles) > final_test_end + 1 else "No trailing bars were left unused."
+        ),
         "promotion_status": "NO_CANDIDATE_PROMOTED",
         "limitations": [
             "Candidate definitions and parameters must be frozen before this run.",
             "Signals must be causal; this routine cannot prove signal-builder causality.",
-            "Selection uses prior training data only; no independent final holdout is reserved.",
+            "Selection uses prior training data only. Any unused trailing bars are excluded from this walk-forward run only and are not an untouched holdout if prior reports or experiments exposed them.",
             "Fixed fee/slippage omits spread, depth, impact, latency and intrabar execution.",
             "Small fold trade counts are descriptive and do not establish statistical power.",
         ],

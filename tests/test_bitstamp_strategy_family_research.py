@@ -78,12 +78,15 @@ class BitstampStrategyFamilyResearchTests(unittest.TestCase):
         self.assertFalse(report["execution_enabled"])
         self.assertEqual(set(report["cost_stress"]), {"1x", "2x", "3x"})
         self.assertEqual(len(report["ranking_by_net_return"]), 17)
-        self.assertEqual(report["rolling_walk_forward"]["fold_count"], 4)
+        self.assertEqual(report["rolling_walk_forward"]["fold_count"], 3)
+        self.assertEqual(report["rolling_walk_forward"]["max_folds"], 3)
+        self.assertEqual(report["rolling_walk_forward"]["unused_tail_bars"], 239)
+        self.assertIn("not an untouched holdout", report["walk_forward_tail_scope_warning"])
         self.assertEqual(report["protocol"]["oos_open_to_open_returns"], 479)
         self.assertEqual(report["cscv_pbo_status"], "INSUFFICIENT_OOS_OBSERVATIONS")
         self.assertEqual(report["data_quality"]["imputed_hourly_candles"], 0)
         self.assertEqual(len(report["trial_manifest"]), 17)
-        self.assertEqual(len(report["rolling_walk_forward_trial_manifest"]), 4)
+        self.assertEqual(len(report["rolling_walk_forward_trial_manifest"]), 3)
         json.dumps(report, allow_nan=False)
 
     def test_higher_fixed_costs_never_improve_candidate_net_return(self):
