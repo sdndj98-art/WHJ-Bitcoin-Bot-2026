@@ -735,15 +735,39 @@ No strategy is promoted. No paper ledger, balance, schedule, risk limit, exchang
 - All 17 matched-window candidates were negative at 1x, 2x, and 3x. Best RSI14 returned -1.3633% on Coinbase and -1.3451% on Bitstamp (11 closed trades on each); matched 25%-allocation buy-and-hold returned -11.8554% and -11.8744%, respectively. A less-negative strategy is not a profitable strategy.
 - The full-history fixed-candidate WF ranking remains 0/17 passed on both venues. The exact-calendar comparison confirms high cross-venue rank stability, not profitability.
 
-### F30 — GC=F historical evaluation blocked by malformed Yahoo OHLC (2026-11-20)
+### F30 — transient GC=F OHLC failure resolved by a fresh valid Yahoo response (2026-11-20)
 
-- [Gold Research #18](https://github.com/sdndj98-art/WHJ-Bitcoin-Bot-2026/actions/runs/44632921334) ran the gold parser/strategy/shadow tests successfully, but the historical evaluation failed in `gold_market_data.parse_yahoo_chart` with `ValueError: Impossible gold OHLC relationship`.
-- The artifact-upload step was skipped, so no new Gold #18 report or dataset snapshot exists. The previous valid [Gold Research #17 artifact](https://github.com/sdndj98-art/WHJ-Bitcoin-Bot-2026/actions/runs/43771360299/artifacts/14184397840) remains the latest verified historical result.
-- The parser correctly fails closed rather than silently repairing or dropping an impossible bar. The failure is in public Yahoo `GC=F` futures-reference data, not in the XAUUSD broker-cost parser.
-- No broker Bid/Ask XAUUSD history is present. GC=F must not be represented as spot XAUUSD or broker execution evidence.
+- [Gold Research #18](https://github.com/sdndj98-art/WHJ-Bitcoin-Bot-2026/actions/runs/44632921334) passed its parser/strategy/shadow tests but the historical evaluation stopped on an impossible Yahoo `GC=F` OHLC relationship; the artifact-upload step was skipped.
+- The parser was kept fail-closed. No malformed bar was repaired, silently skipped, or used in a backtest.
+- [Gold Research #19](https://github.com/sdndj98-art/WHJ-Bitcoin-Bot-2026/actions/runs/44633217180) then fetched a refreshed Yahoo response, passed all research steps, and uploaded a verified artifact. This indicates the earlier bad bar was transient in the public response; it does not justify weakening OHLC validation.
+- No broker Bid/Ask XAUUSD history is present. GC=F remains a continuous COMEX futures reference, not spot XAUUSD or broker execution evidence.
 
-### F31 — malformed GC=F bar diagnostic context
+### F31 — malformed GC=F bar diagnostic context validated
 
 - `gold_market_data.parse_yahoo_chart` now includes the offending array index, UTC timestamp, and OHLC values in its impossible-OHLC exception.
-- The existing regression test now asserts the diagnostic context. The parser still rejects the bar; no bad row is skipped or altered.
-- Validation is pending the next Gold Research and repository audit runs.
+- The regression test asserts that context. Gold Research #19 passed the parser tests and the refreshed historical evaluation; no malformed row was encountered in that run.
+- The repository audit #1777 passed 592 tests, all tracked Python compilation, and `git diff --check`.
+
+
+### F32 — GC=F Gold Research #19 artifact verified (2026-11-20)
+
+- Workflow: [Gold Research #19](https://github.com/sdndj98-art/WHJ-Bitcoin-Bot-2026/actions/runs/44633217180) — success; [artifact 14581863835](https://github.com/sdndj98-art/WHJ-Bitcoin-Bot-2026/actions/runs/44633217180/artifacts/14581863835).
+- Artifact ZIP SHA-256: `0c478787ebb487b99adaab8456266ea7d4333d26ba0dde7fb3b5401b931f5194`.
+- Recomputed dataset SHA-256: `af462b0f734e5ca6508103ad4ccc06127833a2feb0ed87174f9b5e62b0f4c88e`; 2,514 daily candles; 2016-11-21 05:00 UTC to 2026-11-18 05:00 UTC.
+- Three chronological non-overlapping OOS folds over the final 45%; each fold starts from $1,000; 260 warm-up bars. Signals use completed daily close and execute at next daily open. 25% maximum allocation, 2% stop, 4% target, no leverage.
+- Per-side cost assumptions are `1x=[0.05% fee, 0.05% slippage]`, `2x=[0.10%, 0.10%]`, `3x=[0.15%, 0.15%]`. These are fixed sensitivity proxies, not broker quotes; spread, swap/financing, broker markup, impact, and exact session/holiday differences remain unmodelled.
+
+| Fold | Candidate | 1x return | 2x return | 3x return | Max DD 1x | Trades | PF 1x | Matched 25% buy/hold 1x |
+|---:|---|---:|---:|---:|---:|---:|---:|---:|
+| 1 | EMA50/EMA200 | +0.2327% | -0.0926% | -0.4165% | 1.6428% | 6 | 0.7763 | +1.8479% |
+| 1 | EMA50/EMA200 + ATR90 filter | +1.1960% | +0.8286% | +0.4630% | 1.6428% | 7 | 1.5594 | +1.8479% |
+| 2 | EMA50/EMA200 | +0.9610% | +0.9221% | +0.8832% | 0.5356% | 1 | — | +16.3894% |
+| 2 | EMA50/EMA200 + ATR90 filter | +3.3208% | +3.0204% | +2.7211% | 1.3738% | 7 | 4.7491 | +16.3894% |
+| 3 | EMA50/EMA200 | -1.6801% | -1.8498% | -2.0192% | 2.1584% | 4 | 0.0465 | +3.1376% |
+| 3 | EMA50/EMA200 + ATR90 filter | +0.0987% | -0.2634% | -0.6239% | 2.2564% | 9 | 1.0343 | +3.1376% |
+
+- The ATR90-filtered candidate had 23 closed trades across the three separate folds and remained below the matched buy-and-hold benchmark in every fold; its third fold turned negative at 2x and 3x.
+- The unfiltered EMA50/EMA200 candidate had 11 closed trades and also underperformed the benchmark in all three folds.
+- Fold returns are not compounded together because each fold is an independent $1,000 reset. No candidate was promoted; these results are historical GC=F research only.
+- The report records `live_orders=false`, `paper_ledgers_read_or_written=false`, and `promotion_status=NO_CANDIDATE_PROMOTED`.
+
