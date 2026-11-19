@@ -146,3 +146,17 @@ Matched buy-and-hold under the corresponding 2x/3x assumptions remains the repor
 - No candidate is selected or promoted.
 
 **Decision remains NO CANDIDATE PROMOTED.** The 56-day variant is less negative than the matched benchmark in this sample but loses money, has PF below 1, only 15 closed trades, concentrated winners, and a bootstrap interval spanning material losses and gains. Do not connect it to paper or live execution.
+
+
+## Review note — 2026-11-19: current source validation versus latest artifact
+
+The latest dedicated slow-momentum artifact retrievable in this review remains run #22:
+
+- Workflow: [run 44151979400](https://github.com/sdndj98-art/WHJ-Bitcoin-Bot-2026/actions/runs/44151979400).
+- Artifact: [whj-isolated-slow-momentum-22](https://github.com/sdndj98-art/WHJ-Bitcoin-Bot-2026/actions/runs/44151979400/artifacts/14359971027).
+- Artifact ZIP SHA-256: `3d640f573cab6412447b9d8e2885ac9450018bc8fe5d37aac710fe07055deab3`; recomputed during this review and matched the GitHub artifact digest.
+- Artifact code commit: `63a82b8bf9768ba85bca14c2b00eb08e8567daf4`; decompressed daily dataset SHA-256 recomputed as `5feba5d5f2f97eaec192ae058b2a689d09556717a7dabc686e1715a470f765db`, matching the report's trial-governance manifest.
+
+On 2026-11-19, F25 added overflow-safe validation for unrepresentably large integer inputs in the slow-momentum evaluator and its direct signal/periodic-return/cost-stress helpers. This is validation-only: it does not change the momentum rule, next-close fill timing, fee/slippage formulas, allocation cap, candidate parameters, or metric calculations. The run-22 performance figures above therefore remain historical evidence from the pre-F25 code commit, not a fresh run of the updated source.
+
+No later slow-momentum artifact was exposed by the available workflow/artifact lookup in this review. The workflow definition currently has `workflow_dispatch` and branch-push triggers but no scheduled trigger. A post-F25 run and its artifact remain pending; no new performance result is claimed.
