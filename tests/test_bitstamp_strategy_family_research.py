@@ -41,11 +41,11 @@ class BitstampStrategyFamilyResearchTests(unittest.TestCase):
         self.assertEqual(len(reference["code_commit_sha"]), 40)
         self.assertEqual(len(reference["dataset_sha256"]), 64)
         self.assertEqual(reference["open_to_open_returns"], 10799)
-        self.assertEqual(reference["run_id"], "44631838327")
-        self.assertEqual(reference["code_commit_sha"], "3406a98eca240a628dabb760debac4982ab2a904")
-        self.assertEqual(reference["dataset_sha256"], "25a2ebdce5893d499759b6d990bbe628ee36e52bf22a04277b79e4f9b1f202d1")
-        self.assertEqual(reference["first_oos_open_timestamp_utc"], "2025-08-26T22:00:00+00:00")
-        self.assertEqual(reference["last_candle_timestamp_utc"], "2026-11-19T21:00:00+00:00")
+        self.assertEqual(reference["run_id"], "44635394233")
+        self.assertEqual(reference["code_commit_sha"], "482836838966eb8a70a8c218c3446df2a6358f79")
+        self.assertEqual(reference["dataset_sha256"], "a40e6e7271c87e78367cce77f527bd5ffc8d8b39780fc6c212e1954eea42bf90")
+        self.assertEqual(reference["first_oos_open_timestamp_utc"], "2025-08-26T23:00:00+00:00")
+        self.assertEqual(reference["last_candle_timestamp_utc"], "2026-11-19T22:00:00+00:00")
         first = datetime.fromisoformat(reference["first_oos_open_timestamp_utc"])
         last = datetime.fromisoformat(reference["last_candle_timestamp_utc"])
         self.assertLess(first, last)
@@ -251,23 +251,23 @@ class BitstampStrategyFamilyResearchTests(unittest.TestCase):
             )
 
 
-    def test_coinbase_reference_window_pins_latest_verified_run_50(self):
-        self.assertEqual(COINBASE_REFERENCE_WINDOW["run_id"], "44631838327")
+    def test_coinbase_reference_window_pins_latest_verified_run_52(self):
+        self.assertEqual(COINBASE_REFERENCE_WINDOW["run_id"], "44635394233")
         self.assertEqual(
             COINBASE_REFERENCE_WINDOW["code_commit_sha"],
-            "3406a98eca240a628dabb760debac4982ab2a904",
+            "482836838966eb8a70a8c218c3446df2a6358f79",
         )
         self.assertEqual(
             COINBASE_REFERENCE_WINDOW["dataset_sha256"],
-            "25a2ebdce5893d499759b6d990bbe628ee36e52bf22a04277b79e4f9b1f202d1",
+            "a40e6e7271c87e78367cce77f527bd5ffc8d8b39780fc6c212e1954eea42bf90",
         )
         self.assertEqual(
             COINBASE_REFERENCE_WINDOW["first_oos_open_timestamp_utc"],
-            "2025-08-26T22:00:00+00:00",
+            "2025-08-26T23:00:00+00:00",
         )
         self.assertEqual(
             COINBASE_REFERENCE_WINDOW["last_candle_timestamp_utc"],
-            "2026-11-19T21:00:00+00:00",
+            "2026-11-19T22:00:00+00:00",
         )
         self.assertEqual(COINBASE_REFERENCE_WINDOW["open_to_open_returns"], 10799)
 
