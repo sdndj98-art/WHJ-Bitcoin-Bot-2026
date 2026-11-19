@@ -771,3 +771,58 @@ No strategy is promoted. No paper ledger, balance, schedule, risk limit, exchang
 - Fold returns are not compounded together because each fold is an independent $1,000 reset. No candidate was promoted; these results are historical GC=F research only.
 - The report records `live_orders=false`, `paper_ledgers_read_or_written=false`, and `promotion_status=NO_CANDIDATE_PROMOTED`.
 
+## F33 — three-fold walk-forward cap, ranking alignment, and exact Coinbase/Bitstamp replay (2026-11-20)
+
+This refresh replaces the four-fold walk-forward selector that consumed 95% of the historical series with a capped three-fold selector: 55% initial training plus three contiguous 10% OOS folds. The final 15% is excluded from this walk-forward selector. **It is not a pristine holdout**: the older 70/30 historical OOS reports already exposed this same interval. A genuinely untouched final holdout still requires future data collected after this research freeze.
+
+### Protocol implementation and regression
+
+- Commit f4837c68d131380dd59fe323e63d4dd0eec53e50 added optional validated max_folds, unused_tail_start_index, unused_tail_bars, unused_tail_fraction, and an explicit tail-scope warning to rolling_walk_forward.py.
+- The Coinbase and Bitstamp research workflows now request three folds and report the unused tail explicitly.
+- The first three-fold artifacts, Coinbase #51 and Bitstamp #32, revealed an integration defect: the fixed-candidate ranking helper still defaulted to four required folds, so all 17 candidates were excluded as INSUFFICIENT_WALK_FORWARD_FOLDS. That was a protocol/configuration mismatch, not a candidate performance result.
+- Commit 482836838966eb8a70a8c218c3446df2a6358f79 passes the actual walk-forward fold count to the ranking helper and adds regression tests for three-fold ranking. Coinbase #52 and Bitstamp #33 then returned all 17 ranked candidates, zero excluded, zero passing.
+- Commit 55219b79f0a7b323d9d8d5da24c5a1e749a12928 pins the Bitstamp exact-calendar replay to the newer Coinbase #52 dataset and its exact timestamps. Bitstamp #34 verifies that pin and recomputes the matched replay.
+
+### Coinbase #52 — latest 17-candidate historical OOS and three-fold WF
+
+- Workflow: [Coinbase Multi-Strategy #52](https://github.com/sdndj98-art/WHJ-Bitcoin-Bot-2026/actions/runs/44635394233)
+- Artifact: [whj-multi-strategy-research-52](https://github.com/sdndj98-art/WHJ-Bitcoin-Bot-2026/actions/runs/44635394233/artifacts/14583730899)
+- Artifact ZIP SHA-256: d7cc43c55f2bad5086af9ff50107fb148bd10d65c136d2808626c33bed0d508a; recomputed after download and matched the GitHub artifact digest.
+- Code commit: 482836838966eb8a70a8c218c3446df2a6358f79.
+- Source: public Coinbase BTC-USD spot, 36,000 hourly candles, 2022-10-11 23:00 UTC to 2026-11-19 22:00 UTC; 13 hourly observations are explicitly imputed.
+- Canonical dataset SHA-256: a40e6e7271c87e78367cce77f527bd5ffc8d8b39780fc6c212e1954eea42bf90; independently recomputed from the decompressed snapshot and matched the report.
+- Fixed 70/30 OOS: 10,799 open-to-open returns. All 17 V1 proxies lose at 1x, 2x, and 3x costs. Best by 1x net return is RSI14 at -1.36%, with only 11 closed trades, 1.41% drawdown, periodic PF 0.350, and Sharpe -1.888.
+- Three-fold WF: 19,800 initial training bars plus three 3,600-bar OOS folds; 5,399 trailing bars (15.0%) excluded from this selector only. The adaptive selector chooses SMA200 in all three folds and returns -22.23% at 1x versus -4.56% matched buy-and-hold; -33.94% at 2x and -43.89% at 3x. Aggregate Max DD 25.39%, periodic PF 0.88, Sharpe -2.75, 217 closed trades.
+- Fixed-candidate WF ranking: all 17 ranked, none excluded, 0/17 pass. The top relative score is RSI14, but its fixed-WF return is -1.34%, with 13 trades, PF 0.405, Sharpe -1.742, one positive fold out of three, and zero regime coverage under the 30-active-bar rule.
+
+### Bitstamp #34 — independent venue and exact matched calendar
+
+- Workflow: [Bitstamp Independent Research #34](https://github.com/sdndj98-art/WHJ-Bitcoin-Bot-2026/actions/runs/44635718327)
+- Artifact: [whj-bitstamp-17-strategy-research-34](https://github.com/sdndj98-art/WHJ-Bitcoin-Bot-2026/actions/runs/44635718327/artifacts/14583636569)
+- Artifact ZIP SHA-256: fc251b5f64986d30446ba36bd7be6f8bc42723e0072f10a8f3eadd2ddd95a769; recomputed after download and matched the GitHub artifact digest.
+- Code commit: 55219b79f0a7b323d9d8d5da24c5a1e749a12928.
+- Source: public Bitstamp BTCUSD spot, 72,000 hourly candles, 2018-09-02 23:00 UTC to 2026-11-19 22:00 UTC; zero duplicates, zero gaps, zero imputed candles.
+- Canonical dataset SHA-256: 0196ef6c6d52760c704eebfa3954842e36aa248d03df707e2932f854f304ec1c; independently recomputed and matched the report's data-quality manifest.
+- Full-history 70/30 OOS: 21,599 open-to-open returns. Best by 1x net return is RSI14 at -3.38%, versus +2.31% matched buy-and-hold; 37 trades, DD 3.43%, PF 0.452, Sharpe -1.895. All 17 lose under 2x/3x costs.
+- Three-fold WF: 39,600 initial training bars plus three 7,200-bar OOS folds; 10,799 trailing bars (15.0%) excluded from this selector only. Adaptive selector return -4.157% at 1x versus +61.685% matched buy-and-hold; -27.828% at 2x and -45.659% at 3x. Max DD 14.891%, PF 0.993, Sharpe -0.154, 378 closed trades.
+- Fixed-candidate WF ranking: all 17 ranked, none excluded, 0/17 pass. RSI14 is the top relative score but still returns -3.812%, with 44 trades, PF 0.457, Sharpe -1.776, zero positive folds, and only one covered regime.
+
+### Exact same-calendar Coinbase #52 / Bitstamp #34 replay
+
+The Bitstamp replay now uses the exact Coinbase #52 OOS window and immutable reference:
+
+- Coinbase run ID: 44635394233; code commit 482836838966eb8a70a8c218c3446df2a6358f79.
+- Coinbase dataset SHA-256: a40e6e7271c87e78367cce77f527bd5ffc8d8b39780fc6c212e1954eea42bf90.
+- First OOS open: 2025-08-26T23:00:00+00:00; final candle: 2026-11-19T22:00:00+00:00; exactly 10,799 open-to-open returns.
+- Bitstamp matched-slice SHA-256: 0f25af4eeb8fa155ea75b0fdc65b52aa28b416b556a6e6038fde90e886f19d0d.
+- Cross-venue candidate-return correlation across all 17 proxies: Pearson 0.997020, Spearman 0.985294, Kendall 0.955882; 13/17 candidates have exactly the same rank; mean absolute venue difference 0.4734 percentage points, maximum 2.1447 pp.
+- All 17 candidates lose on both venues over this exact calendar at 1x, 2x, and 3x. The best relative candidate remains RSI14: Coinbase -1.36%, Bitstamp -1.3451%, with only 11 closed trades on each series. The matched-window Bitstamp ranking has 17 candidates, PBO 0.085714 over 35 CSCV splits; this is diagnostic only, not a future-profit probability.
+
+### CI verification for this refresh
+
+- [Termux Repository Audit #1782](https://github.com/sdndj98-art/WHJ-Bitcoin-Bot-2026/actions/runs/44635718344): **594 tests passed in 8.176 seconds**, tracked Python compilation passed, and git diff --check passed.
+- [Coinbase #52](https://github.com/sdndj98-art/WHJ-Bitcoin-Bot-2026/actions/runs/44635394233): 12 ranking tests passed; research evaluation and artifact upload succeeded.
+- [Bitstamp #34](https://github.com/sdndj98-art/WHJ-Bitcoin-Bot-2026/actions/runs/44635718327): 79 tests passed across nine groups; isolated module compilation, 17-candidate evaluation, and artifact upload succeeded.
+- No strategy is promoted. All results are historical; no forward paper-trading evidence is added by these runs. Candidate definitions remain v1_boolean_long_flat_state_proxy; F14 canonical entry/exit semantics remain open. Costs still omit venue-specific bid/ask spread, depth, impact, latency, and tick-level execution.
+
+**Decision: no Bitcoin candidate qualified.** The new three-fold selector makes the trailing 15% unavailable to its adaptive selection, but historical exposure means a truly untouched final holdout must be gathered prospectively after this freeze.
