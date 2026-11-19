@@ -159,6 +159,7 @@ class OhlcExecutionLabTests(unittest.TestCase):
             ("stop_loss_pct", True),
             ("take_profit_pct", True),
             ("fee", "0.001"),
+            ("fee", 10**1000),
             ("slippage", float("nan")),
             ("allocation_fraction", float("inf")),
             ("stop_loss_pct", float("nan")),
@@ -168,6 +169,17 @@ class OhlcExecutionLabTests(unittest.TestCase):
             with self.subTest(parameter=name, value=value):
                 with self.assertRaisesRegex(ValueError, name):
                     simulate_ohlc_risk(**args, **{name: value})
+
+
+    def test_rejects_unrepresentably_large_integer_ohlc_prices(self):
+        oversized = 10**1000
+        args = dict(
+            opens=[oversized, 100], highs=[oversized, 101], lows=[99, 99],
+            closes=[100, 100], entry_signals=[False, False],
+            exit_signals=[False, False],
+        )
+        with self.assertRaisesRegex(ValueError, "OHLC prices"):
+            simulate_ohlc_risk(**args)
 
 
 if __name__ == "__main__":
