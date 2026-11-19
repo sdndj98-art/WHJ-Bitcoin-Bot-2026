@@ -413,7 +413,8 @@ def build_bitstamp_strategy_report(
         max_folds=3,
     )
     walk_forward_candidate_ranking = rank_fixed_candidate_walk_forward(
-        walk_forward["fixed_candidate_walk_forward"]["candidates"]
+        walk_forward["fixed_candidate_walk_forward"]["candidates"],
+        required_folds=walk_forward["fold_count"],
     )
 
     return_matrix = {

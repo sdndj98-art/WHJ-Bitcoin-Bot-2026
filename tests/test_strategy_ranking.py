@@ -122,6 +122,21 @@ class StrategyRankingTests(unittest.TestCase):
         self.assertFalse(result["execution_enabled"])
         self.assertFalse(result["live_trading_approved"])
 
+    def test_fixed_candidate_ranking_supports_declared_three_fold_protocol(self):
+        from strategy_ranking import rank_fixed_candidate_walk_forward
+
+        candidate = self.fixed_candidate(fold_returns=(4.0, 2.0, 1.0))
+        result = rank_fixed_candidate_walk_forward(
+            {"three_fold": candidate},
+            required_folds=3,
+        )
+        self.assertEqual(result["required_walk_forward_folds"], 3)
+        self.assertEqual(result["required_positive_folds"], 3)
+        self.assertEqual(result["candidate_count"], 1)
+        self.assertEqual(len(result["ranked_candidates"]), 1)
+        self.assertEqual(result["excluded_candidates"], [])
+        self.assertTrue(result["ranked_candidates"][0]["eligible_for_next_stage"])
+
     def test_fixed_candidate_screen_rejects_negative_cost_stress(self):
         from strategy_ranking import rank_fixed_candidate_walk_forward
 
