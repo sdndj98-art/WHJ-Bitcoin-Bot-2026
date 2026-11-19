@@ -675,9 +675,9 @@ No strategy is promoted. No paper ledger, balance, schedule, risk limit, exchang
 | 16 | OBV | 15.01 | -46.1118% | 48.0480% | 0.7575 | -5.6036 | 763 | -69.6031% | -82.8576% | 0/4 | 3/3 |
 | 17 | Stochastic | 14.07 | -49.5913% | 49.6055% | 0.2718 | -12.0113 | 935 | -75.0089% | -87.6135% | 0/4 | 3/3 |
 
-**Bitstamp run #29 (full-history WF; matched-calendar reference subsequently advanced to Coinbase run #50)**
-- [Workflow #29](https://github.com/sdndj98-art/WHJ-Bitcoin-Bot-2026/actions/runs/44631838317) — success; [artifact](https://github.com/sdndj98-art/WHJ-Bitcoin-Bot-2026/actions/runs/44631838317/artifacts/14582531589).
-- 72,000 hourly candles; zero duplicate timestamps, zero gaps, zero imputed bars; dataset SHA-256 `ac52bfa3ea7e77cf522a16f7b0c217c1bf836d4d7fa962bf604314276e91c6fa`; artifact ZIP SHA-256 `71dde03960a8b78e1b93c25ad71ae2057227bc043345f9ec55686f96a43e7d2b`.
+**Bitstamp run #31 (full-history WF and exact-calendar replay pinned to Coinbase run #50)**
+- [Workflow #31](https://github.com/sdndj98-art/WHJ-Bitcoin-Bot-2026/actions/runs/44632509631) — success; [artifact](https://github.com/sdndj98-art/WHJ-Bitcoin-Bot-2026/actions/runs/44632509631/artifacts/14582333190).
+- 72,000 hourly candles; zero duplicate timestamps, zero gaps, zero imputed bars; dataset SHA-256 `ac52bfa3ea7e77cf522a16f7b0c217c1bf836d4d7fa962bf604314276e91c6fa`; artifact ZIP SHA-256 `42b40b3d6e1ee17b0485a22a0e9233f99d915edc953f40d18303f6ef1d93a024`.
 - Fixed-candidate WF: four folds of 7,200 returns each; 28,800 aggregate WF returns; 0/17 passed.
 - Top WF scores: RSI14 42.71 (-4.9881%, 52 trades, 1/3 regimes); SMA200 27.06 (-17.1323%); ROC120 24.43 (-22.4043%); ROC60 19.87 (-24.9181%); Bollinger 19.65 (-22.9339%). All 17 are negative at 2x and 3x.
 
