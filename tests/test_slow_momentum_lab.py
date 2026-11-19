@@ -145,10 +145,17 @@ class SlowMomentumLabTests(unittest.TestCase):
             momentum_signals([100.0, 101.0], True)
         with self.assertRaises(ValueError):
             evaluate_slow_momentum([100.0 + i for i in range(200)], lookbacks=(0,))
+        oversized = 10**1000
+        with self.assertRaisesRegex(ValueError, "Prices"):
+            evaluate_slow_momentum([oversized] + [100.0] * 219)
+        with self.assertRaisesRegex(ValueError, "closes"):
+            momentum_signals([oversized, 101.0], 1)
+        with self.assertRaisesRegex(ValueError, "closes"):
+            periodic_net_returns([oversized] + [100.0] * 219, [False] * 220, 154, 220)
 
     def test_evaluator_rejects_boolean_string_and_non_finite_costs(self):
         closes = [100.0 + index * 0.1 for index in range(220)]
-        invalid_values = (False, "0.001", float("nan"), float("inf"), float("-inf"))
+        invalid_values = (False, "0.001", float("nan"), float("inf"), float("-inf"), 10**1000)
         for parameter in ("fee", "slippage"):
             for value in invalid_values:
                 with self.subTest(parameter=parameter, value=repr(value)):
@@ -158,7 +165,7 @@ class SlowMomentumLabTests(unittest.TestCase):
     def test_periodic_returns_rejects_invalid_costs_and_allocations(self):
         closes = [100.0] * 220
         signals = [False] * 220
-        invalid_costs = (False, "0.001", float("nan"), float("inf"), float("-inf"))
+        invalid_costs = (False, "0.001", float("nan"), float("inf"), float("-inf"), 10**1000)
         for parameter in ("fee", "slippage"):
             for value in invalid_costs:
                 with self.subTest(parameter=parameter, value=repr(value)):
@@ -167,7 +174,7 @@ class SlowMomentumLabTests(unittest.TestCase):
                             closes, signals, 154, 220, **{parameter: value}
                         )
         invalid_allocations = (
-            False, True, "0.1", float("nan"), float("inf"), float("-inf")
+            False, True, "0.1", float("nan"), float("inf"), float("-inf"), 10**1000
         )
         for value in invalid_allocations:
             with self.subTest(allocation_fraction=repr(value)):
@@ -179,7 +186,7 @@ class SlowMomentumLabTests(unittest.TestCase):
     def test_cost_stress_rejects_invalid_multiplier_and_cost_inputs(self):
         closes = [100.0 + index * 0.1 for index in range(220)]
         invalid_multipliers = (
-            True, "2", float("nan"), float("inf"), float("-inf"), 0.5
+            True, "2", float("nan"), float("inf"), float("-inf"), 0.5, 10**1000
         )
         for value in invalid_multipliers:
             with self.subTest(multiplier=repr(value)):
