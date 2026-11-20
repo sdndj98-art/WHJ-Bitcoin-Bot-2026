@@ -56,6 +56,9 @@ COMMODITY_BASES = {
 CRYPTO_BASES = frozenset("""
 BTC ETH BNB XRP SOL ADA DOGE DOT LTC BCH LINK AVAX TRX TON XLM
 """.split())
+CRYPTO_QUOTES = frozenset("""
+USD USDT USDC EUR BTC ETH
+""".split())
 
 
 def _clean_symbol(symbol: str) -> str:
