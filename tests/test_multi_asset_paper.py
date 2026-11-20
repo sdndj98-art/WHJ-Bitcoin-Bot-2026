@@ -69,6 +69,18 @@ class MultiAssetPaperTests(unittest.TestCase):
         self.assertEqual(state["events"][0]["reason"], "STALE_QUOTE")
         self.assertEqual(state["summary"]["open_positions"], 0)
 
+    def test_stale_quote_does_not_mark_existing_position(self):
+        state = process_snapshot(snap(1000, {"BTCUSD": "BUY"}), now=1000)
+        stale = snap(800, {"BTCUSD": "SELL"})
+        state = process_snapshot(stale, state, now=1200)
+        btc = state["summary"]["markets"]["BTCUSD"]
+        self.assertEqual(state["events"][0]["reason"], "STALE_QUOTE")
+        self.assertTrue(btc["position_open"])
+        self.assertAlmostEqual(
+            btc["equity_usd"],
+            btc["cash_usd"] + state["markets"]["BTCUSD"]["position"]["entry_notional_usd"],
+        )
+
     def test_risk_limits_cannot_exceed_100_percent(self):
         with self.assertRaisesRegex(ValueError, "risk limits"):
             process_snapshot(snap(1000, {"BTCUSD": "HOLD"}), now=1000,
