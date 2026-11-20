@@ -41,6 +41,7 @@ jobs:
         run: |
           python -m unittest discover -s tests -p 'test_whj_agent_office.py' -v
           python -m unittest discover -s tests -p 'test_whj_grok_worker.py' -v
+          python -m unittest discover -s tests -p 'test_whj_evidence_verifier.py' -v
           python -m unittest discover -s tests -p 'test_whj_free_worker.py' -v
       - name: Generate nightly research work plan
         run: python whj_agent_office.py plan --output-dir research/agent_office
