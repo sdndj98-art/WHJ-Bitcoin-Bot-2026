@@ -826,3 +826,12 @@ The Bitstamp replay now uses the exact Coinbase #52 OOS window and immutable ref
 - No strategy is promoted. All results are historical; no forward paper-trading evidence is added by these runs. Candidate definitions remain v1_boolean_long_flat_state_proxy; F14 canonical entry/exit semantics remain open. Costs still omit venue-specific bid/ask spread, depth, impact, latency, and tick-level execution.
 
 **Decision: no Bitcoin candidate qualified.** The new three-fold selector makes the trailing 15% unavailable to its adaptive selection, but historical exposure means a truly untouched final holdout must be gathered prospectively after this freeze.
+
+
+## F34 — direct slow-momentum signal helper accepted non-positive prices (low/medium)
+
+`momentum_signals()` is a public helper used by the isolated evaluator and can also be called directly. Its input check rejected booleans and non-finite numbers, but it still accepted zero or negative finite values. The higher-level evaluator and periodic-return helper already require positive prices, so direct calls had a weaker input contract.
+
+**Research-branch correction:** `momentum_signals()` now rejects any non-finite or non-positive close before building signals. Regression coverage checks both zero and negative prices.
+
+This is validation-only: all valid positive-price signal outputs, lookbacks, execution timing, fees, allocation, and historical performance calculations are unchanged. The isolated slow-momentum workflow path filter includes both the source and test file, so the branch push should request a fresh isolated run. The latest available historical artifact before this change is run #22; no post-F34 performance result is claimed until a new artifact is retrieved and checked.
