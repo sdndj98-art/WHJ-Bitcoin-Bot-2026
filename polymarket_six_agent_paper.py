@@ -228,9 +228,40 @@ def exit_pnl(quantity: float, entry_price: float, exit_price: float,
     }
 
 
+def exit_monitor(quantity: float, entry_price: float, current_exit_bid: float,
+                 total_costs: float, pressure_reversed: bool,
+                 stop_price: float, elapsed_seconds: float,
+                 max_hold_seconds: float) -> dict:
+    """Paper EXIT trigger; close on reversal, stop, or holding horizon."""
+    qty = _num(quantity, "filled quantity", 0)
+    entry = _num(entry_price, "average entry price", 0)
+    bid = _num(current_exit_bid, "current exit bid", 0)
+    costs = _num(total_costs, "all execution costs", 0)
+    stop = _num(stop_price, "risk stop price", 0)
+    elapsed = _num(elapsed_seconds, "elapsed seconds", 0)
+    horizon = _num(max_hold_seconds, "maximum holding seconds", 0)
+    if entry > 1 or bid > 1 or stop > 1 or horizon <= 0:
+        raise ValueError("Invalid binary price or holding horizon")
+    reasons = []
+    if pressure_reversed:
+        reasons.append("ORDER_BOOK_PRESSURE_REVERSED")
+    if bid <= stop:
+        reasons.append("RISK_STOP_TRIGGERED")
+    if elapsed >= horizon:
+        reasons.append("HOLDING_HORIZON_ENDED")
+    should_close = bool(reasons)
+    pnl = exit_pnl(qty, entry, bid, costs) if should_close else None
+    return {
+        "agent": "EXIT", "should_close": should_close,
+        "exit_reasons": reasons, "current_exit_bid": bid,
+        "realized_pnl": pnl, "mode": "PAPER_ONLY",
+        "orders_submitted": False,
+    }
+
+
 def run_six_agents(book: dict, observations: dict, risk: dict,
                     round_trip_cost: float, edge_buffer: float = 0.01) -> dict:
-    """Unified research decision. It never creates an order or changes a ledger."""
+    """Unified six-role research decision. No orders or ledger changes."""
     pulse_result = pulse(book)
     side = pulse_result["stronger_demand_side"]
     if side is None:
@@ -245,10 +276,11 @@ def run_six_agents(book: dict, observations: dict, risk: dict,
     impact_result = impact(
         pulse_result["imbalance"], history, selected["best_bid"]
     )
+    agents = [pulse_result, impact_result]
     if impact_result["status"] != "CALIBRATED_OLS":
         return {
-            "agents": [pulse_result, impact_result],
-            "decision": "HOLD", "reason": "IMPACT_HISTORY_INSUFFICIENT",
+            "agents": agents, "decision": "HOLD",
+            "reason": "IMPACT_HISTORY_INSUFFICIENT",
             "paper_only": True, "live_orders_enabled": False,
             "orders_submitted": False,
         }
@@ -256,10 +288,10 @@ def run_six_agents(book: dict, observations: dict, risk: dict,
         selected["best_ask"], impact_result["expected_exit_bid"],
         round_trip_cost, edge_buffer,
     )
+    agents.append(edge_result)
     if not edge_result["approved"]:
         return {
-            "agents": [pulse_result, impact_result, edge_result],
-            "selected_side": side, "decision": "HOLD",
+            "agents": agents, "selected_side": side, "decision": "HOLD",
             "reason": "EDGE_BELOW_REQUIRED_BUFFER",
             "paper_only": True, "live_orders_enabled": False,
             "orders_submitted": False,
@@ -272,11 +304,40 @@ def run_six_agents(book: dict, observations: dict, risk: dict,
         collateral=risk["collateral"],
         q_cap=risk["q_cap"],
     )
+    agents.append(sizing)
+    if sizing["quantity"] <= 0:
+        return {
+            "agents": agents, "selected_side": side, "decision": "HOLD",
+            "reason": "NO_POSITION_CAPACITY",
+            "paper_only": True, "live_orders_enabled": False,
+            "orders_submitted": False,
+        }
+    max_entry_price = (
+        impact_result["expected_exit_bid"]
+        - _num(round_trip_cost, "round trip cost", 0)
+        - _num(edge_buffer, "edge buffer", 0)
+    )
+    entry_result = paper_entry(
+        book[side]["asks"], sizing["quantity"], max_entry_price
+    )
+    agents.append(entry_result)
     return {
-        "agents": [pulse_result, impact_result, edge_result, sizing],
+        "agents": agents,
         "selected_side": side,
-        "decision": "PAPER_CANDIDATE" if sizing["quantity"] > 0 else "HOLD",
-        "paper_only": True, "live_orders_enabled": False,
-        "orders_submitted": False,
-        "warning": "ENTRY and EXIT require a separate event-driven paper simulator and verified fill/fee data.",
+        "decision": "PAPER_CANDIDATE" if entry_result["filled_quantity"] > 0 else "HOLD",
+        "reason": "PAPER_FILL_SIMULATED" if entry_result["filled_quantity"] > 0 else "ENTRY_LIMIT_NO_FILL",
+        "expected_exit_bid": impact_result["expected_exit_bid"],
+        "maximum_entry_price": max_entry_price,
+        "paper_position": {
+            "outcome": side,
+            "filled_quantity": entry_result["filled_quantity"],
+            "average_entry_price": entry_result["average_fill_price"],
+            "entry_quote_spent": entry_result["quote_spent"],
+            "unfilled_cancelled": entry_result["unfilled_cancelled"],
+            "status": "OPEN_PAPER_POSITION" if entry_result["filled_quantity"] > 0 else "NO_POSITION",
+            "exit_monitor_required": entry_result["filled_quantity"] > 0,
+        },
+        "paper_only": True, "live_trading_enabled": False,
+        "live_orders_enabled": False, "orders_submitted": False,
+        "warning": "Six-role decision is research/paper-only. No account, real order, or persistent portfolio ledger is connected.",
     }
