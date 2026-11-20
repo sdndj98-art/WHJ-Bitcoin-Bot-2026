@@ -79,11 +79,11 @@ def audit_hourly_schedule(path: Path) -> dict:
     if not path.is_file():
         return {"status": "failed", "reason": "development-team workflow missing"}
     content = path.read_text(encoding="utf-8")
-    expected = 'cron: "0 * * * *"'
+    expected = 'cron: "0 */2 * * *"'
     ok = expected in content and "permissions:" in content and "contents: read" in content
     return {
         "status": "passed" if ok else "failed",
-        "hourly_schedule_present": expected in content,
+        "12_runs_per_day_present": expected in content,
         "read_only_repository_permission": "contents: read" in content,
     }
 

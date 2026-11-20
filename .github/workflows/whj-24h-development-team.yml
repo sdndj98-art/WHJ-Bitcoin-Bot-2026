@@ -13,7 +13,8 @@ on:
       - "dual_portfolio.json"
       - "index.html"
   schedule:
-    - cron: "0 * * * *"
+    # 12 development cycles per day: every 2 hours (UTC)
+    - cron: "0 */2 * * *"
 
 permissions:
   contents: read

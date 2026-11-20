@@ -182,3 +182,41 @@ Important limitations:
 - The public Info API calls used by this monitor do not provide a global top-200 wallet leaderboard or a 30-day PnL ranking. Only addresses explicitly entered in the config are scanned.
 - The liquidation map is an estimate based on liquidation prices reported for the configured wallets; it is not a complete exchange-wide liquidation heatmap and does not predict forced liquidations.
 - No signing, exchange action endpoint, order placement, modification, or cancellation is implemented. This module is read-only and does not enable live trading.
+
+
+## Broker-aware multi-asset market universe (paper data only)
+
+The feature/six-agent-paper-engine development branch adds a broker-symbol discovery layer for the WHJ market universe. It classifies broker-listed FX pairs using broad ISO 4217 currency-code coverage, precious metals (XAU gold, XAG silver, XPT platinum, XPD palladium), selected commodities (WTI/Brent crude, natural gas, copper), and common crypto instruments. Broker suffixes such as EURUSD.a, XAUUSDm, and BTCUSD.a are preserved exactly.
+
+On a supported Windows host with MT5 open and configured, run:
+
+```powershell
+python mt5_market_universe.py --output market_universe.json
+```
+
+This reads the broker's symbol catalog and exports the available symbols by category. It does not read account balances or send orders. “All currencies” means currency pairs actually listed by the connected broker and recognized by the currency catalog; availability, quote currencies, symbol suffixes, trading hours, spread and history vary by broker. Gold is included as XAU and the additional precious metals are included when the broker offers them. This discovery step is not yet a multi-asset execution engine; current persistent MT5 paper-ledger update remains BTC/XBT-only, and other instruments are data/scanner candidates until separate asset-aware paper ledgers and dashboard aggregation are implemented.
+
+## Isolated multi-asset paper ledger (experimental)
+
+The `multi_asset_paper.py` module adds separate virtual sleeves for any broker-discovered symbol (FX, metals, commodities, or crypto) without changing the existing dashboard or legacy BTC/gold ledgers. It consumes a user-generated `multi_asset_snapshot.json` containing validated bid/ask quotes, quote timestamps, explicit BUY/SELL/HOLD signals, a healthy-symbol list, each instrument's broker-specific contract size, and quote-currency-to-USD conversion rate.
+
+Run it with:
+
+```bash
+python multi_asset_paper.py --input multi_asset_snapshot.json --state state/multi_asset_paper.json --output state/multi_asset_paper_report.json
+```
+
+The ledger persists independent cash, position, fees, realized/unrealized PnL, quote de-duplication, daily-loss pause, and peak-drawdown pause per symbol. Entries are long-only, use ask prices; exits use bid prices; fees are modeled on both sides. Invalid/missing contract metadata blocks the snapshot rather than guessing broker lot sizes. The module does not fetch quotes, generate strategy signals, send orders, or modify the existing dashboard. A valid feed adapter and signal producer must be connected before it can run continuously. This is experimental paper simulation, not validated profitability or a live-trading system.
+
+### MT5 quote snapshot for multi-asset paper testing
+
+On a Windows machine with the configured MT5 terminal, create a signals file such as `whj_market_signals.json`:
+
+```json
+{
+  "signals": {"BTCUSD": "BUY", "XAUUSD": "HOLD"},
+  "quote_to_usd": {"EURUSD": 1.08}
+}
+```
+
+Then run `python mt5_multi_asset_snapshot.py --signals whj_market_signals.json --output multi_asset_snapshot.json`. The script enumerates broker-listed symbols, reads current quotes and contract size, blocks stale quotes, and requires explicit conversion rates for non-USD profit currencies. It defaults missing signals to HOLD. Review the generated snapshot before running the paper ledger. This is a data adapter only; it does not automatically generate the six agents' strategy signals or place orders.

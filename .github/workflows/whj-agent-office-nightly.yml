@@ -17,7 +17,8 @@ on:
       - "dual_portfolio.json"
       - ".github/workflows/whj-agent-office-nightly.yml"
   schedule:
-    - cron: "0 22,2,6,10,14,18 * * *"
+    # 12 runs per day: every 2 hours (UTC)
+    - cron: "0 */2 * * *"
 
 permissions:
   contents: read
