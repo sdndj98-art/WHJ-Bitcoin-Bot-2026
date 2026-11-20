@@ -3,9 +3,11 @@ from __future__ import annotations
 
 import ast
 import hashlib
+import io
 import json
 import subprocess
 import sys
+import tokenize
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -98,6 +100,39 @@ def file_fingerprint(path: Path) -> str | None:
     return digest.hexdigest()
 
 
+def find_backlog_markers(source: str, filename: str) -> list[dict]:
+    """Find actionable TODO/FIXME comments and executable NotImplementedError uses.
+
+    String literals are intentionally ignored so the scanner does not report
+    its own marker vocabulary or documentation examples as backlog items.
+    """
+    found = []
+    try:
+        tokens = tokenize.generate_tokens(io.StringIO(source).readline)
+        for token in tokens:
+            if token.type == tokenize.COMMENT and any(
+                tag in token.string for tag in ("TODO", "FIXME")
+            ):
+                found.append({
+                    "file": filename, "line": token.start[0],
+                    "item": token.string.strip()[:240],
+                })
+    except (tokenize.TokenError, IndentationError):
+        pass
+
+    try:
+        tree = ast.parse(source, filename=filename)
+        for node in ast.walk(tree):
+            if isinstance(node, ast.Name) and node.id == "NotImplementedError":
+                found.append({
+                    "file": filename, "line": node.lineno,
+                    "item": "NotImplementedError usage",
+                })
+    except SyntaxError:
+        pass
+    return sorted(found, key=lambda item: item["line"])
+
+
 def run_council(root: Path = ROOT) -> dict:
     files = tracked_python_files(root)
     syntax = []
@@ -108,10 +143,7 @@ def run_council(root: Path = ROOT) -> dict:
             source = path.read_text(encoding="utf-8")
             ast.parse(source, filename=rel)
             syntax.append({"file": rel, "status": "passed"})
-            for number, line in enumerate(source.splitlines(), 1):
-                stripped = line.strip()
-                if any(tag in stripped for tag in ("TODO", "FIXME", "NotImplementedError")):
-                    backlog.append({"file": rel, "line": number, "item": stripped[:240]})
+            backlog.extend(find_backlog_markers(source, rel))
         except (OSError, UnicodeError, SyntaxError) as exc:
             syntax.append({"file": rel, "status": "failed", "error": str(exc)})
 
