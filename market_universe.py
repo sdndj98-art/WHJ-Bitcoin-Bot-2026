@@ -71,7 +71,7 @@ def classify_symbol(symbol: str) -> str:
         return "UNKNOWN"
 
     # Broker prefixes/suffixes are tolerated by searching for known instrument codes.
-    if any(re.match(rf"^{base}(?:USD|EUR|GBP|JPY|CHF|AUD|CAD)", s) for base in CRYPTO_BASES):
+    if any(re.match(rf"^{base}(?:{quote})", s) for base in CRYPTO_BASES for quote in CRYPTO_QUOTES):
         return "CRYPTO"
     if any(s.startswith(code) for code in METALS):
         return "PRECIOUS_METAL"
@@ -125,5 +125,5 @@ def core_market_symbols() -> dict:
         "forex": sorted(FX_CORE_PAIRS),
         "metals": ["XAUUSD", "XAGUSD", "XPTUSD", "XPDUSD"],
         "commodities": ["WTI", "BRENT", "NATGAS", "COPPER"],
-        "crypto": [base + "USD" for base in sorted(CRYPTO_BASES)],
+        "crypto": [base + quote for base in sorted(CRYPTO_BASES) for quote in ("USD", "USDT")],
     }
