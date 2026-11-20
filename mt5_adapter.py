@@ -162,6 +162,20 @@ class MetaTrader5ReadOnly:
             "mode": "READ_ONLY",
         }
 
+    def list_symbols(self):
+        """Return broker-listed symbol names only; no account/private fields."""
+        self._require_connection()
+        symbols = self._module().symbols_get()
+        if symbols is None:
+            error = self._module().last_error() if hasattr(self._module(), "last_error") else "unknown"
+            raise RuntimeError(f"MT5 symbol discovery failed: {error}")
+        names = []
+        for item in symbols:
+            name = getattr(item, "name", None)
+            if isinstance(name, str) and name.strip():
+                names.append(name.strip())
+        return sorted(set(names), key=str.upper)
+
     def close(self):
         if self._connected:
             self._module().shutdown()
