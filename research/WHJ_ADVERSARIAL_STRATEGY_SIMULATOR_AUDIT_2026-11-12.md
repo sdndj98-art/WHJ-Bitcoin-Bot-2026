@@ -848,11 +848,11 @@ This is validation-only: all valid positive-price signal outputs, lookbacks, exe
 - The 56d moving-block bootstrap 95% interval was -15.5019% to +13.7127%; its top winner contributed 89.3424% of gross winning P&L and its top five contributed 100%. The 84d variant had only seven trades and one winner; the 112d variant had 13 trades. CSCV/PBO 0.50 is computed across only these three variants (six partitions, ten splits, 75 observations per partition), and is a narrow selection-bias diagnostic only.
 - This post-F34 run supersedes the prior report's “latest artifact is #22/#24” notes. It validates the positive-price input guard under the isolated workflow but does not validate profitability. The three fixed OOS subperiods are not rolling walk-forward; no forward paper evidence exists. No candidate is promoted.
 
-### CI verification for the current documentation refresh
+### CI verification for the F35 evidence refresh
 
-- [Termux Repository Audit #1786](https://github.com/sdndj98-art/WHJ-Bitcoin-Bot-2026/actions/runs/44792078120), on branch head `c7012d5b1afea8ffb724aa14aaaee011f5079d27`: **595 tests passed in 9.090 seconds**, tracked Python compilation passed, and `git diff --check` passed.
-- The same audit job's logs show the test runner's final summary `Ran 595 tests ... OK`; no test count is inferred from the run title.
+- Prior [Termux Repository Audit #1786](https://github.com/sdndj98-art/WHJ-Bitcoin-Bot-2026/actions/runs/44792078120), on branch head `c7012d5b1afea8ffb724aa14aaaee011f5079d27`: **595 tests passed in 9.090 seconds**, tracked Python compilation passed, and `git diff --check` passed.
+- After the F35 report/audit documentation commits, [Termux Repository Audit run #1827](https://github.com/sdndj98-art/WHJ-Bitcoin-Bot-2026/actions/runs/44832310742) completed successfully on commit `0d0072892c2e2e1f34937f5e36df8ce41089e235`: **595 tests passed in 6.778 seconds**, tracked Python compilation passed, and `git diff --check` passed. The downloaded job log explicitly reports `Ran 595 tests ... OK`.
 - Slow Momentum #26 completed successfully, and its report, trial manifest, and dataset snapshot were downloaded and inspected directly.
-- The current branch head is documentation-only after the F34 source commit; the #26 research job ran against the F34 source commit `d174745...`. No new 17-candidate BTC evaluation was triggered by this documentation-only update.
+- The branch head is documentation-only after the F34 source commit; the #26 research job ran against the F34 source commit `d174745...`. No new 17-candidate BTC evaluation was triggered by this documentation-only update.
 
 **Safety and decision:** the slow-momentum workflow uses the isolated historical evaluator and public Coinbase data. Its report states `live_orders=false` and `paper_ledgers_read_or_written=false`. No paper ledger, balance, schedule, risk limit, exchange secret, or order pathway was accessed or changed. No candidate is promoted.
