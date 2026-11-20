@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "generated_at_utc": "2026-11-19T23:50:58.978882+00:00",
+  "generated_at_utc": "2026-11-20T00:36:33.470395+00:00",
   "mode": "READ_ONLY_PAPER_RESEARCH",
   "paper_only": true,
   "live_trading_enabled": false,
@@ -9,7 +9,7 @@
     "BTC": {
       "market": "BTC",
       "strategy": "rsi14_mean_reversion",
-      "status": "PAPER_ACTIVE_WAITING_NEXT_CLOSED_CANDLE",
+      "status": "PAPER_RUNNING",
       "closed_trades": 0,
       "wins": 0,
       "losses": 0,
@@ -28,7 +28,7 @@
     "XAUUSD": {
       "market": "XAUUSD",
       "strategy": "ema_trend",
-      "status": "FEED_BLOCKED_NO_NEW_TRADES",
+      "status": "PAPER_RUNNING",
       "closed_trades": 0,
       "wins": 0,
       "losses": 0,
