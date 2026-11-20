@@ -92,11 +92,24 @@ class SixAgentPaperTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "must be <= 1"):
             pulse(bad)
 
-    def test_empty_book_is_not_guessed(self):
+    def test_empty_book_is_skipped_and_other_side_can_be_used(self):
         bad = book()
         bad["UP"]["bids"] = []
-        with self.assertRaisesRegex(ValueError, "empty"):
-            pulse(bad)
+        result = pulse(bad)
+        self.assertEqual(result["stronger_demand_side"], "DOWN")
+        self.assertIn("UP", result["skipped_empty_books"])
+
+    def test_all_empty_books_force_hold(self):
+        bad = {
+            "UP": {"bids": [], "asks": []},
+            "DOWN": {"bids": [], "asks": []},
+        }
+        result = run_six_agents(
+            bad, {}, {"risk_budget": 5, "stressed_adverse_move": 0.05,
+                     "collateral": 100, "q_cap": 20}, 0.01,
+        )
+        self.assertEqual(result["decision"], "HOLD")
+        self.assertFalse(result["orders_submitted"])
 
 
 if __name__ == "__main__":
