@@ -184,6 +184,57 @@ body[data-whj-theme="light"] .agent-event-tag{background:#e7f0f7;color:#34516a}
 body[data-whj-theme="light"] .agent-step{background:#edf4fa;border-color:#cbd8e5}body[data-whj-theme="light"] .agent-note{background:#fff8e9;color:#765315;border-color:#e8d4a8}
 @media(max-width:950px){.agent-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.agent-flow{grid-template-columns:repeat(3,minmax(0,1fr))}}
 @media(max-width:700px){.agent-grid,.agent-lower{grid-template-columns:1fr}.agent-hero{align-items:flex-start;flex-direction:column}.agent-flow{grid-template-columns:repeat(2,minmax(0,1fr))}}
+
+/* WHJ GROK-DESK-inspired neural terminal skin */
+:root{--bg:#03050b;--p:#090e1a;--p2:#101626;--line:#273044;--t:#edf5ff;--m:#8b9ab2;--c:#35e7f0;--g:#39e8a6;--r:#ff4e88;--a:#ffb84e}
+body{background:radial-gradient(ellipse at 50% 18%,#10142a 0,#050711 46%,#020308 100%);font-family:Inter,Arial,Tahoma,sans-serif}
+.shell{background:transparent}.side{background:#050812;border-right:1px solid #20263a}.logo{background:linear-gradient(145deg,#e8b45c,#7d49e7);color:#080812}.brand b{letter-spacing:1.4px}.nav button.active,.nav button:hover{background:linear-gradient(90deg,#111b30,#19132b);box-shadow:inset -3px 0 #bd62ff}
+.top h1{letter-spacing:.5px}.banner{background:linear-gradient(100deg,#0c1423,#0a101b);border-color:#26314a}
+.card{background:linear-gradient(145deg,#0c1220,#080d17);border-color:#263047;border-radius:11px;box-shadow:0 0 22px #080b1826}
+.metric .value{font-variant-numeric:tabular-nums}
+.whj-desk{border:1px solid #29344d;border-radius:15px;overflow:hidden;background:radial-gradient(ellipse at 50% 48%,#11162c 0,#070b15 58%,#05070d 100%);box-shadow:0 0 38px #8d35ff12,inset 0 0 40px #17254b35;margin:0 0 18px;direction:ltr}
+.whj-deskbar,.whj-ticker,.whj-pipeline{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 15px;border-bottom:1px solid #222b40;flex-wrap:wrap}
+.whj-live{font-size:15px;font-weight:900;letter-spacing:1.5px;color:#f2e6ff}.whj-live:before{content:"◉";color:#bd68ff;margin-right:8px}.whj-live span{font-size:9px;color:#8d9ab5;margin-left:10px;letter-spacing:1px}
+.whj-deskstats{display:flex;gap:16px;align-items:center;color:#8d9ab5;font-size:9px;letter-spacing:1px}.whj-deskstats b,.whj-safe{color:#42e7aa!important}
+.whj-ticker{justify-content:flex-start;gap:clamp(10px,2vw,28px);background:#070b14;color:#8292ab;font-size:9px;letter-spacing:.5px}
+.whj-ticker span{display:flex;gap:7px;align-items:center}.whj-ticker b{color:#e4edff;font-size:10px}
+.whj-mainstage{display:grid;grid-template-columns:minmax(180px,1fr) minmax(380px,1.75fr) minmax(180px,1fr);gap:10px;padding:12px;align-items:stretch;min-height:440px}
+.whj-rail{display:grid;grid-template-rows:repeat(3,minmax(0,1fr));gap:10px;min-width:0}
+.whj-panel{border:1px solid #29334a;border-radius:10px;padding:12px;background:linear-gradient(145deg,#0d1422,#080c16);min-width:0;overflow:hidden;box-shadow:inset 0 0 18px #1a214018}
+.whj-panelhead{display:flex;align-items:center;justify-content:space-between;color:#dbe8ff;font-size:10px;font-weight:800;letter-spacing:.7px;margin-bottom:12px}.whj-panelhead b{font-size:9px;color:#a8b4ca}
+.whj-marketline{display:flex;justify-content:space-between;align-items:center;color:#91a0b7;font-size:10px}.whj-marketline strong{font-size:19px;color:#fff;font-variant-numeric:tabular-nums}
+.whj-spark{height:52px;margin-top:8px}.whj-spark svg{width:100%;height:100%;overflow:visible}.whj-panelnote{font-size:9px;color:#7f8ca3;line-height:1.6;margin-top:7px}
+.whj-signal-orbs{display:flex;justify-content:space-around;gap:5px;margin:15px 0}.whj-signal-orbs i{width:47px;height:47px;border-radius:50%;display:grid;place-items:center;font-style:normal;font-size:9px;font-weight:900;border:1px solid #9a59ff66;color:#d5b8ff;background:#32175a55;box-shadow:0 0 18px #8d43ff2b}.whj-signal-orbs i:nth-child(2){border-color:#36dce866;color:#7bf3e7;background:#0d424555}.whj-signal-orbs i:nth-child(3){border-color:#ff588766;color:#ff91b1;background:#4c173055}
+.whj-heat{display:grid;grid-template-columns:repeat(9,1fr);gap:4px;margin:9px 0}.whj-heat i{height:13px;border-radius:3px;background:hsl(calc(190 - var(--n)*14) 82% 48% / .8);box-shadow:0 0 8px hsl(calc(190 - var(--n)*14) 82% 48% / .25)}
+.whj-panelaction{width:100%;border:1px solid #3b4260;background:#15142b;color:#c7b7ff;border-radius:7px;padding:8px;font-size:9px;cursor:pointer;margin-top:8px}
+.whj-statusrow{display:flex;align-items:center;gap:8px;font-size:9px;color:#9eacc2;padding:7px 0;border-bottom:1px solid #1b2436}.whj-statusrow i,.whj-neural-foot i{width:6px;height:6px;border-radius:50%;background:#39e8a6;box-shadow:0 0 9px #39e8a6;flex:none}.whj-statusrow b{margin-left:auto;color:#48e4b0;font-size:8px}
+.whj-decision{padding:12px 8px;text-align:center;border:1px solid #6c4eb0;background:#21163b;border-radius:8px;color:#d6bdff;font-size:12px;box-shadow:0 0 20px #995cff1c}.whj-decision small{display:block;color:#9c91b5;font-size:9px;margin-top:7px}
+.whj-riskbar{display:grid;grid-template-columns:1fr 1.2fr;gap:8px;align-items:center;margin:13px 0;color:#9ba9c0;font-size:9px}.whj-riskbar i{height:5px;background:#202a3d;border-radius:9px;overflow:hidden}.whj-riskbar i b{display:block;width:72%;height:100%;background:linear-gradient(90deg,#36e6e1,#b25bff);border-radius:9px}
+.whj-neural{position:relative;min-height:440px;overflow:hidden;display:flex;align-items:center;justify-content:center;border:1px solid #343052;border-radius:12px;background:radial-gradient(ellipse at 50% 50%,#1a1b39 0,#10152a 31%,#090d1a 67%,#080b14 100%);isolation:isolate}
+.whj-neural:before,.whj-neural:after{content:"";position:absolute;inset:10%;border:1px solid #7a4ce744;border-radius:50%;transform:rotate(-22deg) scaleY(.48);animation:whjOrbit 16s linear infinite;pointer-events:none}
+.whj-neural:after{inset:17% 3%;border-color:#20dce855;transform:rotate(27deg) scaleY(.43);animation-direction:reverse;animation-duration:21s}
+@keyframes whjOrbit{to{transform:rotate(338deg) scaleY(.48)}}
+.whj-neural-title{position:absolute;top:12px;left:15px;right:15px;display:flex;justify-content:space-between;gap:10px;z-index:3;color:#d7c9ff;font-size:10px;font-weight:900;letter-spacing:1px}.whj-neural-title small{color:#7e8aa6;font-size:8px;font-weight:500}
+.whj-neural-lines{position:absolute;width:100%;height:100%;inset:0;z-index:0;opacity:.85}
+.whj-orbit{position:absolute;left:50%;top:51%;width:75%;height:48%;border:1px solid #a64cff55;border-radius:50%;transform:translate(-50%,-50%) rotate(-28deg);pointer-events:none;animation:whjPulse 4s ease-in-out infinite}
+.whj-orbit.orbit-b{width:88%;height:38%;border-color:#21d9e866;transform:translate(-50%,-50%) rotate(29deg);animation-delay:-1.3s}
+.whj-orbit.orbit-c{width:57%;height:75%;border-color:#ffb34c44;transform:translate(-50%,-50%) rotate(75deg);animation-delay:-2.4s}
+@keyframes whjPulse{50%{opacity:.35;filter:drop-shadow(0 0 8px currentColor)}}
+.whj-core{position:absolute;z-index:3;left:50%;top:50%;transform:translate(-50%,-50%);display:flex;align-items:center;flex-direction:column;gap:6px;text-align:center;color:#e6eaff;pointer-events:none}
+.whj-core-ring{width:102px;height:102px;border-radius:50%;display:grid;place-items:center;background:radial-gradient(circle at 35% 25%,#fff 0,#d5e7ff 18%,#8065d7 42%,#141a3d 70%,#080b18 100%);border:2px solid #c5a5ff;box-shadow:0 0 18px #9b67ff,0 0 55px #23c9ff88,inset 0 0 20px #fff8}
+.whj-core-ring span{width:52px;height:52px;border-radius:50%;display:grid;place-items:center;background:#090c1b;color:#f7e5ae;border:1px solid #ffd46d;font-size:18px;font-weight:900;box-shadow:0 0 20px #ffc75a88}
+.whj-core>b{font-size:10px;letter-spacing:2px}.whj-core>small{font-size:7px;color:#8e9bb6;letter-spacing:1px}
+.whj-agent-node{position:absolute;z-index:4;width:84px;height:84px;border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;background:radial-gradient(circle at 35% 20%,#242044,#0a1020 75%);border:1px solid var(--node);box-shadow:0 0 12px var(--node),inset 0 0 18px color-mix(in srgb,var(--node) 25%,transparent);color:#eef3ff;cursor:pointer;transition:transform .2s,box-shadow .2s}
+.whj-agent-node:hover{transform:scale(1.09);box-shadow:0 0 26px var(--node)}
+.whj-agent-node span{font-size:21px;color:var(--node);line-height:1.1}.whj-agent-node b{font-size:9px;letter-spacing:1px}.whj-agent-node small{font-size:7px;color:#a0abc1}
+.node-scan{--node:#a66aff;top:21%;left:13%}.node-map{--node:#ff5da8;top:21%;right:13%}.node-guard{--node:#37e5a8;top:45%;right:4%}.node-taker{--node:#27dfe8;bottom:14%;right:18%}.node-logger{--node:#ffb84d;bottom:14%;left:18%}.node-prior{--node:#438eff;top:45%;left:4%}
+.whj-neural-foot{position:absolute;z-index:3;bottom:9px;left:12px;right:12px;display:flex;justify-content:space-between;gap:10px;color:#7888a4;font-size:7px;letter-spacing:.7px}.whj-neural-foot span:first-child{display:flex;align-items:center;gap:6px}
+.whj-pipeline{justify-content:center;background:#080c16;color:#8d9bb2;font-size:8px;letter-spacing:.8px;border:0;border-top:1px solid #293149}.whj-pipeline b{color:#d9caff}.whj-pipeline i{color:#b25cff;font-style:normal}
+.whj-section-label{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:18px 2px 10px;color:#c6b5ff;font-size:10px;font-weight:900;letter-spacing:1px}.whj-section-label small{color:#71809b;font-size:8px;font-weight:500}
+@media(max-width:1050px){.whj-mainstage{grid-template-columns:minmax(150px,1fr) minmax(340px,1.7fr) minmax(150px,1fr);gap:7px;padding:8px}.whj-panel{padding:9px}.whj-agent-node{width:72px;height:72px}.whj-neural{min-height:410px}}
+@media(max-width:760px){.whj-mainstage{grid-template-columns:1fr;min-height:0}.whj-neural{grid-row:1;min-height:410px}.whj-rail{grid-template-columns:repeat(2,minmax(0,1fr));grid-template-rows:auto}.whj-left{grid-row:2}.whj-right{grid-row:3}.whj-panel{min-height:145px}.whj-deskstats{gap:8px}.whj-ticker{gap:10px}.whj-ticker span{font-size:8px}.whj-ticker span:nth-child(n+4){display:none}.whj-pipeline{justify-content:flex-start;overflow:auto;white-space:nowrap;flex-wrap:nowrap}.whj-agent-node{width:72px;height:72px}.node-scan{left:12%;top:22%}.node-map{right:12%;top:22%}.node-guard{right:3%;top:48%}.node-taker{right:14%;bottom:13%}.node-logger{left:14%;bottom:13%}.node-prior{left:3%;top:48%}}
+@media(max-width:430px){.whj-neural{min-height:370px}.whj-agent-node{width:63px;height:63px}.whj-agent-node span{font-size:17px}.whj-agent-node b{font-size:8px}.whj-agent-node small{font-size:6px}.whj-core-ring{width:82px;height:82px}.whj-core-ring span{width:43px;height:43px;font-size:15px}.whj-neural-title small{display:none}.whj-rail{grid-template-columns:1fr}.whj-panel{min-height:130px}.whj-deskbar{padding:9px}.whj-deskstats span:nth-child(2){display:none}}
+
 </style>
 
 
@@ -303,7 +354,48 @@ body[data-whj-theme="light"] .agent-nav button:hover,body[data-whj-theme="light"
  </div>
  <div class="agent-note">تنبيه: هذه وحدات وظيفية داخل النظام وليست ستة وكلاء ذكاء اصطناعي مستقلين يعملون في الخلفية. حالة كل منها تصف دورها البرمجي؛ أما النشاط الفعلي فيظهر فقط عند توفر تقرير حديث وبيانات موثقة.</div>
 </section>
-<section class="view active" id="overview"><div class="grid">
+<section class="view active" id="overview">
+<div class="whj-desk">
+ <div class="whj-deskbar"><div class="whj-live"><i></i> WHJ DESK <span>NEURAL COMMAND</span></div><div class="whj-deskstats"><span>6 MODULES</span><span>ONE DECISION PIPELINE</span><b>● PAPER MODE</b></div></div>
+ <div class="whj-ticker"><span>₿ BITCOIN <b id="whjTickerPrice">—</b></span><span>MARKET <b>BTC / USD</b></span><span>ENGINE <b>WHJ CORE</b></span><span>EXECUTION <b class="whj-safe">LIVE OFF</b></span><span>NETWORK <b class="whj-safe">READ ONLY / PAPER</b></span></div>
+ <div class="whj-mainstage">
+  <aside class="whj-rail whj-left">
+   <article class="whj-panel"><div class="whj-panelhead"><span>◈ MARKET INTELLIGENCE</span><b>01</b></div><div class="whj-marketline"><span>BTC / USD</span><strong id="whjHeroPrice">—</strong></div><div class="whj-spark"><svg viewBox="0 0 300 72" preserveAspectRatio="none"><path d="M0 58 C18 55 22 28 42 36 S70 52 91 32 S122 42 143 25 S174 42 194 21 S225 33 245 15 S275 29 300 8" fill="none" stroke="#36e4d0" stroke-width="2.5"/><path d="M0 58 C18 55 22 28 42 36 S70 52 91 32 S122 42 143 25 S174 42 194 21 S225 33 245 15 S275 29 300 8 V72 H0Z" fill="url(#whjGlow)" opacity=".22"/><defs><linearGradient id="whjGlow" x1="0" x2="0" y1="0" y2="1"><stop stop-color="#36e4d0"/><stop offset="1" stop-color="#36e4d0" stop-opacity="0"/></linearGradient></defs></svg></div><div class="whj-panelnote">منحنى زخرفي — السعر الفعلي يظهر من تقرير WHJ</div></article>
+   <article class="whj-panel"><div class="whj-panelhead"><span>◉ SIGNAL CENTER</span><b>02</b></div><div class="whj-signal-orbs"><i>BUY</i><i>WAIT</i><i>SELL</i></div><div class="whj-panelnote">تظهر نتيجة الإشارة من محرك التحليل بعد تحميل التقرير</div></article>
+   <article class="whj-panel"><div class="whj-panelhead"><span>▦ LIQUIDITY / WHALES</span><b>03</b></div><div class="whj-heat" aria-hidden="true"><i style="--n:0"></i><i style="--n:7"></i><i style="--n:3"></i><i style="--n:10"></i><i style="--n:6"></i><i style="--n:2"></i><i style="--n:9"></i><i style="--n:5"></i><i style="--n:1"></i><i style="--n:8"></i><i style="--n:4"></i><i style="--n:0"></i><i style="--n:7"></i><i style="--n:3"></i><i style="--n:10"></i><i style="--n:6"></i><i style="--n:2"></i><i style="--n:9"></i><i style="--n:5"></i><i style="--n:1"></i><i style="--n:8"></i><i style="--n:4"></i><i style="--n:0"></i><i style="--n:7"></i><i style="--n:3"></i><i style="--n:10"></i><i style="--n:6"></i><i style="--n:2"></i><i style="--n:9"></i><i style="--n:5"></i><i style="--n:1"></i><i style="--n:8"></i><i style="--n:4"></i><i style="--n:0"></i><i style="--n:7"></i><i style="--n:3"></i></div><button class="whj-panelaction" type="button" data-open-view="liquidations">فتح خريطة التصفية والحيتان ↗</button></article>
+  </aside>
+  <div class="whj-neural">
+   <div class="whj-neural-title"><span>THE SYNAPSE</span><small>WHJ MULTI-MODULE CORE · SIX SPECIALIZED FUNCTIONS</small></div>
+   <svg class="whj-neural-lines" viewBox="0 0 640 470" aria-hidden="true">
+    <defs><radialGradient id="whjCoreGlow"><stop stop-color="#fff" stop-opacity=".95"/><stop offset=".28" stop-color="#8b6dff" stop-opacity=".4"/><stop offset="1" stop-color="#00d9ff" stop-opacity="0"/></radialGradient><filter id="whjBlur"><feGaussianBlur stdDeviation="5"/></filter></defs>
+    <g fill="none" stroke-width="1.3" opacity=".7">
+     <path d="M320 235 Q150 60 105 115 T320 235 Q490 50 535 115 T320 235 Q150 390 105 345 T320 235 Q490 400 535 345 T320 235" stroke="#a76cff"/>
+     <path d="M320 235 Q180 160 105 115 M320 235 Q460 160 535 115 M320 235 Q180 300 105 345 M320 235 Q460 300 535 345 M320 235 L320 42 M320 235 L320 428" stroke="#23e4e0"/>
+     <path d="M105 115 Q320 5 535 115 Q630 235 535 345 Q320 460 105 345 Q10 235 105 115" stroke="#ff4ca8" stroke-dasharray="5 8"/>
+    </g>
+    <g fill="#69f8ef"><circle cx="105" cy="115" r="4"/><circle cx="535" cy="115" r="4"/><circle cx="105" cy="345" r="4"/><circle cx="535" cy="345" r="4"/><circle cx="320" cy="42" r="4"/><circle cx="320" cy="428" r="4"/></g>
+    <circle cx="320" cy="235" r="125" fill="url(#whjCoreGlow)" filter="url(#whjBlur)"/>
+   </svg>
+   <div class="whj-orbit orbit-a"></div><div class="whj-orbit orbit-b"></div><div class="whj-orbit orbit-c"></div>
+   <button class="whj-agent-node node-scan" type="button" data-open-view="scanner"><span>⌕</span><b>SPOTTER</b><small>Market Scanner</small></button>
+   <button class="whj-agent-node node-map" type="button" data-open-view="liquidations"><span>◉</span><b>MAPPER</b><small>Whales & Liquidity</small></button>
+   <button class="whj-agent-node node-guard" type="button" data-open-view="risk"><span>⬡</span><b>GUARD</b><small>Risk Control</small></button>
+   <button class="whj-agent-node node-taker" type="button" data-open-view="trades"><span>↗</span><b>TAKER</b><small>Paper Execution</small></button>
+   <button class="whj-agent-node node-logger" type="button" data-open-view="forward"><span>≋</span><b>CLOSER</b><small>Review & Logs</small></button>
+   <button class="whj-agent-node node-prior" type="button" data-open-view="strategies"><span>◈</span><b>PRIOR</b><small>Strategy Engine</small></button>
+   <div class="whj-core"><div class="whj-core-ring"><span>WHJ</span></div><b>NEURAL CORE</b><small>COORDINATED DECISION HUB</small></div>
+   <div class="whj-neural-foot"><span><i></i> CORE READY WHEN DATA IS FRESH</span><span>NO SIGNAL WITHOUT EVIDENCE</span></div>
+  </div>
+  <aside class="whj-rail whj-right">
+   <article class="whj-panel"><div class="whj-panelhead"><span>◈ SYSTEM STATUS</span><b class="whj-safe">PAPER</b></div><div class="whj-statusrow"><i></i><span>Live trading</span><b>DISABLED</b></div><div class="whj-statusrow"><i></i><span>Data validation</span><b>REQUIRED</b></div><div class="whj-statusrow"><i></i><span>Decision flow</span><b>GUARDED</b></div></article>
+   <article class="whj-panel"><div class="whj-panelhead"><span>✣ AGENT DECISIONS</span><b>6 MODULES</b></div><div class="whj-decision"><strong>WAITING FOR REPORT</strong><small>لا يتم اختراع توصية أو نسبة ثقة</small></div><div class="whj-panelnote">تظهر نتيجة القرار الفعلية بعد اكتمال التحقق من بيانات السوق والمخاطر.</div></article>
+   <article class="whj-panel"><div class="whj-panelhead"><span>⬡ RISK GUARD</span><b>ACTIVE RULES</b></div><div class="whj-riskbar"><span>STOP / LOSS</span><i><b></b></i></div><div class="whj-riskbar"><span>POSITION LIMIT</span><i><b></b></i></div><div class="whj-riskbar"><span>DRAWDOWN WATCH</span><i><b></b></i></div><button class="whj-panelaction" type="button" data-open-view="risk">فتح مركز إدارة المخاطر ↗</button></article>
+  </aside>
+ </div>
+ <div class="whj-pipeline"><span>EXECUTION PIPELINE</span><b>01 SPOTTER</b><i>→</i><b>02 PRIOR</b><i>→</i><b>03 GUARD</b><i>→</i><b>04 TAKER</b><i>→</i><b>05 CLOSER</b><i>→</i><b>06 REVIEW</b></div>
+</div>
+<div class="whj-section-label"><span>WHJ PERFORMANCE TELEMETRY</span><small>VALUES FROM THE LATEST VERIFIED REPORT</small></div>
+<div class="grid">
 <article class="card metric"><div class="label">سعر Bitcoin <span>BTC / USD</span></div><div class="value neutral" id="price">—</div><div class="hint" id="updated">بانتظار آخر تقرير</div></article>
 <article class="card metric"><div class="label">قيمة المحفظة الافتراضية <span>USD</span></div><div class="value" id="equity">—</div><div class="hint">القيمة المقدّرة للحساب</div></article>
 <article class="card metric"><div class="label">العائد الافتراضي <span>ROI</span></div><div class="value" id="return">—</div><div class="hint">منذ بداية المحاكاة</div></article>
@@ -312,7 +404,7 @@ body[data-whj-theme="light"] .agent-nav button:hover,body[data-whj-theme="light"
 <article class="card metric"><div class="label">نسبة الصفقات الرابحة</div><div class="value" id="winrate">—</div><div class="hint">من الصفقات المغلقة</div></article>
 <article class="card metric"><div class="label">معامل الربحية</div><div class="value" id="pf">—</div><div class="hint">إجمالي الربح إلى الخسارة</div></article>
 <article class="card metric"><div class="label">الرسوم المدفوعة</div><div class="value" id="fees">—</div><div class="hint">رسوم المحاكاة المسجلة</div></article></div>
-<div class="content"><article class="card"><div class="head"><h2>منحنى رأس المال</h2><span>آخر تقرير متاح</span></div><canvas id="equityChart"></canvas></article><article class="card"><div class="head"><h2>إشارة السوق الحالية</h2><span>تحليل فني</span></div><div class="signalbox"><div><b id="signal">—</b><small id="signalText">إشارة النموذج</small></div><span class="sigbadge" id="signalBadge">—</span></div><div class="mini"><span>المتوسط SMA 20</span><b id="sma20">—</b></div><div class="mini"><span>المتوسط SMA 50</span><b id="sma50">—</b></div><div class="mini"><span>الشموع المغلقة</span><b id="candles">—</b></div></article></div>
+<div class="whj-section-label"><span>THE TAPE · PERFORMANCE & SIGNALS</span><small>CHARTS / DECISION TRACE</small></div><div class="content"><article class="card"><div class="head"><h2>منحنى رأس المال</h2><span>آخر تقرير متاح</span></div><canvas id="equityChart"></canvas></article><article class="card"><div class="head"><h2>إشارة السوق الحالية</h2><span>تحليل فني</span></div><div class="signalbox"><div><b id="signal">—</b><small id="signalText">إشارة النموذج</small></div><span class="sigbadge" id="signalBadge">—</span></div><div class="mini"><span>المتوسط SMA 20</span><b id="sma20">—</b></div><div class="mini"><span>المتوسط SMA 50</span><b id="sma50">—</b></div><div class="mini"><span>الشموع المغلقة</span><b id="candles">—</b></div></article></div>
 <div class="card tablecard"><div class="head"><h2>أداء الحسابات الافتراضية</h2><span>مقارنة الاستراتيجيات</span></div><div class="tablewrap"><table><thead><tr><th>الاستراتيجية</th><th>قيمة الحساب</th><th>العائد</th><th>التراجع</th><th>الصفقات</th><th>الحالة</th></tr></thead><tbody id="portfolioRows"><tr><td colspan="6" class="empty">لا توجد بيانات بعد</td></tr></tbody></table></div></div></section>
 <section class="view" id="scanner">
 <div class="scanner-head">
@@ -880,6 +972,14 @@ document.querySelectorAll(".agent-nav button").forEach(b=>b.addEventListener("cl
  }
  document.querySelector('.nav button[data-view="liquidations"]')?.addEventListener("click",loadHyperliquid);
  loadHyperliquid();window.setInterval(loadHyperliquid,60000);
+})();
+</script>
+<script>
+(function(){
+ const price=document.getElementById("price");
+ const mirror=()=>{const v=price?.textContent?.trim()||"—";const a=document.getElementById("whjTickerPrice"),b=document.getElementById("whjHeroPrice");if(a)a.textContent=v;if(b)b.textContent=v};
+ mirror();const target=price;if(target&&typeof MutationObserver!=="undefined")new MutationObserver(mirror).observe(target,{childList:true,subtree:true,characterData:true});
+ document.querySelectorAll("[data-open-view]").forEach(btn=>btn.addEventListener("click",()=>{const target=btn.getAttribute("data-open-view");document.querySelector('.nav button[data-view="'+target+'"]')?.click()}));
 })();
 </script>
 </body></html>
