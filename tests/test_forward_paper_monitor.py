@@ -329,7 +329,7 @@ class ForwardPaperMonitorTests(unittest.TestCase):
         now = candles[-1]["timestamp"] / 1000 + 3600 + 60
         with tempfile.TemporaryDirectory() as folder:
             first = process_forward_accounts(candles, folder, now)
-            self.assertEqual(first["initial_cash_usd"], 10.0)
+            self.assertEqual(first["initial_cash_usd"], 14.0)
             self.assertEqual(first["completed_trades"], 0)
             self.assertEqual(first["schema_version"], 1)
             self.assertEqual(first["qualified_ensemble"]["initial_cash_usd"], 4.0)
@@ -340,7 +340,7 @@ class ForwardPaperMonitorTests(unittest.TestCase):
             self.assertEqual(first["status"], "PAPER_MONITORING")
             self.assertEqual(first["cycle_status"], "WAITING_FOR_NEW_CLOSED_CANDLES")
             self.assertEqual(first["total_processed_new_candles"], 0)
-            self.assertEqual(first["cash_usd"], 10.0)
+            self.assertEqual(first["cash_usd"], 14.0)
             self.assertEqual(first["btc_units"], 0.0)
             self.assertEqual(first["gross_exposure_usd"], 0.0)
             self.assertEqual(first["gross_exposure_pct_of_equity"], 0.0)
@@ -348,19 +348,20 @@ class ForwardPaperMonitorTests(unittest.TestCase):
             self.assertEqual(first["open_positions"], 0)
             self.assertEqual(
                 set(first["sleeves_summary"]),
-                {"1h_sma_trend", "1h_ema_trend", "1h_rsi14_mean_reversion", "4h", "6h"},
+                {"1h_sma_trend", "1h_ema_trend", "1h_rsi14_mean_reversion", "1h_rsi_momentum", "1h_sma200_regime", "1h_ema50_200_regime", "1h_bollinger_mean_reversion", "4h", "6h"},
             )
-            for timeframe in ("1h_sma_trend", "1h_ema_trend", "1h_rsi14_mean_reversion", "4h", "6h"):
+            for timeframe in ("1h_sma_trend", "1h_ema_trend", "1h_rsi14_mean_reversion", "1h_rsi_momentum", "1h_sma200_regime", "1h_ema50_200_regime", "1h_bollinger_mean_reversion", "4h", "6h"):
                 health = first["sleeves_summary"][timeframe]["health_assessment"]
                 self.assertEqual(health["status"], "INSUFFICIENT_FORWARD_SAMPLE")
                 self.assertFalse(health["live_trading_eligible"])
-            for timeframe in ("1h_sma_trend", "1h_ema_trend", "1h_rsi14_mean_reversion", "4h", "6h"):
+            for timeframe in ("1h_sma_trend", "1h_ema_trend", "1h_rsi14_mean_reversion", "1h_rsi_momentum", "1h_sma200_regime", "1h_ema50_200_regime", "1h_bollinger_mean_reversion", "4h", "6h"):
                 account = first["sleeves"][timeframe]["account"]
                 self.assertEqual(account["processed_new_candles"], 0)
                 self.assertEqual(account["return_pct"], 0.0)
                 self.assertEqual(account["completed_trades"], 0)
                 sleeve = first["sleeves_summary"][timeframe]
-                self.assertEqual(sleeve["cash_usd"], 2.0)
+                expected_cash = 2.0 if timeframe in ("1h_sma_trend", "1h_ema_trend", "1h_rsi14_mean_reversion", "4h", "6h") else 1.0
+                self.assertEqual(sleeve["cash_usd"], expected_cash)
                 self.assertEqual(sleeve["btc_units"], 0.0)
                 self.assertEqual(sleeve["exposure_usd"], 0.0)
                 self.assertEqual(sleeve["exposure_pct_of_equity"], 0.0)
@@ -388,6 +389,8 @@ class ForwardPaperMonitorTests(unittest.TestCase):
             self.assertGreater(result["sleeves"]["1h_sma_trend"]["account"]["processed_new_candles"], 0)
             self.assertGreater(result["sleeves"]["1h_ema_trend"]["account"]["processed_new_candles"], 0)
             self.assertGreater(result["sleeves"]["1h_rsi14_mean_reversion"]["account"]["processed_new_candles"], 0)
+            for strategy in ("1h_rsi_momentum", "1h_sma200_regime", "1h_ema50_200_regime", "1h_bollinger_mean_reversion"):
+                self.assertGreater(result["sleeves"][strategy]["account"]["processed_new_candles"], 0)
             self.assertEqual(result["cycle_status"], "PROCESSED_NEW_CANDLES")
             self.assertGreater(result["total_processed_new_candles"], 0)
             self.assertAlmostEqual(result["gross_exposure_usd"], sum(x["exposure_usd"] for x in result["sleeves_summary"].values()), places=2)
