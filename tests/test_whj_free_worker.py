@@ -59,6 +59,26 @@ class WHJFreeWorkerTests(unittest.TestCase):
             self.assertIn("Python AST valid: True", markdown)
             self.assertTrue((output / "latest_free_worker_results.json").is_file())
 
+
+    def test_findings_include_verbatim_quotes_from_inspected_sources(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            source_text = "def signal():\\n    return 'HOLD'\\n"
+            (root / "strategy_family_lab.py").write_text(source_text, encoding="utf-8")
+            result = build_free_report(root)
+        for row in result["reports"]:
+            inspected = {item["path"]: item for item in row["files_inspected"]}
+            for finding in row["findings"]:
+                self.assertIn(finding["source_path"], inspected)
+                source_path = Path(directory) / finding["source_path"]
+                # The fixture source is checked directly; findings must carry an actual line.
+                self.assertTrue(finding["evidence_quote"])
+        self.assertTrue(any(
+            finding["evidence_quote"] in source_text
+            for row in result["reports"] for finding in row["findings"]
+            if finding["source_path"] == "strategy_family_lab.py"
+        ))
+
     def test_path_traversal_is_rejected(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
