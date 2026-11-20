@@ -21,8 +21,9 @@ class SixAgentSignalTests(unittest.TestCase):
 
     def test_risk_agent_vetoes_extreme_range(self):
         bars = bars_from_closes([100 + i * 0.5 for i in range(30)])
-        bars[-1]["high"] = bars[-1]["close"] * 1.2
-        bars[-1]["low"] = bars[-1]["close"] * 0.8
+        for bar in bars[-20:]:
+            bar["high"] = bar["close"] * 1.1
+            bar["low"] = bar["close"] * 0.9
         report = analyze_market(bars)
         self.assertEqual(report["signal"], "HOLD")
         self.assertTrue(report["risk_veto"])
