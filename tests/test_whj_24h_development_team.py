@@ -3,10 +3,22 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from whj_24h_development_team import audit_hourly_schedule, audit_portfolio, file_fingerprint
+from whj_24h_development_team import audit_hourly_schedule, audit_portfolio, file_fingerprint, find_backlog_markers
 
 
 class WHJDevelopmentCouncilTests(unittest.TestCase):
+    def test_backlog_scanner_ignores_marker_strings_but_finds_real_items(self):
+        source = '''
+MESSAGE = "TODO: this is documentation, not a task"
+# TODO: add a regression test
+def pending():
+    raise NotImplementedError
+'''
+        findings = find_backlog_markers(source, "sample.py")
+        self.assertEqual([item["line"] for item in findings], [3, 5])
+        self.assertIn("TODO", findings[0]["item"])
+        self.assertEqual(find_backlog_markers('TEXT = "FIXME"', "clean.py"), [])
+
     def test_portfolio_requires_paper_only_and_live_disabled(self):
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory) / "dual_portfolio.json"
