@@ -14,7 +14,7 @@ def snap(t, signals, healthy=None, quotes=None):
                        "contract_size": 1, "quote_to_usd": 1},
         },
         "signals": signals,
-        "healthy_symbols": healthy or ["BTCUSD", "XAUUSD"],
+        "healthy_symbols": ["BTCUSD", "XAUUSD"] if healthy is None else healthy,
     }
 
 
@@ -37,7 +37,7 @@ class MultiAssetPaperTests(unittest.TestCase):
 
     def test_sell_closes_position_and_books_costs(self):
         state = process_snapshot(snap(100, {"BTCUSD": "BUY"}), now=1000)
-        state = process_snapshot(snap(200, {"BTCUSD": "SELL"}), state, now=1000)
+        profitable = snap(200, {"BTCUSD": "SELL"}, quotes={\n            "BTCUSD": {"bid": 102.0, "ask": 103.0, "timestamp": 200,\n                      "contract_size": 1, "quote_to_usd": 1}\n        })\n        state = process_snapshot(profitable, state, now=1000)
         btc = state["summary"]["markets"]["BTCUSD"]
         self.assertFalse(btc["position_open"])
         self.assertEqual(btc["closed_trades"], 1)
