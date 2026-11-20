@@ -187,3 +187,32 @@ The earlier review note in this file recorded run #22 as the newest retrievable 
 - CSCV/PBO was 0.50 across three declared variants, six partitions, ten splits, and 75 observations per partition. This is a selection-bias diagnostic only, not a probability of future profit.
 - These are historical OOS and fixed subperiod results, not rolling walk-forward or forward paper-trading evidence. All three variants remain research-only and unqualified.
 
+
+
+## Latest verified refresh — 2026-11-20, isolated run #26 (post-F34)
+
+This supersedes the earlier notes that listed run #22 or #24 as the newest verified artifact. The successful push-triggered workflow on code commit `d17474580190ab587ae5f675940a8eaeac625b9d` includes the F34 positive-price input guard in `momentum_signals()`.
+
+- Workflow: [WHJ Isolated Slow Momentum Historical Research #26](https://github.com/sdndj98-art/WHJ-Bitcoin-Bot-2026/actions/runs/44792072224)
+- Artifact: [whj-isolated-slow-momentum-26](https://github.com/sdndj98-art/WHJ-Bitcoin-Bot-2026/actions/runs/44792072224/artifacts/14657465785)
+- Artifact ZIP SHA-256: `5d9fac2ddcfb0f833a22bfb8560e4c9e3270787715c159264aa8ce3a536b0a63`; independently recomputed from the downloaded ZIP and matched the GitHub artifact digest.
+- Canonical daily dataset SHA-256: `d078cc223c281d1bb91a8a9f6139f46a33271ac835864e3b07605ae3bda600ee`; independently recomputed from the decompressed `btc_daily_dataset.json.gz` and matched the JSON report and all three trial manifests.
+- Generated UTC: 2026-11-20T18:23:39.568658Z.
+- Source: public Coinbase BTC-USD hourly spot aggregated into complete UTC daily bars; 36,000 hourly source bars, 1,499 daily bars, 13 hourly observations explicitly imputed and disclosed.
+- Daily interval: 2022-10-13T00:00:00Z through 2026-11-19T00:00:00Z; chronological 70/30 split at daily index 1,049; 450 daily OOS bars.
+- The manifest records exactly three declared lookbacks (56/84/112 days), not a global experiment census. Protocol: three fixed chronological OOS subperiods; not rolling walk-forward.
+- Execution remains completed daily-close signal, next daily-close fill; 25% maximum allocation; 0.10% fee and 0.05% slippage per side. Costs are fixed proxies, not venue-specific spread/depth/impact.
+
+| Lookback | OOS 1x | OOS 2x | OOS 3x | Max close-to-close DD | Closed-trade PF | Closed trades | 95% block-bootstrap CI | Top-1 winner share |
+|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| 56 days | -2.6896% | -3.7718% | -4.8403% | 7.5257% | 0.6474 | 15 | [-15.5019%, +13.7127%] | 89.3424% |
+| 84 days | -7.8404% | -8.3058% | -8.7681% | 10.2742% | 0.0214 | 7 | [-19.4569%, +4.4709%] | 100.0000% |
+| 112 days | -11.6508% | -12.4832% | -13.3064% | 14.1759% | 0.0401 | 13 | [-23.1984%, +1.4525%] | 41.7121% |
+
+- Matched 25%-allocation buy-and-hold OOS return: -11.1290% at 1x, -11.17% at 2x, and -11.21% at 3x (rounded stress values from the report).
+- The 56-day candidate's three OOS subperiods were -4.7928%, -2.5588%, and +4.8931%; only the final slice was positive. The 84-day slices were -0.7699%, -4.3247%, and -2.9273%; the 112-day slices were -1.8367%, -5.1065%, and -5.1545%.
+- The 56-day candidate had four winning trades; its top winner contributed 89.3424% of gross winning P&L and its top five contributed 100%. Net P&L excluding the top five winners was -$76.2787. The 84-day candidate had one winning trade, which contributed 100% of gross winning P&L. These are fragility diagnostics, not alternate performance estimates.
+- CSCV/PBO was 0.50 across only the three declared variants, six partitions, ten splits, and 75 observations per partition. It is not a future-profit probability and does not restore an untouched holdout.
+- All three lookbacks remain negative at 1x/2x/3x. The 56-day candidate is less negative than the matched benchmark in this sample but still loses absolutely, has only 15 closed trades, PF below 1, concentrated winners, and a bootstrap interval spanning material losses and gains.
+
+**Decision: NO CANDIDATE PROMOTED.** This is historical OOS evidence only, not rolling walk-forward and not forward paper-trading evidence. The artifact explicitly reports `live_orders=false` and `paper_ledgers_read_or_written=false`; no paper or live execution was invoked.
