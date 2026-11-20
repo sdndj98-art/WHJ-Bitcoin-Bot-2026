@@ -1018,7 +1018,7 @@ document.querySelectorAll(".agent-nav button").forEach(b=>b.addEventListener("cl
   ];
   const shortState=(el,kind)=>{
    if(!el)return "unknown";
-   if(kind==="strategyRows"){const rows=el.querySelectorAll("tr");return rows.length&&!el.textContent.includes("لا توجد نتائج")?"pass":"unknown";}
+   if(kind==="strategyRows"){const rows=el.querySelectorAll("tr");return rows.length&&!el.querySelector(".empty")?"pass":"unknown";}
    const text=(el.textContent||"").trim().toLowerCase();
    if(!text||/بانتظار|غير معروف|غير متاح|لا توجد بيانات|no report|unavailable|unknown/.test(text))return "unknown";
    if(/blocked|محجوب|موقوف|لم يجتز|قديم|تعذر|error|failed|no report/.test(text))return "blocked";
@@ -1028,7 +1028,7 @@ document.querySelectorAll(".agent-nav button").forEach(b=>b.addEventListener("cl
   const syncModuleStates=()=>{
    statusMap.forEach((item,i)=>{const node=nodes.find(n=>n.classList.contains(item.node)),source=document.getElementById(item.id);if(!node||!source)return;
     const state=shortState(source,item.id==="strategyRows"?"strategyRows":"text");node.dataset.liveState=state;
-    const small=node.querySelector("small");if(small){small.classList.add("whj-node-state");small.textContent=state==="pass"?"DATA READY":state==="blocked"?"GUARDED":"AWAITING DATA";}
+    const small=node.querySelector("small");if(small){small.classList.add("whj-node-state");small.textContent=state==="pass"?"DATA READY":state==="blocked"?"GUARDED":"AWAITING DATA";}node.setAttribute("aria-label",item.node.replace("node-","")+" · "+state.toUpperCase());
     paths[i].dataset.liveState=state;
    });
   };
