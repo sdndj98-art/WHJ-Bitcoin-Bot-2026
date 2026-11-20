@@ -54,12 +54,13 @@ def pulse(book: dict, depth_levels: int = 3) -> dict:
         if not isinstance(side, dict):
             skipped.append(outcome)
             continue
-        try:
-            bids = _levels(side.get("bids"), f"{outcome} bids")
-            asks = _levels(side.get("asks"), f"{outcome} asks")
-        except ValueError:
+        raw_bids = side.get("bids")
+        raw_asks = side.get("asks")
+        if not isinstance(raw_bids, list) or not raw_bids or not isinstance(raw_asks, list) or not raw_asks:
             skipped.append(outcome)
             continue
+        bids = _levels(raw_bids, f"{outcome} bids")
+        asks = _levels(raw_asks, f"{outcome} asks")
         d_in = sum(level["size"] for level in bids[:depth_levels])
         d_out = sum(level["size"] for level in asks[:depth_levels])
         denominator = d_in + d_out
