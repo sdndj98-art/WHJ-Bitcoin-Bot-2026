@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "generated_at_utc": "2026-11-20T23:37:47.767483+00:00",
+  "generated_at_utc": "2026-11-20T23:53:26.129924+00:00",
   "mode": "READ_ONLY_PAPER_RESEARCH",
   "paper_only": true,
   "live_trading_enabled": false,
@@ -9,7 +9,7 @@
     "BTC": {
       "market": "BTC",
       "strategy": "rsi14_mean_reversion",
-      "status": "PAPER_RUNNING",
+      "status": "PAPER_ACTIVE_WAITING_NEXT_CLOSED_CANDLE",
       "closed_trades": 0,
       "wins": 0,
       "losses": 0,
