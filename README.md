@@ -134,3 +134,18 @@ python cvd_timeframes.py --trade-log state/kraken_btc_usd_trades.jsonl --output 
 ```
 
 The replay produces 1s, 5s, 15s, 30s, 1m, 3m, 5m, 15m, 30m, 1h, 4h, 6h, 12h and 1d bars with OHLC, buy/sell volume, delta, cumulative CVD, closed-bar status and missing-interval flags. Empty intervals are not fabricated. The CVD history begins at the first event retained in the journal; it is venue-specific and is not a consolidated-market signal or a trading instruction.
+
+## Independent zero-token evidence verifier
+
+WHJ's deterministic research office now includes a separate verifier for worker evidence. The free worker records each inspected file's SHA-256 fingerprint and attaches a verbatim, non-empty source excerpt to every finding. The verifier independently checks that each finding's source is part of that fingerprinted inventory, that the quote exists exactly in the current source, and that the source fingerprint has not changed between inventory and verification.
+
+Run locally:
+
+```bash
+python whj_free_worker.py run --output-dir research/agent_office
+python whj_evidence_verifier.py --root . --output-dir research/agent_office/evidence_verifier
+```
+
+The JSON and Markdown results are written to `research/agent_office/evidence_verifier/`. A failed check returns a non-zero exit code. GitHub Actions CI compiles the worker and verifier, runs their unit tests, creates a fresh evidence inventory, and verifies the resulting report. The nightly office workflow also runs the verifier after the free worker.
+
+**Important limitation:** exact quote matching proves only that the cited text exists in the source. It does not prove that the claim logically follows from the quote, that the source itself is correct, or that a trading recommendation is profitable. Semantic review remains required. The verifier makes no network calls and uses no model/API tokens. It does not change trading settings, paper ledgers, or live execution permissions; live trading remains disabled by the research office.
