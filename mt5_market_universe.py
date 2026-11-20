@@ -28,7 +28,7 @@ def main():
         universe["broker_symbols"] = names
         target = Path(args.output)
         target.parent.mkdir(parents=True, exist_ok=True)
-        target.write_text(json.dumps(universe, indent=2, ensure_ascii=False) + "\\n", encoding="utf-8")
+        target.write_text(json.dumps(universe, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
         print(json.dumps({
             "output": str(target.resolve()),
             "symbol_count": len(names),
