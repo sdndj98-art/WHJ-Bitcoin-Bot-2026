@@ -149,3 +149,36 @@ python whj_evidence_verifier.py --root . --output-dir research/agent_office/evid
 The JSON and Markdown results are written to `research/agent_office/evidence_verifier/`. A failed check returns a non-zero exit code. GitHub Actions CI compiles the worker and verifier, runs their unit tests, creates a fresh evidence inventory, and verifies the resulting report. The nightly office workflow also runs the verifier after the free worker.
 
 **Important limitation:** exact quote matching proves only that the cited text exists in the source. It does not prove that the claim logically follows from the quote, that the source itself is correct, or that a trading recommendation is profitable. Semantic review remains required. The verifier makes no network calls and uses no model/API tokens. It does not change trading settings, paper ledgers, or live execution permissions; live trading remains disabled by the research office.
+
+## Hyperliquid Liquidation Intelligence Desk (read-only)
+
+WHJ includes an optional read-only monitor that retrieves perpetual-market context and configured wallet positions from Hyperliquid's public Info API. It aggregates the reported liquidation prices from those tracked positions into 0.5% distance bands, split by coin and LONG/SHORT side.
+
+Configure up to 200 wallet addresses in `config/hyperliquid_wallets.json`:
+
+```json
+{
+  "wallets": [
+    { "address": "0xYOUR_VERIFIED_ADDRESS", "label": "Wallet A" }
+  ]
+}
+```
+
+Run once:
+
+```bash
+python whj_hyperliquid_monitor.py --wallet-limit 200 --output web/data/hyperliquid_monitor.json
+```
+
+Run continuously on a server (minimum interval 60 seconds):
+
+```bash
+python whj_hyperliquid_monitor.py --interval 300
+```
+
+GitHub Actions is configured to refresh the report every 15 minutes and publish the JSON to the dashboard branch. The dashboard's **مراقبة الحيتان** section reads this report.
+
+Important limitations:
+- The public Info API calls used by this monitor do not provide a global top-200 wallet leaderboard or a 30-day PnL ranking. Only addresses explicitly entered in the config are scanned.
+- The liquidation map is an estimate based on liquidation prices reported for the configured wallets; it is not a complete exchange-wide liquidation heatmap and does not predict forced liquidations.
+- No signing, exchange action endpoint, order placement, modification, or cancellation is implemented. This module is read-only and does not enable live trading.
