@@ -59,7 +59,7 @@ class WHJEvidenceVerifierTests(unittest.TestCase):
             data["reports"][0]["findings"][0]["source_path"] = "../outside.py"
             report.write_text(json.dumps(data), encoding="utf-8")
             result = verify_report(root, report)
-            self.assertEqual(result["issues"][0]["type"], "source_missing_or_unsafe")
+            self.assertEqual(result["issues"][0]["type"], "source_not_in_inventory")
 
     def test_detects_source_changed_after_inventory(self):
         with tempfile.TemporaryDirectory() as temp:
