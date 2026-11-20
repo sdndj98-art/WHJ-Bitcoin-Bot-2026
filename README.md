@@ -207,3 +207,16 @@ python multi_asset_paper.py --input multi_asset_snapshot.json --state state/mult
 ```
 
 The ledger persists independent cash, position, fees, realized/unrealized PnL, quote de-duplication, daily-loss pause, and peak-drawdown pause per symbol. Entries are long-only, use ask prices; exits use bid prices; fees are modeled on both sides. Invalid/missing contract metadata blocks the snapshot rather than guessing broker lot sizes. The module does not fetch quotes, generate strategy signals, send orders, or modify the existing dashboard. A valid feed adapter and signal producer must be connected before it can run continuously. This is experimental paper simulation, not validated profitability or a live-trading system.
+
+### MT5 quote snapshot for multi-asset paper testing
+
+On a Windows machine with the configured MT5 terminal, create a signals file such as `whj_market_signals.json`:
+
+```json
+{
+  "signals": {"BTCUSD": "BUY", "XAUUSD": "HOLD"},
+  "quote_to_usd": {"EURUSD": 1.08}
+}
+```
+
+Then run `python mt5_multi_asset_snapshot.py --signals whj_market_signals.json --output multi_asset_snapshot.json`. The script enumerates broker-listed symbols, reads current quotes and contract size, blocks stale quotes, and requires explicit conversion rates for non-USD profit currencies. It defaults missing signals to HOLD. Review the generated snapshot before running the paper ledger. This is a data adapter only; it does not automatically generate the six agents' strategy signals or place orders.
