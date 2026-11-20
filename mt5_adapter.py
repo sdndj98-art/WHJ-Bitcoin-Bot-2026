@@ -162,6 +162,31 @@ class MetaTrader5ReadOnly:
             "mode": "READ_ONLY",
         }
 
+    def get_instrument_spec(self, symbol):
+        """Return public instrument contract metadata needed for paper sizing."""
+        self._require_connection()
+        if not isinstance(symbol, str) or not symbol.strip():
+            raise ValueError("A non-empty MT5 symbol is required")
+        name = symbol.strip()
+        info = self._module().symbol_info(name)
+        if info is None:
+            raise RuntimeError(f"MT5 instrument metadata unavailable for {name}")
+        contract_size = self._finite(getattr(info, "trade_contract_size", 0), "contract size")
+        if contract_size <= 0:
+            raise ValueError(f"MT5 contract size must be positive for {name}")
+        profit_currency = str(getattr(info, "currency_profit", "") or "").upper()
+        return {
+            "symbol": name,
+            "contract_size": contract_size,
+            "profit_currency": profit_currency,
+            "digits": int(getattr(info, "digits", 0) or 0),
+            "tick_size": self._finite(getattr(info, "trade_tick_size", 0) or 0, "tick size"),
+            "volume_min": self._finite(getattr(info, "volume_min", 0) or 0, "minimum volume"),
+            "volume_max": self._finite(getattr(info, "volume_max", 0) or 0, "maximum volume"),
+            "volume_step": self._finite(getattr(info, "volume_step", 0) or 0, "volume step"),
+            "mode": "READ_ONLY_INSTRUMENT_METADATA",
+        }
+
     def list_symbols(self):
         """Return broker-listed symbol names only; no account/private fields."""
         self._require_connection()
