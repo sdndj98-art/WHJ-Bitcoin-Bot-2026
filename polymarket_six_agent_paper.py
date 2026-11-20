@@ -44,16 +44,22 @@ def _levels(levels, label):
 
 
 def pulse(book: dict, depth_levels: int = 3) -> dict:
-    """Compare top-level entry demand with exit-side depth for UP and DOWN."""
+    """Compare top-level depth; skip outcomes whose books are empty."""
     if not isinstance(book, dict) or depth_levels < 1:
         raise ValueError("A book object and positive depth_levels are required")
     result = {}
+    skipped = []
     for outcome in ("UP", "DOWN"):
         side = book.get(outcome)
         if not isinstance(side, dict):
-            raise ValueError(f"Missing {outcome} book")
-        bids = _levels(side.get("bids"), f"{outcome} bids")
-        asks = _levels(side.get("asks"), f"{outcome} asks")
+            skipped.append(outcome)
+            continue
+        try:
+            bids = _levels(side.get("bids"), f"{outcome} bids")
+            asks = _levels(side.get("asks"), f"{outcome} asks")
+        except ValueError:
+            skipped.append(outcome)
+            continue
         d_in = sum(level["size"] for level in bids[:depth_levels])
         d_out = sum(level["size"] for level in asks[:depth_levels])
         denominator = d_in + d_out
@@ -65,15 +71,21 @@ def pulse(book: dict, depth_levels: int = 3) -> dict:
             "bid_depth": sum(level["size"] for level in bids[:depth_levels]),
             "ask_depth": sum(level["size"] for level in asks[:depth_levels]),
         }
+    if not result:
+        return {
+            "agent": "PULSE", "outcomes": {},
+            "stronger_demand_side": None, "imbalance": None,
+            "skipped_empty_books": skipped, "status": "SKIP_EMPTY_BOOKS",
+        }
     chosen = max(result, key=lambda key: result[key]["imbalance"])
     return {
         "agent": "PULSE",
         "outcomes": result,
         "stronger_demand_side": chosen,
         "imbalance": result[chosen]["imbalance"],
+        "skipped_empty_books": skipped,
         "status": "BOOK_SNAPSHOT_ONLY",
     }
-
 
 def impact(imbalance: float, observations: list, current_exit_bid: float,
            minimum_samples: int = 20) -> dict:
@@ -221,6 +233,13 @@ def run_six_agents(book: dict, observations: dict, risk: dict,
     """Unified research decision. It never creates an order or changes a ledger."""
     pulse_result = pulse(book)
     side = pulse_result["stronger_demand_side"]
+    if side is None:
+        return {
+            "agents": [pulse_result], "decision": "HOLD",
+            "reason": "ALL_BOOKS_EMPTY_OR_UNAVAILABLE",
+            "paper_only": True, "live_orders_enabled": False,
+            "orders_submitted": False,
+        }
     selected = pulse_result["outcomes"][side]
     history = observations.get(side, []) if isinstance(observations, dict) else []
     impact_result = impact(
