@@ -302,63 +302,99 @@ def build_report():
     assets = []
     errors = {}
     universe_count = 0
+    ranked_count = 0
+    crypto_pairs_scanned = 0
+    current_market = None
+    OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+
+    def make_report(scan_status):
+        opportunities = [
+            item for item in assets
+            if item.get("scanner", {}).get("status") == "PAPER_CANDIDATE"
+            or item.get("directional_research") in (
+                "BULLISH_RESEARCH_CANDIDATE", "BEARISH_RESEARCH_CANDIDATE"
+            )
+        ]
+        opportunities.sort(key=opportunity_rank, reverse=True)
+        ordered_assets = sorted(assets, key=opportunity_rank, reverse=True)
+        return {
+            "generated_at_utc": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+            "scan_started_at_utc": now.isoformat(timespec="seconds"),
+            "scan_status": scan_status,
+            "current_market": current_market,
+            "crypto_pairs_discovered": universe_count,
+            "crypto_pairs_ranked": ranked_count,
+            "crypto_pairs_scanned": crypto_pairs_scanned,
+            "crypto_pairs_remaining": max(0, ranked_count - crypto_pairs_scanned),
+            "markets_successfully_scanned": len(assets),
+            "opportunity_count": len(opportunities),
+            "opportunities": opportunities[:100],
+            "markets": ordered_assets,
+            "unavailable_or_failed_markets": errors,
+            "scan_mode": "ALL_DISCOVERED_KRAKEN_USD_USDT_USDC_SPOT_PAIRS_PLUS_CONFIGURED_METALS",
+            "safety": {
+                "paper_research_only": True,
+                "live_orders_enabled": False,
+                "paper_ledgers_modified": False,
+                "execution_enabled": False,
+                "signal_definition": "Existing WHJ scanner confluence and advanced OHLCV research labels; no prediction guarantee",
+                "crypto_quote_universe": sorted(QUOTE_CURRENCIES),
+                "metals_attempted": list(METALS),
+                "all_markets_are_not_guaranteed": (
+                    "Only markets listed by the selected public providers are scanned. "
+                    "Provider outages, API limits, unavailable symbols, stale data, and "
+                    "exchange-specific pairs can leave markets unscanned."
+                ),
+            },
+        }
+
+    def checkpoint():
+        report = make_report("PARTIAL")
+        temporary = OUTPUT_DIR / ".latest.json.tmp"
+        temporary.write_text(
+            json.dumps(report, indent=2, sort_keys=True, allow_nan=False) + "\n",
+            encoding="utf-8",
+        )
+        temporary.replace(OUTPUT_DIR / "latest.json")
+
     try:
         universe = discover_kraken_universe()
         universe_count = len(universe)
         ranked, missing_tickers = rank_kraken_pairs(universe)
+        ranked_count = len(ranked)
+        print(f"[WHJ scan] Discovered {universe_count} active pairs; ranked {ranked_count}.", flush=True)
         if missing_tickers:
             errors["kraken_ticker_missing"] = missing_tickers[:100]
         for index, pair in enumerate(ranked):
+            current_market = pair["symbol"]
             try:
                 assets.append(scan_crypto_pair(pair, now_seconds))
             except Exception as exc:
                 errors[pair["symbol"]] = str(exc)[:300]
+            crypto_pairs_scanned += 1
+            if crypto_pairs_scanned % 25 == 0 or crypto_pairs_scanned == ranked_count:
+                print(
+                    f"[WHJ scan] {crypto_pairs_scanned}/{ranked_count} crypto pairs; "
+                    f"{len(assets)} successful; {len(errors)} unavailable. Current: {current_market}",
+                    flush=True,
+                )
+                checkpoint()
             # Public endpoint pacing; prevents hammering the exchange.
             if index < len(ranked) - 1:
                 time.sleep(1.05)
     except Exception as exc:
         errors["kraken_universe"] = str(exc)[:500]
+        checkpoint()
 
     for symbol in METALS:
+        current_market = symbol
         try:
             assets.append(normalize_biquote_metals(symbol, now_seconds))
         except Exception as exc:
             errors[symbol] = str(exc)[:300]
+        checkpoint()
 
-    opportunities = [
-        item for item in assets
-        if item.get("scanner", {}).get("status") == "PAPER_CANDIDATE"
-        or item.get("directional_research") in (
-            "BULLISH_RESEARCH_CANDIDATE", "BEARISH_RESEARCH_CANDIDATE"
-        )
-    ]
-    opportunities.sort(key=opportunity_rank, reverse=True)
-    assets.sort(key=opportunity_rank, reverse=True)
-    return {
-        "generated_at_utc": now.isoformat(timespec="seconds"),
-        "scan_mode": "ALL_DISCOVERED_KRAKEN_USD_USDT_USDC_SPOT_PAIRS_PLUS_CONFIGURED_METALS",
-        "crypto_pairs_discovered": universe_count,
-        "markets_successfully_scanned": len(assets),
-        "opportunity_count": len(opportunities),
-        "opportunities": opportunities[:100],
-        "markets": assets,
-        "unavailable_or_failed_markets": errors,
-        "safety": {
-            "paper_research_only": True,
-            "live_orders_enabled": False,
-            "paper_ledgers_modified": False,
-            "execution_enabled": False,
-            "signal_definition": "Existing WHJ scanner confluence and advanced OHLCV research labels; no prediction guarantee",
-            "crypto_quote_universe": sorted(QUOTE_CURRENCIES),
-            "metals_attempted": list(METALS),
-            "all_markets_are_not_guaranteed": (
-                "Only markets listed by the selected public providers are scanned. "
-                "Provider outages, API limits, unavailable symbols, stale data, and "
-                "exchange-specific pairs can leave markets unscanned."
-            ),
-        },
-    }
-
+    return make_report("COMPLETE" if crypto_pairs_scanned == ranked_count else "PARTIAL")
 
 def main():
     report = build_report()
