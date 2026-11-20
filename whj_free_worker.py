@@ -40,6 +40,7 @@ def inspect_file(root: Path, relative: str) -> dict | None:
         "readable_text": False,
         "python_ast_valid": None,
         "first_line": "",
+        "evidence_quote": "",
     }
     if len(raw) > MAX_FILE_BYTES:
         result["note"] = "File exceeds deterministic inspection size limit."
@@ -52,6 +53,7 @@ def inspect_file(root: Path, relative: str) -> dict | None:
             return result
         result["readable_text"] = True
         result["first_line"] = content.splitlines()[0][:200] if content.splitlines() else ""
+        result["evidence_quote"] = next((line.strip()[:200] for line in content.splitlines() if line.strip()), "")
         if Path(relative).suffix.lower() == ".py":
             try:
                 ast.parse(content, filename=relative)
@@ -83,9 +85,9 @@ def build_free_report(root: Path) -> dict:
                 detail += " python_ast=valid"
             elif item["python_ast_valid"] is False:
                 detail += " python_ast=INVALID"
-            quote = item["first_line"] or detail
-            if len(quote) < 12:
-                quote = detail
+            quote = item.get("evidence_quote", "")
+            if not quote:
+                continue
             findings.append({
                 "claim": f"Repository file inventory: {item['path']} exists; {detail}.",
                 "source_path": item["path"],
