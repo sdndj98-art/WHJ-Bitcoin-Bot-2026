@@ -220,8 +220,14 @@ def process_snapshot(snapshot, state=None, *, now=None, initial_cash_usd=DEFAULT
         quote = quotes.get(symbol) if isinstance(quotes, dict) else None
         mark = None
         if isinstance(quote, dict):
-            mark = _number(quote.get("bid"), f"{symbol}.bid", 0, True) * _number(
-                quote.get("quote_to_usd"), f"{symbol}.quote_to_usd", 0, True)
+            quote_timestamp = quote.get("timestamp")
+            if (isinstance(quote_timestamp, (int, float)) and
+                    not isinstance(quote_timestamp, bool) and
+                    math.isfinite(quote_timestamp) and
+                    quote_timestamp <= current.timestamp() + 60 and
+                    current.timestamp() - quote_timestamp <= max_quote_age):
+                mark = _number(quote.get("bid"), f"{symbol}.bid", 0, True) * _number(
+                    quote.get("quote_to_usd"), f"{symbol}.quote_to_usd", 0, True)
         equity = _equity(sleeve, mark)
         summary[symbol] = {
             "equity_usd": round(equity, 8),
