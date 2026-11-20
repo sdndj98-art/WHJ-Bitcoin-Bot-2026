@@ -1022,7 +1022,7 @@ document.querySelectorAll(".agent-nav button").forEach(b=>b.addEventListener("cl
    const text=(el.textContent||"").trim().toLowerCase();
    if(!text||/بانتظار|غير معروف|غير متاح|لا توجد بيانات|no report|unavailable|unknown/.test(text))return "unknown";
    if(/blocked|محجوب|موقوف|لم يجتز|قديم|تعذر|error|failed|no report/.test(text))return "blocked";
-   if(/healthy|اجتاز|سليم|مرشح|مراقبة السوق|شمعة جديدة|تم تحميل|online|paper/.test(text))return "pass";
+   if(/healthy|اجتاز|سليم|مرشح|مراقبة السوق|شمعة جديدة|تم تحميل|صفقة ورقية|سجل اختبار تاريخي|محفظة ورقية|online|paper/.test(text))return "pass";
    return "unknown";
   };
   const syncModuleStates=()=>{
