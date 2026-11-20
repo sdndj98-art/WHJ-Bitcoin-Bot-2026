@@ -14,6 +14,10 @@ STATE_FILES = {
     "1h_sma_trend": "paper_forward_1h_sma_trend.json",
     "1h_ema_trend": "paper_forward_1h_ema_trend.json",
     "1h_rsi14_mean_reversion": "paper_forward_1h_rsi14_mean_reversion.json",
+    "1h_rsi_momentum": "paper_forward_1h_rsi_momentum.json",
+    "1h_sma200_regime": "paper_forward_1h_sma200_regime.json",
+    "1h_ema50_200_regime": "paper_forward_1h_ema50_200_regime.json",
+    "1h_bollinger_mean_reversion": "paper_forward_1h_bollinger_mean_reversion.json",
     "4h": "paper_forward_4h_ema50_200.json",
     "6h": "paper_forward_6h_ema50_200.json",
 }
@@ -335,12 +339,17 @@ def process_forward_accounts(
             )
     directory = Path(state_dir)
     results = {}
-    # Dedicated $10 BTC paper wallet split equally across five independent sleeves.
-    # This replaces the former research-only $1,900 aggregate sizing.
+    # Preserve the original five $2 paper sleeves ($10 total) without resetting
+    # their ledgers. Add four independent $1 exploratory sleeves for the remaining
+    # supported strategy families. Total simulated BTC capital is $14; no live orders.
     configurations = (
         ("1h_sma_trend", 1, "sma_trend", 2.0),
         ("1h_ema_trend", 1, "ema_trend", 2.0),
         ("1h_rsi14_mean_reversion", 1, "rsi14_mean_reversion", 2.0),
+        ("1h_rsi_momentum", 1, "rsi_momentum", 1.0),
+        ("1h_sma200_regime", 1, "sma200_regime", 1.0),
+        ("1h_ema50_200_regime", 1, "ema50_200_regime", 1.0),
+        ("1h_bollinger_mean_reversion", 1, "bollinger_mean_reversion", 1.0),
         ("4h", 4, "ema50_200_regime", 2.0),
         ("6h", 6, "ema50_200_regime", 2.0),
     )
