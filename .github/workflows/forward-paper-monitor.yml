@@ -40,6 +40,10 @@ jobs:
             paper_forward_1h_sma_trend.json
             paper_forward_1h_ema_trend.json
             paper_forward_1h_rsi14_mean_reversion.json
+            paper_forward_1h_rsi_momentum.json
+            paper_forward_1h_sma200_regime.json
+            paper_forward_1h_ema50_200_regime.json
+            paper_forward_1h_bollinger_mean_reversion.json
             paper_forward_4h_ema50_200.json
             paper_forward_6h_ema50_200.json
           key: whj-forward-paper-v2-${{ github.run_id }}-${{ github.run_attempt }}
@@ -62,6 +66,10 @@ jobs:
             paper_forward_1h_sma_trend.json
             paper_forward_1h_ema_trend.json
             paper_forward_1h_rsi14_mean_reversion.json
+            paper_forward_1h_rsi_momentum.json
+            paper_forward_1h_sma200_regime.json
+            paper_forward_1h_ema50_200_regime.json
+            paper_forward_1h_bollinger_mean_reversion.json
             paper_forward_4h_ema50_200.json
             paper_forward_6h_ema50_200.json
           key: whj-forward-paper-v2-${{ github.run_id }}-${{ github.run_attempt }}
