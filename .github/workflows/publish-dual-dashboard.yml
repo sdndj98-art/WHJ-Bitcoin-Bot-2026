@@ -6,6 +6,10 @@ on:
       - main
     paths:
       - ".github/workflows/publish-dual-dashboard.yml"
+      - "web/index.html"
+      - "dual_portfolio.json"
+      - "report.json"
+      - "data/**"
   workflow_dispatch:
 
 permissions:
