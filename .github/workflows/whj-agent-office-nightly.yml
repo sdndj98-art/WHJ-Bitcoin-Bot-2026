@@ -12,6 +12,8 @@ on:
       - "tests/test_whj_free_worker.py"
       - "tests/test_whj_agent_office.py"
       - "tests/test_whj_grok_worker.py"
+      - "whj_evidence_verifier.py"
+      - "tests/test_whj_evidence_verifier.py"
       - "dual_portfolio.json"
       - ".github/workflows/whj-agent-office-nightly.yml"
   schedule:
@@ -53,6 +55,8 @@ jobs:
           fi
       - name: Run free deterministic workers (always on)
         run: python whj_free_worker.py run --output-dir research/agent_office
+      - name: Independently verify exact evidence quotes and source fingerprints
+        run: python whj_evidence_verifier.py --root . --output-dir research/agent_office/evidence_verifier
       - name: Enforce free-only office mode
         run: |
           echo "FREE_ONLY=true"
@@ -68,6 +72,7 @@ jobs:
             research/agent_office/latest_free_worker_results.json
             research/agent_office/latest_free_worker_results.md
             research/agent_office/latest_paper_agents.json
+            research/agent_office/evidence_verifier/
             research/agent_office/runs/**
           if-no-files-found: error
           retention-days: 30
