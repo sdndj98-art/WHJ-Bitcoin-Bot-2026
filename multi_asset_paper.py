@@ -220,10 +220,11 @@ def process_snapshot(snapshot, state=None, *, now=None, initial_cash_usd=DEFAULT
             "equity_usd": round(equity, 8),
             "cash_usd": round(sleeve["cash_usd"], 8),
             "realized_pnl_usd": round(sleeve["realized_pnl_usd"], 8),
-            "unrealized_pnl_usd": round(equity - sleeve["cash_usd"] -
-                                       (sleeve["position"]["entry_notional_usd"] -
-                                        sleeve["position"]["entry_fee_usd"]
-                                        if sleeve["position"] else 0), 8),
+            "unrealized_pnl_usd": round(
+                sleeve["position"]["quantity"] * sleeve["position"]["contract_size"] * mark
+                - sleeve["position"]["entry_notional_usd"]
+                - sleeve["position"]["quantity"] * sleeve["position"]["contract_size"] * mark * fee
+                if sleeve["position"] and mark is not None else 0.0, 8),
             "fees_paid_usd": round(sleeve["fees_paid_usd"], 8),
             "closed_trades": sleeve["closed_trades"],
             "win_rate_pct": round(sleeve["wins"] / sleeve["closed_trades"] * 100, 4)
