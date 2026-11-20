@@ -1,5 +1,9 @@
 import unittest
 from datetime import datetime, timezone
+from tempfile import TemporaryDirectory
+from unittest.mock import patch
+
+import multi_market_opportunity_scan as multi_scan
 
 from multi_market_opportunity_scan import (
     discover_kraken_universe,
@@ -9,6 +13,17 @@ from market_scanner import scan_btc_market
 
 
 class MultiMarketScannerTests(unittest.TestCase):
+    def test_failed_universe_discovery_is_never_reported_complete(self):
+        with TemporaryDirectory() as temp_dir:
+            with patch.object(multi_scan, "OUTPUT_DIR", __import__("pathlib").Path(temp_dir)), \
+                 patch.object(multi_scan, "discover_kraken_universe", side_effect=RuntimeError("provider down")), \
+                 patch.object(multi_scan, "normalize_biquote_metals", side_effect=RuntimeError("feed down")):
+                report = multi_scan.build_report()
+        self.assertEqual(report["scan_status"], "PARTIAL")
+        self.assertFalse(report["scan_complete"])
+        self.assertFalse(report["universe_discovery_succeeded"])
+        self.assertEqual(report["crypto_pairs_remaining"], 0)
+
     def test_kraken_normalizer_uses_closed_hourly_candles(self):
         now = datetime(2026, 11, 21, 12, 30, tzinfo=timezone.utc).timestamp()
         rows = []
