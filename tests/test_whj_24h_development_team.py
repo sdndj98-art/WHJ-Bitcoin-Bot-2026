@@ -22,12 +22,12 @@ class WHJDevelopmentCouncilTests(unittest.TestCase):
             path.write_text(json.dumps(snapshot), encoding="utf-8")
             self.assertEqual(audit_portfolio(path)["status"], "failed")
 
-    def test_hourly_workflow_requires_hourly_cron_and_read_only_permission(self):
+    def test_workflow_requires_12_daily_cycles_and_read_only_permission(self):
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory) / "workflow.yml"
-            path.write_text('schedule:\n  - cron: "0 * * * *"\npermissions:\n  contents: read\n', encoding="utf-8")
+            path.write_text('schedule:\n  - cron: "0 */2 * * *"\npermissions:\n  contents: read\n', encoding="utf-8")
             self.assertEqual(audit_hourly_schedule(path)["status"], "passed")
-            path.write_text('schedule:\n  - cron: "0 0 * * *"\npermissions:\n  contents: write\n', encoding="utf-8")
+            path.write_text('schedule:\n  - cron: "0 */4 * * *"\npermissions:\n  contents: write\n', encoding="utf-8")
             self.assertEqual(audit_hourly_schedule(path)["status"], "failed")
 
     def test_dashboard_fingerprint_is_sha256(self):
