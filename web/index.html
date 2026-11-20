@@ -247,6 +247,18 @@ body{background:radial-gradient(ellipse at 50% 18%,#10142a 0,#050711 46%,#020308
 .whj-neural[data-module-selected="true"] .whj-neural-foot span:first-child{color:#d5c3ff}
 .whj-neural[data-module-selected="true"] .whj-neural-foot i{background:#b46aff;box-shadow:0 0 10px #b46aff}
 @media(prefers-reduced-motion:reduce){.whj-neural-pulse-layer path.is-selected,.whj-core-ring.is-reacting{animation:none}.whj-orbit,.whj-neural:before,.whj-neural:after{animation:none}}
+/* Report-driven neural module telemetry */
+.whj-agent-node[data-live-state="pass"]{--state-glow:#38e7a4;border-color:#38e7a4;box-shadow:0 0 13px #38e7a433,inset 0 0 12px #38e7a411}
+.whj-agent-node[data-live-state="blocked"]{--state-glow:#ff557f;border-color:#ff557f;box-shadow:0 0 13px #ff557f33,inset 0 0 12px #ff557f11}
+.whj-agent-node[data-live-state="unknown"]{--state-glow:#ffb84d;border-color:#ffb84d;box-shadow:0 0 13px #ffb84d22}
+.whj-agent-node[data-live-state="pass"] span{color:#38e7a4}
+.whj-agent-node[data-live-state="blocked"] span{color:#ff557f}
+.whj-agent-node[data-live-state="unknown"] span{color:#ffb84d}
+.whj-agent-node small{max-width:76px;text-align:center;line-height:1.2}
+.whj-agent-node .whj-node-state{font-size:6px;letter-spacing:.45px;margin-top:2px;text-transform:uppercase;color:var(--state-glow,#a0abc1)}
+.whj-neural-pulse-layer path[data-live-state="pass"]{opacity:.38;stroke-width:1.6;filter:drop-shadow(0 0 3px #38e7a4)}
+.whj-neural-pulse-layer path[data-live-state="blocked"]{opacity:.42;stroke:#ff557f;stroke-dasharray:3 8}
+.whj-neural-pulse-layer path[data-live-state="unknown"]{opacity:.18;stroke:#ffb84d}
 </style>
 
 
@@ -996,6 +1008,32 @@ document.querySelectorAll(".agent-nav button").forEach(b=>b.addEventListener("cl
  if(desk&&core){
   const ns="http://www.w3.org/2000/svg",layer=document.createElementNS(ns,"svg");layer.setAttribute("viewBox","0 0 640 470");layer.setAttribute("preserveAspectRatio","none");layer.setAttribute("class","whj-neural-pulse-layer");layer.setAttribute("aria-hidden","true");desk.insertBefore(layer,desk.querySelector(".whj-neural-lines"));
   const paths=nodes.map((node,i)=>{const p=document.createElementNS(ns,"path");p.setAttribute("stroke",getComputedStyle(node).getPropertyValue("--node").trim()||"#a66aff");p.dataset.node=String(i);layer.appendChild(p);return p;});
+  const statusMap=[
+   {id:"agentScanState",node:"node-scan"},
+   {id:"hlStatus",node:"node-map"},
+   {id:"agentGuardState",node:"node-guard"},
+   {id:"agentExecState",node:"node-taker"},
+   {id:"agentLogState",node:"node-logger"},
+   {id:"strategyRows",node:"node-prior"}
+  ];
+  const shortState=(el,kind)=>{
+   if(!el)return "unknown";
+   if(kind==="strategyRows"){const rows=el.querySelectorAll("tr");return rows.length&&!el.textContent.includes("لا توجد نتائج")?"pass":"unknown";}
+   const text=(el.textContent||"").trim().toLowerCase();
+   if(!text||/بانتظار|غير معروف|غير متاح|لا توجد بيانات|no report|unavailable|unknown/.test(text))return "unknown";
+   if(/blocked|محجوب|موقوف|لم يجتز|قديم|تعذر|error|failed|no report/.test(text))return "blocked";
+   if(/healthy|اجتاز|سليم|مرشح|مراقبة السوق|شمعة جديدة|تم تحميل|online|paper/.test(text))return "pass";
+   return "unknown";
+  };
+  const syncModuleStates=()=>{
+   statusMap.forEach((item,i)=>{const node=nodes.find(n=>n.classList.contains(item.node)),source=document.getElementById(item.id);if(!node||!source)return;
+    const state=shortState(source,item.id==="strategyRows"?"strategyRows":"text");node.dataset.liveState=state;
+    const small=node.querySelector("small");if(small){small.classList.add("whj-node-state");small.textContent=state==="pass"?"DATA READY":state==="blocked"?"GUARDED":"AWAITING DATA";}
+    paths[i].dataset.liveState=state;
+   });
+  };
+  syncModuleStates();
+  statusMap.forEach(item=>{const el=document.getElementById(item.id);if(el&&typeof MutationObserver!=="undefined")new MutationObserver(syncModuleStates).observe(el,{childList:true,subtree:true,characterData:true,attributes:true});});
   const positions=()=>{const rect=desk.getBoundingClientRect();if(!rect.width||!rect.height)return;const c=core.getBoundingClientRect(),cx=(c.left+c.width/2-rect.left)/rect.width*640,cy=(c.top+c.height/2-rect.top)/rect.height*470;nodes.forEach((node,i)=>{const r=node.getBoundingClientRect(),x=(r.left+r.width/2-rect.left)/rect.width*640,y=(r.top+r.height/2-rect.top)/rect.height*470;paths[i].setAttribute("d","M "+x+" "+y+" Q "+((x+cx)/2+(i%2?24:-24))+" "+((y+cy)/2-18)+" "+cx+" "+cy);});};
   const select=i=>{nodes.forEach((n,j)=>n.classList.toggle("is-selected",j===i));paths.forEach((p,j)=>p.classList.toggle("is-selected",j===i));desk.dataset.moduleSelected="true";const labels=names[nodes[i].classList[1]]||["WHJ MODULE","SELECTED"];if(coreTitle)coreTitle.textContent=labels[0];if(coreSub)coreSub.textContent=labels[1];core.style.setProperty("--node",getComputedStyle(nodes[i]).getPropertyValue("--node").trim());core.classList.remove("is-reacting");void core.offsetWidth;core.classList.add("is-reacting");};
   nodes.forEach((node,i)=>node.addEventListener("click",()=>select(i)));
