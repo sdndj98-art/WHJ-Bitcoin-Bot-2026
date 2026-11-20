@@ -835,3 +835,24 @@ The Bitstamp replay now uses the exact Coinbase #52 OOS window and immutable ref
 **Research-branch correction:** `momentum_signals()` now rejects any non-finite or non-positive close before building signals. Regression coverage checks both zero and negative prices.
 
 This is validation-only: all valid positive-price signal outputs, lookbacks, execution timing, fees, allocation, and historical performance calculations are unchanged. The isolated slow-momentum workflow path filter includes both the source and test file, so the branch push should request a fresh isolated run. The latest available historical artifact before this change is run #22; no post-F34 performance result is claimed until a new artifact is retrieved and checked.
+
+
+## F35 — post-F34 isolated slow-momentum run #26 independently verified (2026-11-21)
+
+- [Workflow run #26](https://github.com/sdndj98-art/WHJ-Bitcoin-Bot-2026/actions/runs/44792072224) completed successfully on code commit `d17474580190ab587ae5f675940a8eaeac625b9d`; its single job completed evaluation and artifact upload successfully.
+- [Artifact 14657465785](https://github.com/sdndj98-art/WHJ-Bitcoin-Bot-2026/actions/runs/44792072224/artifacts/14657465785), `whj-isolated-slow-momentum-26`, is 59,033 bytes. Downloaded ZIP SHA-256 `5d9fac2ddcfb0f833a22bfb8560e4c9e3270787715c159264aa8ce3a536b0a63` was recomputed and matched GitHub's artifact digest.
+- The decompressed canonical daily snapshot SHA-256 was independently recomputed as `d078cc223c281d1bb91a8a9f6139f46a33271ac835864e3b07605ae3bda600ee`, matching the JSON report and each of the three trial manifests.
+- Dataset: Coinbase public BTC-USD hourly spot aggregated to 1,499 UTC daily bars from 2022-10-13 through 2026-11-19; 36,000 hourly source bars; 13 hourly observations explicitly imputed; 450 daily OOS bars after the 70/30 chronological split.
+- Normal-cost OOS: 56d -2.6896% (DD 7.5257%, closed-trade PF 0.6474, 15 trades); 84d -7.8404% (DD 10.2742%, PF 0.0214, 7 trades); 112d -11.6508% (DD 14.1759%, PF 0.0401, 13 trades). Matched 25%-allocation buy-and-hold: -11.1290%.
+- Cost stress remained negative for all three: 56d -3.7718% / -4.8403%; 84d -8.3058% / -8.7681%; 112d -12.4832% / -13.3064% at 2x/3x respectively.
+- The 56d moving-block bootstrap 95% interval was -15.5019% to +13.7127%; its top winner contributed 89.3424% of gross winning P&L and its top five contributed 100%. The 84d variant had only seven trades and one winner; the 112d variant had 13 trades. CSCV/PBO 0.50 is computed across only these three variants (six partitions, ten splits, 75 observations per partition), and is a narrow selection-bias diagnostic only.
+- This post-F34 run supersedes the prior report's “latest artifact is #22/#24” notes. It validates the positive-price input guard under the isolated workflow but does not validate profitability. The three fixed OOS subperiods are not rolling walk-forward; no forward paper evidence exists. No candidate is promoted.
+
+### CI verification for the current documentation refresh
+
+- [Termux Repository Audit #1786](https://github.com/sdndj98-art/WHJ-Bitcoin-Bot-2026/actions/runs/44792078120), on branch head `c7012d5b1afea8ffb724aa14aaaee011f5079d27`: **595 tests passed in 9.090 seconds**, tracked Python compilation passed, and `git diff --check` passed.
+- The same audit job's logs show the test runner's final summary `Ran 595 tests ... OK`; no test count is inferred from the run title.
+- Slow Momentum #26 completed successfully, and its report, trial manifest, and dataset snapshot were downloaded and inspected directly.
+- The current branch head is documentation-only after the F34 source commit; the #26 research job ran against the F34 source commit `d174745...`. No new 17-candidate BTC evaluation was triggered by this documentation-only update.
+
+**Safety and decision:** the slow-momentum workflow uses the isolated historical evaluator and public Coinbase data. Its report states `live_orders=false` and `paper_ledgers_read_or_written=false`. No paper ledger, balance, schedule, risk limit, exchange secret, or order pathway was accessed or changed. No candidate is promoted.
