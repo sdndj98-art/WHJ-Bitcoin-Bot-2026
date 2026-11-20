@@ -259,6 +259,133 @@ body{background:radial-gradient(ellipse at 50% 18%,#10142a 0,#050711 46%,#020308
 .whj-neural-pulse-layer path[data-live-state="pass"]{opacity:.38;stroke-width:1.6;filter:drop-shadow(0 0 3px #38e7a4)}
 .whj-neural-pulse-layer path[data-live-state="blocked"]{opacity:.42;stroke:#ff557f;stroke-dasharray:3 8}
 .whj-neural-pulse-layer path[data-live-state="unknown"]{opacity:.18;stroke:#ffb84d}
+
+/* WHJ full-width reference-inspired command terminal */
+body{background:#03050b;color:#edf4ff}
+.shell{display:block;min-height:100vh;background:radial-gradient(ellipse at 50% -15%,#111b38 0,transparent 42%),#03050b}
+.side{display:none!important}
+main{width:100%;max-width:1800px;margin:0 auto;padding:10px 12px 26px}
+.mobilehead{display:none!important}
+.top{display:flex;align-items:center;gap:12px;margin:0 0 8px;padding:9px 12px;background:#070a12;border:1px solid #222b40;border-radius:10px}
+.top .eyebrow{color:#bc73ff;font-size:9px;letter-spacing:1.6px}
+.top h1{font-size:clamp(18px,2vw,26px);margin:3px 0;color:#fff}
+.top .sub{font-size:9px;color:#7e91ad}
+.topright{gap:6px}
+.topright .toolbtn{padding:7px 9px;font-size:9px}
+.topright .pill{font-size:9px;padding:7px 10px}
+.topright .refresh{font-size:9px;padding:7px 10px}
+.whj-viewnav{display:flex;align-items:center;gap:4px;overflow-x:auto;white-space:nowrap;padding:7px 9px;margin:0 0 8px;border:1px solid #1d263b;border-radius:8px;background:#070a12;scrollbar-width:none}
+.whj-viewnav::-webkit-scrollbar{display:none}
+.whj-viewnav button{border:1px solid transparent;border-radius:5px;background:transparent;color:#8796b0;padding:7px 11px;font-size:9px;font-weight:800;letter-spacing:.6px;cursor:pointer}
+.whj-viewnav button.active,.whj-viewnav button:hover{color:#fff;border-color:#5d36a5;background:#1b1430;box-shadow:inset 0 -2px #b65cff}
+.banner{display:none!important}
+.view{width:100%}
+.whj-desk{margin:0 0 10px;border-radius:9px;border:1px solid #252d43;background:radial-gradient(ellipse at 50% 40%,#10172b 0,#05070d 66%);box-shadow:0 0 28px #7b36ff12}
+.whj-deskbar{padding:8px 13px;background:#070a12}
+.whj-live{font-size:14px;letter-spacing:1.7px}
+.whj-live span{font-size:8px}
+.whj-deskstats{font-size:8px;gap:12px}
+.whj-ticker{padding:7px 12px;gap:clamp(8px,1.8vw,24px);background:#05070d;font-size:8px;flex-wrap:nowrap;overflow:hidden}
+.whj-ticker span{white-space:nowrap}
+.whj-ticker b{font-size:9px}
+.whj-agentstrip{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:6px;padding:8px 10px;border-bottom:1px solid #222b40;background:#060911}
+.whj-agentstrip button{display:flex;align-items:center;gap:8px;min-width:0;padding:8px 9px;border:1px solid #26314b;border-radius:6px;background:linear-gradient(110deg,#0c1220,#080b13);color:#dce7ff;text-align:left;cursor:pointer}
+.whj-agentstrip button:nth-child(1){--ac:#31e7bb}.whj-agentstrip button:nth-child(2){--ac:#9d62ff}.whj-agentstrip button:nth-child(3){--ac:#ff5b94}.whj-agentstrip button:nth-child(4){--ac:#ffb74d}.whj-agentstrip button:nth-child(5){--ac:#35dce8}.whj-agentstrip button:nth-child(6){--ac:#438dff}
+.whj-agentstrip button i{font-style:normal;font-size:18px;color:var(--ac);text-shadow:0 0 12px var(--ac)}
+.whj-agentstrip button span{display:flex;flex-direction:column;gap:3px;font-size:9px;font-weight:900;letter-spacing:.5px}
+.whj-agentstrip button small{font-size:7px;color:#8091aa;font-weight:500}
+.whj-agentstrip button>b{margin-left:auto;font-size:8px;color:var(--ac)}
+.whj-agentstrip button:hover{border-color:var(--ac);box-shadow:0 0 14px color-mix(in srgb,var(--ac) 18%,transparent)}
+.whj-mainstage{grid-template-columns:minmax(190px,1fr) minmax(400px,2.2fr) minmax(190px,1fr);gap:8px;padding:9px;min-height:490px}
+.whj-rail{grid-template-rows:repeat(3,minmax(0,1fr));gap:8px}
+.whj-panel{border-radius:7px;border-color:#202a42;background:linear-gradient(145deg,#0b111e,#060911);padding:10px}
+.whj-panelhead{font-size:9px;margin-bottom:9px}
+.whj-marketline strong{font-size:20px}
+.whj-panelnote{font-size:8px}
+.whj-neural{min-height:490px;border-radius:8px;border-color:#282b4a;background:radial-gradient(ellipse at 50% 50%,#15162e 0,#0b1020 45%,#05070d 100%)}
+.whj-neural-title{font-size:9px}
+.whj-core-ring{width:116px;height:116px}
+.whj-core-ring span{width:58px;height:58px;font-size:19px}
+.whj-agent-node{width:86px;height:86px}
+.whj-agent-node b{font-size:9px}
+.whj-agent-node small{font-size:7px}
+.node-scan{left:12%;top:21%}.node-map{right:12%;top:21%}.node-prior{left:3%;top:45%}.node-guard{right:3%;top:45%}.node-logger{left:15%;bottom:13%}.node-taker{right:15%;bottom:13%}
+.whj-neural-foot{font-size:7px}
+.whj-pipeline{padding:8px 12px;justify-content:center;gap:9px;font-size:8px}
+.whj-section-label{margin:12px 2px 8px;font-size:9px}
+.grid{grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+#overview .metric.card{padding:12px;border-radius:8px;background:linear-gradient(145deg,#0c1320,#060910);border-color:#202a40}
+#overview .metric .label{font-size:9px}
+#overview .metric .value{font-size:clamp(17px,2vw,24px);margin:8px 0 3px}
+#overview .metric .hint{font-size:8px}
+#overview .content{display:grid;grid-template-columns:1.35fr 1fr;gap:8px;margin-top:9px}
+#overview .content>.card{border-radius:8px;border-color:#202a40;background:linear-gradient(145deg,#0c1320,#060910)}
+#overview .content canvas{height:170px}
+.whj-lowergrid{display:grid;grid-template-columns:1fr;margin-top:9px}
+.whj-orderflow{border-radius:8px;border-color:#202a40;background:linear-gradient(145deg,#0c1320,#060910);min-width:0}
+.whj-book-mid{display:flex;justify-content:space-between;align-items:center;gap:8px;color:#8292ad;font-size:8px;padding:8px 0;border-bottom:1px solid #1b2639}
+.whj-book-mid b{color:#ffb74d;font-size:9px;text-align:center}
+.whj-book-bars{display:grid;grid-template-columns:repeat(8,minmax(0,1fr));gap:7px;align-items:end;height:80px;padding:10px 0}
+.whj-book-bars i{height:var(--w);background:var(--c);opacity:.72;border-radius:3px 3px 0 0;box-shadow:0 0 9px color-mix(in srgb,var(--c) 25%,transparent)}
+.whj-orderflow p{font-size:8px;color:#7586a0;margin:5px 0 0}
+#overview .tablecard{margin-top:9px;border-radius:8px;background:#080c14;border-color:#202a40}
+#overview .tablecard .head h2{font-size:10px}
+#overview .tablecard table{font-size:9px}
+#overview .tablecard th,#overview .tablecard td{padding:9px 8px}
+footer,.footer{color:#5d6d86}
+@media(max-width:1100px){
+ .whj-mainstage{grid-template-columns:minmax(150px,1fr) minmax(300px,1.7fr) minmax(150px,1fr);gap:6px}
+ .whj-agentstrip{gap:4px}.whj-agentstrip button{padding:7px 5px;gap:5px}
+ .whj-agentstrip button span{font-size:8px}.whj-agentstrip button small{font-size:6px}
+ .whj-agentstrip button>b{display:none}
+ .whj-neural{min-height:440px}
+ .whj-agent-node{width:74px;height:74px}
+}
+@media(max-width:760px){
+ main{padding:6px 6px 16px}
+ .top{padding:8px;align-items:flex-start}
+ .top h1{font-size:17px}
+ .topright{flex-wrap:wrap;justify-content:flex-end;max-width:54%}
+ #exportJson,#exportCsv{display:none}
+ .whj-viewnav{padding:5px;gap:2px}
+ .whj-viewnav button{padding:7px 9px;font-size:8px}
+ .whj-deskbar{align-items:flex-start}
+ .whj-deskstats{gap:7px;flex-wrap:wrap;justify-content:flex-end}
+ .whj-deskstats span:nth-child(2){display:none}
+ .whj-ticker{gap:12px;overflow-x:auto}
+ .whj-ticker span:nth-child(n+4){display:flex}
+ .whj-agentstrip{grid-template-columns:repeat(3,minmax(0,1fr));gap:5px}
+ .whj-agentstrip button{padding:7px 6px}
+ .whj-mainstage{grid-template-columns:1fr;min-height:0;padding:6px;gap:6px}
+ .whj-neural{grid-row:1;min-height:430px}
+ .whj-left{grid-row:2}.whj-right{grid-row:3}
+ .whj-rail{grid-template-columns:repeat(2,minmax(0,1fr));grid-template-rows:auto}
+ .whj-panel{min-height:140px;padding:9px}
+ .whj-agent-node{width:72px;height:72px}
+ .node-scan{left:12%;top:22%}.node-map{right:12%;top:22%}.node-prior{left:3%;top:48%}.node-guard{right:3%;top:48%}.node-logger{left:14%;bottom:13%}.node-taker{right:14%;bottom:13%}
+ .whj-pipeline{justify-content:flex-start;overflow-x:auto;white-space:nowrap;flex-wrap:nowrap}
+ .grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}
+ #overview .content{grid-template-columns:1fr}
+ #overview .content canvas{height:150px}
+ .whj-lowergrid{grid-template-columns:1fr}
+}
+@media(max-width:420px){
+ .whj-live{font-size:12px}
+ .whj-live span{font-size:7px}
+ .whj-deskstats{font-size:7px}
+ .whj-neural{min-height:390px}
+ .whj-agent-node{width:62px;height:62px}
+ .whj-agent-node span{font-size:16px}.whj-agent-node b{font-size:7px}.whj-agent-node small{font-size:6px}
+ .whj-core-ring{width:88px;height:88px}.whj-core-ring span{width:44px;height:44px;font-size:15px}
+ .whj-neural-title small{display:none}
+ .whj-rail{grid-template-columns:1fr}
+ .whj-panel{min-height:125px}
+ .whj-agentstrip button span{font-size:7px}
+ .whj-agentstrip button i{font-size:15px}
+ .whj-agentstrip button small{font-size:6px}
+}
+@media(prefers-reduced-motion:reduce){.whj-agentstrip button:hover{box-shadow:none}}
+
 </style>
 
 
@@ -346,6 +473,7 @@ body[data-whj-theme="light"] .agent-nav button:hover,body[data-whj-theme="light"
 </style>
 </head><body><div class="shell"><aside class="side"><div class="brand"><div class="logo">₿</div><div><b>WHJ BITCOIN</b><small>مركز قيادة التداول الذكي</small></div></div><div class="navlabel">القائمة الرئيسية</div><nav class="nav"><button class="active" data-view="overview"><span class="ico">⌂</span>الرئيسية</button><button data-view="scanner"><span class="ico">⌁</span>ماسح السوق</button><button data-view="liquidations"><span class="ico">◉</span>مراقبة الحيتان</button><button data-view="strategies"><span class="ico">◈</span>الاستراتيجيات</button><button data-view="trades"><span class="ico">⇄</span>الصفقات</button><button data-view="risk"><span class="ico">⌁</span>المخاطر</button><button data-view="system"><span class="ico">⚙</span>النظام</button><button data-view="agents"><span class="ico">✣</span>مركز الوكلاء</button><button data-view="forward"><span class="ico">◷</span>المراقبة المستقبلية</button><button data-view="mt5"><span class="ico">⌁</span>منصة MT5</button></nav><div class="navlabel agent-nav-label">وحدات التشغيل الست</div><nav class="agent-nav" aria-label="وحدات التشغيل"><button type="button" data-agent-target="0"><span>⌕</span>ماسح السوق</button><button type="button" data-agent-target="1"><span>⚑</span>بوابة التحقق</button><button type="button" data-agent-target="2"><span>◈</span>مدير الحجم</button><button type="button" data-agent-target="3"><span>Ⅱ</span>المحاكي الورقي</button><button type="button" data-agent-target="4"><span>≡</span>سجل القرارات</button><button type="button" data-agent-target="5"><span>◉</span>مراقب المحفظة</button></nav><div class="sidefoot">WHJ Bitcoin Bot 2026<br>مراقبة وتحليل · Paper Trading فقط</div></aside><main>
 <div class="mobilehead">WHJ BITCOIN · مركز القيادة</div><header class="top"><div><div class="eyebrow">WHJ / COMMAND CENTER</div><h1 id="pageTitle">نظرة عامة</h1><div class="sub">مراقبة أداء البوت وتحليل BTC/USD</div></div><div class="topright"><button class="toolbtn" id="exportJson" type="button">تنزيل التقرير JSON</button><button class="toolbtn" id="exportCsv" type="button">تصدير الصفقات CSV</button><span class="pill"><i class="dot"></i><span id="systemState">جارٍ تحميل البيانات</span></span><button class="refresh" id="refresh">↻ تحديث البيانات</button></div></header>
+<nav class="whj-viewnav" aria-label="Dashboard sections"><button class="active" data-view="overview">⌂ DESK</button><button data-view="scanner">⌁ SCANNER</button><button data-view="liquidations">◉ WHALES</button><button data-view="strategies">◈ STRATEGIES</button><button data-view="trades">⇄ TAPE</button><button data-view="risk">⬡ RISK</button><button data-view="agents">✣ AGENTS</button><button data-view="system">⚙ SYSTEM</button></nav>
 <div class="banner"><div><b>وضع الحماية مفعّل — التداول الحقيقي متوقف</b><p>تعرض اللوحة بيانات التحليل والمحاكاة فقط، ولا ترسل أوامر إلى منصات التداول.</p></div><span class="status">● PAPER MODE</span></div>
 
 <section class="view" id="agents">
@@ -382,6 +510,14 @@ body[data-whj-theme="light"] .agent-nav button:hover,body[data-whj-theme="light"
 <div class="whj-desk">
  <div class="whj-deskbar"><div class="whj-live"><i></i> WHJ DESK <span>NEURAL COMMAND</span></div><div class="whj-deskstats"><span>6 MODULES</span><span>ONE DECISION PIPELINE</span><b>● PAPER MODE</b></div></div>
  <div class="whj-ticker"><span>₿ BITCOIN <b id="whjTickerPrice">—</b></span><span>MARKET <b>BTC / USD</b></span><span>ENGINE <b>WHJ CORE</b></span><span>EXECUTION <b class="whj-safe">LIVE OFF</b></span><span>NETWORK <b class="whj-safe">READ ONLY / PAPER</b></span></div>
+ <div class="whj-agentstrip" aria-label="Six-module execution pipeline">
+  <button data-open-view="scanner"><i>⌕</i><span>SPOTTER<small>SCAN</small></span><b>01</b></button>
+  <button data-open-view="strategies"><i>◈</i><span>PRIOR<small>STRATEGY</small></span><b>02</b></button>
+  <button data-open-view="risk"><i>⬡</i><span>GUARD<small>RISK GATE</small></span><b>03</b></button>
+  <button data-open-view="trades"><i>↗</i><span>TAKER<small>PAPER EXEC</small></span><b>04</b></button>
+  <button data-open-view="forward"><i>≋</i><span>CLOSER<small>REVIEW</small></span><b>05</b></button>
+  <button data-open-view="system"><i>◎</i><span>WATCH<small>PORTFOLIO</small></span><b>06</b></button>
+ </div>
  <div class="whj-mainstage">
   <aside class="whj-rail whj-left">
    <article class="whj-panel"><div class="whj-panelhead"><span>◈ MARKET INTELLIGENCE</span><b>01</b></div><div class="whj-marketline"><span>BTC / USD</span><strong id="whjHeroPrice">—</strong></div><div class="whj-spark"><svg viewBox="0 0 300 72" preserveAspectRatio="none"><path d="M0 58 C18 55 22 28 42 36 S70 52 91 32 S122 42 143 25 S174 42 194 21 S225 33 245 15 S275 29 300 8" fill="none" stroke="#36e4d0" stroke-width="2.5"/><path d="M0 58 C18 55 22 28 42 36 S70 52 91 32 S122 42 143 25 S174 42 194 21 S225 33 245 15 S275 29 300 8 V72 H0Z" fill="url(#whjGlow)" opacity=".22"/><defs><linearGradient id="whjGlow" x1="0" x2="0" y1="0" y2="1"><stop stop-color="#36e4d0"/><stop offset="1" stop-color="#36e4d0" stop-opacity="0"/></linearGradient></defs></svg></div><div class="whj-panelnote">منحنى زخرفي — السعر الفعلي يظهر من تقرير WHJ</div></article>
@@ -429,6 +565,7 @@ body[data-whj-theme="light"] .agent-nav button:hover,body[data-whj-theme="light"
 <article class="card metric"><div class="label">معامل الربحية</div><div class="value" id="pf">—</div><div class="hint">إجمالي الربح إلى الخسارة</div></article>
 <article class="card metric"><div class="label">الرسوم المدفوعة</div><div class="value" id="fees">—</div><div class="hint">رسوم المحاكاة المسجلة</div></article></div>
 <div class="whj-section-label"><span>THE TAPE · PERFORMANCE & SIGNALS</span><small>CHARTS / DECISION TRACE</small></div><div class="content"><article class="card"><div class="head"><h2>منحنى رأس المال</h2><span>آخر تقرير متاح</span></div><canvas id="equityChart"></canvas></article><article class="card"><div class="head"><h2>إشارة السوق الحالية</h2><span>تحليل فني</span></div><div class="signalbox"><div><b id="signal">—</b><small id="signalText">إشارة النموذج</small></div><span class="sigbadge" id="signalBadge">—</span></div><div class="mini"><span>المتوسط SMA 20</span><b id="sma20">—</b></div><div class="mini"><span>المتوسط SMA 50</span><b id="sma50">—</b></div><div class="mini"><span>الشموع المغلقة</span><b id="candles">—</b></div></article></div>
+<div class="whj-lowergrid"><article class="card whj-orderflow"><div class="head"><h2>THE BOOK · ORDER FLOW</h2><span>VISUAL / NO LIVE DEPTH FEED</span></div><div class="whj-book-mid"><span>ASK</span><b>DEPTH FEED NOT CONNECTED</b><span>BID</span></div><div class="whj-book-bars" aria-hidden="true"><i style="--w:82%;--c:#ff4d87"></i><i style="--w:68%;--c:#ff4d87"></i><i style="--w:54%;--c:#ff4d87"></i><i style="--w:43%;--c:#ff4d87"></i><i style="--w:38%;--c:#32e6b0"></i><i style="--w:56%;--c:#32e6b0"></i><i style="--w:71%;--c:#32e6b0"></i><i style="--w:88%;--c:#32e6b0"></i></div><p>لا تُعرض أحجام أو مستويات سعرية غير متصلة بمصدر مباشر.</p></article></div>
 <div class="card tablecard"><div class="head"><h2>أداء الحسابات الافتراضية</h2><span>مقارنة الاستراتيجيات</span></div><div class="tablewrap"><table><thead><tr><th>الاستراتيجية</th><th>قيمة الحساب</th><th>العائد</th><th>التراجع</th><th>الصفقات</th><th>الحالة</th></tr></thead><tbody id="portfolioRows"><tr><td colspan="6" class="empty">لا توجد بيانات بعد</td></tr></tbody></table></div></div></section>
 <section class="view" id="scanner">
 <div class="scanner-head">
