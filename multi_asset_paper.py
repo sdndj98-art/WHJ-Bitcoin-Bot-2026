@@ -99,7 +99,8 @@ def _equity(sleeve, bid_usd):
 def process_snapshot(snapshot, state=None, *, now=None, initial_cash_usd=DEFAULT_INITIAL_CASH_USD,
                      allocation_pct=DEFAULT_ALLOCATION_PCT, fee_rate=DEFAULT_FEE_RATE,
                      max_daily_loss_pct=DEFAULT_MAX_DAILY_LOSS_PCT,
-                     max_drawdown_pct=DEFAULT_MAX_DRAWDOWN_PCT):
+                     max_drawdown_pct=DEFAULT_MAX_DRAWDOWN_PCT,
+                     max_quote_age_seconds=120):
     """Apply one snapshot; all markets have isolated cash and position records.
 
     snapshot schema: {quotes:{SYMBOL:{bid,ask,timestamp,contract_size,quote_to_usd}},
@@ -117,6 +118,9 @@ def process_snapshot(snapshot, state=None, *, now=None, initial_cash_usd=DEFAULT
         raise ValueError("fee_rate must be < 5%")
     daily_limit = _number(max_daily_loss_pct, "max_daily_loss_pct", 0, True)
     dd_limit = _number(max_drawdown_pct, "max_drawdown_pct", 0, True)
+    max_quote_age = _number(max_quote_age_seconds, "max_quote_age_seconds", 0, True)
+    if daily_limit > 100 or dd_limit > 100:
+        raise ValueError("risk limits must be <= 100 percent")
     current = datetime.fromtimestamp(now, timezone.utc) if now is not None else datetime.now(timezone.utc)
     day = current.date().isoformat()
     state = _validate_state(dict(state or {}), cash, day)
@@ -143,6 +147,9 @@ def process_snapshot(snapshot, state=None, *, now=None, initial_cash_usd=DEFAULT
             raise ValueError(f"{symbol} quote timestamp must be finite")
         if timestamp > current.timestamp() + 60:
             raise ValueError(f"{symbol} quote is from the future")
+        if current.timestamp() - timestamp > max_quote_age:
+            events.append({"symbol": symbol, "action": "SKIP", "reason": "STALE_QUOTE"})
+            continue
         contract_size = _number(quote.get("contract_size"), f"{symbol}.contract_size", 0, True)
         quote_to_usd = _number(quote.get("quote_to_usd"), f"{symbol}.quote_to_usd", 0, True)
         sleeve = state["markets"].setdefault(symbol, _new_sleeve(cash, day))
