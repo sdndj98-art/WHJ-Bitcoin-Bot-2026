@@ -26,6 +26,12 @@ class SlowMomentumLabTests(unittest.TestCase):
             truncated = momentum_signals(closes[:end], 56)
             self.assertEqual(full[:end], truncated)
 
+    def test_momentum_signals_reject_non_positive_prices(self):
+        for closes in ([0.0, 101.0], [-1.0, 101.0]):
+            with self.subTest(closes=closes):
+                with self.assertRaisesRegex(ValueError, "positive"):
+                    momentum_signals(closes, 1)
+
     def test_future_prices_do_not_change_past_signals(self):
         closes = [100.0 + i * 0.2 for i in range(220)]
         original = momentum_signals(closes, 84)
