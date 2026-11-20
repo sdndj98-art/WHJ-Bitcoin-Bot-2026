@@ -27,7 +27,7 @@ jobs:
       - name: Checkout QuantumOrb dashboard source
         uses: actions/checkout@v4
         with:
-          ref: feature/quantumorb-living-motion-20261110
+          ref: main
           path: dashboard-source
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v5
@@ -36,6 +36,8 @@ jobs:
           mkdir -p _site
           cp dashboard-source/web/index.html _site/index.html
           cp dashboard-source/dual_portfolio.json _site/dual_portfolio.json
+          if [ -f dashboard-source/report.json ]; then cp dashboard-source/report.json _site/report.json; fi
+          if [ -d dashboard-source/data ]; then cp -R dashboard-source/data _site/data; fi
           touch _site/.nojekyll
       - name: Upload dashboard site
         uses: actions/upload-pages-artifact@v3
