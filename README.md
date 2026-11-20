@@ -182,3 +182,16 @@ Important limitations:
 - The public Info API calls used by this monitor do not provide a global top-200 wallet leaderboard or a 30-day PnL ranking. Only addresses explicitly entered in the config are scanned.
 - The liquidation map is an estimate based on liquidation prices reported for the configured wallets; it is not a complete exchange-wide liquidation heatmap and does not predict forced liquidations.
 - No signing, exchange action endpoint, order placement, modification, or cancellation is implemented. This module is read-only and does not enable live trading.
+
+
+## Broker-aware multi-asset market universe (paper data only)
+
+The feature/six-agent-paper-engine development branch adds a broker-symbol discovery layer for the WHJ market universe. It classifies broker-listed FX pairs using broad ISO 4217 currency-code coverage, precious metals (XAU gold, XAG silver, XPT platinum, XPD palladium), selected commodities (WTI/Brent crude, natural gas, copper), and common crypto instruments. Broker suffixes such as EURUSD.a, XAUUSDm, and BTCUSD.a are preserved exactly.
+
+On a supported Windows host with MT5 open and configured, run:
+
+```powershell
+python mt5_market_universe.py --output market_universe.json
+```
+
+This reads the broker's symbol catalog and exports the available symbols by category. It does not read account balances or send orders. “All currencies” means currency pairs actually listed by the connected broker and recognized by the currency catalog; availability, quote currencies, symbol suffixes, trading hours, spread and history vary by broker. Gold is included as XAU and the additional precious metals are included when the broker offers them. This discovery step is not yet a multi-asset execution engine; current persistent MT5 paper-ledger update remains BTC/XBT-only, and other instruments are data/scanner candidates until separate asset-aware paper ledgers and dashboard aggregation are implemented.
