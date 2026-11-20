@@ -41,6 +41,17 @@ def fetch_json(url, timeout=25):
     return result
 
 
+def fetch_raw_json(url, timeout=25):
+    request = Request(url, headers={"User-Agent": USER_AGENT, "Accept": "application/json"})
+    with urlopen(request, timeout=timeout) as response:
+        if response.status != 200:
+            raise ValueError("Market provider returned HTTP " + str(response.status))
+        payload = json.loads(response.read().decode("utf-8"))
+    if not isinstance(payload, dict):
+        raise ValueError("Market provider response is not a JSON object")
+    return payload
+
+
 def finite(value, label):
     if isinstance(value, bool):
         raise ValueError(label + " must be finite numeric data")
@@ -180,7 +191,7 @@ def scan_crypto_pair(pair, now_seconds):
 
 
 def normalize_biquote_metals(symbol, now_seconds):
-    quote = fetch_json("https://biquote.io/api/" + symbol + "?allowStale=false")
+    quote = fetch_raw_json("https://biquote.io/api/" + symbol + "?allowStale=false")
     if quote.get("symbol") != symbol:
         raise ValueError("Biquote quote symbol mismatch")
     quote_age = finite(quote.get("quoteAgeSeconds"), "metal quote age")
@@ -191,7 +202,7 @@ def normalize_biquote_metals(symbol, now_seconds):
     bid, ask = finite(quote.get("bid"), "metal bid"), finite(quote.get("ask"), "metal ask")
     if bid <= 0 or ask < bid:
         raise ValueError("Metal bid/ask is invalid")
-    history = fetch_json(
+    history = fetch_raw_json(
         "https://biquote.io/api/" + symbol + "/ohlc?interval=1h&limit=1000"
     )
     if history.get("symbol") != symbol or history.get("interval") != "1h":
