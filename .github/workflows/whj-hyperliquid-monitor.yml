@@ -1,0 +1,48 @@
+name: WHJ Hyperliquid Read-Only Monitor
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "*/15 * * * *"
+  push:
+    branches: [feature/independent-evidence-verifier]
+    paths:
+      - "whj_hyperliquid_monitor.py"
+      - "config/hyperliquid_wallets.json"
+      - ".github/workflows/whj-hyperliquid-monitor.yml"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: whj-hyperliquid-read-only-monitor
+  cancel-in-progress: true
+
+jobs:
+  monitor:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Run read-only public-data monitor
+        run: python whj_hyperliquid_monitor.py --wallet-limit 200 --output web/data/hyperliquid_monitor.json
+      - name: Publish latest read-only report to the dashboard branch
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add web/data/hyperliquid_monitor.json
+          if ! git diff --cached --quiet; then
+            git commit -m "chore: refresh Hyperliquid read-only monitoring report"
+            git push
+          fi
+      - name: Upload monitoring report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: whj-hyperliquid-read-only-report
+          path: web/data/hyperliquid_monitor.json
+          if-no-files-found: ignore
+          retention-days: 14

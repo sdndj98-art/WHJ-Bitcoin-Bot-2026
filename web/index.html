@@ -269,7 +269,7 @@ body[data-whj-theme="light"] .agent-nav button:hover,body[data-whj-theme="light"
  .agent-card.agent-focused{outline-offset:0}
 }
 </style>
-</head><body><div class="shell"><aside class="side"><div class="brand"><div class="logo">₿</div><div><b>WHJ BITCOIN</b><small>مركز قيادة التداول الذكي</small></div></div><div class="navlabel">القائمة الرئيسية</div><nav class="nav"><button class="active" data-view="overview"><span class="ico">⌂</span>الرئيسية</button><button data-view="scanner"><span class="ico">⌁</span>ماسح السوق</button><button data-view="strategies"><span class="ico">◈</span>الاستراتيجيات</button><button data-view="trades"><span class="ico">⇄</span>الصفقات</button><button data-view="risk"><span class="ico">⌁</span>المخاطر</button><button data-view="system"><span class="ico">⚙</span>النظام</button><button data-view="agents"><span class="ico">✣</span>مركز الوكلاء</button><button data-view="forward"><span class="ico">◷</span>المراقبة المستقبلية</button><button data-view="mt5"><span class="ico">⌁</span>منصة MT5</button></nav><div class="navlabel agent-nav-label">وحدات التشغيل الست</div><nav class="agent-nav" aria-label="وحدات التشغيل"><button type="button" data-agent-target="0"><span>⌕</span>ماسح السوق</button><button type="button" data-agent-target="1"><span>⚑</span>بوابة التحقق</button><button type="button" data-agent-target="2"><span>◈</span>مدير الحجم</button><button type="button" data-agent-target="3"><span>Ⅱ</span>المحاكي الورقي</button><button type="button" data-agent-target="4"><span>≡</span>سجل القرارات</button><button type="button" data-agent-target="5"><span>◉</span>مراقب المحفظة</button></nav><div class="sidefoot">WHJ Bitcoin Bot 2026<br>مراقبة وتحليل · Paper Trading فقط</div></aside><main>
+</head><body><div class="shell"><aside class="side"><div class="brand"><div class="logo">₿</div><div><b>WHJ BITCOIN</b><small>مركز قيادة التداول الذكي</small></div></div><div class="navlabel">القائمة الرئيسية</div><nav class="nav"><button class="active" data-view="overview"><span class="ico">⌂</span>الرئيسية</button><button data-view="scanner"><span class="ico">⌁</span>ماسح السوق</button><button data-view="liquidations"><span class="ico">◉</span>مراقبة الحيتان</button><button data-view="strategies"><span class="ico">◈</span>الاستراتيجيات</button><button data-view="trades"><span class="ico">⇄</span>الصفقات</button><button data-view="risk"><span class="ico">⌁</span>المخاطر</button><button data-view="system"><span class="ico">⚙</span>النظام</button><button data-view="agents"><span class="ico">✣</span>مركز الوكلاء</button><button data-view="forward"><span class="ico">◷</span>المراقبة المستقبلية</button><button data-view="mt5"><span class="ico">⌁</span>منصة MT5</button></nav><div class="navlabel agent-nav-label">وحدات التشغيل الست</div><nav class="agent-nav" aria-label="وحدات التشغيل"><button type="button" data-agent-target="0"><span>⌕</span>ماسح السوق</button><button type="button" data-agent-target="1"><span>⚑</span>بوابة التحقق</button><button type="button" data-agent-target="2"><span>◈</span>مدير الحجم</button><button type="button" data-agent-target="3"><span>Ⅱ</span>المحاكي الورقي</button><button type="button" data-agent-target="4"><span>≡</span>سجل القرارات</button><button type="button" data-agent-target="5"><span>◉</span>مراقب المحفظة</button></nav><div class="sidefoot">WHJ Bitcoin Bot 2026<br>مراقبة وتحليل · Paper Trading فقط</div></aside><main>
 <div class="mobilehead">WHJ BITCOIN · مركز القيادة</div><header class="top"><div><div class="eyebrow">WHJ / COMMAND CENTER</div><h1 id="pageTitle">نظرة عامة</h1><div class="sub">مراقبة أداء البوت وتحليل BTC/USD</div></div><div class="topright"><button class="toolbtn" id="exportJson" type="button">تنزيل التقرير JSON</button><button class="toolbtn" id="exportCsv" type="button">تصدير الصفقات CSV</button><span class="pill"><i class="dot"></i><span id="systemState">جارٍ تحميل البيانات</span></span><button class="refresh" id="refresh">↻ تحديث البيانات</button></div></header>
 <div class="banner"><div><b>وضع الحماية مفعّل — التداول الحقيقي متوقف</b><p>تعرض اللوحة بيانات التحليل والمحاكاة فقط، ولا ترسل أوامر إلى منصات التداول.</p></div><span class="status">● PAPER MODE</span></div>
 
@@ -387,6 +387,23 @@ body[data-whj-theme="light"] .agent-nav button:hover,body[data-whj-theme="light"
 </div>
 <div class="card" style="margin-top:12px"><div class="head"><h2>الهارمونيك والعرض والطلب</h2><span class="gate-lock">RESEARCH ONLY</span></div><div class="mini"><span>حالة السعر بالنسبة للمناطق</span><b id="zoneStatus">—</b></div><p class="sub">نماذج XABCD ومناطق مبنية على القمم والقيعان المؤكدة، مع دايفرجنس RSI. هذه تقديرات تحليلية وليست أوامر أو دليلاً على تدفقات المؤسسات.</p></div>
 <div class="scanner-safety"><span class="safety-icon">盾</span><div><b>حماية التداول مفعّلة</b><p>الماسح لا يفتح صفقات ولا يرسل أوامر حقيقية. أي فرصة تظهر هي مرشح بحثي للمحاكاة فقط. لا يفحص عقود العملات الجديدة أو مخاطر السحب الاحتيالي on-chain.</p></div><span class="status">LIVE TRADING OFF</span></div>
+</section>
+<section class="view" id="liquidations">
+ <div class="scanner-head"><div><div class="eyebrow">WHJ / HYPERLIQUID INTELLIGENCE</div><h2>مكتب مراقبة الحيتان والتصفية</h2><p>قراءة فقط من واجهة Hyperliquid العامة. لا توجد أوامر تداول أو مفاتيح API خاصة.</p></div><div class="scanner-head-tags"><span class="scan-chip muted">PUBLIC DATA</span><span class="scan-chip"><i></i> READ ONLY · PAPER</span></div></div>
+ <div class="banner"><div><b>مصدر البيانات: Hyperliquid Info API</b><p id="hlStatusText">بانتظار أول تقرير مراقبة. يتم تحديث التقرير المجدول كل 15 دقيقة عند تفعيل GitHub Actions.</p></div><span class="status" id="hlStatus">NO REPORT</span></div>
+ <div class="grid">
+  <article class="card metric"><div class="label">المحافظ المضافة <span>WATCHLIST</span></div><div class="value" id="hlWalletConfigured">—</div><div class="hint">عناوين أضيفت يدوياً إلى قائمة المراقبة</div></article>
+  <article class="card metric"><div class="label">المحافظ المفحوصة <span>SCANNED</span></div><div class="value" id="hlWalletScanned">—</div><div class="hint">نتائج القراءة الناجحة في آخر دورة</div></article>
+  <article class="card metric"><div class="label">مناطق التصفية <span>ZONES</span></div><div class="value" id="hlZoneCount">—</div><div class="hint">مجمعة حسب العملة والاتجاه ونطاق 0.5%</div></article>
+  <article class="card metric"><div class="label">الأسواق المتاحة <span>MARKETS</span></div><div class="value" id="hlMarketCount">—</div><div class="hint">بيانات السعر والفائدة والاهتمام المفتوح</div></article>
+ </div>
+ <div class="content">
+  <article class="card"><div class="head"><h2>خريطة مناطق التصفية</h2><span>تقديرات من مراكز المحافظ المتتبعة فقط</span></div><div class="tablewrap"><table><thead><tr><th>العملة</th><th>الاتجاه</th><th>المسافة من السعر %</th><th>قيمة المراكز $</th><th>عدد المحافظ</th><th>نطاق سعر التصفية</th></tr></thead><tbody id="hlZones"><tr><td colspan="6" class="empty">بانتظار البيانات</td></tr></tbody></table></div></article>
+  <article class="card"><div class="head"><h2>أسعار السوق</h2><span>MARK PRICE</span></div><div class="tablewrap"><table><thead><tr><th>الأصل</th><th>السعر</th><th>Funding</th><th>Open Interest</th></tr></thead><tbody id="hlMarkets"><tr><td colspan="4" class="empty">بانتظار البيانات</td></tr></tbody></table></div></article>
+ </div>
+ <article class="card tablecard"><div class="head"><h2>قائمة المحافظ المتتبعة</h2><span id="hlWalletMeta">لا توجد محافظ مضافة بعد</span></div><div class="tablewrap"><table><thead><tr><th>المحفظة</th><th>قيمة الحساب $</th><th>قيمة المراكز $</th><th>ربح/خسارة عائمة $</th><th>عدد المراكز</th></tr></thead><tbody id="hlWallets"><tr><td colspan="5" class="empty">أضف عناوين محافظ موثوقة إلى config/hyperliquid_wallets.json</td></tr></tbody></table></div></article>
+ <article class="card tablecard"><div class="head"><h2>حدود البيانات والتنبيهات</h2><span>TRANSPARENCY</span></div><div id="hlLimitations" class="empty">لم يتم تحميل تقرير بعد.</div></article>
+ <div class="sub" id="hlUpdated" style="margin-top:12px">آخر تحديث: غير متوفر</div>
 </section>
 <section class="view" id="strategies"><div class="card"><div class="head"><h2>مختبر الاستراتيجيات</h2><div class="headtools"><input class="filter" id="strategyFilter" type="search" placeholder="ابحث عن استراتيجية..." aria-label="البحث عن استراتيجية"><span>نتائج خارج العينة</span></div></div><div class="tablewrap"><table><thead><tr><th>الاستراتيجية</th><th>العائد %</th><th>التراجع %</th><th>الصفقات</th><th>أسوأ نافذة</th></tr></thead><tbody id="strategyRows"><tr><td colspan="5" class="empty">لا توجد بيانات</td></tr></tbody></table></div></div><div class="card" style="margin-top:13px"><div class="head"><h2>تحليل الاستراتيجيات حسب حالة السوق</h2><span>تشخيص وصفي خارج العينة</span></div><p class="sub">العائد المشروط هنا يقيس حركة الشموع التالية أثناء نشاط الإشارة؛ ليس ربح صفقات فعلياً ولا يتضمن تكاليف تنفيذ.</p><div class="tablewrap"><table><thead><tr><th>حالة السوق</th><th>شموع الحالة</th><th>حالة الدليل</th><th>الاستراتيجية</th><th>شموع الإشارة</th><th>العائد المشروط %</th><th>شموع موجبة %</th><th>فاصل الثقة 95%</th></tr></thead><tbody id="regimeRows"><tr><td colspan="8" class="empty">لا توجد بيانات تشخيص النظام السوقي</td></tr></tbody></table></div></div><div class="card" style="margin-top:13px"><p class="sub">ترتيب الاستراتيجيات لا يعني أنها مؤهلة للتداول الحقيقي. اعتمد دائماً على تقرير التأهيل واختبارات التكاليف.</p></div></section>
 <section class="view" id="trades"><div class="card"><div class="head"><h2>سجل الصفقات المغلقة</h2><div class="headtools"><input class="filter" id="tradeFilter" type="search" placeholder="ابحث بالتاريخ أو النوع أو النتيجة..." aria-label="البحث في الصفقات"><span>آخر 50 صفقة</span></div></div><div class="tablewrap"><table><thead><tr><th>التاريخ</th><th>النوع</th><th>النتيجة</th><th>الربح / الخسارة</th></tr></thead><tbody id="tradeRows"><tr><td colspan="4" class="empty">لا توجد صفقات مسجلة</td></tr></tbody></table></div></div></section>
@@ -813,4 +830,56 @@ document.querySelectorAll(".agent-nav button").forEach(b=>b.addEventListener("cl
 
 </script>
 
+<style>
+#liquidations .metric .value{font-variant-numeric:tabular-nums}
+#liquidations .tablewrap{max-height:380px;overflow:auto}
+#liquidations td{font-variant-numeric:tabular-nums}
+#liquidations .hl-long{color:var(--g);font-weight:bold}
+#liquidations .hl-short{color:var(--r);font-weight:bold}
+#liquidations .hl-warning{color:var(--a)}
+#liquidations .hl-limit{padding:8px 0;border-bottom:1px solid var(--line);text-align:right;color:var(--m);font-size:11px;line-height:1.7}
+@media(max-width:700px){#liquidations .scanner-head{align-items:flex-start;flex-direction:column}#liquidations .tablewrap{max-height:320px}}
+</style>
+<script>
+(function(){
+ const $=id=>document.getElementById(id);
+ const fmt=(v,d=2)=>Number.isFinite(Number(v))?Number(v).toLocaleString("en-US",{maximumFractionDigits:d}):"—";
+ const cell=(tr,value,cls)=>{const td=document.createElement("td");td.textContent=value==null?"—":String(value);if(cls)td.className=cls;tr.appendChild(td)};
+ const row=(body,values,classes=[])=>{const tr=document.createElement("tr");values.forEach((v,i)=>cell(tr,v,classes[i]));body.appendChild(tr)};
+ const empty=(body,cols,message)=>{body.replaceChildren();const tr=document.createElement("tr"),td=document.createElement("td");td.colSpan=cols;td.className="empty";td.textContent=message;tr.appendChild(td);body.appendChild(tr)};
+ async function loadHyperliquid(){
+  try{
+   const response=await fetch("data/hyperliquid_monitor.json?ts="+Date.now(),{cache:"no-store"});
+   if(!response.ok)throw new Error("لا يوجد تقرير مراقبة منشور بعد");
+   const data=await response.json();
+   if(!data||typeof data!=="object"||Array.isArray(data))throw new Error("صيغة التقرير غير صالحة");
+   $("hlWalletConfigured").textContent=fmt(data.wallets_configured,0);
+   $("hlWalletScanned").textContent=fmt(data.wallets_scanned,0);
+   $("hlZoneCount").textContent=fmt((data.liquidation_zones||[]).length,0);
+   $("hlMarketCount").textContent=fmt(Object.keys(data.markets||{}).length,0);
+   $("hlStatus").textContent=data.status==="healthy"?"HEALTHY":data.status==="partial"?"PARTIAL":"ERROR";
+   $("hlStatusText").textContent=data.status==="healthy"?"اكتمل آخر فحص للبيانات العامة.":data.status==="partial"?"اكتمل الفحص جزئياً؛ راجع أخطاء المحافظ.":"توجد مشكلة في آخر دورة مراقبة.";
+   $("hlWalletMeta").textContent=(data.wallets_scanned||0)+" / "+(data.wallets_configured||0)+" محافظ";
+   $("hlUpdated").textContent="آخر تحديث UTC: "+(data.generated_at_utc||"غير متوفر")+" · المصدر: "+(data.source||"غير معروف");
+   const zones=$("hlZones");zones.replaceChildren();
+   if(!(data.liquidation_zones||[]).length)empty(zones,6,"لا توجد مناطق تصفية محسوبة؛ أضف محافظ إلى قائمة المراقبة أو انتظر بيانات المراكز.");
+   (data.liquidation_zones||[]).slice(0,100).forEach(z=>row(zones,[z.coin,z.side,fmt(z.distance_from_mark_pct,2)+"%", "$"+fmt(z.estimated_position_value_usd,0),fmt(z.wallet_count,0),fmt(z.liquidation_price_low,4)+" – "+fmt(z.liquidation_price_high,4)],[ "",z.side==="LONG"?"hl-long":"hl-short"]));
+   const markets=$("hlMarkets");markets.replaceChildren();
+   Object.entries(data.markets||{}).slice(0,100).forEach(([coin,m])=>row(markets,[coin,fmt(m.mark_price,4),fmt(m.funding,6),fmt(m.open_interest,2)]));
+   if(!markets.children.length)empty(markets,4,"لا توجد بيانات أسعار.");
+   const wallets=$("hlWallets");wallets.replaceChildren();
+   (data.wallets||[]).slice(0,200).forEach(w=>row(wallets,[w.label,"$"+fmt(w.account_value_usd,2),"$"+fmt(w.total_notional_usd,2),"$"+fmt(w.unrealized_pnl_usd,2),fmt((w.positions||[]).length,0)]));
+   if(!wallets.children.length)empty(wallets,5,"لا توجد محافظ في القائمة. أضف عناوين موثوقة إلى ملف الإعدادات.");
+   const limits=$("hlLimitations");limits.replaceChildren();
+   (data.limitations||[]).forEach(item=>{const p=document.createElement("div");p.className="hl-limit";p.textContent=item;limits.appendChild(p)});
+   (data.wallet_scan_failures||[]).forEach(item=>{const p=document.createElement("div");p.className="hl-limit hl-warning";p.textContent="فشل فحص "+item.label+": "+item.error;limits.appendChild(p)});
+  }catch(error){
+   $("hlStatus").textContent="WAITING";$("hlStatusText").textContent=error.message;
+   $("hlUpdated").textContent="لم يتم العثور على تقرير بيانات صالح. ستظهر البيانات بعد أول تشغيل ناجح.";
+  }
+ }
+ document.querySelector('.nav button[data-view="liquidations"]')?.addEventListener("click",loadHyperliquid);
+ loadHyperliquid();window.setInterval(loadHyperliquid,60000);
+})();
+</script>
 </body></html>

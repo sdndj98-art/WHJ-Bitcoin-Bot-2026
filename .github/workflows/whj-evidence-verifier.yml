@@ -1,0 +1,48 @@
+name: WHJ Evidence Verifier CI
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "whj_evidence_verifier.py"
+      - "whj_free_worker.py"
+      - "tests/test_whj_evidence_verifier.py"
+      - ".github/workflows/whj-evidence-verifier.yml"
+  push:
+    branches: [feature/independent-evidence-verifier]
+    paths:
+      - "whj_evidence_verifier.py"
+      - "whj_free_worker.py"
+      - "tests/test_whj_evidence_verifier.py"
+      - ".github/workflows/whj-evidence-verifier.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Compile verifier and worker
+        run: python -m py_compile whj_evidence_verifier.py whj_free_worker.py
+      - name: Run verifier unit tests
+        run: python -m unittest discover -s tests -p 'test_whj_evidence_verifier.py' -v
+      - name: Run existing free-worker tests
+        run: python -m unittest discover -s tests -p 'test_whj_free_worker.py' -v
+      - name: Generate deterministic source evidence
+        run: python whj_free_worker.py run --output-dir research/agent_office
+      - name: Verify every evidence quote against its fingerprinted source
+        run: python whj_evidence_verifier.py --root . --output-dir research/agent_office/evidence_verifier
+      - name: Upload verification report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: whj-evidence-verifier-report
+          path: research/agent_office/evidence_verifier/
+          if-no-files-found: ignore
+          retention-days: 14
