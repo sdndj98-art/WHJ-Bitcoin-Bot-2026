@@ -94,7 +94,8 @@ def _adx(rows, period=14):
 
 
 def scan_btc_market(candles, market_data_quality=None, volume_lookback=20,
-                    volume_spike_multiple=1.5, interval_hours=1, market_label="BTC/USD"):
+                    volume_spike_multiple=1.5, interval_hours=1, market_label="BTC/USD",
+                    allow_session_gaps=False, max_session_gap_hours=4):
     """Score a completed hourly candle against eight independent confirmation checks.
 
     Uses 50 prior candles for EMA trend context, 20 prior candles for breakout
@@ -147,8 +148,24 @@ def scan_btc_market(candles, market_data_quality=None, volume_lookback=20,
     timestamps = [item[0] for item in normalized]
     if any(current <= previous for previous, current in zip(timestamps, timestamps[1:])):
         raise ValueError("Scanner candle timestamps must be strictly increasing")
-    if any(current - previous != interval_seconds for previous, current in zip(timestamps, timestamps[1:])):
+    if not isinstance(allow_session_gaps, bool):
+        raise ValueError("allow_session_gaps must be boolean")
+    if (isinstance(max_session_gap_hours, bool)
+            or not isinstance(max_session_gap_hours, (int, float))
+            or not math.isfinite(max_session_gap_hours)
+            or max_session_gap_hours < 1):
+        raise ValueError("max_session_gap_hours must be finite and at least 1")
+    gaps = [current - previous for previous, current in zip(timestamps, timestamps[1:])]
+    if not allow_session_gaps and any(gap != interval_seconds for gap in gaps):
         raise ValueError(f"Scanner requires contiguous completed {timeframe} candles")
+    if allow_session_gaps and any(
+        gap < interval_seconds or gap > interval_seconds * max_session_gap_hours
+        for gap in gaps
+    ):
+        raise ValueError(
+            f"Scanner {timeframe} session gap exceeds the configured "
+            f"{max_session_gap_hours}-hour allowance"
+        )
     if any(timestamp % interval_seconds != 0 for timestamp in timestamps):
         if interval_hours == 1:
             raise ValueError("Scanner hourly candle timestamps must align to UTC hour boundaries")
