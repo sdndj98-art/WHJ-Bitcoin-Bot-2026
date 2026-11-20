@@ -195,3 +195,15 @@ python mt5_market_universe.py --output market_universe.json
 ```
 
 This reads the broker's symbol catalog and exports the available symbols by category. It does not read account balances or send orders. “All currencies” means currency pairs actually listed by the connected broker and recognized by the currency catalog; availability, quote currencies, symbol suffixes, trading hours, spread and history vary by broker. Gold is included as XAU and the additional precious metals are included when the broker offers them. This discovery step is not yet a multi-asset execution engine; current persistent MT5 paper-ledger update remains BTC/XBT-only, and other instruments are data/scanner candidates until separate asset-aware paper ledgers and dashboard aggregation are implemented.
+
+## Isolated multi-asset paper ledger (experimental)
+
+The `multi_asset_paper.py` module adds separate virtual sleeves for any broker-discovered symbol (FX, metals, commodities, or crypto) without changing the existing dashboard or legacy BTC/gold ledgers. It consumes a user-generated `multi_asset_snapshot.json` containing validated bid/ask quotes, quote timestamps, explicit BUY/SELL/HOLD signals, a healthy-symbol list, each instrument's broker-specific contract size, and quote-currency-to-USD conversion rate.
+
+Run it with:
+
+```bash
+python multi_asset_paper.py --input multi_asset_snapshot.json --state state/multi_asset_paper.json --output state/multi_asset_paper_report.json
+```
+
+The ledger persists independent cash, position, fees, realized/unrealized PnL, quote de-duplication, daily-loss pause, and peak-drawdown pause per symbol. Entries are long-only, use ask prices; exits use bid prices; fees are modeled on both sides. Invalid/missing contract metadata blocks the snapshot rather than guessing broker lot sizes. The module does not fetch quotes, generate strategy signals, send orders, or modify the existing dashboard. A valid feed adapter and signal producer must be connected before it can run continuously. This is experimental paper simulation, not validated profitability or a live-trading system.
