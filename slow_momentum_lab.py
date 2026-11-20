@@ -27,8 +27,8 @@ def momentum_signals(closes, lookback):
         raise ValueError("lookback must be a positive integer")
     if not isinstance(closes, (list, tuple)) or len(closes) <= lookback:
         raise ValueError("closes must contain more observations than lookback")
-    if any(not _is_finite_numeric(value) for value in closes):
-        raise ValueError("closes must contain finite numeric values")
+    if any(not _is_finite_numeric(value) or value <= 0 for value in closes):
+        raise ValueError("closes must contain finite positive numeric values")
     signals = [False] * len(closes)
     for i in range(lookback, len(closes)):
         signals[i] = float(closes[i]) > float(closes[i - lookback])
