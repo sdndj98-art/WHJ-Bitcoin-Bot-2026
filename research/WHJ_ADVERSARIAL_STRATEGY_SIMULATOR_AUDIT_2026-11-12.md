@@ -702,9 +702,9 @@ No strategy is promoted. No paper ledger, balance, schedule, risk limit, exchang
 | 17 | Stochastic | 11.58 | -76.1655% | 76.2606% | 0.2602 | -12.4834 | 1869 | -94.1374% | -98.5587% | 0/4 | 3/3 |
 
 **Critical protocol caveat**
-- The existing fixed 70/30 OOS and the four-fold 55%-to-95% walk-forward share data. On Coinbase, 9,000 of 10,799 fixed-OOS returns (83.3%) overlap the WF test folds; on Bitstamp, 18,000 of 21,599 (83.3%) overlap. Therefore these two reports are not independent confirmations.
-- The composite score above uses the fixed-candidate WF results only; the 70/30 OOS metrics remain separate diagnostics and are not double-counted.
-- Next protocol step: freeze V1 rules, reserve the final 15% as an untouched holdout, and limit walk-forward to three 10% folds ending at 85%. This will create non-overlapping WF and final-holdout windows. The earlier 70/30 reports remain archived and unchanged.
+- The 9,000/10,799 Coinbase and 18,000/21,599 Bitstamp overlap figures above describe the superseded four-fold 55%-to-95% selector only. They must not be reused as the overlap count for the later three-fold selector.
+- The composite score above uses fixed-candidate walk-forward results only; fixed 70/30 OOS metrics remain separate diagnostics and are not double-counted.
+- The three-fold selector was subsequently capped at 55%-to-85% (F33). Because the older fixed 70/30 OOS reports cover 70%-to-100%, the three-fold test still overlaps half of those fixed-OOS returns, and the trailing 15% is not a pristine holdout. See F36 below. A genuinely untouched final holdout must be collected prospectively after the candidate rules and protocol are frozen.
 
 ### F27 — Slow Momentum run #24 artifact independently verified (2026-11-20)
 
@@ -856,3 +856,17 @@ This is validation-only: all valid positive-price signal outputs, lookbacks, exe
 - The branch head is documentation-only after the F34 source commit; the #26 research job ran against the F34 source commit `d174745...`. No new 17-candidate BTC evaluation was triggered by this documentation-only update.
 
 **Safety and decision:** the slow-momentum workflow uses the isolated historical evaluator and public Coinbase data. Its report states `live_orders=false` and `paper_ledgers_read_or_written=false`. No paper ledger, balance, schedule, risk limit, exchange secret, or order pathway was accessed or changed. No candidate is promoted.
+
+
+## F36 — exact overlap after the three-fold walk-forward cap (2026-11-21)
+
+A boundary audit of the verified Coinbase #52 and Bitstamp #34 artifacts corrects the overlap interpretation after F33 changed the selector from four folds to three:
+
+- Coinbase #52: the fixed 70/30 OOS stream contains 10,799 open-to-open returns beginning at index 25,200. The three-fold walk-forward test interval spans indices 19,800–30,600; their intersection is 5,400 returns, or **50.0%** of the fixed OOS stream.
+- Bitstamp #34: the fixed 70/30 OOS stream contains 21,599 returns beginning at index 50,400. The three-fold walk-forward test interval spans indices 39,600–61,200; their intersection is 10,800 returns, or **50.0%** of the fixed OOS stream.
+- The final 15% excluded from the three-fold selector (85%–100%) was nevertheless already exposed by the fixed 70/30 OOS experiment and earlier research. It is therefore an unused selector tail, **not an untouched final holdout**.
+- The older 83.3% overlap values remain historically correct for the earlier four-fold selector, but are superseded for current three-fold overlap accounting.
+
+This does not invalidate either historical report; it limits the independence claim. The fixed 70/30 OOS and three-fold walk-forward results are overlapping historical diagnostics, not independent replications. A final holdout must consist of future observations collected only after V1/V2 candidate definitions, parameters, ranking rules, and cost assumptions are frozen. Do not tune on that prospective holdout, and report its sample size and calendar coverage separately.
+
+No code or strategy rule changed for this boundary audit. No candidate is promoted and no paper/live execution is enabled.
