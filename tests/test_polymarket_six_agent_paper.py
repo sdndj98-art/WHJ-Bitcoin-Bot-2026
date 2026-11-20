@@ -1,7 +1,7 @@
 import unittest
 
 from polymarket_six_agent_paper import (
-    edge, impact, paper_entry, pulse, run_six_agents, size_position, exit_pnl,
+    edge, impact, paper_entry, pulse, run_six_agents, size_position, exit_pnl, exit_monitor,
 )
 
 
@@ -71,6 +71,21 @@ class SixAgentPaperTests(unittest.TestCase):
         result = exit_pnl(10, 0.4, 0.5, 0.3)
         self.assertAlmostEqual(result["realized_pnl"], 0.7)
         self.assertEqual(result["mode"], "PAPER_ONLY")
+
+    def test_exit_monitor_closes_on_pressure_reversal(self):
+        result = exit_monitor(
+            10, 0.40, 0.48, 0.20, True, 0.30, 60, 300,
+        )
+        self.assertTrue(result["should_close"])
+        self.assertIn("ORDER_BOOK_PRESSURE_REVERSED", result["exit_reasons"])
+        self.assertAlmostEqual(result["realized_pnl"]["realized_pnl"], 0.6)
+        self.assertFalse(result["orders_submitted"])
+
+    def test_exit_monitor_closes_on_stop_or_horizon(self):
+        stop = exit_monitor(10, 0.40, 0.28, 0.20, False, 0.30, 60, 300)
+        self.assertIn("RISK_STOP_TRIGGERED", stop["exit_reasons"])
+        horizon = exit_monitor(10, 0.40, 0.45, 0.20, False, 0.30, 300, 300)
+        self.assertIn("HOLDING_HORIZON_ENDED", horizon["exit_reasons")
 
     def test_full_pipeline_returns_paper_candidate_only(self):
         result = run_six_agents(
