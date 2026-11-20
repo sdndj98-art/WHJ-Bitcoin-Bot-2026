@@ -85,7 +85,7 @@ class SixAgentPaperTests(unittest.TestCase):
         stop = exit_monitor(10, 0.40, 0.28, 0.20, False, 0.30, 60, 300)
         self.assertIn("RISK_STOP_TRIGGERED", stop["exit_reasons"])
         horizon = exit_monitor(10, 0.40, 0.45, 0.20, False, 0.30, 300, 300)
-        self.assertIn("HOLDING_HORIZON_ENDED", horizon["exit_reasons")
+        self.assertIn("HOLDING_HORIZON_ENDED", horizon["exit_reasons"])
 
     def test_full_pipeline_returns_paper_candidate_only(self):
         result = run_six_agents(
