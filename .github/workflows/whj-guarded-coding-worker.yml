@@ -1,0 +1,95 @@
+name: WHJ Guarded Coding Worker
+
+on:
+  workflow_dispatch:
+  schedule:
+    # 12 bounded development attempts per day; GitHub may delay scheduled jobs.
+    - cron: "0 */2 * * *"
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: whj-guarded-coding-worker
+  cancel-in-progress: false
+
+jobs:
+  propose-research-change:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Skip if model credentials are not configured
+        id: gate
+        env:
+          MODEL_KEY: ${{ secrets.WHJ_MODEL_API_KEY }}
+          MODEL_URL: ${{ vars.WHJ_MODEL_BASE_URL }}
+          MODEL_NAME: ${{ vars.WHJ_MODEL_NAME }}
+        run: |
+          if [ -z "$MODEL_KEY" ] || [ -z "$MODEL_URL" ] || [ -z "$MODEL_NAME" ]; then
+            echo "configured=false" >> "$GITHUB_OUTPUT"
+            echo "No model credentials/configuration. Worker safely skipped."
+          else
+            echo "configured=true" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Checkout default branch
+        if: steps.gate.outputs.configured == 'true'
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.repository.default_branch }}
+          fetch-depth: 0
+      - name: Set up Python
+        if: steps.gate.outputs.configured == 'true'
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Run deterministic QA report
+        if: steps.gate.outputs.configured == 'true'
+        run: python whj_24h_development_team.py
+      - name: Ask model for a guarded patch
+        if: steps.gate.outputs.configured == 'true'
+        env:
+          WHJ_MODEL_API_KEY: ${{ secrets.WHJ_MODEL_API_KEY }}
+          WHJ_MODEL_BASE_URL: ${{ vars.WHJ_MODEL_BASE_URL }}
+          WHJ_MODEL_NAME: ${{ vars.WHJ_MODEL_NAME }}
+        run: python whj_coding_worker.py
+      - name: Apply and verify patch
+        if: steps.gate.outputs.configured == 'true' && hashFiles('whj_worker.patch') != ''
+        run: |
+          git apply --check whj_worker.patch
+          git apply whj_worker.patch
+          python -m compileall -q .
+          python -m unittest discover -s tests -v
+          git diff --check
+      - name: Create a draft PR only after tests pass
+        if: steps.gate.outputs.configured == 'true' && hashFiles('whj_worker.patch') != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RUN_NUMBER: ${{ github.run_number }}
+          BRANCH_NAME: whj-coding-worker-${{ github.run_number }}
+        run: |
+          if git diff --quiet; then
+            echo "Patch produced no working-tree changes; no PR."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout -b "$BRANCH_NAME"
+          git add -- research tests '*_lab.py' '*_research.py' '*_audit.py' '*_evaluator.py' '*_runner.py' whj_agent_office.py whj_24h_development_team.py whj_repair_advisor.py 2>/dev/null || true
+          if git diff --cached --quiet; then
+            echo "No allowlisted changes staged."
+            exit 0
+          fi
+          git commit -m "WHJ coding worker: guarded research improvement"
+          git push origin "$BRANCH_NAME"
+          gh pr create --draft --base "${{ github.event.repository.default_branch }}" --head "$BRANCH_NAME" \
+            --title "WHJ coding worker proposal #$RUN_NUMBER" \
+            --body "Automated research/docs-only proposal. The worker patch was path/size checked and Python compilation, unit tests, and whitespace validation passed. This PR is draft and never auto-merges. Review the diff carefully."
+      - name: Upload patch for audit
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: whj-coding-worker-patch-${{ github.run_number }}
+          path: whj_worker.patch
+          if-no-files-found: ignore
+          retention-days: 14
