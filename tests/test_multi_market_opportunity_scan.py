@@ -1,0 +1,86 @@
+import unittest
+from datetime import datetime, timezone
+
+from multi_market_opportunity_scan import (
+    discover_kraken_universe,
+    normalize_kraken_ohlc,
+)
+from market_scanner import scan_btc_market
+
+
+class MultiMarketScannerTests(unittest.TestCase):
+    def test_kraken_normalizer_uses_closed_hourly_candles(self):
+        now = datetime(2026, 11, 21, 12, 30, tzinfo=timezone.utc).timestamp()
+        rows = []
+        start = int(now // 3600) * 3600 - 80 * 3600
+        for index in range(81):
+            timestamp = start + index * 3600
+            price = 100.0 + index * 0.25
+            rows.append([
+                timestamp, str(price), str(price + 1), str(price - 1),
+                str(price + 0.2), str(price), "120.0", "10",
+            ])
+        candles, quality = normalize_kraken_ohlc({"rows": rows}, now)
+        self.assertEqual(len(candles), 80)  # forming candle is excluded
+        self.assertEqual(quality["quality_status"], "HEALTHY")
+        self.assertTrue(quality["recent_51_hour_gap_free"])
+
+    def test_kraken_normalizer_rejects_recent_missing_hour(self):
+        now = datetime(2026, 11, 21, 12, 30, tzinfo=timezone.utc).timestamp()
+        rows = []
+        start = int(now // 3600) * 3600 - 80 * 3600
+        for index in range(81):
+            if index == 50:
+                continue
+            timestamp = start + index * 3600
+            price = 100.0 + index * 0.25
+            rows.append([
+                timestamp, price, price + 1, price - 1, price + 0.2,
+                price, 120.0, 10,
+            ])
+        with self.assertRaisesRegex(ValueError, "missing hourly interval"):
+            normalize_kraken_ohlc({"rows": rows}, now)
+
+    def test_session_gap_is_opt_in_and_bounded(self):
+        candles = []
+        start = 1_700_000_000 // 3600 * 3600
+        for index in range(55):
+            timestamp = start + index * 3600
+            if index >= 35:
+                timestamp += 2 * 3600
+            price = 100.0 + index
+            candles.append([
+                timestamp, price, price + 1, price - 1, price + 0.5,
+                0.0, 100.0, 10,
+            ])
+        quality = {"quality_status": "HEALTHY", "paper_execution_allowed": True}
+        with self.assertRaisesRegex(ValueError, "contiguous"):
+            scan_btc_market(candles, quality, market_label="TEST/USD")
+        result = scan_btc_market(
+            candles, quality, market_label="TEST/USD",
+            allow_session_gaps=True, max_session_gap_hours=4,
+        )
+        self.assertEqual(result["market"], "TEST/USD")
+
+    def test_session_gap_over_limit_is_rejected(self):
+        candles = []
+        start = 1_700_000_000 // 3600 * 3600
+        for index in range(55):
+            timestamp = start + index * 3600
+            if index >= 35:
+                timestamp += 6 * 3600
+            price = 100.0 + index
+            candles.append([
+                timestamp, price, price + 1, price - 1, price + 0.5,
+                0.0, 100.0, 10,
+            ])
+        quality = {"quality_status": "HEALTHY", "paper_execution_allowed": True}
+        with self.assertRaisesRegex(ValueError, "session gap exceeds"):
+            scan_btc_market(
+                candles, quality, market_label="TEST/USD",
+                allow_session_gaps=True, max_session_gap_hours=4,
+            )
+
+
+if __name__ == "__main__":
+    unittest.main()
