@@ -303,6 +303,7 @@ def build_report():
     errors = {}
     universe_count = 0
     ranked_count = 0
+    universe_ready = False
     crypto_pairs_scanned = 0
     current_market = None
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
@@ -321,6 +322,8 @@ def build_report():
             "generated_at_utc": datetime.now(timezone.utc).isoformat(timespec="seconds"),
             "scan_started_at_utc": now.isoformat(timespec="seconds"),
             "scan_status": scan_status,
+            "scan_complete": scan_status == "COMPLETE",
+            "universe_discovery_succeeded": universe_ready,
             "current_market": current_market,
             "crypto_pairs_discovered": universe_count,
             "crypto_pairs_ranked": ranked_count,
@@ -362,6 +365,7 @@ def build_report():
         universe_count = len(universe)
         ranked, missing_tickers = rank_kraken_pairs(universe)
         ranked_count = len(ranked)
+        universe_ready = True
         print(f"[WHJ scan] Discovered {universe_count} active pairs; ranked {ranked_count}.", flush=True)
         if missing_tickers:
             errors["kraken_ticker_missing"] = missing_tickers[:100]
@@ -394,7 +398,7 @@ def build_report():
             errors[symbol] = str(exc)[:300]
         checkpoint()
 
-    return make_report("COMPLETE" if crypto_pairs_scanned == ranked_count else "PARTIAL")
+    return make_report("COMPLETE" if universe_ready and crypto_pairs_scanned == ranked_count else "PARTIAL")
 
 def main():
     report = build_report()
