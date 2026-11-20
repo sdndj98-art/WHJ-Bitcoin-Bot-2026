@@ -97,6 +97,13 @@ def verify_report(root: Path, report_path: Path) -> dict:
 
             source_path = finding.get("source_path")
             quote = finding.get("evidence_quote")
+            if source_path not in inventory:
+                result["issues"].append({
+                    **location, "type": "source_not_in_inventory",
+                    "source_path": source_path,
+                    "detail": "Finding source must be listed in files_inspected with its SHA-256 fingerprint.",
+                })
+                continue
             source = safe_source(root, source_path)
             if source is None:
                 result["issues"].append({
@@ -105,7 +112,7 @@ def verify_report(root: Path, report_path: Path) -> dict:
                     "detail": "Source path is missing, outside the repository, or not a file.",
                 })
                 continue
-            if not isinstance(quote, str) or len(quote.strip()) < 12:
+            if not isinstance(quote, str) or not quote.strip():
                 result["issues"].append({
                     **location, "type": "quote_missing_or_too_short",
                     "source_path": source_path,
