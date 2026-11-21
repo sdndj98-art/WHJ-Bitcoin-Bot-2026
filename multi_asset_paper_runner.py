@@ -313,7 +313,7 @@ def run_engine():
     # Metal execution requires timestamp-validated spot and validated daily OHLC.
     metal_status = {}
     quote_now = datetime.now(timezone.utc).timestamp()
-    for symbol in (*METALS, "XPTUSD", "XPDUSD"):
+    for symbol in (*METALS, "XCUUSD", "XPTUSD", "XPDUSD"):
         market = markets.get(symbol)
         if market:
             metal_status[symbol] = {
@@ -330,13 +330,13 @@ def run_engine():
         try:
             quote = fetch_spot(symbol, quote_now)
             metal_status[symbol] = {
-                "status": "SPOT_ONLY_HISTORY_BLOCKED" if symbol in METALS else "SPOT_ONLY_RESEARCH",
+                "status": "SPOT_ONLY_HISTORY_BLOCKED" if symbol == "XCUUSD" else "SPOT_ONLY_RESEARCH",
                 "paper_execution_enabled": False, "symbol": symbol,
                 "provider": quote.get("provider"), "last_price_usd": quote.get("price_usd"),
                 "price_unit": quote.get("price_unit"), "quote_age_seconds": quote.get("quote_age_seconds"),
                 "quote_timestamp": quote.get("computed_at"), "history_interval": None,
                 "closed_daily_bars": 0, "latest_closed_candle": None, "closed_trades": 0,
-                "reason": errors.get(symbol) or "No validated free daily OHLC feed for this metal",
+                "reason": errors.get(symbol) or ("goldprice.dev free tier plan-gates HG daily OHLC" if symbol == "XCUUSD" else "No validated free daily OHLC feed for this metal"),
             }
         except Exception as exc:
             metal_status[symbol] = {

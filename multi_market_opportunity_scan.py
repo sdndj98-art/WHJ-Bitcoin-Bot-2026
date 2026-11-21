@@ -222,7 +222,7 @@ def normalize_biquote_metals(symbol, now_seconds):
             "data_quality": {
                 "quality_status": "TIMESTAMP_VALIDATED_SPOT_ONLY",
                 "paper_execution_allowed": False,
-                "reason": "Free validated closed daily OHLC history is not available for this metal",
+                "reason": ("goldprice.dev free tier returns plan_gated for HG daily OHLC" if symbol == "XCUUSD" else "No validated free daily OHLC history for platinum/palladium"),
             },
             "directional_research": "WATCH",
         })

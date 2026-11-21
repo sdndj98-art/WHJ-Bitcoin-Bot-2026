@@ -39,6 +39,20 @@ class MultiMarketScannerTests(unittest.TestCase):
                 multi_scan.fetch_json("https://provider.example/markets")
         self.assertEqual(request.call_count, 1)
         sleep.assert_not_called()
+    def test_copper_spot_is_watch_only_when_daily_history_is_plan_gated(self):
+        quote = {
+            "price_usd": 4.25, "price_unit": "pound", "provider": "Gold-API",
+            "quote_age_seconds": 20, "expected_delay_minutes": 0,
+            "computed_at": "2026-11-21T11:00:00+00:00",
+        }
+        with patch.object(multi_scan, "fetch_spot", return_value=quote), \
+             patch.object(multi_scan, "fetch_daily_bars") as bars:
+            result = multi_scan.normalize_biquote_metals("XCUUSD", 1795262400)
+        self.assertFalse(result["execution_enabled"])
+        self.assertEqual(result["directional_research"], "WATCH")
+        self.assertIn("plan-gated", result["data_quality"]["reason"])
+        bars.assert_not_called()
+
     def test_failed_universe_discovery_is_never_reported_complete(self):
         with TemporaryDirectory() as temp_dir:
             with patch.object(multi_scan, "OUTPUT_DIR", __import__("pathlib").Path(temp_dir)), \
