@@ -28,7 +28,9 @@ class MultiMarketDashboardTests(unittest.TestCase):
     def test_scan_workflow_publishes_report_without_live_execution(self):
         workflow = Path(".github/workflows/whj-multi-market-scan.yml").read_text(encoding="utf-8")
         self.assertIn("contents: write", workflow)
-        self.assertIn("git push origin HEAD:main", workflow)
+        self.assertNotIn("git push origin HEAD:main", workflow)
+        self.assertIn("timeout-minutes: 45", workflow)
+        self.assertIn("Upload multi-market report", workflow)
         self.assertIn("python multi_market_opportunity_scan.py", workflow)
         self.assertNotIn("live trading", workflow.lower())
 

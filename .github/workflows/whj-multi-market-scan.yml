@@ -22,7 +22,7 @@ concurrency:
 jobs:
   scan:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 45
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -37,24 +37,11 @@ jobs:
           python -m unittest discover -s tests -p 'test_market_scanner.py' -v
       - name: Scan all discovered liquid-quote crypto pairs and supported metals
         run: python multi_market_opportunity_scan.py
-      - name: Commit read-only multi-market report
+      - name: Keep scan reports as run artifacts (no concurrent main-branch pushes)
         if: always()
         run: |
-          if [ ! -s research/multi_market_scan/latest.json ]; then
-            echo "No scan checkpoint exists; nothing to publish."
-            exit 0
-          fi
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git pull --rebase origin main
-          git add research/multi_market_scan/latest.json
-          if [ -f research/multi_market_scan/latest.md ]; then git add research/multi_market_scan/latest.md; fi
-          if ! git diff --cached --quiet; then
-            git commit -m "chore: publish read-only multi-market scan report"
-            git push origin HEAD:main
-          else
-            echo "Multi-market report is unchanged."
-          fi
+          echo "Reports are published as workflow artifacts."
+          echo "The scanner is read-only and must not push generated data into main."
       - name: Publish scan summary
         if: always()
         run: |
