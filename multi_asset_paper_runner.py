@@ -22,7 +22,7 @@ LEDGER = Path("state/shared_paper_100usd.json")
 SNAPSHOT = Path("dual_portfolio.json")
 REPORT = Path("state/multi_asset_paper_report.json")
 INITIAL_CASH = 100.0
-MAX_CRYPTO_MARKETS = 3
+MAX_CRYPTO_MARKETS = 20
 METALS = ("XAUUSD", "XAGUSD")
 TRADE_ALLOCATION = 0.02
 MAX_GROSS_EXPOSURE = 0.50
@@ -128,7 +128,7 @@ def _crypto_market(pair, now_seconds):
 def _is_eligible_crypto_pair(pair):
     return (
         isinstance(pair, dict)
-        and pair.get("quote") == "USD"
+        and pair.get("quote") in {"USD", "USDT", "USDC"}
         and str(pair.get("base", "")).upper() not in EXCLUDED_BASES
         and str(pair.get("base", "")).upper() not in FIAT_BASES
     )
@@ -145,10 +145,21 @@ def _load_markets(book):
     now = datetime.now(timezone.utc).timestamp()
     universe = discover_kraken_universe()
     ranked, _ = rank_kraken_pairs(universe)
-    usd_pairs = [pair for pair in ranked if _is_eligible_crypto_pair(pair)]
-    selected = usd_pairs[:MAX_CRYPTO_MARKETS]
+    eligible_pairs = [pair for pair in ranked if _is_eligible_crypto_pair(pair)]
+    # Select up to 20 distinct crypto bases by liquidity across USD/stablecoin
+    # quotes; avoid duplicate exposure to the same coin via multiple quote pairs.
+    selected = []
+    selected_bases = set()
+    for pair in eligible_pairs:
+        base = str(pair.get("base", "")).upper()
+        if base in selected_bases:
+            continue
+        selected.append(pair)
+        selected_bases.add(base)
+        if len(selected) >= MAX_CRYPTO_MARKETS:
+            break
     open_assets = _position_market_symbols(book)
-    pair_by_symbol = {pair["symbol"]: pair for pair in universe if pair["quote"] == "USD"}
+    pair_by_symbol = {pair["symbol"]: pair for pair in universe if pair["quote"] in {"USD", "USDT", "USDC"}}
     # Kraken names Bitcoin XBT; the shared WHJ ledger uses the canonical BTC/USD label.
     xbt_pair = next((pair for pair in universe
                      if pair["base"].upper() == "XBT" and pair["quote"] == "USD"), None)
@@ -156,7 +167,7 @@ def _load_markets(book):
         pair_by_symbol["BTC/USD"] = xbt_pair
     required_crypto = {
         asset for asset in open_assets
-        if isinstance(asset, str) and asset.endswith("/USD")
+        if isinstance(asset, str) and "/" in asset
     }
     for symbol in required_crypto:
         base = symbol.split("/", 1)[0]
