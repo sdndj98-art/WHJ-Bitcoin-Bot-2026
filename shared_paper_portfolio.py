@@ -116,6 +116,19 @@ class SharedPaperPortfolio:
         self.state["strategy_state"] = strategy_state
         self._save()
 
+    def save_extension_state(self, key, value):
+        """Persist namespaced paper-engine state without replacing BTC strategy cursors."""
+        if not isinstance(key, str) or not key or key in {
+            "schema_version", "mode", "live_trading_enabled", "initial_cash_usd",
+            "cash_usd", "positions", "closed_trades", "fees_paid_usd",
+            "next_position_number", "strategy_state",
+        }:
+            raise ValueError("Invalid extension state key")
+        if not isinstance(value, dict):
+            raise ValueError("Extension state must be an object")
+        self.state[key] = value
+        self._save()
+
     def open_position(self, strategy, asset, price, notional_usd, position_id=None):
         if strategy not in SUPPORTED_STRATEGIES:
             raise ValueError("Unsupported strategy")
