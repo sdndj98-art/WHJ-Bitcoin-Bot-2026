@@ -122,7 +122,11 @@ jobs:
           cp index.html _site/index.html
           cp dual_portfolio_dashboard.html _site/dual_portfolio_dashboard.html
           cp dual_portfolio.json _site/dual_portfolio.json
-          cp state/whj_agents.json _site/whj_agents.json\n          if [ -s research/multi_market_scan/latest.json ]; then\n            mkdir -p _site/research/multi_market_scan\n            cp research/multi_market_scan/latest.json _site/research/multi_market_scan/latest.json\n          fi
+          cp state/whj_agents.json _site/whj_agents.json
+          if [ -s research/multi_market_scan/latest.json ]; then
+            mkdir -p _site/research/multi_market_scan
+            cp research/multi_market_scan/latest.json _site/research/multi_market_scan/latest.json
+          fi
       - name: Upload dashboard
         if: success()
         uses: actions/upload-pages-artifact@v3
