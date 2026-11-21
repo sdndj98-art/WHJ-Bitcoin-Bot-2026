@@ -39,6 +39,22 @@ class MultiMarketScannerTests(unittest.TestCase):
                 multi_scan.fetch_json("https://provider.example/markets")
         self.assertEqual(request.call_count, 1)
         sleep.assert_not_called()
+    def test_ranker_excludes_stablecoin_and_fiat_base_pairs(self):
+        pairs = [
+            {"base": "USDG", "quote": "USDC", "pair_key": "USDGUSDC", "altname": "USDGUSDC", "symbol": "USDG/USDC"},
+            {"base": "EUR", "quote": "USD", "pair_key": "EURUSD", "altname": "EURUSD", "symbol": "EUR/USD"},
+            {"base": "ETH", "quote": "USD", "pair_key": "ETHUSD", "altname": "ETHUSD", "symbol": "ETH/USD"},
+        ]
+        tickers = {
+            "USDGUSDC": {"v": ["1", "1000"], "c": ["1.0006"]},
+            "EURUSD": {"v": ["1", "1000"], "c": ["1.1"]},
+            "ETHUSD": {"v": ["1", "100"], "c": ["2000"]},
+        }
+        with patch.object(multi_scan, "fetch_json", return_value=tickers):
+            ranked, missing = multi_scan.rank_kraken_pairs(pairs)
+        self.assertEqual([p["symbol"] for p in ranked], ["ETH/USD"])
+        self.assertEqual(missing, [])
+
     def test_copper_spot_is_watch_only_when_daily_history_is_plan_gated(self):
         quote = {
             "price_usd": 4.25, "price_unit": "pound", "provider": "Gold-API",

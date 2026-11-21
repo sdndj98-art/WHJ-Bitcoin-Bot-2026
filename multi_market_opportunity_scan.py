@@ -21,6 +21,17 @@ KRAKEN_API = "https://api.kraken.com/0/public"
 QUOTE_CURRENCIES = {"USD", "USDT", "USDC"}
 METALS = ("XAUUSD", "XAGUSD", "XPTUSD", "XPDUSD", "XCUUSD")
 INTERVAL_SECONDS = 3600
+STABLE_BASES = {
+    "USDT", "USDC", "USDS", "USDP", "USDG", "DAI", "EURC", "FDUSD",
+    "TUSD", "PYUSD", "USDE", "USDD", "DUSD", "BUSD", "UST", "USTC",
+    "FRAX", "GUSD", "LUSD", "USD0", "CRVUSD",
+}
+FIAT_BASES = {
+    "EUR", "GBP", "CAD", "AUD", "CHF", "JPY", "NZD", "CNY", "CNH",
+    "SGD", "HKD", "MXN", "BRL", "ZAR", "TRY", "PLN", "SEK", "NOK",
+    "DKK", "CZK", "HUF", "ILS", "AED", "SAR", "THB", "IDR", "INR",
+    "KRW", "UAH", "RUB",
+}
 OUTPUT_DIR = Path("research/multi_market_scan")
 USER_AGENT = "WHJ-MultiMarket-PaperScanner/1.0"
 
@@ -112,6 +123,9 @@ def rank_kraken_pairs(universe):
     ranked = []
     missing = []
     for pair in universe:
+        base = str(pair.get("base", "")).upper()
+        if base in STABLE_BASES or base in FIAT_BASES:
+            continue
         ticker = tickers.get(pair["pair_key"]) or tickers.get(pair["altname"])
         if not isinstance(ticker, dict):
             missing.append(pair["symbol"])
