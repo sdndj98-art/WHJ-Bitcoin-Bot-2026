@@ -1,4 +1,4 @@
-"""Seven-strategy shared-$100 BTC paper engine. No exchange order endpoints."""
+"""Eight-strategy shared-$100 BTC paper engine. No exchange order endpoints."""
 import json
 import math
 import os
@@ -69,6 +69,7 @@ def strategy_signal(strategy, history, holding_bars=0):
         "ema50_200_regime": 200,
         "bollinger_mean_reversion": 20,
         "rsi14_mean_reversion": 15,
+        "compound_momentum": 50,
     }
     if strategy not in minimum_history:
         raise ValueError("Unsupported strategy: " + str(strategy))
@@ -120,6 +121,13 @@ def strategy_signal(strategy, history, holding_bars=0):
         if holding_bars <= 0:
             return momentum < 30, False
         return False, momentum > 55 or momentum < 20 or holding_bars >= 10
+    if strategy == "compound_momentum":
+        fast, slow = ema(values[-50:], 12), ema(values[-50:], 26)
+        momentum = rsi(values, 14)
+        return_20 = prior / values[-21] - 1.0 if values[-21] > 0 else 0.0
+        want = fast > slow and prior > slow and return_20 > 0 and 50 <= momentum <= 75
+        exit_signal = fast <= slow or prior <= slow or momentum >= 80 or return_20 <= 0
+        return want, exit_signal
     raise ValueError("Unsupported strategy: " + str(strategy))
 
 
@@ -143,6 +151,19 @@ def _new_strategy_state(rows):
         } for name in SUPPORTED_STRATEGIES
     }
 
+
+
+def _ensure_strategy_state(strategy_state, rows):
+    """Add newly introduced strategy cursors without resetting existing ones."""
+    if not isinstance(strategy_state, dict):
+        raise ValueError("Saved BTC strategy state is malformed; refusing reset")
+    fresh = _new_strategy_state(rows)
+    added = []
+    for name in SUPPORTED_STRATEGIES:
+        if not isinstance(strategy_state.get(name), dict):
+            strategy_state[name] = fresh[name]
+            added.append(name)
+    return added
 
 def main():
     candles = load_two_year_candles(days=300)
@@ -169,6 +190,7 @@ def main():
                           "strategies": len(SUPPORTED_STRATEGIES), "processed_new_candles": 0}, indent=2))
         return
 
+    _ensure_strategy_state(strategy_state, rows)
     processed = 0
     new_trades = []
     for row in rows:
