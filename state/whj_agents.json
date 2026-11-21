@@ -23,7 +23,6 @@
           "SUI/USD",
           "TAO/USD",
           "UNI/USD",
-          "USDG/USDC",
           "VVV/USD",
           "XAGUSD",
           "XDG/USD",
@@ -49,7 +48,6 @@
           "SUI/USD",
           "TAO/USD",
           "UNI/USD",
-          "USDG/USDC",
           "VVV/USD",
           "XAGUSD",
           "XDG/USD",
@@ -119,12 +117,12 @@
       "status": "TRACKING"
     }
   ],
-  "generated_at_utc": "2026-11-21T12:05:03.908313+00:00",
+  "generated_at_utc": "2026-11-21T12:06:11.522383+00:00",
   "live_trading_enabled": false,
   "mode": "PAPER_ONLY",
   "portfolio_status": "WAITING_NEXT_CLOSED_CANDLE",
   "schema_version": 2,
-  "source_updated_at": "2026-11-21T12:05:03.431622+00:00",
+  "source_updated_at": "2026-11-21T12:06:11.131583+00:00",
   "summary": {
     "agent_count": 6,
     "markets": [
@@ -144,7 +142,6 @@
       "SUI/USD",
       "TAO/USD",
       "UNI/USD",
-      "USDG/USDC",
       "VVV/USD",
       "XAGUSD",
       "XDG/USD",
@@ -321,17 +318,6 @@
         "watch_only": true
       },
       "UNI/USD": {
-        "approved_by_consensus": false,
-        "decision": "HOLD",
-        "execution_mode": "PAPER_ONLY",
-        "live_orders_enabled": false,
-        "reason_codes": [
-          "WATCH_ONLY_NO_CLOSED_CANDLE_SIGNAL"
-        ],
-        "strategy_signal": "HOLD",
-        "watch_only": true
-      },
-      "USDG/USDC": {
         "approved_by_consensus": false,
         "decision": "HOLD",
         "execution_mode": "PAPER_ONLY",
