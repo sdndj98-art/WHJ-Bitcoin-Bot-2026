@@ -1,7 +1,7 @@
 """Multi-market forward-only paper engine sharing WHJ's single $100 ledger.
 
-Crypto uses completed hourly candles; metals use validated completed daily spot bars.
-It never calls broker/exchange order endpoints and cannot enable live trading.
+Crypto uses completed hourly candles; XAU/XAG/HG use validated daily bars.
+No broker/exchange order endpoint is called; live trading is disabled.
 """
 import json
 import math

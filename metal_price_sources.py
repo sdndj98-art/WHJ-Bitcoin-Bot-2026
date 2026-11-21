@@ -1,6 +1,6 @@
-"""Validated, free-tier goldprice.dev market data for WHJ paper research.
-The keyless/free feed is delayed by 15 minutes. It provides XAU/XAG/HG spot
-prices; intraday bars require an eligible plan. Never fabricate missing bars.
+"""Validated Gold-API spot quotes and goldprice.dev daily OHLC history.
+Spot timestamps have a five-minute safety ceiling. Daily bars are available
+only for XAU/XAG/HG on the free tier; never fabricate missing candles.
 """
 import json, math
 from datetime import datetime, timedelta, timezone

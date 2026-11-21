@@ -8,6 +8,7 @@ on:
     branches: [main]
     paths:
       - "multi_market_opportunity_scan.py"
+      - "metal_price_sources.py"
       - "market_scanner.py"
       - "tests/test_multi_market_opportunity_scan.py"
       - ".github/workflows/whj-multi-market-scan.yml"
@@ -32,7 +33,7 @@ jobs:
           python-version: "3.12"
       - name: Validate scanner and safety tests
         run: |
-          python -m py_compile multi_market_opportunity_scan.py market_scanner.py
+          python -m py_compile multi_market_opportunity_scan.py market_scanner.py metal_price_sources.py
           python -m unittest discover -s tests -p 'test_multi_market_opportunity_scan.py' -v
           python -m unittest discover -s tests -p 'test_market_scanner.py' -v
       - name: Scan all discovered liquid-quote crypto pairs and supported metals

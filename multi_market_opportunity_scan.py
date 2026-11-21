@@ -1,9 +1,8 @@
-"""Read-only, multi-market crypto and metals opportunity scanner.
+"""Read-only multi-market crypto and metals opportunity scanner.
 
-Scans active Kraken spot pairs quoted in USD/USDT/USDC and tries supported
-Biquote metal symbols. Uses completed hourly candles and the existing WHJ
-confluence + advanced market analysis. It never changes paper ledgers or places
-orders. Missing or stale markets are recorded as unavailable, not guessed.
+Scans Kraken USD/USDT/USDC pairs and five metal spot symbols. Metals use
+timestamp-validated Gold-API spot; XAU/XAG/HG also use validated daily bars.
+No orders are placed and paper ledgers are never changed.
 """
 import json
 import math
