@@ -6,6 +6,7 @@ from multi_asset_paper_runner import (
     MAX_GROSS_EXPOSURE, MAX_OPEN_POSITIONS, TRADE_ALLOCATION,
 )
 from shared_paper_portfolio import SUPPORTED_STRATEGIES
+from shared_paper_runner import strategy_signal
 
 
 class FakeBook:
@@ -27,6 +28,12 @@ class MultiAssetPaperRunnerTests(unittest.TestCase):
             {rows[-1][0]},
         )
         self.assertTrue(all(len(item["recent_closes"]) == 200 for item in state.values()))
+
+    def test_daily_sma_trend_can_signal_after_20_closed_bars(self):
+        history = [100.0] * 19 + [101.0]
+        want_long, want_flat = strategy_signal("sma_trend", history)
+        self.assertTrue(want_long)
+        self.assertFalse(want_flat)
 
     def test_universe_excludes_bitcoin_alias_and_fiat_fx_pairs(self):
         self.assertTrue(_is_eligible_crypto_pair({"base": "ETH", "quote": "USD"}))

@@ -61,10 +61,10 @@ def rsi(values, period=14):
 
 def strategy_signal(strategy, history, holding_bars=0):
     """Signals use only completed candles before the current execution candle."""
-    required = 200 if strategy in (
+    required = 20 if strategy == "sma_trend" else (200 if strategy in (
         "sma200_regime", "ema50_200_regime",
         "bollinger_mean_reversion", "rsi14_mean_reversion",
-    ) else 50
+    ) else 50)
     if len(history) < required:
         return False, False
     prior = float(history[-1])

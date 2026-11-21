@@ -253,7 +253,8 @@ def run_engine():
                 if timestamp <= int(strategy_state["last_timestamp"]):
                     continue
                 history = [float(x) for x in strategy_state["recent_closes"]]
-                if len(history) < 50:
+                minimum_history = 20 if strategy == "sma_trend" else 50
+                if len(history) < minimum_history:
                     strategy_state["recent_closes"] = (history + [close])[-200:]
                     strategy_state["last_timestamp"] = timestamp
                     continue
