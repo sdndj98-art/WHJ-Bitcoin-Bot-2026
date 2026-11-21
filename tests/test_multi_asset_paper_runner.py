@@ -83,7 +83,7 @@ class MultiAssetPaperRunnerTests(unittest.TestCase):
     def test_allocation_and_exposure_limits_are_conservative(self):
         self.assertEqual(TRADE_ALLOCATION, 0.02)
         self.assertLessEqual(MAX_GROSS_EXPOSURE, 0.50)
-        self.assertEqual(MAX_OPEN_POSITIONS, 25)
+        self.assertIsNone(MAX_OPEN_POSITIONS)  # cumulative trades are unbounded; risk/cash caps still apply
 
     def test_daily_loss_and_drawdown_pauses_are_enforced(self):
         timestamp = int(datetime(2026, 11, 21, tzinfo=timezone.utc).timestamp())
