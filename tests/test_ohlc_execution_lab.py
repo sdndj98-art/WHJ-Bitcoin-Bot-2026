@@ -25,6 +25,23 @@ class OhlcExecutionLabTests(unittest.TestCase):
         self.assertTrue(event["gap_through_stop"])
         self.assertEqual(event["raw_reference_price"], 90.0)
 
+    def test_gap_fill_applies_open_price_slippage_and_exit_fee(self):
+        result = simulate_ohlc_risk(
+            [100, 100, 90], [101, 101, 95], [99, 99, 85],
+            [100, 100, 92], [True, False, False], [False, False, False],
+            fee=0.001, slippage=0.002, stop_loss_pct=0.05, take_profit_pct=0.5,
+        )
+        event = result["exit_events"][0]
+        self.assertEqual(event["reason"], "stop_loss_gap")
+        self.assertTrue(event["gap_through_stop"])
+        self.assertAlmostEqual(event["raw_reference_price"], 90.0)
+        self.assertAlmostEqual(event["fill_price_after_slippage"], 89.82, places=6)
+        self.assertAlmostEqual(result["final_net_liquidation_equity_usd"], 973.6538, places=4)
+        self.assertAlmostEqual(result["return_pct"], -2.6346, places=4)
+        self.assertAlmostEqual(
+            result["max_intrabar_ohlc_envelope_drawdown_pct"], 2.6346, places=4
+        )
+
     def test_same_bar_stop_and_target_uses_adverse_stop_first(self):
         result = simulate_ohlc_risk(
             [100, 100, 100], [101, 110, 101], [99, 90, 99],
