@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#07111f"><title>WHJ | الصفقات الورقية</title>
+<style>
+:root{color-scheme:dark;--bg:#07111f;--card:#102137;--line:#294159;--text:#edf5ff;--muted:#91a8c0;--cyan:#54d6e8;--green:#35d49a;--red:#ff7185;--amber:#f5c36b}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at 80% -20%,#15334a,transparent 45%),var(--bg);color:var(--text);font-family:Tahoma,Arial,sans-serif}
+main{max-width:1250px;margin:auto;padding:22px 14px 60px}.top{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:18px}
+h1{font-size:22px;margin:7px 0}.muted{color:var(--muted);font-size:12px;line-height:1.8}.pill{display:inline-block;border:1px solid #285a59;background:#102d32;color:#7ce5c5;border-radius:99px;padding:8px 12px;font-size:11px}
+a,button{font:inherit}.btn{display:inline-block;background:#18344c;border:1px solid var(--line);color:var(--text);padding:9px 13px;border-radius:10px;text-decoration:none;font-size:12px}
+.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}.card{background:linear-gradient(145deg,#13243a,#0e1c2d);border:1px solid var(--line);border-radius:15px;padding:15px;margin-bottom:12px;min-width:0}
+.metric span{display:block;color:var(--muted);font-size:11px}.metric strong{display:block;font-size:24px;margin:9px 0;direction:ltr;text-align:right;overflow-wrap:anywhere}.green{color:var(--green)}.red{color:var(--red)}.cyan{color:var(--cyan)}
+.section{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:12px}.section h2{font-size:15px;margin:0}
+.tablewrap{overflow:auto}table{width:100%;border-collapse:collapse;white-space:nowrap;font-size:12px}th,td{text-align:right;padding:11px 9px;border-bottom:1px solid #20344a}th{color:var(--muted);font-weight:500}td{color:#d5e2ef}.empty{text-align:center;color:var(--muted);padding:22px}.status{padding:6px 9px;border-radius:8px;background:#193448;color:var(--cyan);font-size:11px}
+@media(max-width:650px){.grid{grid-template-columns:repeat(2,minmax(0,1fr))}.metric strong{font-size:20px}h1{font-size:19px}}
+</style>
+</head>
+<body><main>
+<header class="top"><div><div class="muted">WHJ QUANTUMORB · PAPER EXECUTION</div><h1>صفقات المحفظة الافتراضية</h1><div class="muted" id="fresh">جارٍ تحميل بيانات آخر تشغيل…</div></div><div><span class="pill">PAPER ONLY · 100 USD</span> <a class="btn" href="./index.html">العودة للوحة الرئيسية</a></div></header>
+<section class="grid">
+<div class="card metric"><span>قيمة المحفظة</span><strong id="equity">—</strong><span id="pnl">الربح/الخسارة —</span></div>
+<div class="card metric"><span>السيولة المتاحة</span><strong id="cash">—</strong><span>رصيد افتراضي فقط</span></div>
+<div class="card metric"><span>صفقات مفتوحة</span><strong id="openCount">—</strong><span id="closedCount">صفقات مغلقة —</span></div>
+</section>
+<section class="card"><div class="section"><h2>حالة محرك الاستراتيجيات</h2><span class="status" id="engineStatus">—</span></div><div class="grid">
+<div class="metric"><span>الأسواق المفحوصة</span><strong id="markets">—</strong></div>
+<div class="metric"><span>شموع مكتملة تمت معالجتها</span><strong id="candles">—</strong></div>
+<div class="metric"><span>إشارات/أحداث هذا التشغيل</span><strong id="events">—</strong></div>
+</div><p class="muted" id="explain"></p></section>
+<section class="card"><div class="section"><h2>الصفقات المفتوحة</h2><span class="muted">سعر السوق من آخر لقطة متاحة</span></div><div class="tablewrap"><table><thead><tr><th>الأصل</th><th>الاستراتيجية</th><th>سعر الدخول</th><th>السعر الحالي</th><th>القيمة</th><th>الربح/الخسارة غير المحققة</th></tr></thead><tbody id="openRows"><tr><td colspan="6" class="empty">لا توجد صفقات مفتوحة حالياً</td></tr></tbody></table></div></section>
+<section class="card"><div class="section"><h2>آخر الصفقات المغلقة</h2><span class="muted">حتى آخر 100 صفقة من سجل المحفظة</span></div><div class="tablewrap"><table><thead><tr><th>#</th><th>الأصل</th><th>الاستراتيجية</th><th>الدخول</th><th>الخروج</th><th>الرسوم</th><th>الربح/الخسارة</th></tr></thead><tbody id="closedRows"><tr><td colspan="7" class="empty">لا توجد صفقات مغلقة في السجل</td></tr></tbody></table></div></section>
+<section class="card"><div class="section"><h2>أحداث آخر تشغيل</h2><span class="muted">OPEN / CLOSE</span></div><div class="tablewrap"><table><thead><tr><th>الحدث</th><th>السوق</th><th>الاستراتيجية</th><th>الوقت (UTC)</th><th>الربح/الخسارة</th></tr></thead><tbody id="eventRows"><tr><td colspan="5" class="empty">لا توجد أحداث تداول في آخر تشغيل</td></tr></tbody></table></div></section>
+<footer class="muted" style="text-align:center;margin-top:18px">الصفقات محاكاة على أسعار السوق. لا يتم إرسال أوامر إلى منصة أو وسيط. لا تعتبر نتائج الاختبار ضماناً للربح.</footer>
+</main>
+<script>
+const $=id=>document.getElementById(id),num=v=>Number.isFinite(Number(v))?Number(v):0,money=v=>'$'+num(v).toFixed(2),fmt=v=>num(v).toLocaleString('en-US',{maximumFractionDigits:5}),esc=v=>String(v??'—').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+async function load(){
+ try{
+  const [report,ledger,snapshot]=await Promise.all(['./state/multi_asset_paper_report.json','./state/shared_paper_100usd.json','./dual_portfolio.json'].map(u=>fetch(u+'?t='+Date.now(),{cache:'no-store'}).then(r=>{if(!r.ok)throw Error('HTTP '+r.status);return r.json()})));
+  const shared=snapshot.shared_portfolio||{},open=ledger.positions||{},closed=Array.isArray(ledger.closed_trades)?ledger.closed_trades:[],marks=new Map((shared.open_positions||[]).map(p=>[p.position_id,p]));
+  const equity=num(shared.equity_usd),pnl=num(shared.pnl_usd);
+  $('equity').textContent=money(equity);$('pnl').textContent='الربح/الخسارة '+money(pnl);$('pnl').className=pnl>=0?'green':'red';
+  $('cash').textContent=money(shared.cash_usd);$('openCount').textContent=Object.keys(open).length;$('closedCount').textContent='صفقات مغلقة '+closed.length;
+  const multi=snapshot.multi_asset_paper||{};$('engineStatus').textContent=esc(snapshot.status||report.status||'PAPER');$('markets').textContent=(multi.markets_scanned||report.markets||[]).length;$('candles').textContent=num(multi.processed_closed_candles??report.processed_closed_candles);$('events').textContent=(multi.events_this_run||report.events||[]).length;
+  const seeded=multi.seeded_markets||report.seeded_markets||[],processed=num(multi.processed_closed_candles??report.processed_closed_candles),events=multi.events_this_run||report.events||[];
+  $('explain').textContent=processed===0?'لم تتم معالجة شمعة جديدة في هذا التشغيل؛ المحرك ينتظر إغلاق شمعة جديدة قبل اتخاذ قرار. لا يتم إنشاء صفقة مصطنعة لمجرد ملء اللوحة.':('تمت معالجة '+processed+' شمعة/شموع مكتملة. أحداث هذا التشغيل: '+events.length+'.');
+  $('fresh').textContent='آخر تحديث: '+esc(report.generated_at_utc||snapshot.updated_at||'غير متوفر')+' · البيانات من آخر تشغيل منشور';
+  const opens=Object.entries(open).map(([id,p])=>{const m=marks.get(id)||{},price=num(m.mark_price),entry=num(p.entry_price),units=num(p.units),value=units*price,unreal=value-num(p.entry_notional_usd)-num(p.entry_fee_usd);return '<tr><td>'+esc(p.asset)+'</td><td>'+esc(p.strategy)+'</td><td>'+money(entry)+'</td><td>'+money(price)+'</td><td>'+money(value)+'</td><td class="'+(unreal>=0?'green':'red')+'">'+money(unreal)+'</td></tr>'}).join('');
+  $('openRows').innerHTML=opens||'<tr><td colspan="6" class="empty">لا توجد صفقات مفتوحة حالياً</td></tr>';
+  $('closedRows').innerHTML=closed.slice(-100).reverse().map((p,i)=>'<tr><td>'+ (closed.length-i)+'</td><td>'+esc(p.asset)+'</td><td>'+esc(p.strategy)+'</td><td>'+money(p.entry_price)+'</td><td>'+money(p.exit_price)+'</td><td>'+money(p.fees_usd)+'</td><td class="'+(num(p.pnl_usd)>=0?'green':'red')+'">'+money(p.pnl_usd)+'</td></tr>').join('')||'<tr><td colspan="7" class="empty">لا توجد صفقات مغلقة في السجل</td></tr>';
+  $('eventRows').innerHTML=events.slice(-50).reverse().map(e=>'<tr><td>'+esc(e.event)+'</td><td>'+esc(e.market||e.asset)+'</td><td>'+esc(e.strategy)+'</td><td>'+esc(e.timestamp?new Date(e.timestamp*1000).toISOString():'—')+'</td><td class="'+(num(e.pnl_usd)>=0?'green':'red')+'">'+(e.pnl_usd===undefined?'—':money(e.pnl_usd))+'</td></tr>').join('')||'<tr><td colspan="5" class="empty">لا توجد أحداث تداول في آخر تشغيل</td></tr>';
+ }catch(e){$('fresh').textContent='تعذر تحميل بيانات التداول: '+e.message+' · تأكد من اكتمال نشر آخر تشغيل.'}
+}
+load();setInterval(load,60000);
+</script></body></html>
