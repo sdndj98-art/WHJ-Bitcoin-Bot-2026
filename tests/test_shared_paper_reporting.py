@@ -44,6 +44,17 @@ class SharedPaperReportingTests(unittest.TestCase):
             with self.assertRaises(ValueError):
                 load_shared_paper_portfolio(path)
 
+
+    def test_legacy_snapshot_waits_without_creating_an_independent_wallet(self):
+        legacy = {"paper_only": True, "live_trading_enabled": False, "btc": {}, "gold": {}}
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "legacy.json"
+            path.write_text(json.dumps(legacy), encoding="utf-8")
+            portfolio, summary = load_shared_paper_portfolio(path)
+        self.assertEqual(portfolio["mode"], "WAITING_FOR_SHARED_100USD_LEDGER")
+        self.assertEqual(portfolio["accounts"], {})
+        self.assertEqual(summary, {})
+
     def test_missing_snapshot_does_not_create_fallback_account(self):
         with tempfile.TemporaryDirectory() as directory:
             portfolio, summary = load_shared_paper_portfolio(Path(directory) / "missing.json")
