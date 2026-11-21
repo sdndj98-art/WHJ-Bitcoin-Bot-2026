@@ -50,7 +50,7 @@ class MultiMarketScannerTests(unittest.TestCase):
             result = multi_scan.normalize_biquote_metals("XCUUSD", 1795262400)
         self.assertFalse(result["execution_enabled"])
         self.assertEqual(result["directional_research"], "WATCH")
-        self.assertIn("plan-gated", result["data_quality"]["reason"])
+        self.assertIn("plan_gated", result["data_quality"]["reason"])
         bars.assert_not_called()
 
     def test_failed_universe_discovery_is_never_reported_complete(self):
