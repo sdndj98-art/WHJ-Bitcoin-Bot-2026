@@ -243,13 +243,20 @@ def _make_snapshot(book, strategy_state, price, quality, status,
     for name in SUPPORTED_STRATEGIES:
         positions = [p for p in shared["open_positions"] if p["strategy"] == name]
         market_value = sum(p["market_value_usd"] for p in positions)
+        state = strategy_state[name]
+        peak = max(float(state.get("peak_equity", INITIAL_CASH)), 1e-12)
+        drawdown = max(0.0, (peak - float(shared["equity_usd"])) / peak * 100.0)
         by_strategy[name] = {
             "asset": "BTC", "strategy": name,
             "open_positions": len(positions), "market_value_usd": round(market_value, 8),
-            "trades": int(strategy_state[name].get("trades", 0)),
-            "paused": bool(strategy_state[name].get("paused_for_drawdown")
-                           or strategy_state[name].get("daily_loss_paused")
-                           or strategy_state[name].get("paused_for_loss_streak")),
+            "trades": int(state.get("trades", 0)),
+            "max_drawdown_pct": round(drawdown, 4),
+            "paused_for_drawdown": bool(state.get("paused_for_drawdown")),
+            "daily_loss_paused": bool(state.get("daily_loss_paused")),
+            "paused_for_loss_streak": bool(state.get("paused_for_loss_streak")),
+            "paused": bool(state.get("paused_for_drawdown")
+                           or state.get("daily_loss_paused")
+                           or state.get("paused_for_loss_streak")),
         }
     btc = {
         "asset": "BTC", "symbol": "BTC/USD", "initial_equity_usd": INITIAL_CASH,
@@ -287,9 +294,15 @@ def _make_snapshot(book, strategy_state, price, quality, status,
         "strategies": [
             {"asset": "BTC", "strategy": name, "equity_usd": round(
                 shared["cash_usd"] / len(SUPPORTED_STRATEGIES) + by_strategy[name]["market_value_usd"], 4),
-             "return_pct": 0.0, "closed_trades": by_strategy[name]["trades"],
-             "fees_usd": 0.0, "max_drawdown_pct": 0.0, "status": "PAPER_ONLY",
-             "open_positions": by_strategy[name]["open_positions"], "paused": by_strategy[name]["paused"]}
+             "return_pct": round(((shared["cash_usd"] / len(SUPPORTED_STRATEGIES)
+                 + by_strategy[name]["market_value_usd"]) / (INITIAL_CASH / len(SUPPORTED_STRATEGIES)) - 1.0) * 100.0, 4),
+             "closed_trades": by_strategy[name]["trades"],
+             "fees_usd": 0.0, "max_drawdown_pct": by_strategy[name]["max_drawdown_pct"],
+             "status": "PAPER_ONLY", "open_positions": by_strategy[name]["open_positions"],
+             "paused": by_strategy[name]["paused"],
+             "paused_for_drawdown": by_strategy[name]["paused_for_drawdown"],
+             "daily_loss_paused": by_strategy[name]["daily_loss_paused"],
+             "paused_for_loss_streak": by_strategy[name]["paused_for_loss_streak"]}
             for name in SUPPORTED_STRATEGIES
         ],
         "strategy_details": by_strategy,
