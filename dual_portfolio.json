@@ -6,7 +6,7 @@
   "compounding_enabled": true,
   "sizing_mode": "SHARED_100USD_EQUITY_FRACTION",
   "initial_capital_usd": 100.0,
-  "updated_at": "2026-11-21T11:26:26.301987+00:00",
+  "updated_at": "2026-11-21T11:33:07.374125+00:00",
   "shared_portfolio": {
     "mode": "PAPER_ONLY",
     "live_trading_enabled": false,
@@ -46,7 +46,7 @@
     "cash_usd": 100.0,
     "data_quality": {
       "quality": "HEALTHY",
-      "latest_closed_candle_age_minutes": 26.23,
+      "latest_closed_candle_age_minutes": 32.98,
       "total_hourly_candles": 7200,
       "observed_hourly_candles": 7195,
       "imputed_hourly_candles": 5,
@@ -360,7 +360,8 @@
     ],
     "markets_with_errors": {
       "XAGUSD": "goldprice.dev spot failed price/age validation",
-      "XAUUSD": "goldprice.dev spot failed price/age validation"
+      "XAUUSD": "goldprice.dev spot failed price/age validation",
+      "XCUUSD": "goldprice.dev spot failed price/age validation"
     },
     "seeded_markets": [],
     "processed_closed_candles": 0,
