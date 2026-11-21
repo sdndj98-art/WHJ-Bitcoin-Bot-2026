@@ -76,7 +76,7 @@ jobs:
                   "initial_capital_usd": 100.0,
                   "paper_only": True,
                   "ledger": "state/shared_paper_100usd.json"
-              }, indent=2) + "\\n", encoding="utf-8")
+              }, indent=2), encoding="utf-8")
           PY
       - name: Save shared paper ledger cache
         if: success()
