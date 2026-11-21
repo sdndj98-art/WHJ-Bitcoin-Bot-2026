@@ -241,7 +241,23 @@ def normalize_biquote_metals(symbol, now_seconds):
             "directional_research": "WATCH",
         })
         return base
-    bars = fetch_daily_bars(symbol, now_seconds)
+    try:
+        bars = fetch_daily_bars(symbol, now_seconds)
+    except (ValueError, OSError, TimeoutError) as exc:
+        # A valid timestamped spot quote remains useful when optional daily OHLC
+        # history is unavailable (HTTP 404 or plan gate). Never trade spot-only.
+        history_error = str(exc)[:300]
+        base.update({
+            "history_interval": "1d", "closed_daily_bars": 0,
+            "history_error": history_error,
+            "data_quality": {
+                "quality_status": "TIMESTAMP_VALIDATED_SPOT_HISTORY_UNAVAILABLE",
+                "paper_execution_allowed": False,
+                "reason": "Spot quote validated; daily OHLC unavailable: " + history_error,
+            },
+            "directional_research": "WATCH",
+        })
+        return base
     base.update({
         "history_interval": "1d", "closed_daily_bars": len(bars),
         "latest_closed_bar": datetime.fromtimestamp(bars[-1][0], timezone.utc).isoformat(),

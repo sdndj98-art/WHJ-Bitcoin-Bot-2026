@@ -1,0 +1,69 @@
+name: WHJ Shared $100 Multi-Asset Paper Engine
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "17 * * * *"
+  push:
+    branches: [main]
+    paths:
+      - "multi_asset_paper_runner.py"
+      - "shared_paper_portfolio.py"
+      - "shared_paper_runner.py"
+      - "metal_price_sources.py"
+      - "multi_market_opportunity_scan.py"
+      - "whj_agents.py"
+      - "tests/test_multi_asset_paper_runner.py"
+      - ".github/workflows/whj-100usd-multi-asset-paper.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: whj-shared-100usd-paper
+  cancel-in-progress: false
+
+jobs:
+  paper-engine:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Restore shared simulated $100 wallet state
+        uses: actions/cache/restore@v4
+        with:
+          path: state/shared_paper_100usd.json
+          key: whj-shared-100usd-${{ github.run_id }}-${{ github.run_attempt }}
+          restore-keys: |
+            whj-shared-100usd-
+      - name: Validate paper engine and risk controls
+        run: |
+          python -m py_compile multi_asset_paper_runner.py shared_paper_portfolio.py shared_paper_runner.py metal_price_sources.py multi_market_opportunity_scan.py whj_agents.py
+          python -m unittest discover -s tests -p 'test_multi_asset_paper_runner.py' -v
+          python -m unittest discover -s tests -p 'test_shared_paper_portfolio.py' -v
+          python -m unittest discover -s tests -p 'test_shared_paper_runner.py' -v
+          python -m unittest discover -s tests -p 'test_whj_agents.py' -v
+      - name: Run shared $100 paper engine
+        run: python multi_asset_paper_runner.py
+      - name: Persist simulated wallet state
+        if: success() && hashFiles('state/shared_paper_100usd.json') != ''
+        uses: actions/cache/save@v4
+        with:
+          path: state/shared_paper_100usd.json
+          key: whj-shared-100usd-${{ github.run_id }}-${{ github.run_attempt }}
+      - name: Upload paper report and dashboard snapshot
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: whj-shared-100usd-paper-${{ github.run_number }}
+          path: |
+            state/multi_asset_paper_report.json
+            dual_portfolio.json
+            state/shared_paper_100usd.json
+          if-no-files-found: warn
+          retention-days: 30
