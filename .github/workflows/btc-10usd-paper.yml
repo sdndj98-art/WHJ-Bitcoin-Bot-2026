@@ -17,7 +17,7 @@ on:
       - "historical_research.py"
       - "forward_paper_monitor.py"
       - "dual_portfolio.json"
-      - "web/index.html"
+      - "web/**"
       - "dual_portfolio_dashboard.html"
       - "tests/**"
       - ".github/workflows/btc-10usd-paper.yml"
@@ -117,13 +117,20 @@ jobs:
       - name: Assemble existing WHJ dashboard
         if: success()
         run: |
-          mkdir -p _site
+          mkdir -p _site/state
+          # Publish all existing WHJ pages without changing their visual layout.
+          cp web/*.html _site/
           cp web/index.html _site/index.html
           cp dual_portfolio_dashboard.html _site/dual_portfolio_dashboard.html
           cp dual_portfolio.json _site/dual_portfolio.json
           cp state/whj_agents.json _site/whj_agents.json
+          # The paper-trades page needs its live paper ledger and report under ./state/.
+          cp state/shared_paper_100usd.json _site/state/shared_paper_100usd.json
           if [ -s report.json ]; then cp report.json _site/report.json; fi
-          if [ -s state/multi_asset_paper_report.json ]; then cp state/multi_asset_paper_report.json _site/multi_asset_paper_report.json; fi
+          if [ -s state/multi_asset_paper_report.json ]; then
+            cp state/multi_asset_paper_report.json _site/multi_asset_paper_report.json
+            cp state/multi_asset_paper_report.json _site/state/multi_asset_paper_report.json
+          fi
           if [ -s research/multi_market_scan/latest.json ]; then
             mkdir -p _site/research/multi_market_scan
             cp research/multi_market_scan/latest.json _site/research/multi_market_scan/latest.json
