@@ -61,15 +61,23 @@ def rsi(values, period=14):
 
 def strategy_signal(strategy, history, holding_bars=0):
     """Signals use only completed candles before the current execution candle."""
-    required = 20 if strategy == "sma_trend" else (200 if strategy in (
-        "sma200_regime", "ema50_200_regime",
-        "bollinger_mean_reversion", "rsi14_mean_reversion",
-    ) else 50)
-    if len(history) < required:
+    minimum_history = {
+        "sma_trend": 20,
+        "ema_trend": 50,
+        "rsi_momentum": 50,
+        "sma200_regime": 200,
+        "ema50_200_regime": 200,
+        "bollinger_mean_reversion": 20,
+        "rsi14_mean_reversion": 15,
+    }
+    if strategy not in minimum_history:
+        raise ValueError("Unsupported strategy: " + str(strategy))
+    if len(history) < minimum_history[strategy]:
         return False, False
     prior = float(history[-1])
     values = [float(x) for x in history]
-    sma20 = sum(values[-20:]) / 20.0
+    sma_window = values[-20:]
+    sma20 = sum(sma_window) / len(sma_window)
     sma50 = sum(values[-50:]) / 50.0 if len(values) >= 50 else None
     if strategy == "sma_trend":
         # Faster paper-test entry: participate when price is above the 20-bar
@@ -90,7 +98,8 @@ def strategy_signal(strategy, history, holding_bars=0):
         # established 50-bar uptrend; all inputs are completed candles.
         want = (50 < momentum < 75 and prior > slow) or (fast_rsi < 25 and prior > sma50)
         return want, not want
-    sma200 = sum(values[-200:]) / 200.0
+    if strategy in ("sma200_regime", "ema50_200_regime"):
+        sma200 = sum(values[-200:]) / 200.0
     if strategy == "sma200_regime":
         want = prior > sma20 > sma50 and prior > sma200
         return want, not want
@@ -104,13 +113,13 @@ def strategy_signal(strategy, history, holding_bars=0):
         variance = sum((x - mean) ** 2 for x in window) / 20.0
         lower = mean - 2.0 * math.sqrt(variance)
         if holding_bars <= 0:
-            return prior < lower and prior > sma200, False
-        return False, prior >= mean or prior < sma200 or holding_bars >= 10
+            return prior < lower, False
+        return False, prior >= mean or holding_bars >= 10
     if strategy == "rsi14_mean_reversion":
         momentum = rsi(values, 14)
         if holding_bars <= 0:
-            return momentum < 30 and prior > sma200, False
-        return False, momentum > 55 or prior < sma200 or holding_bars >= 10
+            return momentum < 30, False
+        return False, momentum > 55 or momentum < 20 or holding_bars >= 10
     raise ValueError("Unsupported strategy: " + str(strategy))
 
 
