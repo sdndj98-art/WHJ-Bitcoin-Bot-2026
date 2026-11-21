@@ -12,6 +12,7 @@ from pathlib import Path
 SUPPORTED_STRATEGIES = (
     "sma_trend", "ema_trend", "rsi_momentum", "sma200_regime",
     "ema50_200_regime", "bollinger_mean_reversion", "rsi14_mean_reversion",
+    "compound_momentum",
 )
 SCHEMA_VERSION = 1
 
