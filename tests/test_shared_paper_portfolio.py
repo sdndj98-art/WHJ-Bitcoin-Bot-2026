@@ -66,6 +66,19 @@ class SharedPaperPortfolioTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             self.book.snapshot({})
 
+    def test_namespaced_extension_state_does_not_replace_btc_strategy_state(self):
+        btc_state = {"sma_trend": {"last_timestamp": 123}}
+        self.book.save_strategy_state(btc_state)
+        self.book.save_extension_state("multi_asset_strategy_state", {
+            "ETH/USD": {"ema_trend": {"last_timestamp": 456}}
+        })
+        restored = SharedPaperPortfolio(self.path, initial_cash_usd=100)
+        self.assertEqual(restored.state["strategy_state"], btc_state)
+        self.assertEqual(
+            restored.state["multi_asset_strategy_state"]["ETH/USD"]["ema_trend"]["last_timestamp"],
+            456,
+        )
+
 
 if __name__ == "__main__":
     unittest.main()
