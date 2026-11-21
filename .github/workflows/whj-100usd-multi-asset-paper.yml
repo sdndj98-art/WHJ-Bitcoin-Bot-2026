@@ -20,7 +20,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: whj-shared-100usd-paper
+  group: pages
   cancel-in-progress: false
 
 jobs:
@@ -67,3 +67,37 @@ jobs:
             state/shared_paper_100usd.json
           if-no-files-found: warn
           retention-days: 30
+      - name: Assemble live paper trades dashboard
+        if: success()
+        run: |
+          mkdir -p _site/state
+          cp web/index.html _site/index.html
+          cp web/paper-trades.html _site/paper-trades.html
+          cp dual_portfolio.json _site/dual_portfolio.json
+          if [ -f report.json ]; then cp report.json _site/report.json; fi
+          cp state/multi_asset_paper_report.json _site/state/
+          cp state/shared_paper_100usd.json _site/state/
+          touch _site/.nojekyll
+      - name: Upload Pages site
+        if: success()
+        uses: actions/upload-pages-artifact@v3
+        with:
+          name: github-pages-${{ github.run_id }}-${{ github.run_attempt }}
+          path: _site
+
+  deploy:
+    needs: paper-engine
+    if: needs.paper-engine.result == 'success'
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    steps:
+      - name: Deploy paper trades dashboard
+        id: deployment
+        uses: actions/deploy-pages@v4
+        with:
+          artifact_name: github-pages-${{ github.run_id }}-${{ github.run_attempt }}
