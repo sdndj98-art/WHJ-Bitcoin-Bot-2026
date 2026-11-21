@@ -200,7 +200,9 @@ def build_agent_state(snapshot, generated_at=None, research_report=None):
         "At least one market has a fresh, healthy feed; each market is gated independently."
         if scanner_ok else "Waiting for at least one fresh, healthy market feed.",
         {"healthy_markets": [s for s, ok in healthy.items() if ok],
-         "markets": list(sleeves)},
+         "markets": list(sleeves),
+         "markets_scanned": list((snapshot.get("multi_asset_paper") or {}).get("markets_scanned", [])),
+         "shared_wallet": True},
     )
 
     pause_reasons = {
@@ -258,28 +260,40 @@ def build_agent_state(snapshot, generated_at=None, research_report=None):
         {"new_trade_events": trade_count},
     )
 
-    total_equity = sum(
-        float(sleeve.get("equity_usd", 0))
-        for sleeve in sleeves.values()
-        if _finite_number(sleeve.get("equity_usd", 0))
-    )
-    total_initial = sum(
-        float(sleeve.get("initial_equity_usd", 0))
-        for sleeve in sleeves.values()
-        if _finite_number(sleeve.get("initial_equity_usd", 0))
-    )
-    total_pnl = total_equity - total_initial
-    closed = sum(
-        int(sleeve.get("closed_trades", 0))
-        for sleeve in sleeves.values()
-        if isinstance(sleeve.get("closed_trades", 0), int)
-        and not isinstance(sleeve.get("closed_trades", 0), bool)
-    )
+    shared = snapshot.get("shared_portfolio")
+    if isinstance(shared, dict) and _finite_number(shared.get("equity_usd")):
+        # The active wallet is the source of truth; BTC/XAU sleeves are
+        # per-market telemetry and must not be added to the shared balance.
+        total_equity = float(shared["equity_usd"])
+        total_initial = float(shared.get("initial_cash_usd", snapshot.get("initial_capital_usd", 0)))
+        total_pnl = float(shared.get("pnl_usd", total_equity - total_initial))
+        closed = shared.get("closed_trades", 0)
+        if not isinstance(closed, int) or isinstance(closed, bool):
+            closed = 0
+    else:
+        total_equity = sum(
+            float(sleeve.get("equity_usd", 0))
+            for sleeve in sleeves.values()
+            if _finite_number(sleeve.get("equity_usd", 0))
+        )
+        total_initial = sum(
+            float(sleeve.get("initial_equity_usd", 0))
+            for sleeve in sleeves.values()
+            if _finite_number(sleeve.get("initial_equity_usd", 0))
+        )
+        total_pnl = total_equity - total_initial
+        closed = sum(
+            int(sleeve.get("closed_trades", 0))
+            for sleeve in sleeves.values()
+            if isinstance(sleeve.get("closed_trades", 0), int)
+            and not isinstance(sleeve.get("closed_trades", 0), bool)
+        )
     equity_agent = _agent(
         "EQUITY",
         "TRACKING" if total_initial > 0 else "WAITING_CAPITAL",
-        "Combined paper equity calculated from the BTC and XAUUSD ledgers.",
-        {"equity_usd": round(total_equity, 4),
+        "Equity is read from the single shared paper wallet when available.",
+        {"shared_wallet": isinstance(shared, dict),
+         "equity_usd": round(total_equity, 4),
          "initial_equity_usd": round(total_initial, 4),
          "pnl_usd": round(total_pnl, 4),
          "return_pct": round(total_pnl / total_initial * 100, 4) if total_initial else None,
@@ -304,7 +318,8 @@ def build_agent_state(snapshot, generated_at=None, research_report=None):
             "agent_count": len(AGENT_NAMES),
             "ready_count": sum(a["status"] in ("READY", "PASS", "PAPER_READY", "TRACKING", "RECORDS_AVAILABLE") for a in
                                (scanner, rug_check, sizer, executor, logger, equity_agent)),
-            "markets": ["BTC/USD", "XAUUSD"],
+            "markets": list((snapshot.get("multi_asset_paper") or {}).get(
+                "markets_scanned", ["BTC/USD", "XAUUSD"])),
             "paper_only": safety_ok,
         },
     }
