@@ -50,6 +50,7 @@ class SharedPaperPortfolio:
             "closed_trades": [],
             "fees_paid_usd": 0.0,
             "next_position_number": 1,
+            "strategy_state": {},
         }
 
     def _load(self):
@@ -70,6 +71,8 @@ class SharedPaperPortfolio:
         _finite(state.get("fees_paid_usd"), "saved fees", 0)
         if not isinstance(state.get("positions"), dict) or not isinstance(state.get("closed_trades"), list):
             raise ValueError("Shared portfolio collections are invalid")
+        if not isinstance(state.get("strategy_state", {}), dict):
+            raise ValueError("Shared strategy state is invalid")
         if state["cash_usd"] < -1e-8:
             raise ValueError("Saved shared cash is negative")
         active_pairs = set()
@@ -106,6 +109,12 @@ class SharedPaperPortfolio:
             if temp_path and os.path.exists(temp_path):
                 os.unlink(temp_path)
             raise
+
+    def save_strategy_state(self, strategy_state):
+        if not isinstance(strategy_state, dict):
+            raise ValueError("strategy_state must be an object")
+        self.state["strategy_state"] = strategy_state
+        self._save()
 
     def open_position(self, strategy, asset, price, notional_usd, position_id=None):
         if strategy not in SUPPORTED_STRATEGIES:
