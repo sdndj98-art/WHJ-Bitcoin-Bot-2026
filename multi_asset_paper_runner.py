@@ -387,6 +387,25 @@ def run_engine():
             "quote_timestamp": metal_status.get("XAUUSD", {}).get("quote_timestamp"),
             "quote_age_seconds": metal_status.get("XAUUSD", {}).get("quote_age_seconds"),
             "history_interval": metal_status.get("XAUUSD", {}).get("history_interval"),
+            "source": "Gold-API spot + goldprice.dev daily bars",
+            "bid_usd_oz": None, "ask_usd_oz": None,
+            "execution_model": "Shared $100 paper wallet; daily candles; no live broker bid/ask or orders",
+            "legacy_sleeve_active": False,
+            "shared_wallet_equity_usd": shared.get("equity_usd"),
+            "shared_wallet_pnl_usd": shared.get("pnl_usd"),
+            "shared_wallet_open_positions": [
+                position for position in shared.get("open_positions", [])
+                if position.get("asset") == "XAUUSD"
+            ],
+            "strategy_signal": "DAILY_PAPER_ENABLED" if metal_status.get("XAUUSD", {}).get("paper_execution_enabled") else "WATCH_ONLY",
+            "entry_consensus": {
+                "approved_by_consensus": False,
+                "reason": "NO_ENTRY_EVENT_THIS_RUN" if metal_status.get("XAUUSD", {}).get("paper_execution_enabled") else "NO_VALIDATED_DAILY_FEED",
+            },
+            "new_trades": [
+                event for event in events
+                if event.get("market") == "XAUUSD" or event.get("asset") == "XAUUSD"
+            ],
             "last_error": metal_status.get("XAUUSD", {}).get("reason"),
         },
         "notes": [
