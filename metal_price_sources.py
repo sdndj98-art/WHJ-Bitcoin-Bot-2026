@@ -60,8 +60,13 @@ def fetch_spot(symbol, now_seconds=None):
     if item.get("symbol") != SPOT_CODES[symbol] or item.get("currency") != "USD":
         raise ValueError("Gold-API spot symbol/currency mismatch")
     expected_unit = "lb" if symbol == "XCUUSD" else "oz"
-    if item.get("unit") != expected_unit:
-        raise ValueError("Gold-API spot unit mismatch")
+    raw_unit = str(item.get("unit", "")).strip().lower().replace(" ", "_")
+    accepted_units = {"lb", "pound", "usd/lb", "usd_per_lb"} if symbol == "XCUUSD" else {
+        "oz", "ozt", "troy_ounce", "troy_oz", "troyounce", "usd/oz", "usd/ozt",
+        "usd_per_oz", "usd_per_troy_ounce",
+    }
+    if raw_unit not in accepted_units:
+        raise ValueError("Gold-API spot unit mismatch: expected " + expected_unit + ", received " + repr(item.get("unit")))
     price = _number(item.get("price"), "spot price")
     stamp = _parse_timestamp(item.get("updatedAt"), "spot")
     age = now_seconds - stamp
@@ -75,7 +80,7 @@ def fetch_spot(symbol, now_seconds=None):
         raise ValueError("Gold-API spot quote exceeds the 5-minute safety age")
     return {
         "symbol": symbol, "provider_symbol": SPOT_CODES[symbol],
-        "price_usd": price, "price_unit": UNITS[symbol],
+        "price_usd": price, "price_unit": UNITS[symbol], "provider_unit": item.get("unit"),
         "computed_at": item["updatedAt"], "quote_age_seconds": round(age, 1),
         "expected_delay_minutes": 0,
         "provider": "Gold-API public spot (approximately 30-second refresh)",
