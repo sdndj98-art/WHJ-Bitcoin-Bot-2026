@@ -14,9 +14,13 @@ class SharedPaperRunnerTests(unittest.TestCase):
         self.assertEqual({item["last_timestamp"] for item in state.values()}, {rows[-1][0]})
         self.assertTrue(all(len(item["recent_closes"]) == 200 for item in state.values()))
 
-    def test_insufficient_history_never_emits_entry(self):
-        for strategy in SUPPORTED_STRATEGIES:
-            want_long, want_flat = strategy_signal(strategy, [100 + i for i in range(30)])
+    def test_short_daily_sma_has_20_bar_warmup_while_other_strategies_wait(self):
+        history = [100.0] * 29 + [101.0]
+        want_long, want_flat = strategy_signal("sma_trend", history)
+        self.assertTrue(want_long)
+        self.assertFalse(want_flat)
+        for strategy in SUPPORTED_STRATEGIES - {"sma_trend"}:
+            want_long, want_flat = strategy_signal(strategy, history)
             self.assertFalse(want_long)
             self.assertFalse(want_flat)
 
