@@ -107,12 +107,13 @@ class ForwardPaperMonitorTests(unittest.TestCase):
                 {"schema_version": 1, "status": "PAPER_MONITORING"},
             )
 
-    def test_github_monitor_runs_hourly_to_review_each_closed_hour(self):
+    def test_legacy_isolated_monitor_is_manual_only_beside_shared_wallet(self):
         workflow = Path(".github/workflows/forward-paper-monitor.yml").read_text(
             encoding="utf-8"
         )
-        self.assertIn('cron: "17 * * * *"', workflow)
-        self.assertNotIn('cron: "17 */4 * * *"', workflow)
+        self.assertIn("workflow_dispatch:", workflow)
+        self.assertNotIn("schedule:", workflow)
+        self.assertNotIn('cron: "17 * * * *"', workflow)
 
     def make_candles(self, hours=24 * 60):
         start = 1_700_000_000
