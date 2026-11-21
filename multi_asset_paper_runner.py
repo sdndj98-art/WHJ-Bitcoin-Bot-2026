@@ -27,7 +27,8 @@ MAX_CRYPTO_MARKETS = 20
 METALS = ("XAUUSD", "XAGUSD")  # shared $100 ledger: only metals with validated closed daily bars
 TRADE_ALLOCATION = 0.02
 MAX_GROSS_EXPOSURE = 0.50
-MAX_OPEN_POSITIONS = 8
+# No fixed position-count cap; cash, exposure and risk guards remain active.
+MAX_OPEN_POSITIONS = 2_147_483_647
 MIN_TRADE_USD = 1.0
 FEE_RATE = 0.001
 SLIPPAGE_RATE = 0.0005
