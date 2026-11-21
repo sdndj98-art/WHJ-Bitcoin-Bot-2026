@@ -14,6 +14,7 @@ from strategy_lab import run_strategy_lab
 from risk_analysis import block_bootstrap_trade_risk, monte_carlo_trade_risk
 from market_scanner import scan_btc_market, scan_btc_multi_timeframe
 from harmonic_supply_demand import analyze_harmonic_supply_demand
+from shared_paper_portfolio import SUPPORTED_STRATEGIES
 
 API = "https://api.kraken.com/0/public/OHLC?pair=XBTUSD&interval=60"
 REPORT_PATH = Path("report.json")
@@ -210,8 +211,8 @@ def load_shared_paper_portfolio(path="dual_portfolio.json"):
         raise ValueError("Shared portfolio capital or equity is invalid")
     strategy_rows = snapshot.get("strategies")
     positions = shared.get("open_positions", [])
-    if not isinstance(strategy_rows, list) or not isinstance(positions, list) or len(strategy_rows) != 7:
-        raise ValueError("Shared portfolio must contain all seven strategy allocations")
+    if not isinstance(strategy_rows, list) or not isinstance(positions, list) or len(strategy_rows) != len(SUPPORTED_STRATEGIES):
+        raise ValueError("Shared portfolio must contain all supported strategy allocations")
     accounts = {}
     per_strategy_capital = initial / len(strategy_rows)
     for row in strategy_rows:
@@ -245,7 +246,7 @@ def load_shared_paper_portfolio(path="dual_portfolio.json"):
                 "reason": "Seven strategy allocations share one $100 cash pool; no isolated capital is created.",
             },
         }
-    if len(accounts) != 7:
+    if len(accounts) != len(SUPPORTED_STRATEGIES):
         raise ValueError("Shared portfolio strategy names are duplicated")
     closed = int(shared.get("closed_trades", 0))
     fees = float(shared.get("fees_paid_usd", 0))
@@ -281,7 +282,7 @@ def load_shared_paper_portfolio(path="dual_portfolio.json"):
         "return_pct": summary["return_pct"],
         "completed_trades": closed,
         "accounts": accounts,
-        "note": "All seven strategy rows are allocations within one $100 shared portfolio, not seven separate deposits.",
+        "note": "All strategy rows are allocations within one $100 shared portfolio, not separate deposits.",
     }, summary
 
 
