@@ -45,20 +45,31 @@ class WhjAgentsTests(unittest.TestCase):
         self.assertEqual(state["agents"][1]["status"], "BLOCKED")
         self.assertEqual(state["agents"][3]["status"], "BLOCKED")
 
-    def test_blocks_stale_or_unhealthy_feed(self):
+    def test_unhealthy_gold_does_not_block_healthy_btc_market(self):
         snapshot = healthy_snapshot()
+        snapshot["btc"]["strategy_signal"] = "BUY"
         snapshot["gold"]["data_quality"]["quality"] = "STALE"
         state = build_agent_state(snapshot)
-        self.assertEqual(state["agents"][0]["status"], "WAITING_DATA")
-        self.assertEqual(state["agents"][3]["status"], "BLOCKED")
+        self.assertEqual(state["agents"][0]["status"], "READY")
+        self.assertEqual(state["agents"][3]["status"], "PAPER_READY")
+        btc = state["unified_decision"]["market_decisions"]["BTC"]
+        gold = state["unified_decision"]["market_decisions"]["XAUUSD"]
+        self.assertEqual(btc["decision"], "BUY")
+        self.assertTrue(btc["approved_by_consensus"])
+        self.assertEqual(gold["decision"], "HOLD")
+        self.assertIn("MARKET_DATA_NOT_HEALTHY", gold["reason_codes"])
 
     def test_blocks_risk_pause_and_oversized_allocation(self):
         snapshot = healthy_snapshot()
         snapshot["btc"]["risk_pause_reasons"] = ["daily loss limit"]
         snapshot["gold"]["risk_limits"]["allocation_pct"] = 15
         state = build_agent_state(snapshot)
-        self.assertEqual(state["agents"][1]["status"], "BLOCKED")
-        self.assertEqual(state["agents"][2]["status"], "BLOCKED")
+        self.assertEqual(state["agents"][1]["status"], "PASS")
+        self.assertEqual(state["agents"][2]["status"], "READY")
+        btc = state["unified_decision"]["market_decisions"]["BTC"]
+        gold = state["unified_decision"]["market_decisions"]["XAUUSD"]
+        self.assertIn("RISK_PAUSE_ACTIVE", btc["reason_codes"])
+        self.assertIn("POSITION_SIZE_INVALID", gold["reason_codes"])
 
     def test_equity_is_derived_from_both_ledgers(self):
         snapshot = healthy_snapshot()
