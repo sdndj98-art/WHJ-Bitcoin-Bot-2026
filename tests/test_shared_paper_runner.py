@@ -1,9 +1,14 @@
+import json
 import tempfile
 import unittest
+from datetime import datetime, timezone
 from pathlib import Path
+from unittest.mock import patch
 
 from shared_paper_portfolio import SharedPaperPortfolio, SUPPORTED_STRATEGIES
-from shared_paper_runner import _new_strategy_state, strategy_signal
+from shared_paper_runner import (
+    _make_snapshot, _new_strategy_state, liquidation_equity, strategy_signal,
+)
 
 
 class SharedPaperRunnerTests(unittest.TestCase):
@@ -58,6 +63,56 @@ class SharedPaperRunnerTests(unittest.TestCase):
             self.assertIsInstance(want_flat, bool)
             self.assertTrue(want_long)
             self.assertFalse(want_flat)
+
+    def test_btc_runner_marks_other_shared_assets_from_fresh_snapshot(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            book = SharedPaperPortfolio(root / "ledger.json", 100)
+            book.open_position("sma_trend", "ETH/USD", 2000.0, 2.0, "multi-ETH")
+            book.open_position("sma_trend", "BTC/USD", 50000.0, 2.0, "btc-sma")
+            prior = {
+                "updated_at": datetime.now(timezone.utc).isoformat(),
+                "shared_portfolio": {
+                    "open_positions": [
+                        {"position_id": "multi-ETH", "asset": "ETH/USD",
+                         "mark_price": 2100.0},
+                    ],
+                },
+            }
+            snapshot_path = root / "dual_portfolio.json"
+            snapshot_path.write_text(json.dumps(prior), encoding="utf-8")
+            rows = [[i * 3600, 1, 1, 1, 100 + i, 0] for i in range(220)]
+            with patch("shared_paper_runner.SNAPSHOT", snapshot_path):
+                equity = liquidation_equity(book, 51000.0)
+                output = _make_snapshot(
+                    book, _new_strategy_state(rows), 51000.0,
+                    {"quality": "HEALTHY"}, "PAPER_RUNNING",
+                )
+            self.assertGreater(equity, 95.0)
+            positions = {p["asset"]: p for p in output["shared_portfolio"]["open_positions"]}
+            self.assertEqual(positions["ETH/USD"]["mark_price"], 2100.0)
+            self.assertEqual(positions["BTC/USD"]["mark_price"], 51000.0)
+            self.assertAlmostEqual(output["shared_portfolio"]["equity_usd"], equity, places=6)
+
+    def test_btc_runner_fails_closed_when_non_btc_mark_is_stale(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            book = SharedPaperPortfolio(root / "ledger.json", 100)
+            book.open_position("sma_trend", "ETH/USD", 2000.0, 2.0, "multi-ETH")
+            stale = {
+                "updated_at": "2020-01-01T00:00:00+00:00",
+                "shared_portfolio": {
+                    "open_positions": [
+                        {"position_id": "multi-ETH", "asset": "ETH/USD",
+                         "mark_price": 2100.0},
+                    ],
+                },
+            }
+            snapshot_path = root / "dual_portfolio.json"
+            snapshot_path.write_text(json.dumps(stale), encoding="utf-8")
+            with patch("shared_paper_runner.SNAPSHOT", snapshot_path):
+                with self.assertRaises(RuntimeError):
+                    liquidation_equity(book, 51000.0)
 
     def test_shared_strategy_cursor_persists_with_same_100_dollar_pool(self):
         with tempfile.TemporaryDirectory() as directory:
