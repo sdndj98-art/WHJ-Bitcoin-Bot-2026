@@ -1263,4 +1263,60 @@ html{scroll-behavior:smooth}
   }));
 })();
 </script>
+
+<!-- WHJ LIVE PAPER + AGENT PANEL -->
+<style id="whj-live-panel-style">
+.whj-live-wrap{max-width:1550px;margin:0 auto;padding:0 clamp(12px,3vw,42px) 42px}
+.whj-live-section{background:linear-gradient(145deg,rgba(18,37,58,.98),rgba(9,21,35,.98));border:1px solid #263e58;border-radius:16px;padding:16px;margin:14px 0;scroll-margin-top:15px}
+.whj-live-head{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:12px}
+.whj-live-head h2{font-size:15px;margin:0}
+.whj-live-meta{font-size:10px;color:#91a8c0;line-height:1.8}
+.whj-live-tablewrap{overflow:auto}
+.whj-live-table{width:100%;border-collapse:collapse;white-space:nowrap;font-size:11px}
+.whj-live-table th,.whj-live-table td{text-align:right;padding:10px;border-bottom:1px solid #20344a}
+.whj-live-table th{color:#829bb5;font-weight:500}
+.whj-live-table td{color:#d5e2ef}
+.whj-live-agents{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px}
+.whj-live-agent{border:1px solid #294159;border-radius:12px;padding:12px;background:#0c1b2b;min-width:0}
+.whj-live-agent b{font-size:11px;display:block;margin-bottom:7px}
+.whj-live-agent span{font-size:9px;color:#7ce5c5;overflow-wrap:anywhere}
+.whj-live-kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px;margin-bottom:12px}
+.whj-live-kpi{border:1px solid #294159;border-radius:12px;padding:12px;background:#0c1b2b}
+.whj-live-kpi small{display:block;color:#91a8c0;font-size:10px}
+.whj-live-kpi strong{display:block;font-size:19px;margin-top:8px;direction:ltr;text-align:right}
+.whj-live-pill{font-size:9px;color:#7ce5c5;border:1px solid #285a59;background:#102d32;padding:6px 9px;border-radius:99px}
+@media(max-width:700px){.whj-live-wrap{padding:0 12px 30px}.whj-live-agents{grid-template-columns:repeat(2,minmax(0,1fr))}.whj-live-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.whj-live-kpi strong{font-size:17px}}
+</style>
+<div class="whj-live-wrap" id="whj-live-workspace">
+<section class="whj-live-section" id="whj-live-portfolio">
+<div class="whj-live-head"><h2>WHJ · محفظة التداول الورقي</h2><span class="whj-live-pill">PAPER ONLY · $100</span></div>
+<div class="whj-live-kpis">
+<div class="whj-live-kpi"><small>قيمة المحفظة</small><strong id="whj-live-equity">—</strong></div>
+<div class="whj-live-kpi"><small>الرصيد النقدي</small><strong id="whj-live-cash">—</strong></div>
+<div class="whj-live-kpi"><small>الربح / الخسارة</small><strong id="whj-live-pnl">—</strong></div>
+<div class="whj-live-kpi"><small>مراكز مفتوحة</small><strong id="whj-live-open-count">—</strong></div>
+</div>
+<div class="whj-live-head"><h2>الصفقات المفتوحة</h2><span class="whj-live-meta" id="whj-live-last-update">تحميل آخر سجل...</span></div>
+<div class="whj-live-tablewrap"><table class="whj-live-table"><thead><tr><th>الأصل</th><th>الاستراتيجية</th><th>حجم الدخول</th><th>سعر الفتح</th><th>آخر سعر مسجل</th><th>القيمة</th><th>الربح/الخسارة</th></tr></thead><tbody id="whj-live-open-rows"><tr><td colspan="7">تحميل...</td></tr></tbody></table></div>
+<div class="whj-live-head" style="margin-top:18px"><h2>الصفقات المغلقة</h2><span class="whj-live-meta">آخر 50 صفقة محفوظة</span></div>
+<div class="whj-live-tablewrap"><table class="whj-live-table"><thead><tr><th>الأصل</th><th>الاستراتيجية</th><th>سعر الفتح</th><th>سعر الإغلاق</th><th>الربح/الخسارة</th><th>وقت الإغلاق</th></tr></thead><tbody id="whj-live-closed-rows"><tr><td colspan="6">لا توجد صفقات مغلقة بعد</td></tr></tbody></table></div>
+</section>
+<section class="whj-live-section" id="whj-live-agents">
+<div class="whj-live-head"><h2>مكتب الوكلاء · نشاط آخر تشغيل</h2><span class="whj-live-meta" id="whj-live-agent-time">تحديث من تقرير المحرك</span></div>
+<div class="whj-live-agents" id="whj-live-agent-cards"><div class="whj-live-agent">جارٍ تحميل بيانات الوكلاء...</div></div>
+</section>
+<section class="whj-live-section" id="whj-live-market">
+<div class="whj-live-head"><h2>مراقبة الأسعار · الأسواق المفحوصة</h2><span class="whj-live-meta" id="whj-live-market-status">الأسعار المباشرة من Kraken عند توفرها؛ المعادن من آخر تشغيل للمحرك</span></div>
+<div class="whj-live-tablewrap"><table class="whj-live-table"><thead><tr><th>السوق</th><th>آخر سعر</th><th>تغير 24 ساعة</th><th>المصدر / الحالة</th></tr></thead><tbody id="whj-live-market-rows"><tr><td colspan="4">تحميل قائمة الأسواق...</td></tr></tbody></table></div>
+</section>
+</div>
+<script id="whj-live-workspace-script">
+(()=>{const $=id=>document.getElementById(id),esc=v=>String(v??'—').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch])),n=v=>Number.isFinite(Number(v))?Number(v):0,money=v=>'</html>+n(v).toFixed(2),fmt=v=>n(v).toLocaleString('en-US',{maximumFractionDigits:8}),sign=v=>n(v)>=0?'positive':'negative';let markets=[],lastMarks={};
+async function json(path){const r=await fetch(path+'?t='+Date.now(),{cache:'no-store'});if(!r.ok)throw Error(path+' '+r.status);return r.json()}
+async function loadPaper(){try{const [report,ledger,desk]=await Promise.all([json('./state/multi_asset_paper_report.json'),json('./state/shared_paper_100usd.json'),json('./state/whj_desk.json')]);const positions=ledger.positions&&typeof ledger.positions==='object'?Object.values(ledger.positions):[],closed=Array.isArray(ledger.closed_trades)?ledger.closed_trades:[],snap=report;markets=Array.isArray(snap.markets)?snap.markets:[];lastMarks={};positions.forEach(p=>lastMarks[p.asset]=p.mark_price||p.last_price||p.entry_price);const equity=n(snap.equity_usd),pnl=n(snap.pnl_usd);$('whj-live-equity').textContent=money(equity);$('whj-live-cash').textContent=money(snap.cash_usd);$('whj-live-pnl').textContent=money(pnl);$('whj-live-pnl').className=sign(pnl);$('whj-live-open-count').textContent=positions.length;$('whj-live-last-update').textContent='تقرير المحرك: '+(snap.generated_at_utc||'غير محدد')+' · '+(snap.mode||'');$('whj-live-open-rows').innerHTML=positions.length?positions.map(p=>{const mark=n(p.mark_price||p.last_price||p.entry_price),entry=n(p.entry_price),units=n(p.units),value=units*mark,pl=value-n(p.entry_notional_usd)-n(p.entry_fee_usd);return '<tr><td>'+esc(p.asset)+'</td><td>'+esc(p.strategy)+'</td><td>'+money(p.entry_notional_usd)+'</td><td>'+fmt(entry)+'</td><td>'+fmt(mark)+'</td><td>'+money(value)+'</td><td class="'+sign(pl)+'">'+money(pl)+'</td></tr>'}).join(''):'<tr><td colspan="7">لا توجد مراكز مفتوحة في آخر سجل</td></tr>';$('whj-live-closed-rows').innerHTML=closed.length?closed.slice(-50).reverse().map(p=>'<tr><td>'+esc(p.asset)+'</td><td>'+esc(p.strategy)+'</td><td>'+fmt(p.entry_price)+'</td><td>'+fmt(p.exit_price||p.close_price)+'</td><td class="'+sign(p.pnl_usd||p.realized_pnl_usd)+'">'+money(p.pnl_usd||p.realized_pnl_usd)+'</td><td>'+esc(p.exit_time||p.closed_at||p.exit_timestamp)+'</td></tr>').join(''):'<tr><td colspan="6">لا توجد صفقات مغلقة بعد</td></tr>';$('whj-live-agent-time').textContent='تقرير الوكلاء: '+(desk.generated_at_utc||snap.generated_at_utc||'غير محدد')+' · '+(desk.mode||'PAPER_ONLY');$('whj-live-agent-cards').innerHTML=(desk.agents||[]).map(a=>'<article class="whj-live-agent"><b>'+esc(a.name)+'</b><span>'+esc(a.status)+'</span><div class="whj-live-meta">'+esc(a.detail)+'</div></article>').join('')||'<div class="whj-live-agent">لا توجد بيانات وكلاء في التقرير</div>';renderMarkets()}catch(e){$('whj-live-last-update').textContent='تعذر تحميل سجل المحفظة: '+e.message;$('whj-live-agent-cards').innerHTML='<div class="whj-live-agent">بيانات الوكلاء غير متاحة في نسخة النشر الحالية</div>'}}
+function renderMarkets(){const rows=markets.map(m=>'<tr data-whj-market="'+esc(m)+'"><td>'+esc(m)+'</td><td id="whj-price-'+esc(m).replace(/[^a-zA-Z0-9]/g,'_')+'">'+(lastMarks[m]?fmt(lastMarks[m]):'—')+'</td><td id="whj-change-'+esc(m).replace(/[^a-zA-Z0-9]/g,'_')+'">—</td><td id="whj-source-'+esc(m).replace(/[^a-zA-Z0-9]/g,'_')+'">'+(m==='XAUUSD'||m==='XAGUSD'?'آخر تشغيل للمحرك':'Kraken · انتظار تحديث السعر')+'</td></tr>').join('');$('whj-live-market-rows').innerHTML=rows||'<tr><td colspan="4">لا توجد أسواق في التقرير</td></tr>'}
+async function refreshPrices(){const crypto=markets.filter(s=>s.includes('/')&&s!=='XAUUSD'&&s!=='XAGUSD');const pairs=crypto.map(s=>{let [base,quote]=s.split('/');if(base==='BTC')base='XBT';return base+(quote==='USD'?'USD':quote)});for(let i=0;i<pairs.length;i+=12){const batch=pairs.slice(i,i+12);try{const u='https://api.kraken.com/0/public/Ticker?pair='+encodeURIComponent(batch.join(','));const r=await fetch(u,{cache:'no-store'});if(!r.ok)continue;const d=await r.json();if(d.error&&d.error.length)continue;const vals=Object.values(d.result||{});for(const item of vals){const price=n(item.c&&item.c[0]),open=n(item.o),change=open?(price-open)/open*100:0;const pairKey=Object.keys(d.result).find(k=>d.result[k]===item)||'';const canonical=pairKey.replace(/XBT/g,'BTC').replace(/ZUSD/g,'USD').replace(/USD$/,'/USD');let matched=markets.find(s=>s.replace('/','').replace('BTC','XBT')===pairKey||s.replace('/','')===pairKey||s.replace('/','')===pairKey.replace(/XBT/g,'BTC'));if(!matched){const base=pairKey.replace(/XBT/g,'BTC').replace(/USD$/,'');matched=markets.find(s=>s.split('/')[0]===base)}if(!matched)continue;const safe=matched.replace(/[^a-zA-Z0-9]/g,'_');const priceEl=$('whj-price-'+safe),changeEl=$('whj-change-'+safe),srcEl=$('whj-source-'+safe);if(priceEl)priceEl.textContent=fmt(price);if(changeEl){changeEl.textContent=(change>=0?'+':'')+change.toFixed(2)+'%';changeEl.className=change>=0?'positive':'negative'}if(srcEl)srcEl.textContent='Kraken · مباشر عند الاستعلام'}}catch(e){}}$('whj-live-market-status').textContent='آخر محاولة تحديث أسعار: '+new Date().toLocaleTimeString('ar-IQ')+' · أسعار العملات من Kraken؛ الذهب والفضة حسب آخر تقرير محرك'}}
+loadPaper();setInterval(loadPaper,60000);setTimeout(()=>{refreshPrices();setInterval(refreshPrices,30000)},2500);
+})();
+</script>
 </body></html>
