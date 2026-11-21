@@ -13,8 +13,7 @@ SYMBOLS = {"XAUUSD": "XAU-USD-SPOT", "XAGUSD": "XAG-USD-SPOT", "XCUUSD": "HG-USD
 CODES = {"XAUUSD": "XAU", "XAGUSD": "XAG", "XCUUSD": "HG"}
 SPOT_CODES = {"XAUUSD": "XAU", "XAGUSD": "XAG", "XPTUSD": "XPT", "XPDUSD": "XPD", "XCUUSD": "HG"}
 UNITS = {"XAUUSD": "troy_ounce", "XAGUSD": "troy_ounce", "XPTUSD": "troy_ounce", "XPDUSD": "troy_ounce", "XCUUSD": "pound"}
-UNITS = {"XAUUSD": "troy_ounce", "XAGUSD": "troy_ounce", "XCUUSD": "pound"}
-SOURCE = "goldprice.dev (15-minute delayed free/keyless spot feed)"
+SOURCE = "Gold-API public spot; goldprice.dev free daily OHLC history"
 
 def _get_json(url, timeout=15):
     request = Request(url, headers={"User-Agent": "WHJ-PaperResearch/1.0", "Accept": "application/json"})
