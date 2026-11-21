@@ -206,7 +206,7 @@ def build_agent_state(snapshot, generated_at=None, research_report=None):
         if scanner_ok else "Waiting for at least one fresh, healthy market feed.",
         {"healthy_markets": [s for s, ok in healthy.items() if ok],
          "markets": all_markets,
-         "markets_scanned": all_markets,
+         "markets_scanned": scanned_markets,
          "shared_wallet": True},
     )
 
