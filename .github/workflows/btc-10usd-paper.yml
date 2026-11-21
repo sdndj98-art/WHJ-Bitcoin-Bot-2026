@@ -120,7 +120,7 @@ jobs:
         if: success()
         run: |
           mkdir -p _site
-          cp index.html _site/index.html
+          cp web/index.html _site/index.html
           cp dual_portfolio_dashboard.html _site/dual_portfolio_dashboard.html
           cp dual_portfolio.json _site/dual_portfolio.json
           cp state/whj_agents.json _site/whj_agents.json
