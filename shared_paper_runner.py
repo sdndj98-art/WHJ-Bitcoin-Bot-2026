@@ -253,10 +253,45 @@ def main():
     }, indent=2))
 
 
+def _shared_mark_prices(book, btc_price):
+    """Use the current BTC candle and fresh prior marks for other shared assets."""
+    prices = {"BTC/USD": float(btc_price)}
+    other_positions = [
+        position for position in book.state["positions"].values()
+        if position.get("asset") != "BTC/USD"
+    ]
+    if not other_positions:
+        return prices
+    try:
+        previous = json.loads(SNAPSHOT.read_text(encoding="utf-8"))
+        updated = datetime.fromisoformat(str(previous["updated_at"]).replace("Z", "+00:00"))
+        age_seconds = (datetime.now(timezone.utc) - updated).total_seconds()
+        if age_seconds < -60 or age_seconds > 1800:
+            raise ValueError("Prior shared-asset marks are stale")
+        listed = previous["shared_portfolio"]["open_positions"]
+        marks = {
+            item["position_id"]: float(item["mark_price"])
+            for item in listed
+            if isinstance(item, dict) and item.get("position_id")
+            and item.get("mark_price") is not None
+        }
+    except Exception as exc:
+        raise RuntimeError("Cannot value non-BTC shared positions safely: " + str(exc)) from exc
+    for position in other_positions:
+        position_id = position.get("position_id")
+        mark = marks.get(position_id)
+        if mark is None or not math.isfinite(mark) or mark <= 0:
+            raise RuntimeError("Missing fresh prior mark for shared position " + str(position_id))
+        prices[position["asset"]] = mark
+    return prices
+
+
 def liquidation_equity(book, price):
-    mark = book.snapshot({"BTC/USD": float(price)})
+    prices = _shared_mark_prices(book, price)
+    mark = book.snapshot(prices)
     liquidation_value = sum(
-        float(position["units"]) * float(price) * (1.0 - SLIPPAGE_RATE) * (1.0 - FEE_RATE)
+        float(position["units"]) * float(prices[position["asset"]])
+        * (1.0 - SLIPPAGE_RATE) * (1.0 - FEE_RATE)
         for position in mark["open_positions"]
     )
     return float(mark["cash_usd"]) + liquidation_value
@@ -264,16 +299,19 @@ def liquidation_equity(book, price):
 
 def _make_snapshot(book, strategy_state, price, quality, status,
                    processed=0, new_trades=None):
-    shared = book.snapshot({"BTC/USD": float(price)})
+    prices = _shared_mark_prices(book, price)
+    shared = book.snapshot(prices)
     gross_market_value = float(shared["market_value_usd"])
     net_market_value = sum(
-        float(position["units"]) * float(price) * (1.0 - SLIPPAGE_RATE) * (1.0 - FEE_RATE)
+        float(position["units"]) * float(prices[position["asset"]])
+        * (1.0 - SLIPPAGE_RATE) * (1.0 - FEE_RATE)
         for position in shared["open_positions"]
     )
     for position in shared["open_positions"]:
         position["gross_market_value_usd"] = position["market_value_usd"]
         position["market_value_usd"] = round(
-            float(position["units"]) * float(price) * (1.0 - SLIPPAGE_RATE) * (1.0 - FEE_RATE), 10
+            float(position["units"]) * float(prices[position["asset"]])
+            * (1.0 - SLIPPAGE_RATE) * (1.0 - FEE_RATE), 10
         )
     shared["gross_market_value_usd"] = gross_market_value
     shared["estimated_exit_costs_usd"] = gross_market_value - net_market_value
