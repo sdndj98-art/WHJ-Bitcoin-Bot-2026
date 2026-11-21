@@ -38,6 +38,7 @@
           "NIGHT/USD",
           "ONDO/USD",
           "PAXG/USD",
+          "PEARL/USD",
           "PENGU/USD",
           "PEPE/USD",
           "PUMP/USD",
@@ -104,6 +105,7 @@
           "NIGHT/USD",
           "ONDO/USD",
           "PAXG/USD",
+          "PEARL/USD",
           "PENGU/USD",
           "PEPE/USD",
           "PUMP/USD",
@@ -169,6 +171,7 @@
           "NIGHT/USD",
           "ONDO/USD",
           "PAXG/USD",
+          "PEARL/USD",
           "PENGU/USD",
           "PEPE/USD",
           "PUMP/USD",
@@ -250,22 +253,22 @@
       "detail": "Equity is read from the single shared paper wallet when available.",
       "metrics": {
         "closed_trades": 4,
-        "equity_usd": 100.1567,
+        "equity_usd": 99.9199,
         "initial_equity_usd": 100.0,
-        "pnl_usd": 0.1567,
-        "return_pct": 0.1567,
+        "pnl_usd": -0.0801,
+        "return_pct": -0.0801,
         "shared_wallet": true
       },
       "name": "EQUITY",
       "status": "TRACKING"
     }
   ],
-  "generated_at_utc": "2026-11-21T17:10:08.794659+00:00",
+  "generated_at_utc": "2026-11-21T17:34:36.103928+00:00",
   "live_trading_enabled": false,
   "mode": "PAPER_ONLY",
   "portfolio_status": "PAPER_RUNNING",
   "schema_version": 2,
-  "source_updated_at": "2026-11-21T17:10:08.479120+00:00",
+  "source_updated_at": "2026-11-21T17:34:35.699957+00:00",
   "summary": {
     "agent_count": 6,
     "markets": [
@@ -304,6 +307,7 @@
       "NIGHT/USD",
       "ONDO/USD",
       "PAXG/USD",
+      "PEARL/USD",
       "PENGU/USD",
       "PEPE/USD",
       "PUMP/USD",
@@ -488,6 +492,17 @@
           "NO_EXPLICIT_BUY_OR_SELL_SIGNAL"
         ],
         "strategy_signal": "HOLD"
+      },
+      "BTC/USD": {
+        "approved_by_consensus": false,
+        "decision": "HOLD",
+        "execution_mode": "PAPER_ONLY",
+        "live_orders_enabled": false,
+        "reason_codes": [
+          "WATCH_ONLY_NO_CLOSED_CANDLE_SIGNAL"
+        ],
+        "strategy_signal": "HOLD",
+        "watch_only": true
       },
       "CC/USD": {
         "approved_by_consensus": false,
@@ -710,6 +725,17 @@
         "watch_only": true
       },
       "PAXG/USD": {
+        "approved_by_consensus": false,
+        "decision": "HOLD",
+        "execution_mode": "PAPER_ONLY",
+        "live_orders_enabled": false,
+        "reason_codes": [
+          "WATCH_ONLY_NO_CLOSED_CANDLE_SIGNAL"
+        ],
+        "strategy_signal": "HOLD",
+        "watch_only": true
+      },
+      "PEARL/USD": {
         "approved_by_consensus": false,
         "decision": "HOLD",
         "execution_mode": "PAPER_ONLY",
