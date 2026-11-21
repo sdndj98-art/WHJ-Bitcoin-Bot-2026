@@ -1,8 +1,9 @@
 import unittest
 from datetime import datetime, timezone
+from unittest.mock import patch
 
 from multi_asset_paper_runner import (
-    _ensure_market_strategy_state, _is_eligible_crypto_pair, _market_position_id, _risk_state, _seed_market_state,
+    _crypto_market, _ensure_market_strategy_state, _is_eligible_crypto_pair, _market_position_id, _risk_state, _seed_market_state,
     MAX_GROSS_EXPOSURE, MAX_OPEN_POSITIONS, TRADE_ALLOCATION,
 )
 from shared_paper_portfolio import SUPPORTED_STRATEGIES
@@ -46,6 +47,19 @@ class MultiAssetPaperRunnerTests(unittest.TestCase):
         want_long, want_flat = strategy_signal("sma_trend", history)
         self.assertTrue(want_long)
         self.assertFalse(want_flat)
+
+    def test_short_history_crypto_can_mark_existing_position_but_cannot_enter(self):
+        rows = [[i * 3600, 100, 101, 99, 100 + i, 0, 1] for i in range(12)]
+        with patch("multi_asset_paper_runner.fetch_json", return_value={"XBTUSD": {}}), \
+             patch("multi_asset_paper_runner.normalize_kraken_ohlc", return_value=(rows, "HEALTHY")):
+            market = _crypto_market(
+                {"altname": "XBTUSD", "base": "XBT", "symbol": "XBT/USD"},
+                12 * 3600,
+            )
+        self.assertEqual(market["symbol"], "BTC/USD")
+        self.assertEqual(market["price"], rows[-1][4])
+        self.assertFalse(market["strategy_history_ready"])
+        self.assertFalse(market["trade_allowed"])
 
     def test_universe_excludes_bitcoin_alias_and_fiat_fx_pairs(self):
         self.assertTrue(_is_eligible_crypto_pair({"base": "ETH", "quote": "USD"}))
