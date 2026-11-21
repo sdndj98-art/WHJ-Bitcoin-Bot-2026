@@ -27,6 +27,7 @@ on:
       - ".github/workflows/btc-10usd-paper.yml"
       - "dual_portfolio.json"
       - "index.html"
+  # Push-triggered kickoff: run the development QA team after this workflow is updated.
   schedule:
     - cron: "0 * * * *"
 
