@@ -80,6 +80,19 @@ class SharedPaperRunnerTests(unittest.TestCase):
         self.assertFalse(want_long)
         self.assertTrue(want_flat)
 
+    def test_compound_momentum_allows_mild_pullback_without_chasing(self):
+        import math
+        rising = [100 + i * 0.2 + math.sin(i * 0.7) * 0.5 for i in range(100)]
+        start = rising[-8]
+        rising[-8:] = [start - j * 0.3 for j in range(8)]
+        want_long, want_flat = strategy_signal("compound_momentum", rising)
+        self.assertTrue(want_long)
+        self.assertFalse(want_flat)
+
+        overheated = [100.0 + i for i in range(100)]
+        want_long, _ = strategy_signal("compound_momentum", overheated)
+        self.assertFalse(want_long)
+
     def test_existing_strategy_state_migrates_without_resetting_cursors(self):
         rows = [[i * 3600, 1, 1, 1, 100 + i, 0] for i in range(220)]
         state = _new_strategy_state(rows)
