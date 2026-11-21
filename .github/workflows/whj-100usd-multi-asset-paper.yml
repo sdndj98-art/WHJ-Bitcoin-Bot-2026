@@ -14,6 +14,8 @@ on:
       - "multi_market_opportunity_scan.py"
       - "whj_agents.py"
       - "tests/test_multi_asset_paper_runner.py"
+      - "web/index.html"
+      - "web/paper-trades.html"
       - ".github/workflows/whj-100usd-multi-asset-paper.yml"
 
 permissions:
