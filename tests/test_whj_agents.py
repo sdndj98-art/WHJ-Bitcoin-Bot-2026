@@ -103,6 +103,24 @@ class WhjAgentsTests(unittest.TestCase):
         self.assertEqual(state["summary"]["markets"], ["BTC/USD", "ETH/USD", "XAUUSD", "XAGUSD"])
         self.assertEqual(scanner["markets_scanned"], ["BTC/USD", "ETH/USD", "XAUUSD", "XAGUSD"])
 
+    def test_scanned_markets_are_explicit_watch_only_holds_without_signal(self):
+        snapshot = healthy_snapshot()
+        snapshot["multi_asset_paper"] = {
+            "markets_scanned": ["ETH/USD", "XAGUSD", "XAUUSD"],
+        }
+        state = build_agent_state(snapshot)
+        decisions = state["unified_decision"]["market_decisions"]
+        self.assertIn("ETH/USD", decisions)
+        self.assertIn("XAGUSD", decisions)
+        self.assertEqual(decisions["ETH/USD"]["decision"], "HOLD")
+        self.assertTrue(decisions["ETH/USD"]["watch_only"])
+        self.assertFalse(decisions["ETH/USD"]["approved_by_consensus"])
+        self.assertFalse(decisions["ETH/USD"]["live_orders_enabled"])
+        self.assertIn("WATCH_ONLY_NO_CLOSED_CANDLE_SIGNAL",
+                      decisions["ETH/USD"]["reason_codes"])
+        self.assertEqual(state["summary"]["markets"],
+                         ["BTC/USD", "XAUUSD", "ETH/USD", "XAGUSD"])
+
     def test_unified_consensus_emits_one_safe_decision_per_market(self):
         state = build_agent_state(healthy_snapshot())
         consensus = state["unified_decision"]
