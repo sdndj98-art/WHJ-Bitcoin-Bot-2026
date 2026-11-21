@@ -35,7 +35,11 @@ MAX_DRAWDOWN = 0.10
 DAILY_LOSS_LIMIT = 0.03
 STATE_KEY = "multi_asset_strategy_state"
 RISK_KEY = "multi_asset_risk_state"
-EXCLUDED_BASES = {"BTC", "XBT", "USDT", "USDC", "DAI", "EURC", "USDS"}
+EXCLUDED_BASES = {
+    "BTC", "XBT", "USDT", "USDC", "DAI", "EURC", "USDS", "USDG",
+    "USDP", "FDUSD", "TUSD", "PYUSD", "USDE", "USDD", "DUSD", "BUSD",
+    "UST", "USTC", "FRAX", "GUSD", "LUSD", "USD0", "CRVUSD",
+}
 FIAT_BASES = {
     "EUR", "GBP", "CAD", "AUD", "CHF", "JPY", "NZD", "CNY", "CNH",
     "SGD", "HKD", "MXN", "BRL", "ZAR", "TRY", "PLN", "SEK", "NOK",
@@ -89,6 +93,7 @@ def _crypto_market(pair, now_seconds):
         "provider": "Kraken public spot market data",
         "quote_volume_24h_estimate": pair.get("quote_volume_24h_estimate", 0),
         "latest_closed_candle": rows[-1][0],
+        "trade_allowed": _is_eligible_crypto_pair(pair),
     }
 
 
@@ -266,14 +271,15 @@ def run_engine():
                 position_id = _market_position_id(symbol, strategy)
                 position = book.state["positions"].get(position_id)
                 paused = bool(risk.get("daily_loss_paused") or risk.get("drawdown_paused"))
-                if position and (want_flat or paused):
+                trade_allowed = market.get("trade_allowed", True)
+                if position and (want_flat or paused or not trade_allowed):
                     exit_price = close * (1.0 - SLIPPAGE_RATE)
                     trade = book.close_position(position_id, exit_price)
                     events.append({"event": "CLOSE", "market": symbol, "strategy": strategy,
                                    "timestamp": timestamp, **trade})
                     strategy_state["trades"] = int(strategy_state.get("trades", 0)) + 1
                     strategy_state["holding_bars"] = 0
-                elif not position and want_long and not paused:
+                elif not position and want_long and not paused and trade_allowed:
                     current = book.snapshot(marks)
                     equity = _liquidation_equity(book, marks)
                     exposure = sum(float(p["market_value_usd"]) for p in current["open_positions"])
