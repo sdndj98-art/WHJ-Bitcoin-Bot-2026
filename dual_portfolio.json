@@ -1,12 +1,12 @@
 {
   "schema_version": 2,
-  "status": "PAPER_RUNNING",
+  "status": "WAITING_NEXT_CLOSED_CANDLE",
   "paper_only": true,
   "live_trading_enabled": false,
   "compounding_enabled": true,
   "sizing_mode": "SHARED_100USD_EQUITY_FRACTION",
   "initial_capital_usd": 100.0,
-  "updated_at": "2026-11-21T11:07:43.200898+00:00",
+  "updated_at": "2026-11-21T11:10:58.998432+00:00",
   "shared_portfolio": {
     "mode": "PAPER_ONLY",
     "live_trading_enabled": false,
@@ -40,13 +40,13 @@
     "closed_trades": 0,
     "fees_usd": 0.0,
     "feed_status": "COINBASE_BTC_USD_HOURLY_HEALTHY",
-    "status": "PAPER_RUNNING",
+    "status": "PAPER_WAITING_NEXT_CLOSED_CANDLE",
     "last_price_usd": 57833.87,
     "open_position": false,
     "cash_usd": 100.0,
     "data_quality": {
       "quality": "HEALTHY",
-      "latest_closed_candle_age_minutes": 7.68,
+      "latest_closed_candle_age_minutes": 10.94,
       "total_hourly_candles": 7200,
       "observed_hourly_candles": 7195,
       "imputed_hourly_candles": 5,
@@ -326,7 +326,7 @@
   },
   "bull_summary": "Seven strategy families share one $100 paper-only BTC portfolio.",
   "bear_summary": "Entries require completed-candle signals, fresh feed quality, sizing and six-agent consensus.",
-  "risk_decision": "PAPER_RUNNING",
+  "risk_decision": "WAITING_NEXT_CLOSED_CANDLE",
   "notes": [
     "One $100 simulated cash pool is shared across all seven BTC strategies; cash and net PnL compound together.",
     "Legacy independent BTC/Gold $10 ledgers are preserved and are not added to the new account.",
@@ -346,7 +346,7 @@
       "XAUUSD": "HTTP Error 404: Not Found"
     },
     "seeded_markets": [],
-    "processed_closed_candles": 21,
+    "processed_closed_candles": 0,
     "events_this_run": [],
     "daily_loss_paused": false,
     "drawdown_paused": false,
