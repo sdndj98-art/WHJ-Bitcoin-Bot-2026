@@ -6,7 +6,7 @@
   "compounding_enabled": true,
   "sizing_mode": "SHARED_100USD_EQUITY_FRACTION",
   "initial_capital_usd": 100.0,
-  "updated_at": "2026-11-21T11:40:22.767812+00:00",
+  "updated_at": "2026-11-21T11:44:16.414450+00:00",
   "shared_portfolio": {
     "mode": "PAPER_ONLY",
     "live_trading_enabled": false,
@@ -46,7 +46,7 @@
     "cash_usd": 100.0,
     "data_quality": {
       "quality": "HEALTHY",
-      "latest_closed_candle_age_minutes": 40.18,
+      "latest_closed_candle_age_minutes": 44.07,
       "total_hourly_candles": 7200,
       "observed_hourly_candles": 7195,
       "imputed_hourly_candles": 5,
@@ -363,10 +363,7 @@
     "markets_with_errors": {
       "XCUUSD": "goldprice.dev HTTP 403: {\"error\":\"plan_gated\",\"symbol\":\"HG-USD-SPOT\",\"tier\":\"free_2026\",\"message\":\"Symbol 'HG-USD-SPOT' is not available on the 'free_2026' tier. Upgrade to Pro to access this instrument.\",\"upgrade_url\":\"https://goldprice.dev/pricing\""
     },
-    "seeded_markets": [
-      "XAGUSD",
-      "XAUUSD"
-    ],
+    "seeded_markets": [],
     "processed_closed_candles": 0,
     "events_this_run": [],
     "daily_loss_paused": false,
