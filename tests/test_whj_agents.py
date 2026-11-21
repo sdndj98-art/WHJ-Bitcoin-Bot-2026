@@ -102,6 +102,7 @@ class WhjAgentsTests(unittest.TestCase):
         self.assertEqual(equity["closed_trades"], 3)
         self.assertEqual(state["summary"]["markets"], ["BTC/USD", "XAUUSD", "ETH/USD", "XAGUSD"])
         self.assertEqual(scanner["markets_scanned"], ["BTC/USD", "XAUUSD", "ETH/USD", "XAGUSD"])
+        self.assertEqual(scanner["markets_scanned"], state["summary"]["markets"])
 
     def test_scanned_markets_are_explicit_watch_only_holds_without_signal(self):
         snapshot = healthy_snapshot()
