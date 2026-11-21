@@ -1,3 +1,4 @@
+import copy
 import json
 import tempfile
 import unittest
@@ -23,8 +24,8 @@ def healthy_snapshot():
         "paper_only": True,
         "live_trading_enabled": False,
         "updated_at": "2026-11-18T00:00:00+00:00",
-        "btc": dict(sleeve),
-        "gold": dict(sleeve),
+        "btc": copy.deepcopy(sleeve),
+        "gold": copy.deepcopy(sleeve),
     }
 
 
