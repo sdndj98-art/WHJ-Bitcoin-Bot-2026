@@ -1,18 +1,7 @@
-name: WHJ Forward Paper Monitor
+name: WHJ Legacy Isolated Strategy Research (Manual Only)
 
 on:
   workflow_dispatch:
-  schedule:
-    - cron: "17 * * * *"
-  push:
-    branches: [main, research/regime-aware-consensus-ensemble]
-    paths:
-      - "forward_paper_monitor.py"
-      - "paper_account.py"
-      - "historical_research.py"
-      - "forward_paper_monitor.py"
-      - "tests/test_forward_paper_monitor.py"
-      - ".github/workflows/forward-paper-monitor.yml"
 
 permissions:
   contents: read

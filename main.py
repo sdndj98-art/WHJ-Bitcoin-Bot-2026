@@ -10,7 +10,6 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from paper_trading import run_backtest
-from paper_account import run_paper_portfolio
 from strategy_lab import run_strategy_lab
 from risk_analysis import block_bootstrap_trade_risk, monte_carlo_trade_risk
 from market_scanner import scan_btc_market, scan_btc_multi_timeframe
@@ -178,6 +177,114 @@ def analyze(prices):
     }
 
 
+
+def load_shared_paper_portfolio(path="dual_portfolio.json"):
+    """Expose the one shared paper ledger to report.json; never create a fallback account."""
+    source = Path(path)
+    if not source.exists():
+        return {
+            "mode": "WAITING_FOR_SHARED_100USD_LEDGER",
+            "accounts": {},
+            "note": "The shared paper ledger has not completed its first safe initialization.",
+        }, {}
+    try:
+        snapshot = json.loads(source.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        raise ValueError("Shared paper snapshot is unreadable; refusing to show stale or reset funds") from exc
+    if (not isinstance(snapshot, dict) or snapshot.get("paper_only") is not True
+            or snapshot.get("live_trading_enabled") is not False):
+        raise ValueError("Shared portfolio safety flags failed")
+    shared = snapshot.get("shared_portfolio")
+    if shared is None:
+        return {
+            "mode": "WAITING_FOR_SHARED_100USD_LEDGER",
+            "accounts": {},
+            "note": "The legacy snapshot is retained; waiting for the first shared-ledger run.",
+        }, {}
+    if not isinstance(shared, dict) or shared.get("mode") != "PAPER_ONLY" or shared.get("live_trading_enabled") is not False:
+        raise ValueError("Shared $100 portfolio ledger is missing or unsafe")
+    initial = float(shared.get("initial_cash_usd", 0))
+    equity = float(shared.get("equity_usd", 0))
+    cash = float(shared.get("cash_usd", 0))
+    if not all(math.isfinite(x) for x in (initial, equity, cash)) or abs(initial - 100.0) > 1e-8 or cash < 0 or equity < 0:
+        raise ValueError("Shared portfolio capital or equity is invalid")
+    strategy_rows = snapshot.get("strategies")
+    positions = shared.get("open_positions", [])
+    if not isinstance(strategy_rows, list) or not isinstance(positions, list) or len(strategy_rows) != 7:
+        raise ValueError("Shared portfolio must contain all seven strategy allocations")
+    accounts = {}
+    per_strategy_capital = initial / len(strategy_rows)
+    for row in strategy_rows:
+        if not isinstance(row, dict) or not isinstance(row.get("strategy"), str):
+            raise ValueError("Shared strategy row is invalid")
+        name = row["strategy"]
+        strategy_positions = [p for p in positions if p.get("strategy") == name]
+        paused = bool(row.get("paused", False))
+        strategy_equity = float(row.get("equity_usd", 0))
+        if not math.isfinite(strategy_equity) or strategy_equity < 0:
+            raise ValueError("Shared strategy equity is invalid")
+        accounts[name] = {
+            "initial_cash_usd": per_strategy_capital,
+            "equity_after_estimated_exit_costs_usd": strategy_equity,
+            "return_pct": float(row.get("return_pct", 0)),
+            "cash_usd": cash / len(strategy_rows),
+            "btc_units": sum(float(p.get("units", 0)) for p in strategy_positions),
+            "completed_trades": int(row.get("closed_trades", 0)),
+            "win_rate_pct": float(row.get("win_rate_pct", 0)),
+            "profit_factor": row.get("profit_factor"),
+            "max_drawdown_pct": float(row.get("max_drawdown_pct", 0)),
+            "fees_paid_usd": float(row.get("fees_usd", 0)),
+            "open_position": bool(strategy_positions),
+            "paused_for_drawdown": bool(row.get("paused_for_drawdown", False)),
+            "daily_loss_paused": bool(row.get("daily_loss_paused", False)),
+            "paused_for_loss_streak": bool(row.get("paused_for_loss_streak", False)),
+            "paused_for_strategy_health": False,
+            "max_consecutive_losses": int(row.get("max_consecutive_losses", 0)),
+            "strategy_health": {
+                "status": "FORWARD_PAPER_SAMPLE_COLLECTING",
+                "reason": "Seven strategy allocations share one $100 cash pool; no isolated capital is created.",
+            },
+        }
+    if len(accounts) != 7:
+        raise ValueError("Shared portfolio strategy names are duplicated")
+    closed = int(shared.get("closed_trades", 0))
+    fees = float(shared.get("fees_paid_usd", 0))
+    units = sum(float(p.get("units", 0)) for p in positions)
+    paused = any(a["paused_for_drawdown"] or a["daily_loss_paused"] or a["paused_for_loss_streak"] for a in accounts.values())
+    summary = {
+        "initial_cash_usd": initial,
+        "equity_after_estimated_exit_costs_usd": equity,
+        "return_pct": (equity / initial - 1.0) * 100.0,
+        "cash_usd": cash,
+        "btc_units": units,
+        "completed_trades": closed,
+        "win_rate_pct": (sum(a["win_rate_pct"] * a["completed_trades"] for a in accounts.values()) / closed) if closed else 0.0,
+        "profit_factor": None,
+        "max_drawdown_pct": max((a["max_drawdown_pct"] for a in accounts.values()), default=0.0),
+        "fees_paid_usd": fees,
+        "open_position": bool(positions),
+        "paused_for_drawdown": any(a["paused_for_drawdown"] for a in accounts.values()),
+        "daily_loss_paused": any(a["daily_loss_paused"] for a in accounts.values()),
+        "paused_for_loss_streak": any(a["paused_for_loss_streak"] for a in accounts.values()),
+        "paused_for_strategy_health": False,
+        "max_consecutive_losses": max((a["max_consecutive_losses"] for a in accounts.values()), default=0),
+        "strategy_health": {
+            "status": "FORWARD_PAPER_SAMPLE_COLLECTING",
+            "reason": "Paper-only shared portfolio; no claim of profitability.",
+        },
+    }
+    return {
+        "mode": "SHARED_100USD_PAPER_ONLY",
+        "initial_cash_usd": initial,
+        "equity_usd": equity,
+        "cash_usd": cash,
+        "return_pct": summary["return_pct"],
+        "completed_trades": closed,
+        "accounts": accounts,
+        "note": "All seven strategy rows are allocations within one $100 shared portfolio, not seven separate deposits.",
+    }, summary
+
+
 def main():
     candles = fetch_closed_candles()
     closes = [float(candle[4]) for candle in candles]
@@ -187,16 +294,8 @@ def main():
     report["market_scanner"] = scan_btc_market(candles, quality)
     report["market_scanner_multi_timeframe"] = scan_btc_multi_timeframe(candles, quality)
     report["harmonic_supply_demand_divergence"] = analyze_harmonic_supply_demand(candles)
-    if quality["paper_execution_allowed"]:
-        portfolio = run_paper_portfolio(candles)
-        report["persistent_paper_account"] = portfolio["accounts"]["sma_trend"]
-    else:
-        portfolio = {
-            "mode": "PAUSED_DATA_QUALITY",
-            "accounts": {},
-            "message": "Paper entries are paused because recent candle gaps or stale data were detected.",
-        }
-        report["persistent_paper_account"] = {}
+    portfolio, shared_account = load_shared_paper_portfolio()
+    report["persistent_paper_account"] = shared_account
     report["persistent_paper_portfolio"] = portfolio
     REPORT_PATH.write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
     print(json.dumps(report, indent=2))
