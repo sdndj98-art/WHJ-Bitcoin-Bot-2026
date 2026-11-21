@@ -6,7 +6,7 @@
   "compounding_enabled": true,
   "sizing_mode": "SHARED_100USD_EQUITY_FRACTION",
   "initial_capital_usd": 100.0,
-  "updated_at": "2026-11-21T20:07:01.976960+00:00",
+  "updated_at": "2026-11-21T20:48:30.285600+00:00",
   "shared_portfolio": {
     "mode": "PAPER_ONLY",
     "live_trading_enabled": false,
@@ -223,8 +223,8 @@
     "independent_ledger_enabled": false,
     "paper_execution_enabled": true,
     "last_price_usd": 3539.0,
-    "quote_timestamp": "2026-11-21T20:06:38Z",
-    "quote_age_seconds": -17.9,
+    "quote_timestamp": "2026-11-21T20:48:08Z",
+    "quote_age_seconds": -13.8,
     "history_interval": "1d",
     "source": "Gold-API spot + goldprice.dev daily bars",
     "bid_usd_oz": null,
@@ -536,8 +536,8 @@
         "provider": "Gold-API public spot (approximately 30-second refresh)",
         "last_price_usd": 3539.0,
         "price_unit": "troy_ounce",
-        "quote_age_seconds": -17.9,
-        "quote_timestamp": "2026-11-21T20:06:38Z",
+        "quote_age_seconds": -13.8,
+        "quote_timestamp": "2026-11-21T20:48:08Z",
         "history_interval": "1d",
         "closed_daily_bars": 21,
         "latest_closed_candle": 1795046400,
@@ -551,8 +551,8 @@
         "provider": "Gold-API public spot (approximately 30-second refresh)",
         "last_price_usd": 41.080002,
         "price_unit": "troy_ounce",
-        "quote_age_seconds": -16.9,
-        "quote_timestamp": "2026-11-21T20:06:37Z",
+        "quote_age_seconds": -12.8,
+        "quote_timestamp": "2026-11-21T20:48:07Z",
         "history_interval": "1d",
         "closed_daily_bars": 21,
         "latest_closed_candle": 1795046400,
@@ -566,8 +566,8 @@
         "provider": "Gold-API public spot (approximately 30-second refresh)",
         "last_price_usd": 5.621824,
         "price_unit": "pound",
-        "quote_age_seconds": 19.6,
-        "quote_timestamp": "2026-11-21T20:06:40Z",
+        "quote_age_seconds": 18.2,
+        "quote_timestamp": "2026-11-21T20:48:10Z",
         "history_interval": null,
         "closed_daily_bars": 0,
         "latest_closed_candle": null,
@@ -581,8 +581,8 @@
         "provider": "Gold-API public spot (approximately 30-second refresh)",
         "last_price_usd": 1286.0,
         "price_unit": "troy_ounce",
-        "quote_age_seconds": 18.6,
-        "quote_timestamp": "2026-11-21T20:06:41Z",
+        "quote_age_seconds": 17.2,
+        "quote_timestamp": "2026-11-21T20:48:11Z",
         "history_interval": null,
         "closed_daily_bars": 0,
         "latest_closed_candle": null,
@@ -596,8 +596,8 @@
         "provider": "Gold-API public spot (approximately 30-second refresh)",
         "last_price_usd": 893.0,
         "price_unit": "troy_ounce",
-        "quote_age_seconds": 19.6,
-        "quote_timestamp": "2026-11-21T20:06:40Z",
+        "quote_age_seconds": 18.2,
+        "quote_timestamp": "2026-11-21T20:48:10Z",
         "history_interval": null,
         "closed_daily_bars": 0,
         "latest_closed_candle": null,
@@ -610,6 +610,7 @@
     "status": "PAPER_ONLY",
     "markets_scanned": [
       "AAVE/USD",
+      "AB/USD",
       "ADA/USD",
       "AERO/USD",
       "AKE/USD",
@@ -649,7 +650,6 @@
       "QNT/USD",
       "RENDER/USD",
       "RLUSD/USD",
-      "SHIB/USD",
       "SOFID/USDT",
       "SOL/USD",
       "SPX/USD",
@@ -676,69 +676,14 @@
     ],
     "markets_with_errors": {},
     "seeded_markets": [],
-    "processed_closed_candles": 514,
-    "events_this_run": [
-      {
-        "event": "CLOSE",
-        "market": "XRP/USD",
-        "strategy": "rsi_momentum",
-        "timestamp": 1795287600,
-        "position_id": "multi-XRP_USD-rsi_momentum",
-        "asset": "XRP/USD",
-        "entry_price": 0.929354445,
-        "exit_price": 0.9350222550000001,
-        "units": 2.1565218210348505,
-        "gross_proceeds_usd": 2.0163958960607125,
-        "fees_usd": 0.004020569036178945,
-        "pnl_usd": 0.008202186906300828
-      },
-      {
-        "event": "OPEN",
-        "market": "ZEC/USD",
-        "strategy": "ema_trend",
-        "timestamp": 1795287600,
-        "position_id": "multi-ZEC_USD-ema_trend",
-        "asset": "ZEC/USD",
-        "units": 0.002488789608578239,
-        "entry_price": 790.6251149999999,
-        "entry_notional_usd": 1.9676995704929752,
-        "entry_fee_usd": 0.001967699570492975,
-        "cash_usd": 50.122585931
-      },
-      {
-        "event": "CLOSE",
-        "market": "SOL/USD",
-        "strategy": "rsi_momentum",
-        "timestamp": 1795287600,
-        "position_id": "multi-SOL_USD-rsi_momentum",
-        "asset": "SOL/USD",
-        "entry_price": 70.585275,
-        "exit_price": 70.42477,
-        "units": 0.028321910908284693,
-        "gross_proceeds_usd": 1.9945640616764404,
-        "fees_usd": 0.003993673931663215,
-        "pnl_usd": -0.008539482241997546
-      },
-      {
-        "event": "OPEN",
-        "market": "XMR/USDT",
-        "strategy": "sma_trend",
-        "timestamp": 1795287600,
-        "position_id": "multi-XMR_USDT-sma_trend",
-        "asset": "XMR/USDT",
-        "units": 0.004093175626930892,
-        "entry_price": 487.053405,
-        "entry_notional_usd": 1.9935951263597005,
-        "entry_fee_usd": 0.0019935951263597004,
-        "cash_usd": 50.1195667071
-      }
-    ],
+    "processed_closed_candles": 501,
+    "events_this_run": [],
     "strategy_diagnostics": {
       "sma_trend": {
-        "candles_evaluated": 66,
+        "candles_evaluated": 65,
         "entry_signals": 55,
-        "exit_signals": 11,
-        "opened": 1,
+        "exit_signals": 10,
+        "opened": 0,
         "blocked": 45,
         "block_reasons": {
           "MIN_TRADE_OR_INSUFFICIENT_CASH": 44,
@@ -746,29 +691,29 @@
         }
       },
       "ema_trend": {
-        "candles_evaluated": 64,
-        "entry_signals": 25,
-        "exit_signals": 39,
-        "opened": 1,
-        "blocked": 22,
+        "candles_evaluated": 63,
+        "entry_signals": 27,
+        "exit_signals": 36,
+        "opened": 0,
+        "blocked": 24,
         "block_reasons": {
-          "MIN_TRADE_OR_INSUFFICIENT_CASH": 22
+          "MIN_TRADE_OR_INSUFFICIENT_CASH": 24
         }
       },
       "rsi_momentum": {
-        "candles_evaluated": 64,
-        "entry_signals": 29,
-        "exit_signals": 35,
+        "candles_evaluated": 58,
+        "entry_signals": 30,
+        "exit_signals": 28,
         "opened": 0,
-        "blocked": 27,
+        "blocked": 28,
         "block_reasons": {
-          "MIN_TRADE_OR_INSUFFICIENT_CASH": 27
+          "MIN_TRADE_OR_INSUFFICIENT_CASH": 28
         }
       },
       "sma200_regime": {
-        "candles_evaluated": 64,
+        "candles_evaluated": 63,
         "entry_signals": 3,
-        "exit_signals": 60,
+        "exit_signals": 0,
         "opened": 0,
         "blocked": 3,
         "block_reasons": {
@@ -776,17 +721,17 @@
         }
       },
       "ema50_200_regime": {
-        "candles_evaluated": 64,
-        "entry_signals": 6,
-        "exit_signals": 57,
+        "candles_evaluated": 63,
+        "entry_signals": 3,
+        "exit_signals": 0,
         "opened": 0,
-        "blocked": 6,
+        "blocked": 3,
         "block_reasons": {
-          "MIN_TRADE_OR_INSUFFICIENT_CASH": 6
+          "MIN_TRADE_OR_INSUFFICIENT_CASH": 3
         }
       },
       "bollinger_mean_reversion": {
-        "candles_evaluated": 64,
+        "candles_evaluated": 63,
         "entry_signals": 0,
         "exit_signals": 0,
         "opened": 0,
@@ -794,7 +739,7 @@
         "block_reasons": {}
       },
       "rsi14_mean_reversion": {
-        "candles_evaluated": 64,
+        "candles_evaluated": 63,
         "entry_signals": 1,
         "exit_signals": 0,
         "opened": 0,
@@ -804,13 +749,13 @@
         }
       },
       "compound_momentum": {
-        "candles_evaluated": 64,
-        "entry_signals": 7,
-        "exit_signals": 45,
+        "candles_evaluated": 63,
+        "entry_signals": 9,
+        "exit_signals": 42,
         "opened": 0,
-        "blocked": 7,
+        "blocked": 9,
         "block_reasons": {
-          "MIN_TRADE_OR_INSUFFICIENT_CASH": 7
+          "MIN_TRADE_OR_INSUFFICIENT_CASH": 9
         }
       }
     },
