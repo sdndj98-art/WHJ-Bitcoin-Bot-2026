@@ -38,8 +38,11 @@ class OhlcExecutionLabTests(unittest.TestCase):
         self.assertAlmostEqual(event["fill_price_after_slippage"], 89.82, places=6)
         self.assertAlmostEqual(result["final_net_liquidation_equity_usd"], 973.6538, places=4)
         self.assertAlmostEqual(result["return_pct"], -2.6346, places=4)
+        # The entry candle's high is marked before the later opening-gap exit,
+        # so the OHLC peak-to-liquidation envelope is larger than close-only
+        # return drawdown. The final equity return remains -2.6346%.
         self.assertAlmostEqual(
-            result["max_intrabar_ohlc_envelope_drawdown_pct"], 2.6346, places=4
+            result["max_intrabar_ohlc_envelope_drawdown_pct"], 2.7308, places=4
         )
 
     def test_same_bar_stop_and_target_uses_adverse_stop_first(self):
