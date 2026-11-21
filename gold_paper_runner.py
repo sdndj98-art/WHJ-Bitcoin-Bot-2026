@@ -1,4 +1,4 @@
-"""Forward-only $10 XAUUSD paper sleeve using live MT5-sourced biquote two-way quotes.
+"""Legacy forward-only $10 XAUUSD paper sleeve using validated delayed goldprice.dev spot.
 
 The history endpoint supplies completed hourly OHLC bars. Entry/exit costs
 conservatively include half the currently observed dealer bid/ask spread plus
@@ -14,14 +14,15 @@ from urllib.request import Request, urlopen
 
 from paper_account import seed_forward_paper_account, update_paper_account
 from whj_agents import authorize_paper_entry
+from metal_price_sources import fetch_spot, fetch_hourly_bars
 
 STATE = Path("state/xauusd_10usd_ema_trend.json")
 SNAPSHOT = Path("dual_portfolio.json")
 INITIAL_CASH = 10.0
 COMPOUND_ALLOCATION_FRACTION = 0.10
 STRATEGY = "ema_trend"
-QUOTE_URL = "https://biquote.io/api/XAUUSD?allowStale=false"
-HISTORY_URL = "https://biquote.io/api/XAUUSD/ohlc?interval=1h&limit=1000"
+QUOTE_URL = "https://api.goldprice.dev/v1/prices?symbol=XAU-USD-SPOT"
+HISTORY_URL = "https://api.goldprice.dev/v1/bars?symbol=XAU-USD-SPOT&interval=1h"
 BAR_SECONDS = 3600
 
 
@@ -63,87 +64,26 @@ def atomic_json(path, payload):
 
 def load_market():
     now = datetime.now(timezone.utc).timestamp()
-    quote = get_json(QUOTE_URL)
-    quote_age = float(quote.get("quoteAgeSeconds", math.inf))
-    quote_time = parse_time(quote.get("timestamp"))
-    if quote.get("symbol") != "XAUUSD":
-        raise ValueError("Unexpected live gold quote symbol")
-    if quote.get("marketState") != "open" or quote.get("stale") is not False:
-        raise ValueError("Gold market is closed or quote is marked stale")
-    if not math.isfinite(quote_age) or quote_age < 0 or quote_age > 180:
-        raise ValueError("Gold bid/ask quote is stale")
-    if quote_time > now + 30:
-        raise ValueError("Gold quote timestamp is in the future")
-    bid, ask = float(quote["bid"]), float(quote["ask"])
-    if not all(math.isfinite(x) and x > 0 for x in (bid, ask)) or ask < bid:
-        raise ValueError("Invalid gold bid/ask")
-    mid = (bid + ask) / 2.0
-    spread = ask - bid
-    half_spread_fraction = spread / (2.0 * mid)
-    if half_spread_fraction > 0.005:
-        raise ValueError("Gold bid/ask spread exceeds the 0.50% safety ceiling")
-
-    history_data = get_json(HISTORY_URL)
-    if history_data.get("symbol") != "XAUUSD" or history_data.get("interval") != "1h":
-        raise ValueError("Gold OHLC response symbol or interval is invalid")
-    source_bars = history_data.get("bars")
-    if not isinstance(source_bars, list):
-        raise ValueError("Gold OHLC bars are missing")
-    bars = []
-    for row in source_bars:
-        if row.get("isOpen") is not False:
-            continue
-        timestamp = parse_time(row.get("openTime"))
-        if abs(timestamp % BAR_SECONDS) > 1:
-            raise ValueError("Gold hourly candle is not aligned")
-        values = {key: float(row[key]) for key in ("open", "high", "low", "close")}
-        if not all(math.isfinite(value) and value > 0 for value in values.values()):
-            raise ValueError("Gold OHLC contains an invalid price")
-        if values["high"] < max(values["open"], values["close"], values["low"]):
-            raise ValueError("Gold candle high is inconsistent")
-        if values["low"] > min(values["open"], values["close"], values["high"]):
-            raise ValueError("Gold candle low is inconsistent")
-        bars.append({
-            "timestamp": int(timestamp), **values,
-            "volume": float(row.get("tickVolume", 0) or 0),
-            "imputed": False,
-        })
-    bars.sort(key=lambda item: item["timestamp"])
-    unique = {}
-    for bar in bars:
-        unique[bar["timestamp"]] = bar
-    bars = list(unique.values())
-    if len(bars) < 50:
-        raise ValueError("Insufficient completed hourly gold candles for EMA12/26: " + str(len(bars)) + " of " + str(len(source_bars)) + " provider bars after closed-bar validation")
-    if any(bars[i]["timestamp"] >= bars[i + 1]["timestamp"] for i in range(len(bars) - 1)):
-        raise ValueError("Gold candle timestamps are not strictly increasing")
-    recent = bars[-25:]
-    recent_gaps = [b["timestamp"] - a["timestamp"] for a, b in zip(recent, recent[1:])]
-    # XAUUSD has scheduled daily session breaks; permit gaps up to four hours,
-    # but never fabricate missing candles or accept a longer unexplained outage.
-    if any(gap > 4 * BAR_SECONDS for gap in recent_gaps):
-        raise ValueError("Recent gold history contains a gap longer than the 4-hour session-break allowance")
-    history_age = now - (bars[-1]["timestamp"] + BAR_SECONDS)
-    if history_age < -60 or history_age > 90 * 60:
-        raise ValueError("Latest completed gold hourly candle is stale")
-    return bars, {
-        "provider": "biquote · MT5 broker feed",
-        "source": quote.get("source"),
-        "quote_timestamp": quote.get("timestamp"),
-        "quote_age_seconds": round(quote_age, 1),
-        "bid_usd_oz": bid,
-        "ask_usd_oz": ask,
-        "mid_usd_oz": mid,
-        "spread_usd_oz": spread,
-        "half_spread_pct": round(half_spread_fraction * 100, 5),
-        "history_interval": "1h",
-        "history_bars": len(bars),
-        "recent_gap_count": sum(1 for gap in recent_gaps if gap > BAR_SECONDS),
-        "max_recent_gap_hours": round(max(recent_gaps, default=BAR_SECONDS) / 3600, 2),
+    quote = fetch_spot("XAUUSD", now)
+    rows = fetch_hourly_bars("XAUUSD", now)
+    bars = [{
+        "timestamp": int(row[0]), "open": float(row[1]), "high": float(row[2]),
+        "low": float(row[3]), "close": float(row[4]), "volume": float(row[6]),
+        "imputed": False,
+    } for row in rows]
+    mid = quote["price_usd"]
+    market = {
+        "provider": quote["provider"], "source": "goldprice.dev XAU/USD spot",
+        "quote_timestamp": quote["computed_at"], "quote_age_seconds": quote["quote_age_seconds"],
+        "expected_delay_minutes": quote["expected_delay_minutes"],
+        "mid_usd_oz": mid, "spread_usd_oz": mid * 0.001,
+        "spread_model": "assumed 0.10% spread; free spot provider has no bid/ask",
+        "history_interval": "1h", "history_bars": len(bars),
         "latest_closed_bar": datetime.fromtimestamp(bars[-1]["timestamp"], timezone.utc).isoformat(),
-        "latest_closed_bar_age_minutes": round(history_age / 60, 2),
-        "quality": "HEALTHY",
+        "quality": "DELAYED_SPOT_AND_VALIDATED_HOURLY_BARS",
     }
+    return bars, market
+
 
 def main():
     snapshot = json.loads(SNAPSHOT.read_text(encoding="utf-8")) if SNAPSHOT.exists() else {}
@@ -185,8 +125,8 @@ def main():
             "equity_usd": round(equity, 4), "pnl_usd": round(equity - INITIAL_CASH, 4),
             "return_pct": round((equity / INITIAL_CASH - 1.0) * 100.0, 4),
             "closed_trades": result["completed_trades"], "fees_usd": result["fees_paid_usd"],
-            "max_drawdown_pct": result["max_drawdown_pct"], "feed_status": "BIQUOTE_MT5_XAUUSD_BID_ASK_FRESH",
-            "status": status, "bid_usd_oz": market["bid_usd_oz"], "ask_usd_oz": market["ask_usd_oz"],
+            "max_drawdown_pct": result["max_drawdown_pct"], "feed_status": "GOLDPRICE_DEV_DELAYED_SPOT_AND_VALIDATED_HOURLY_BARS",
+            "status": status, "bid_usd_oz": None, "ask_usd_oz": None,
             "mid_usd_oz": market["mid_usd_oz"], "spread_usd_oz": market["spread_usd_oz"],
             "xau_ounces": round(units, 10), "cash_usd": round(cash, 4),
             "open_position": units > 0, "strategy": STRATEGY,
@@ -197,7 +137,7 @@ def main():
             "data_quality": market,
             "strategy_signal": entry_audit["strategy_signal"],
             "entry_consensus": entry_audit,
-            "execution_model": "1h completed MT5 OHLC; buy/sell cost includes half current bid/ask spread + 0.05% slippage and 0.10% fee per side. No live orders.",
+            "execution_model": "1h completed goldprice.dev OHLC; spot delayed 15m; assumed 0.10% spread + 0.05% slippage and 0.10% fee per side. No live orders.",
         }
     except Exception as exc:
         gold = dict(previous_gold)
@@ -245,7 +185,7 @@ def main():
     snapshot["strategies"] = strategies
     snapshot["notes"] = [
         "BTC and XAUUSD are independent $10 forward-only paper ledgers.",
-        "Gold uses biquote's MT5-sourced XAUUSD bid/ask and hourly OHLC feed; this is a third-party broker feed, not the user's own broker quote.",
+        "Gold uses goldprice.dev delayed XAU/USD spot. Free/keyless intraday bars are plan-gated; no bid/ask is claimed.",
         "Gold transaction costs conservatively model half the latest observed spread, 0.05% slippage and 0.10% fee per side.",
         "Gold strategy is exploratory and has not passed a forward-sample approval gate.",
         "Each new Gold entry sizes at 10% of current realized equity (compounding).",

@@ -16,10 +16,11 @@ from urllib.parse import urlencode
 from urllib.request import Request, urlopen
 
 from market_scanner import scan_btc_market
+from metal_price_sources import fetch_spot
 
 KRAKEN_API = "https://api.kraken.com/0/public"
 QUOTE_CURRENCIES = {"USD", "USDT", "USDC"}
-METALS = ("XAUUSD", "XAGUSD", "XPTUSD", "XPDUSD")
+METALS = ("XAUUSD", "XAGUSD", "XCUUSD")
 INTERVAL_SECONDS = 3600
 OUTPUT_DIR = Path("research/multi_market_scan")
 USER_AGENT = "WHJ-MultiMarket-PaperScanner/1.0"
@@ -204,91 +205,21 @@ def scan_crypto_pair(pair, now_seconds):
 
 
 def normalize_biquote_metals(symbol, now_seconds):
-    quote = fetch_raw_json("https://biquote.io/api/" + symbol + "?allowStale=false")
-    if quote.get("symbol") != symbol:
-        raise ValueError("Biquote quote symbol mismatch")
-    quote_age = finite(quote.get("quoteAgeSeconds"), "metal quote age")
-    if quote.get("marketState") != "open" or quote.get("stale") is not False:
-        raise ValueError("Metal market is closed or quote is marked stale")
-    if not 0 <= quote_age <= 180:
-        raise ValueError("Metal bid/ask quote is stale")
-    bid, ask = finite(quote.get("bid"), "metal bid"), finite(quote.get("ask"), "metal ask")
-    if bid <= 0 or ask < bid:
-        raise ValueError("Metal bid/ask is invalid")
-    history = fetch_raw_json(
-        "https://biquote.io/api/" + symbol + "/ohlc?interval=1h&limit=1000"
-    )
-    if history.get("symbol") != symbol or history.get("interval") != "1h":
-        raise ValueError("Metal hourly history symbol or interval mismatch")
-    bars = []
-    for item in history.get("bars", []):
-        if not isinstance(item, dict) or item.get("isOpen") is not False:
-            continue
-        stamp = item.get("openTime")
-        if not isinstance(stamp, str):
-            continue
-        parsed = datetime.fromisoformat(stamp.replace("Z", "+00:00"))
-        if parsed.tzinfo is None:
-            raise ValueError("Metal candle timestamp lacks timezone")
-        timestamp = int(parsed.timestamp())
-        if timestamp % INTERVAL_SECONDS:
-            raise ValueError("Metal candle timestamp is not UTC-hour aligned")
-        values = [finite(item[key], "metal OHLC") for key in ("open", "high", "low", "close")]
-        op, high, low, close = values
-        if min(values) <= 0 or high < max(op, close, low) or low > min(op, close, high):
-            raise ValueError("Metal OHLC bounds are invalid")
-        volume = finite(item.get("tickVolume", 0) or 0, "metal tick volume")
-        if volume < 0:
-            raise ValueError("Metal tick volume cannot be negative")
-        bars.append({
-            "timestamp": timestamp, "open": op, "high": high, "low": low,
-            "close": close, "volume": volume,
-        })
-    bars.sort(key=lambda item: item["timestamp"])
-    unique = {bar["timestamp"]: bar for bar in bars}
-    bars = [unique[key] for key in sorted(unique)]
-    if len(bars) < 51:
-        raise ValueError("Fewer than 51 completed metal hourly candles")
-    recent = bars[-51:]
-    if any(b["timestamp"] - a["timestamp"] > 4 * INTERVAL_SECONDS
-           for a, b in zip(recent, recent[1:])):
-        raise ValueError("Metal session history has a gap exceeding four hours")
-    age_minutes = (now_seconds - (bars[-1]["timestamp"] + INTERVAL_SECONDS)) / 60.0
-    if not -5 <= age_minutes <= 120:
-        raise ValueError("Latest completed metal candle is stale")
-    scanner_rows = [
-        [bar["timestamp"], bar["open"], bar["high"], bar["low"], bar["close"],
-         0.0, bar["volume"], int(bar["volume"])]
-        for bar in bars
-    ]
-    quality = {
-        "quality_status": "HEALTHY",
-        "paper_execution_allowed": True,
-        "quote_age_seconds": round(quote_age, 1),
-        "latest_closed_candle_age_minutes": round(age_minutes, 2),
-        "completed_hourly_candles": len(bars),
-        "bounded_session_gaps_allowed": True,
-    }
-    scanner = scan_btc_market(
-        scanner_rows,
-        market_data_quality=quality,
-        interval_hours=1,
-        market_label=symbol,
-        allow_session_gaps=True,
-        max_session_gap_hours=4,
-    )
+    """Validated delayed spot only; the free tier does not provide intraday bars."""
+    quote = fetch_spot(symbol, now_seconds)
     return {
-        "asset_class": "METAL",
-        "symbol": symbol,
-        "provider": "Biquote MT5-derived feed",
-        "bid": bid,
-        "ask": ask,
-        "spread": round(ask - bid, 6),
-        "data_quality": quality,
-        "scanner": scanner,
-        "directional_research": scanner.get("advanced_analysis", {}).get("status", "WATCH"),
-        "research_only": True,
-        "execution_enabled": False,
+        "asset_class": "METAL_SPOT", "symbol": symbol,
+        "provider": quote["provider"], "last_price": quote["price_usd"],
+        "quote_currency": "USD", "quote_age_seconds": quote["quote_age_seconds"],
+        "expected_delay_minutes": quote["expected_delay_minutes"],
+        "computed_at": quote["computed_at"],
+        "data_quality": {
+            "quality_status": "DELAYED_SPOT_VALIDATED",
+            "paper_execution_allowed": False,
+            "reason": "Free/keyless provider supplies spot only; intraday OHLC bars are plan-gated",
+        },
+        "directional_research": "WATCH", "research_only": True,
+        "execution_enabled": False, "quote_only": True,
     }
 
 

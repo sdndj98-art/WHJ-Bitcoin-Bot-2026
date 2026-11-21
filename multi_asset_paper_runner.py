@@ -17,6 +17,7 @@ from multi_market_opportunity_scan import (
 from shared_paper_portfolio import SharedPaperPortfolio, SUPPORTED_STRATEGIES
 from shared_paper_runner import strategy_signal
 from whj_agents import authorize_paper_entry
+from metal_price_sources import fetch_spot, fetch_hourly_bars
 
 LEDGER = Path("state/shared_paper_100usd.json")
 SNAPSHOT = Path("dual_portfolio.json")
@@ -56,52 +57,14 @@ def _finite(value, label):
 
 
 def _metal_market(symbol, now_seconds):
-    quote = fetch_raw_json("https://biquote.io/api/" + symbol + "?allowStale=false")
-    if quote.get("symbol") != symbol or quote.get("marketState") != "open" or quote.get("stale") is not False:
-        raise ValueError("Metal quote is closed, stale, or mismatched")
-    age = _finite(quote.get("quoteAgeSeconds"), "metal quote age")
-    bid, ask = _finite(quote.get("bid"), "metal bid"), _finite(quote.get("ask"), "metal ask")
-    if age < 0 or age > 180 or bid <= 0 or ask < bid:
-        raise ValueError("Metal quote failed freshness or bid/ask checks")
-    if (ask - bid) / ((ask + bid) / 2.0) > 0.01:
-        raise ValueError("Metal spread exceeds 1% safety ceiling")
-    history = fetch_raw_json(
-        "https://biquote.io/api/" + symbol + "/ohlc?interval=1h&limit=1000"
-    )
-    if history.get("symbol") != symbol or history.get("interval") != "1h":
-        raise ValueError("Metal history symbol or interval mismatch")
-    rows = []
-    for item in history.get("bars", []):
-        if not isinstance(item, dict) or item.get("isOpen") is not False:
-            continue
-        stamp = item.get("openTime")
-        if not isinstance(stamp, str):
-            raise ValueError("Metal candle timestamp missing")
-        parsed = datetime.fromisoformat(stamp.replace("Z", "+00:00"))
-        if parsed.tzinfo is None:
-            raise ValueError("Metal candle timestamp lacks timezone")
-        ts = int(parsed.timestamp())
-        if ts % 3600:
-            raise ValueError("Metal candle timestamp is not hour-aligned")
-        op, high, low, close = [_finite(item[k], "metal OHLC") for k in ("open", "high", "low", "close")]
-        if min(op, high, low, close) <= 0 or high < max(op, close, low) or low > min(op, close, high):
-            raise ValueError("Metal candle OHLC bounds invalid")
-        rows.append([ts, op, high, low, close, 0.0, _finite(item.get("tickVolume", 0) or 0, "metal volume")])
-    rows.sort(key=lambda row: row[0])
-    rows = list({row[0]: row for row in rows}.values())
-    if len(rows) < 200:
-        raise ValueError("Fewer than 200 completed hourly metal candles")
-    recent = rows[-51:]
-    if any(b[0] - a[0] > 4 * 3600 for a, b in zip(recent, recent[1:])):
-        raise ValueError("Metal history has a session gap exceeding four hours")
-    candle_age = now_seconds - (rows[-1][0] + 3600)
-    if not -300 <= candle_age <= 2 * 3600:
-        raise ValueError("Latest completed metal candle is stale")
+    quote = fetch_spot(symbol, now_seconds)
+    rows = fetch_hourly_bars(symbol, now_seconds)
     return {
         "symbol": symbol, "asset": symbol, "rows": rows,
-        "price": (bid + ask) / 2.0, "quality": "HEALTHY",
-        "provider": "Biquote MT5-derived public feed",
-        "quote_age_seconds": round(age, 1),
+        "price": quote["price_usd"], "quality": "HEALTHY",
+        "provider": quote["provider"],
+        "quote_age_seconds": quote["quote_age_seconds"],
+        "quote_delay_minutes": quote["expected_delay_minutes"],
         "latest_closed_candle": rows[-1][0],
     }
 
