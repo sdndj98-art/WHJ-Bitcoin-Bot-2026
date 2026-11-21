@@ -14,19 +14,16 @@ on:
 
 permissions:
   contents: read
-  pages: write
-  id-token: write
 
 concurrency:
   group: pages
   cancel-in-progress: true
 
 jobs:
-  deploy:
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
+  build:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
       - name: Checkout QuantumOrb dashboard source
         uses: actions/checkout@v4
@@ -48,23 +45,19 @@ jobs:
         with:
           name: github-pages-${{ github.run_id }}-${{ github.run_attempt }}
           path: _site
+
+  deploy:
+    needs: build
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    steps:
       - name: Deploy QuantumOrb dashboard
         id: deployment
         uses: actions/deploy-pages@v4
         with:
           artifact_name: github-pages-${{ github.run_id }}-${{ github.run_attempt }}
-
-# Portfolio snapshot source is maintained alongside the QuantumOrb dashboard.
-# Keep the portfolio panel inside the main content flow for mobile visibility.
-
-# Rebuild Pages when the QuantumOrb portfolio panel is repositioned on its source branch.
-
-# Rebuild after restoring QuantumOrb command center above the portfolio cards.
-
-# Trigger a fresh Pages build for the unified WHJ one-screen wallboard.
-
-# Rebuild after binding the one-screen agent telemetry to verified portfolio state.
-
-# Publish after final one-screen wallboard formatter and agent-state verification.
-# Publish restored original animated QuantumOrb neural tree in the unified wallboard.
-# Rebuild Pages after mobile full-height neural tree and scroll layout fix.
