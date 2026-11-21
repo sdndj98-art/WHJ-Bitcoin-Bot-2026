@@ -23,7 +23,7 @@ LEDGER = Path("state/shared_paper_100usd.json")
 SNAPSHOT = Path("dual_portfolio.json")
 REPORT = Path("state/multi_asset_paper_report.json")
 INITIAL_CASH = 100.0
-MAX_CRYPTO_MARKETS = None  # scan every eligible distinct crypto base discovered from Kraken
+MAX_CRYPTO_MARKETS = 60  # scan the top 60 eligible distinct bases by liquidity; keep hourly run bounded
 METALS = ("XAUUSD", "XAGUSD")  # shared $100 ledger: only metals with validated closed daily bars
 TRADE_ALLOCATION = 0.02
 MAX_GROSS_EXPOSURE = 0.50
@@ -129,6 +129,8 @@ def _load_markets(book):
             continue
         selected.append(pair)
         selected_bases.add(base)
+        if MAX_CRYPTO_MARKETS is not None and len(selected) >= MAX_CRYPTO_MARKETS:
+            break
     open_assets = _position_market_symbols(book)
     pair_by_symbol = {pair["symbol"]: pair for pair in universe if pair["quote"] in {"USD", "USDT", "USDC"}}
     # Kraken names Bitcoin XBT; the shared WHJ ledger uses the canonical BTC/USD label.
