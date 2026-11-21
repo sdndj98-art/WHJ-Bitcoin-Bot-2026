@@ -211,8 +211,18 @@ def load_shared_paper_portfolio(path="dual_portfolio.json"):
         raise ValueError("Shared portfolio capital or equity is invalid")
     strategy_rows = snapshot.get("strategies")
     positions = shared.get("open_positions", [])
-    if not isinstance(strategy_rows, list) or not isinstance(positions, list) or len(strategy_rows) != len(SUPPORTED_STRATEGIES):
-        raise ValueError("Shared portfolio must contain all supported strategy allocations")
+    if not isinstance(strategy_rows, list) or not isinstance(positions, list):
+        raise ValueError("Shared portfolio collections are invalid")
+    strategy_names = {
+        row.get("strategy") for row in strategy_rows
+        if isinstance(row, dict) and isinstance(row.get("strategy"), str)
+    }
+    if len(strategy_rows) != len(SUPPORTED_STRATEGIES) or strategy_names != set(SUPPORTED_STRATEGIES):
+        return {
+            "mode": "WAITING_FOR_SHARED_100USD_LEDGER",
+            "accounts": {},
+            "note": "The saved dashboard snapshot is from an older strategy schema; waiting for the current paper engine snapshot. No fallback wallet created.",
+        }, {}
     accounts = {}
     per_strategy_capital = initial / len(strategy_rows)
     for row in strategy_rows:
