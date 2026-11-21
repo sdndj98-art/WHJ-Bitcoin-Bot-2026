@@ -20,6 +20,21 @@ class MetalPriceSourceTests(unittest.TestCase):
         self.assertEqual(quote["expected_delay_minutes"], 15)
         self.assertIn("XAU-USD-SPOT", get.call_args.args[0])
 
+    def test_delayed_spot_accepts_cache_margin_but_rejects_old_quote(self):
+        now = datetime(2026, 11, 21, 12, 0, tzinfo=timezone.utc).timestamp()
+        def payload(age):
+            return {"symbols": [{
+                "symbol": "XAU", "quote_currency": "USD", "contract_type": "spot",
+                "price": "4021.50", "is_stale": False,
+                "computed_at": datetime.fromtimestamp(now - age, timezone.utc).isoformat(),
+            }]}
+        with patch.object(sources, "_get_json", return_value=payload(35 * 60)):
+            quote = sources.fetch_spot("XAUUSD", now)
+        self.assertEqual(quote["price_unit"], "troy_ounce")
+        with patch.object(sources, "_get_json", return_value=payload(61 * 60)):
+            with self.assertRaisesRegex(ValueError, "60-minute safety age"):
+                sources.fetch_spot("XAUUSD", now)
+
     def test_rejects_stale_spot(self):
         now = datetime(2026, 11, 21, 12, 0, tzinfo=timezone.utc).timestamp()
         payload = {"symbols": [{

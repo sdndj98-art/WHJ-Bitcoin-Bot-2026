@@ -11,6 +11,7 @@ from urllib.error import HTTPError
 BASE_URL = "https://api.goldprice.dev/v1"
 SYMBOLS = {"XAUUSD": "XAU-USD-SPOT", "XAGUSD": "XAG-USD-SPOT", "XCUUSD": "HG-USD-SPOT"}
 CODES = {"XAUUSD": "XAU", "XAGUSD": "XAG", "XCUUSD": "HG"}
+UNITS = {"XAUUSD": "troy_ounce", "XAGUSD": "troy_ounce", "XCUUSD": "pound"}
 SOURCE = "goldprice.dev (15-minute delayed free/keyless spot feed)"
 
 def _get_json(url, timeout=15):
@@ -66,9 +67,15 @@ def fetch_spot(symbol, now_seconds=None):
     price = _number(item.get("price"), "spot price")
     stamp = _parse_timestamp(item.get("computed_at"), "spot")
     age = now_seconds - stamp
-    if price <= 0 or age < -60 or age > 25 * 60:
-        raise ValueError("goldprice.dev spot failed price/age validation")
-    return {"symbol": symbol, "provider_symbol": SYMBOLS[symbol], "price_usd": price,
+    if price <= 0:
+        raise ValueError("goldprice.dev spot price must be positive")
+    if age < -60:
+        raise ValueError("goldprice.dev spot timestamp is future-dated")
+    # The source's own is_stale flag is authoritative; allow a cache margin
+    # beyond its advertised 15-minute delay.
+    if age > 60 * 60:
+        raise ValueError("goldprice.dev spot quote exceeds the 60-minute safety age")
+    return {"symbol": symbol, "provider_symbol": SYMBOLS[symbol], "price_usd": price, "price_unit": UNITS[symbol],
         "computed_at": item["computed_at"], "quote_age_seconds": round(age, 1),
         "expected_delay_minutes": 15, "provider": SOURCE, "quality": "DELAYED_SPOT_VALIDATED"}
 
@@ -104,7 +111,7 @@ def fetch_daily_bars(symbol, now_seconds=None, days=30):
         volume = None if item.get("volume") is None else _number(item.get("volume"), "daily volume")
         if volume is not None and volume < 0:
             raise ValueError("goldprice.dev daily volume cannot be negative")
-        bars.append([timestamp, op, high, low, close, 0.0, 0.0 if volume is None else volume])
+        bars.append([timestamp, op, high, low, close, 0.0, volume])
     bars.sort(key=lambda row: row[0])
     unique = {row[0]: row for row in bars}
     bars = [unique[key] for key in sorted(unique)]

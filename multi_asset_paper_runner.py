@@ -67,6 +67,7 @@ def _metal_market(symbol, now_seconds):
         "quote_delay_minutes": quote["expected_delay_minutes"],
         "history_interval": "1d",
         "history_bars": len(rows),
+        "price_unit": quote["price_unit"],
         "latest_closed_candle": rows[-1][0],
     }
 
