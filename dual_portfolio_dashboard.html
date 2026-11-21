@@ -43,6 +43,10 @@ table{width:100%;border-collapse:collapse;min-width:600px}th,td{text-align:right
 .tree-foot{color:#9fb0c6;font-size:11px;text-align:center}
 @media(max-width:600px){.tree-branches{gap:10px}.tree-root{min-width:200px}.tree-node{padding:11px 8px}.tree-node strong{font-size:12px}.tree-node small{font-size:10px}}
 
+.scan-metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:14px 0}
+.scan-metrics .metric{min-width:0}.scan-metrics strong{overflow-wrap:anywhere}
+.scan-table{min-width:560px}.scan-table td{font-size:12px}
+@media(max-width:650px){.scan-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.scan-table th,.scan-table td{padding:9px 7px;font-size:11px}}
 </style></head>
 <body>
 <header><div><h1>WHJ Dual Portfolio</h1><div class="muted">لوحة متابعة محفظتي البيتكوين والذهب — تداول ورقي فقط</div></div><span class="pill" id="overall">CONFIGURED · NOT ACTIVE</span></header>
@@ -81,7 +85,19 @@ table{width:100%;border-collapse:collapse;min-width:600px}th,td{text-align:right
 </div>
 <div class="tree-foot">كل فرع مستقل؛ فشل تغذية أصل واحد لا يوقف دفتر الأصل الآخر. LIVE TRADING DISABLED.</div>
 </div></section>
-<section><h2>مقارنة الاستراتيجيات</h2><p class="muted small">كل أصل يُقيّم منفصلاً. لن تُرتب الاستراتيجيات قبل وجود نتائج ورقية موثقة.</p>
+<section id="market-scan-panel">
+<div class="asset"><div><h2>مراقبة العملات والمعادن</h2><div class="muted small">Multi-Market Research Scanner · Kraken + Metals Feed</div></div><span class="pill" id="market-scan-status">بانتظار التقرير</span></div>
+<p class="muted small">مسح استرشادي للأزواج المتاحة والذهب والفضة والبلاتين والبلاديوم. النتائج للبحث والمراقبة فقط، ولا تفتح صفقات ولا تغيّر المحافظ الورقية.</p>
+<div class="scan-metrics">
+<div class="metric"><span>أزواج العملات المكتشفة</span><strong id="market-scan-discovered">—</strong></div>
+<div class="metric"><span>أزواج العملات المفحوصة</span><strong id="market-scan-scanned">—</strong></div>
+<div class="metric"><span>الأسواق المتاحة</span><strong id="market-scan-success">—</strong></div>
+<div class="metric"><span>فرص بحثية مرصودة</span><strong id="market-scan-opportunities-count">—</strong></div>
+</div>
+<div class="muted small" id="market-scan-meta">آخر تحديث: بانتظار أول تقرير محفوظ</div>
+<table class="scan-table"><thead><tr><th>الترتيب</th><th>السوق</th><th>الفئة</th><th>اتجاه البحث</th><th>التوافق</th></tr></thead><tbody id="market-scan-opportunities"><tr><td colspan="5" class="muted">لا يوجد تقرير مسح منشور بعد</td></tr></tbody></table>
+<div class="muted small" id="market-scan-errors" style="margin-top:10px">الأخطاء أو الأسواق غير المتاحة: —</div>
+</section>\n<section><h2>مقارنة الاستراتيجيات</h2><p class="muted small">كل أصل يُقيّم منفصلاً. لن تُرتب الاستراتيجيات قبل وجود نتائج ورقية موثقة.</p>
 <table><thead><tr><th>الأصل</th><th>الاستراتيجية</th><th>الرصيد</th><th>العائد</th><th>الصفقات</th><th>الرسوم</th><th>أقصى تراجع</th><th>الحالة</th></tr></thead><tbody id="strategies"><tr><td colspan="8" class="muted">لا توجد نتائج تنفيذ ورقي بعد — CONFIGURED_NOT_ACTIVE</td></tr></tbody></table></section>
 <section><h2>مراجعة العقول</h2><div class="grid"><div class="metric"><span>Bull Brain</span><strong id="bull">بانتظار أول تحليل</strong></div><div class="metric"><span>Bear Brain</span><strong id="bear">بانتظار أول تحليل</strong></div><div class="metric"><span>Risk Judge</span><strong id="risk">لم يصدر قراراً بعد</strong></div><div class="metric"><span>آخر تحديث</span><strong id="updated">لم يبدأ التشغيل</strong></div></div></section>
 <p class="muted small" style="margin-top:18px">مصدر البيانات: ملف dual_portfolio.json عند توفره. إذا كان الملف مفقوداً أو غير صالح، تبقى اللوحة على حالة غير نشطة ولا تخترع نتائج. التداول الحقيقي معطل.</p>
@@ -185,13 +201,73 @@ async function refreshXauSpot() {
   }
 }
 
+async function refreshMarketScan() {
+  const setText = (id, value) => {
+    const node = document.getElementById(id);
+    if (node) node.textContent = String(value ?? '—');
+  };
+  try {
+    const response = await fetch('./research/multi_market_scan/latest.json', { cache: 'no-store' });
+    if (!response.ok) throw new Error('تقرير مسح الأسواق غير منشور بعد');
+    const report = await response.json();
+    if (!report || typeof report !== 'object' || !Array.isArray(report.opportunities)) {
+      throw new Error('صيغة تقرير المسح غير صالحة');
+    }
+    const status = String(report.scan_status || 'UNKNOWN');
+    setText('market-scan-status', status + ' · بحث فقط');
+    setText('market-scan-discovered', report.crypto_pairs_discovered);
+    setText('market-scan-scanned', String(report.crypto_pairs_scanned ?? 0) + ' / ' + String(report.crypto_pairs_ranked ?? 0));
+    setText('market-scan-success', report.markets_successfully_scanned);
+    setText('market-scan-opportunities-count', report.opportunity_count);
+    const failed = report.unavailable_or_failed_markets && typeof report.unavailable_or_failed_markets === 'object'
+      ? Object.keys(report.unavailable_or_failed_markets).length : 0;
+    setText('market-scan-meta', 'آخر تحديث UTC: ' + String(report.generated_at_utc || 'غير معروف') +
+      ' · المتبقي: ' + String(report.crypto_pairs_remaining ?? '—'));
+    setText('market-scan-errors', 'الأخطاء أو الأسواق غير المتاحة: ' + failed +
+      ' · التنفيذ: معطّل · المحافظ الورقية: دون تغيير');
+    const table = document.getElementById('market-scan-opportunities');
+    table.replaceChildren();
+    const items = report.opportunities.slice(0, 10);
+    if (!items.length) {
+      const row = document.createElement('tr');
+      const cell = document.createElement('td');
+      cell.colSpan = 5;
+      cell.className = 'muted';
+      cell.textContent = 'لا توجد فرص بحثية مطابقة حالياً؛ هذا لا يعني غياب حركة السوق.';
+      row.appendChild(cell);
+      table.appendChild(row);
+      return;
+    }
+    for (const [index, item] of items.entries()) {
+      const scanner = item && typeof item.scanner === 'object' ? item.scanner : {};
+      const row = document.createElement('tr');
+      const values = [
+        index + 1,
+        item?.symbol || '—',
+        item?.asset_class || '—',
+        item?.directional_research || 'WATCH',
+        String(scanner.confluence_score ?? '—') + ' / ' + String(scanner.confluence_total ?? '—')
+      ];
+      for (const value of values) {
+        const cell = document.createElement('td');
+        cell.textContent = String(value);
+        row.appendChild(cell);
+      }
+      table.appendChild(row);
+    }
+  } catch (error) {
+    setText('market-scan-status', 'غير متاح');
+    setText('market-scan-meta', String(error.message || error));
+  }
+}
+
 async function refreshAll() {
   try { await refreshPortfolio(); }
   catch (error) {
     document.getElementById('overall').textContent = 'SNAPSHOT_UNAVAILABLE';
     document.getElementById('risk').textContent = String(error.message || error);
   }
-  await refreshXauSpot();
+  await refreshXauSpot();\n  await refreshMarketScan();
 }
 
 refreshAll();
