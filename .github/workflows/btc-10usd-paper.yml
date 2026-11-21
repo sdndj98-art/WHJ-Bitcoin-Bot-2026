@@ -8,6 +8,9 @@ on:
     paths:
       - "shared_paper_runner.py"
       - "shared_paper_portfolio.py"
+      - "multi_asset_paper_runner.py"
+      - "multi_market_opportunity_scan.py"
+      - "tests/test_multi_asset_paper_runner.py"
       - "whj_agents.py"
       - "historical_research.py"
       - "forward_paper_monitor.py"
@@ -54,10 +57,12 @@ jobs:
           fi
       - name: Compile and run complete test suite
         run: |
-          python -m py_compile shared_paper_runner.py shared_paper_portfolio.py historical_research.py forward_paper_monitor.py whj_agents.py
+          python -m py_compile shared_paper_runner.py shared_paper_portfolio.py multi_asset_paper_runner.py multi_market_opportunity_scan.py historical_research.py forward_paper_monitor.py whj_agents.py
           python -m unittest discover -s tests -v
-      - name: Run seven strategies against the one shared paper wallet
+      - name: Run seven BTC strategies against the one shared paper wallet
         run: python shared_paper_runner.py
+      - name: Run top liquid USD crypto pairs and gold/silver through the same paper wallet
+        run: python multi_asset_paper_runner.py
       - name: Refresh existing dashboard report from the shared wallet
         continue-on-error: true
         run: python main.py
@@ -111,6 +116,7 @@ jobs:
           cp dual_portfolio.json _site/dual_portfolio.json
           cp state/whj_agents.json _site/whj_agents.json
           if [ -s report.json ]; then cp report.json _site/report.json; fi
+          if [ -s state/multi_asset_paper_report.json ]; then cp state/multi_asset_paper_report.json _site/multi_asset_paper_report.json; fi
           if [ -s research/multi_market_scan/latest.json ]; then
             mkdir -p _site/research/multi_market_scan
             cp research/multi_market_scan/latest.json _site/research/multi_market_scan/latest.json
@@ -136,6 +142,7 @@ jobs:
             state/shared_paper_100usd.json
             state/shared_paper_initialized.json
             state/whj_agents.json
+            state/multi_asset_paper_report.json
             report.json
           if-no-files-found: warn
           retention-days: 30
