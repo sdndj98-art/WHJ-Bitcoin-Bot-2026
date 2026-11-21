@@ -187,6 +187,11 @@ def build_agent_state(snapshot, generated_at=None, research_report=None):
     paper_only = snapshot.get("paper_only") is True
     live_disabled = snapshot.get("live_trading_enabled") is False
     safety_ok = paper_only and live_disabled
+    multi_asset = snapshot.get("multi_asset_paper") or {}
+    raw_scanned = multi_asset.get("markets_scanned", [])
+    scanned_markets = [item for item in raw_scanned
+                       if isinstance(item, str) and item.strip()] if isinstance(raw_scanned, list) else []
+    all_markets = list(dict.fromkeys(["BTC/USD", "XAUUSD", *scanned_markets]))
 
     sleeves = {"BTC": btc, "XAUUSD": gold}
     healthy = {
@@ -200,8 +205,8 @@ def build_agent_state(snapshot, generated_at=None, research_report=None):
         "At least one market has a fresh, healthy feed; each market is gated independently."
         if scanner_ok else "Waiting for at least one fresh, healthy market feed.",
         {"healthy_markets": [s for s, ok in healthy.items() if ok],
-         "markets": list(sleeves),
-         "markets_scanned": list((snapshot.get("multi_asset_paper") or {}).get("markets_scanned", [])),
+         "markets": all_markets,
+         "markets_scanned": all_markets,
          "shared_wallet": True},
     )
 
@@ -303,6 +308,21 @@ def build_agent_state(snapshot, generated_at=None, research_report=None):
     unified_decision = build_unified_decision(
         sleeves, healthy, safety_ok, safety_ok, sizing_ok
     )
+    # Spot-scanned symbols without an executed closed-candle strategy signal
+    # are explicitly represented as watch-only HOLDs, never as guessed orders.
+    for symbol in scanned_markets:
+        if symbol in unified_decision["market_decisions"]:
+            continue
+        unified_decision["market_decisions"][symbol] = {
+            "decision": "HOLD",
+            "strategy_signal": "HOLD",
+            "reason_codes": ["WATCH_ONLY_NO_CLOSED_CANDLE_SIGNAL"],
+            "approved_by_consensus": False,
+            "execution_mode": "PAPER_ONLY",
+            "live_orders_enabled": False,
+            "watch_only": True,
+        }
+    unified_decision["market_scope"] = "SHARED_WALLET_MULTI_ASSET"
     unified_decision["research_advisory"] = _research_advisory(research_report)
 
     return {
@@ -318,8 +338,7 @@ def build_agent_state(snapshot, generated_at=None, research_report=None):
             "agent_count": len(AGENT_NAMES),
             "ready_count": sum(a["status"] in ("READY", "PASS", "PAPER_READY", "TRACKING", "RECORDS_AVAILABLE") for a in
                                (scanner, rug_check, sizer, executor, logger, equity_agent)),
-            "markets": list((snapshot.get("multi_asset_paper") or {}).get(
-                "markets_scanned", ["BTC/USD", "XAUUSD"])),
+            "markets": all_markets,
             "paper_only": safety_ok,
         },
     }
