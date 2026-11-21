@@ -18,6 +18,17 @@ class MetalPriceSourceTests(unittest.TestCase):
         self.assertEqual(quote["price_usd"], 4021.5)
         self.assertIn("/price/XAU", get.call_args.args[0])
 
+    def test_gold_api_infers_documented_unit_when_provider_omits_it(self):
+        now = datetime(2026, 11, 21, 12, 0, tzinfo=timezone.utc).timestamp()
+        payload = {
+            "symbol": "XPD", "currency": "USD", "price": 1200.0,
+            "updatedAt": datetime.fromtimestamp(now - 40, timezone.utc).isoformat(),
+        }
+        with patch.object(sources, "_get_json", return_value=payload):
+            quote = sources.fetch_spot("XPDUSD", now)
+        self.assertEqual(quote["price_unit"], "troy_ounce")
+        self.assertEqual(quote["provider_unit"], "symbol-contract-inferred")
+
     def test_gold_api_rejects_stale_or_wrong_units(self):
         now = datetime(2026, 11, 21, 12, 0, tzinfo=timezone.utc).timestamp()
         payload = {
