@@ -2,7 +2,7 @@ import unittest
 from datetime import datetime, timezone
 
 from multi_asset_paper_runner import (
-    _is_eligible_crypto_pair, _market_position_id, _risk_state, _seed_market_state,
+    _ensure_market_strategy_state, _is_eligible_crypto_pair, _market_position_id, _risk_state, _seed_market_state,
     MAX_GROSS_EXPOSURE, MAX_OPEN_POSITIONS, TRADE_ALLOCATION,
 )
 from shared_paper_portfolio import SUPPORTED_STRATEGIES
@@ -28,6 +28,16 @@ class MultiAssetPaperRunnerTests(unittest.TestCase):
             {rows[-1][0]},
         )
         self.assertTrue(all(len(item["recent_closes"]) == 200 for item in state.values()))
+
+    def test_missing_new_strategy_cursor_is_seeded_without_resetting_existing(self):
+        rows = [[i * 3600, 100, 101, 99, 100 + i, 0, 1] for i in range(250)]
+        state = _seed_market_state(rows)
+        state["sma_trend"]["last_timestamp"] = 12345
+        del state["compound_momentum"]
+        added = _ensure_market_strategy_state(state, rows)
+        self.assertEqual(added, ["compound_momentum"])
+        self.assertEqual(state["sma_trend"]["last_timestamp"], 12345)
+        self.assertEqual(state["compound_momentum"]["last_timestamp"], rows[-1][0])
 
     def test_daily_sma_trend_can_signal_after_20_closed_bars(self):
         history = [100.0] * 19 + [101.0]
