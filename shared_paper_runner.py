@@ -185,6 +185,21 @@ def main():
         raise RuntimeError("BTC candle timestamps must be unique and increasing")
 
     book = SharedPaperPortfolio(LEDGER, initial_cash_usd=INITIAL_CASH, fee_rate=FEE_RATE)
+    # If non-BTC positions exist but the shared snapshot has stale/missing marks,
+    # pause this BTC sub-engine without valuing them at stale prices or failing
+    # the whole workflow. The multi-asset engine refreshes marks from providers.
+    try:
+        liquidation_equity(book, rows[-1][4])
+    except RuntimeError as exc:
+        print(json.dumps({
+            "status": "PAPER_BLOCKED_STALE_SHARED_MARKS",
+            "reason": str(exc)[:300],
+            "paper_only": True,
+            "live_trading_enabled": False,
+            "trades_opened": 0,
+            "ledger_unchanged": True,
+        }, indent=2))
+        return
     strategy_state = book.state.get("strategy_state", {})
     if not strategy_state:
         strategy_state = _new_strategy_state(rows)
