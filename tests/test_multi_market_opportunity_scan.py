@@ -22,7 +22,7 @@ class MultiMarketScannerTests(unittest.TestCase):
         response = MagicMock()
         response.__enter__.return_value.status = 200
         response.__enter__.return_value.read.return_value = b'{"result":{"PAIR":{"ok":true}}}'
-        with patch.object(multi_scan, "urlopen", side_effect=[throttled, response]) as request, \\
+        with patch.object(multi_scan, "urlopen", side_effect=[throttled, response]) as request, \
              patch.object(multi_scan.time, "sleep") as sleep:
             result = multi_scan.fetch_json("https://provider.example/markets")
         self.assertEqual(result, {"PAIR": {"ok": True}})
@@ -33,7 +33,7 @@ class MultiMarketScannerTests(unittest.TestCase):
         invalid_request = HTTPError(
             "https://provider.example/markets", 400, "Bad Request", {}, None,
         )
-        with patch.object(multi_scan, "urlopen", side_effect=invalid_request) as request, \\
+        with patch.object(multi_scan, "urlopen", side_effect=invalid_request) as request, \
              patch.object(multi_scan.time, "sleep") as sleep:
             with self.assertRaises(HTTPError):
                 multi_scan.fetch_json("https://provider.example/markets")
