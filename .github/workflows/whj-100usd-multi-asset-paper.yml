@@ -13,6 +13,9 @@ on:
       - "metal_price_sources.py"
       - "multi_market_opportunity_scan.py"
       - "whj_agents.py"
+      - "whj_desk.py"
+      - "tests/test_whj_desk.py"
+      - "web/desk.html"
       - "tests/test_multi_asset_paper_runner.py"
       - "web/index.html"
       - "web/paper-trades.html"
@@ -45,13 +48,17 @@ jobs:
             whj-shared-100usd-
       - name: Validate paper engine and risk controls
         run: |
-          python -m py_compile multi_asset_paper_runner.py shared_paper_portfolio.py shared_paper_runner.py metal_price_sources.py multi_market_opportunity_scan.py whj_agents.py
+          python -m py_compile multi_asset_paper_runner.py shared_paper_portfolio.py shared_paper_runner.py metal_price_sources.py multi_market_opportunity_scan.py whj_agents.py whj_desk.py
           python -m unittest discover -s tests -p 'test_multi_asset_paper_runner.py' -v
           python -m unittest discover -s tests -p 'test_shared_paper_portfolio.py' -v
           python -m unittest discover -s tests -p 'test_shared_paper_runner.py' -v
           python -m unittest discover -s tests -p 'test_whj_agents.py' -v
+          python -m unittest discover -s tests -p 'test_whj_desk.py' -v
       - name: Run shared $100 paper engine
         run: python multi_asset_paper_runner.py
+      - name: Generate read-only eight-role desk telemetry
+        if: success()
+        run: python whj_desk.py
       - name: Persist simulated wallet state
         if: success() && hashFiles('state/shared_paper_100usd.json') != ''
         uses: actions/cache/save@v4
@@ -75,10 +82,12 @@ jobs:
           mkdir -p _site/state
           cp web/index.html _site/index.html
           cp web/paper-trades.html _site/paper-trades.html
+          cp web/desk.html _site/desk.html
           cp dual_portfolio.json _site/dual_portfolio.json
           if [ -f report.json ]; then cp report.json _site/report.json; fi
           cp state/multi_asset_paper_report.json _site/state/
           cp state/shared_paper_100usd.json _site/state/
+          cp state/whj_desk.json _site/state/
           touch _site/.nojekyll
       - name: Upload Pages site
         if: success()
