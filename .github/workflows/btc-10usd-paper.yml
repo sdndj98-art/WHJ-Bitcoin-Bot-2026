@@ -104,7 +104,12 @@ jobs:
           git add -f state/whj_agents.json
           if ! git diff --cached --quiet; then
             git commit -m "chore: update shared $100 paper portfolio snapshot"
-            git push
+            # Concurrent code and dashboard commits can land while this paper
+            # run is finishing. Rebase the generated snapshot on current main
+            # and prefer this run's generated report files if they conflict.
+            git fetch origin main
+            git rebase -X theirs origin/main
+            git push origin HEAD:main
           fi
       - name: Configure GitHub Pages
         if: success()
