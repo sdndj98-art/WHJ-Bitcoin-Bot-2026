@@ -275,6 +275,18 @@ def run_engine():
     events = []
     seeded = []
     processed_candles = 0
+    strategy_diagnostics = {
+        name: {
+            "candles_evaluated": 0, "entry_signals": 0, "exit_signals": 0,
+            "opened": 0, "blocked": 0, "block_reasons": {},
+        } for name in SUPPORTED_STRATEGIES
+    }
+
+    def note_block(strategy, reason):
+        diagnostic = strategy_diagnostics[strategy]
+        diagnostic["blocked"] += 1
+        reasons = diagnostic["block_reasons"]
+        reasons[reason] = int(reasons.get(reason, 0)) + 1
 
     for symbol, market in markets.items():
         if symbol == "BTC/USD":
@@ -321,10 +333,19 @@ def run_engine():
                 want_long, want_flat = strategy_signal(
                     strategy, history, int(strategy_state.get("holding_bars", 0))
                 )
+                diagnostic = strategy_diagnostics[strategy]
+                diagnostic["candles_evaluated"] += 1
+                diagnostic["entry_signals"] += int(want_long)
+                diagnostic["exit_signals"] += int(want_flat)
                 position_id = _market_position_id(symbol, strategy)
                 position = book.state["positions"].get(position_id)
                 paused = bool(risk.get("daily_loss_paused") or risk.get("drawdown_paused"))
                 trade_allowed = market.get("trade_allowed", True)
+                if want_long and not position:
+                    if paused:
+                        note_block(strategy, "RISK_PAUSED")
+                    elif not trade_allowed:
+                        note_block(strategy, "MARKET_NOT_ELIGIBLE")
                 if position and (want_flat or paused or not trade_allowed):
                     exit_price = close * (1.0 - SLIPPAGE_RATE)
                     trade = book.close_position(position_id, exit_price)
@@ -342,13 +363,18 @@ def run_engine():
                         capacity,
                         book.state["cash_usd"] / (1.0 + FEE_RATE),
                     )
-                    if (len(current["open_positions"]) < MAX_OPEN_POSITIONS
-                            and notional >= MIN_TRADE_USD):
+                    if len(current["open_positions"]) >= MAX_OPEN_POSITIONS:
+                        note_block(strategy, "MAX_OPEN_POSITIONS")
+                    elif notional < MIN_TRADE_USD:
+                        note_block(strategy, "MIN_TRADE_OR_INSUFFICIENT_CASH")
+                    else:
                         approved = authorize_paper_entry(
                             symbol, market["quality"] == "HEALTHY",
                             {"signal": "BUY", "allocation_pct": TRADE_ALLOCATION * 100,
                              "risk_paused": paused},
                         )
+                        if not approved:
+                            note_block(strategy, "AGENT_CONSENSUS_REJECTED")
                         if approved:
                             try:
                                 opened = book.open_position(
@@ -358,6 +384,7 @@ def run_engine():
                                 events.append({"event": "OPEN", "market": symbol,
                                                "strategy": strategy, "timestamp": timestamp,
                                                **opened})
+                                diagnostic["opened"] += 1
                             except ValueError as exc:
                                 if "Insufficient shared cash" not in str(exc):
                                     raise
@@ -485,6 +512,7 @@ def run_engine():
             "seeded_markets": seeded,
             "processed_closed_candles": processed_candles,
             "events_this_run": events,
+            "strategy_diagnostics": strategy_diagnostics,
             "daily_loss_paused": bool(risk.get("daily_loss_paused")),
             "drawdown_paused": bool(risk.get("drawdown_paused")),
             "drawdown_pct": risk.get("drawdown_pct", 0),
@@ -504,7 +532,7 @@ def run_engine():
         "closed_trades": len(book.state["closed_trades"]),
         "markets": sorted(markets), "errors": errors,
         "seeded_markets": seeded, "processed_closed_candles": processed_candles,
-        "events": events, "risk": risk,
+        "events": events, "strategy_diagnostics": strategy_diagnostics, "risk": risk,
         "orders_submitted": False,
     }
     REPORT.parent.mkdir(parents=True, exist_ok=True)
