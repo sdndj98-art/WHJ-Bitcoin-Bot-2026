@@ -55,6 +55,22 @@ class MultiMarketScannerTests(unittest.TestCase):
         self.assertEqual([p["symbol"] for p in ranked], ["ETH/USD"])
         self.assertEqual(missing, [])
 
+    def test_valid_metal_spot_survives_unavailable_daily_history(self):
+        quote = {
+            "price_usd": 2350.0, "price_unit": "troy_ounce", "provider": "Gold-API",
+            "quote_age_seconds": 25, "expected_delay_minutes": 0,
+            "computed_at": "2026-11-21T11:00:00+00:00",
+        }
+        with patch.object(multi_scan, "fetch_spot", return_value=quote), \
+             patch.object(multi_scan, "fetch_daily_bars", side_effect=ValueError("HTTP 404 history endpoint")):
+            result = multi_scan.normalize_biquote_metals("XAUUSD", 1795262400)
+        self.assertEqual(result["last_price"], 2350.0)
+        self.assertEqual(result["data_quality"]["quality_status"], "TIMESTAMP_VALIDATED_SPOT_HISTORY_UNAVAILABLE")
+        self.assertFalse(result["data_quality"]["paper_execution_allowed"])
+        self.assertFalse(result["execution_enabled"])
+        self.assertEqual(result["directional_research"], "WATCH")
+        self.assertIn("HTTP 404", result["history_error"])
+
     def test_copper_spot_is_watch_only_when_daily_history_is_plan_gated(self):
         quote = {
             "price_usd": 4.25, "price_unit": "pound", "provider": "Gold-API",
