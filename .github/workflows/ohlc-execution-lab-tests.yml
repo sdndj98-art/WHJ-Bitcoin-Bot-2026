@@ -18,7 +18,7 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  isolated-ohcl-simulator-tests:
+  isolated-ohlc-simulator-tests:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
