@@ -72,15 +72,23 @@ def strategy_signal(strategy, history, holding_bars=0):
     sma20 = sum(values[-20:]) / 20.0
     sma50 = sum(values[-50:]) / 50.0
     if strategy == "sma_trend":
-        want = prior > sma20 > sma50
+        # Faster paper-test entry: participate when price is above the 20-bar
+        # mean, rather than waiting for the slower 50-bar trend confirmation.
+        want = prior > sma20
         return want, not want
     if strategy == "ema_trend":
-        want = ema(values[-50:], 12) > ema(values[-50:], 26) and prior > ema(values[-50:], 26)
+        fast, slow = ema(values[-50:], 12), ema(values[-50:], 26)
+        # Earlier entry while the fast EMA is above the slow EMA; retain price
+        # confirmation so the strategy does not buy a falling EMA cross alone.
+        want = fast > slow and prior > slow
         return want, not want
     if strategy == "rsi_momentum":
         momentum = rsi(values, 14)
+        fast_rsi = rsi(values, 2)
         slow = ema(values[-50:], 26)
-        want = 50 < momentum < 70 and prior > slow
+        # Normal momentum entries plus a short RSI pullback entry in an
+        # established 50-bar uptrend; all inputs are completed candles.
+        want = (50 < momentum < 75 and prior > slow) or (fast_rsi < 25 and prior > sma50)
         return want, not want
     sma200 = sum(values[-200:]) / 200.0
     if strategy == "sma200_regime":
