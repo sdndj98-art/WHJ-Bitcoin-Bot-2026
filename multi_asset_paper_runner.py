@@ -321,8 +321,16 @@ def run_engine():
 
     snapshot = json.loads(SNAPSHOT.read_text(encoding="utf-8")) if SNAPSHOT.exists() else {}
     shared = book.snapshot(marks)
-    shared["gross_market_value_usd"] = round(float(shared["market_value_usd"]), 8)
-    shared["equity_usd"] = round(float(shared["cash_usd"]) + float(shared["market_value_usd"]), 8)
+    gross_value = float(shared["market_value_usd"])
+    net_value = sum(
+        float(position["units"]) * float(marks[position["asset"]])
+        * (1.0 - SLIPPAGE_RATE) * (1.0 - FEE_RATE)
+        for position in shared["open_positions"]
+    )
+    shared["gross_market_value_usd"] = round(gross_value, 8)
+    shared["estimated_exit_costs_usd"] = round(gross_value - net_value, 8)
+    shared["market_value_usd"] = round(net_value, 8)
+    shared["equity_usd"] = round(float(shared["cash_usd"]) + net_value, 8)
     shared["pnl_usd"] = round(float(shared["equity_usd"]) - INITIAL_CASH, 8)
     shared["live_trading_enabled"] = False
     snapshot.update({
