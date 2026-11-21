@@ -192,6 +192,19 @@ def _seed_market_state(rows):
     }
 
 
+def _ensure_market_strategy_state(state, rows):
+    """Seed missing strategy cursors at the latest closed bar, preserving others."""
+    if not isinstance(state, dict):
+        raise ValueError("Saved multi-asset market state is malformed; refusing reset")
+    fresh = _seed_market_state(rows)
+    added = []
+    for name in SUPPORTED_STRATEGIES:
+        if not isinstance(state.get(name), dict):
+            state[name] = fresh[name]
+            added.append(name)
+    return added
+
+
 def _market_position_id(symbol, strategy):
     safe = "".join(ch if ch.isalnum() else "_" for ch in symbol)
     return "multi-" + safe + "-" + strategy
@@ -266,10 +279,11 @@ def run_engine():
             market_state[symbol] = _seed_market_state(rows)
             seeded.append(symbol)
             continue
+        added_strategies = _ensure_market_strategy_state(state, rows)
+        if added_strategies and symbol not in seeded:
+            seeded.append(symbol)
         for strategy in SUPPORTED_STRATEGIES:
-            strategy_state = state.get(strategy)
-            if not isinstance(strategy_state, dict):
-                raise ValueError("Strategy cursor missing for " + symbol + "/" + strategy)
+            strategy_state = state[strategy]
             for row in rows:
                 timestamp, close = int(row[0]), float(row[4])
                 if timestamp <= int(strategy_state["last_timestamp"]):
