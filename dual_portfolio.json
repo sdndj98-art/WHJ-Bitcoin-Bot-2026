@@ -6,7 +6,7 @@
   "compounding_enabled": true,
   "sizing_mode": "SHARED_100USD_EQUITY_FRACTION",
   "initial_capital_usd": 100.0,
-  "updated_at": "2026-11-21T11:46:54.529550+00:00",
+  "updated_at": "2026-11-21T11:51:08.746493+00:00",
   "shared_portfolio": {
     "mode": "PAPER_ONLY",
     "live_trading_enabled": false,
@@ -46,7 +46,7 @@
     "cash_usd": 100.0,
     "data_quality": {
       "quality": "HEALTHY",
-      "latest_closed_candle_age_minutes": 46.74,
+      "latest_closed_candle_age_minutes": 50.93,
       "total_hourly_candles": 7200,
       "observed_hourly_candles": 7195,
       "imputed_hourly_candles": 5,
@@ -72,15 +72,22 @@
     "return_pct": 0.0,
     "closed_trades": 0,
     "fees_usd": 0.0,
-    "feed_status": "DISABLED_NO_VALIDATED_FEED",
-    "status": "FEED_BLOCKED_NO_NEW_TRADES",
+    "feed_status": "PAPER_DAILY_READY",
+    "status": "PAPER_DAILY_READY",
     "strategy_signal": "HOLD",
     "entry_consensus": {
       "approved_by_consensus": false,
       "reason": "NO_VALIDATED_FEED"
     },
-    "last_error": "Gold trading remains disabled until a fresh, validated two-way XAUUSD feed is available.",
-    "new_trades": []
+    "last_error": null,
+    "new_trades": [],
+    "account_scope": "SHARED_100USD_PAPER",
+    "independent_ledger_enabled": false,
+    "paper_execution_enabled": true,
+    "last_price_usd": 3539.0,
+    "quote_timestamp": "2026-11-21T11:51:07Z",
+    "quote_age_seconds": -11.2,
+    "history_interval": "1d"
   },
   "strategies": [
     {
@@ -328,12 +335,82 @@
   "bear_summary": "Entries require completed-candle signals, fresh feed quality, sizing and six-agent consensus.",
   "risk_decision": "WAITING_NEXT_CLOSED_CANDLE",
   "notes": [
-    "One $100 simulated cash pool is shared across all seven BTC strategies; cash and net PnL compound together.",
-    "Legacy independent BTC/Gold $10 ledgers are preserved and are not added to the new account.",
-    "Gold is disabled until a fresh validated two-way XAUUSD feed is available.",
-    "Historical candles warm indicators only; first run seeds the forward-only cursor without historical trades.",
+    "One shared simulated $100 wallet covers BTC, selected liquid crypto pairs, and validated XAU/XAG daily paper markets.",
+    "Gold and silver use timestamp-validated Gold-API spot quotes plus completed goldprice.dev daily bars.",
+    "Copper spot is monitored; free daily OHLC is plan-gated, so copper entries are blocked.",
+    "Platinum and palladium are spot-only research; no validated free daily bars, so no paper entries.",
+    "Legacy independent $10 BTC/Gold ledgers are not used by the active shared-wallet engine.",
     "No real exchange or broker orders are sent."
   ],
+  "metals_paper": {
+    "account_scope": "SHARED_100USD_PAPER",
+    "paper_only": true,
+    "live_trading_enabled": false,
+    "spot_provider": "Gold-API",
+    "daily_history_provider": "goldprice.dev",
+    "markets": {
+      "XAUUSD": {
+        "status": "PAPER_DAILY_READY",
+        "paper_execution_enabled": true,
+        "symbol": "XAUUSD",
+        "provider": "Gold-API public spot (approximately 30-second refresh)",
+        "last_price_usd": 3539.0,
+        "price_unit": "troy_ounce",
+        "quote_age_seconds": -11.2,
+        "quote_timestamp": "2026-11-21T11:51:07Z",
+        "history_interval": "1d",
+        "closed_daily_bars": 21,
+        "latest_closed_candle": 1795046400,
+        "reason": null,
+        "closed_trades": 0
+      },
+      "XAGUSD": {
+        "status": "PAPER_DAILY_READY",
+        "paper_execution_enabled": true,
+        "symbol": "XAGUSD",
+        "provider": "Gold-API public spot (approximately 30-second refresh)",
+        "last_price_usd": 41.080002,
+        "price_unit": "troy_ounce",
+        "quote_age_seconds": -11.2,
+        "quote_timestamp": "2026-11-21T11:51:07Z",
+        "history_interval": "1d",
+        "closed_daily_bars": 21,
+        "latest_closed_candle": 1795046400,
+        "reason": null,
+        "closed_trades": 0
+      },
+      "XPTUSD": {
+        "status": "SPOT_ONLY_RESEARCH",
+        "paper_execution_enabled": false,
+        "symbol": "XPTUSD",
+        "provider": "Gold-API public spot (approximately 30-second refresh)",
+        "last_price_usd": 1286.0,
+        "price_unit": "troy_ounce",
+        "quote_age_seconds": 28.5,
+        "quote_timestamp": "2026-11-21T11:50:40Z",
+        "history_interval": null,
+        "closed_daily_bars": 0,
+        "latest_closed_candle": null,
+        "closed_trades": 0,
+        "reason": "No validated free daily OHLC feed for this metal"
+      },
+      "XPDUSD": {
+        "status": "SPOT_ONLY_RESEARCH",
+        "paper_execution_enabled": false,
+        "symbol": "XPDUSD",
+        "provider": "Gold-API public spot (approximately 30-second refresh)",
+        "last_price_usd": 893.0,
+        "price_unit": "troy_ounce",
+        "quote_age_seconds": 29.5,
+        "quote_timestamp": "2026-11-21T11:50:39Z",
+        "history_interval": null,
+        "closed_daily_bars": 0,
+        "latest_closed_candle": null,
+        "closed_trades": 0,
+        "reason": "No validated free daily OHLC feed for this metal"
+      }
+    }
+  },
   "multi_asset_paper": {
     "status": "PAPER_ONLY",
     "markets_scanned": [
@@ -352,6 +429,7 @@
       "TAO/USD",
       "USDG/USDC",
       "VVV/USD",
+      "XAGUSD",
       "XAUUSD",
       "XDG/USD",
       "XLM/USD",
@@ -359,9 +437,7 @@
       "XRP/USD",
       "ZEC/USD"
     ],
-    "markets_with_errors": {
-      "XAGUSD": "<urlopen error [Errno -2] Name or service not known>"
-    },
+    "markets_with_errors": {},
     "seeded_markets": [],
     "processed_closed_candles": 0,
     "events_this_run": [],
