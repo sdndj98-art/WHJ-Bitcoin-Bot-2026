@@ -34,7 +34,10 @@ class SharedPaperPortfolio:
         self.fee_rate = _finite(fee_rate, "fee_rate", 0.0)
         if self.fee_rate >= 1:
             raise ValueError("fee_rate must be less than 1")
+        state_existed = self.path.exists()
         self.state = self._load()
+        if not state_existed:
+            self._save()
 
     def _empty(self):
         return {
@@ -95,7 +98,7 @@ class SharedPaperPortfolio:
             ) as handle:
                 temp_path = handle.name
                 json.dump(self.state, handle, indent=2, allow_nan=False)
-                handle.write("\\n")
+                handle.write("\n")
                 handle.flush()
                 os.fsync(handle.fileno())
             os.replace(temp_path, self.path)
