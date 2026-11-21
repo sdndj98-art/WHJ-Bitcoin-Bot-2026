@@ -165,7 +165,7 @@ def main():
             history = list(state["recent_closes"])
             if len(history) >= (200 if name in ("sma200_regime", "ema50_200_regime",
                                                   "bollinger_mean_reversion", "rsi14_mean_reversion") else 50):
-                equity = book.snapshot({"BTC/USD": close})["equity_usd"]
+                equity = liquidation_equity(book, close)
                 peak = max(float(state["peak_equity"]), equity)
                 state["peak_equity"] = peak
                 drawdown = (peak - equity) / peak if peak > 0 else 0.0
@@ -198,7 +198,7 @@ def main():
                          "risk_paused": False},
                     )
                     if allowed:
-                        current_equity = book.snapshot({"BTC/USD": close})["equity_usd"]
+                        current_equity = liquidation_equity(book, close)
                         notional = min(book.state["cash_usd"] / (1.0 + FEE_RATE),
                                        current_equity * ALLOCATION_FRACTION)
                         if notional >= MIN_TRADE_USD:
@@ -236,9 +236,33 @@ def main():
     }, indent=2))
 
 
+def liquidation_equity(book, price):
+    mark = book.snapshot({"BTC/USD": float(price)})
+    liquidation_value = sum(
+        float(position["units"]) * float(price) * (1.0 - SLIPPAGE_RATE) * (1.0 - FEE_RATE)
+        for position in mark["open_positions"]
+    )
+    return float(mark["cash_usd"]) + liquidation_value
+
+
 def _make_snapshot(book, strategy_state, price, quality, status,
                    processed=0, new_trades=None):
     shared = book.snapshot({"BTC/USD": float(price)})
+    gross_market_value = float(shared["market_value_usd"])
+    net_market_value = sum(
+        float(position["units"]) * float(price) * (1.0 - SLIPPAGE_RATE) * (1.0 - FEE_RATE)
+        for position in shared["open_positions"]
+    )
+    for position in shared["open_positions"]:
+        position["gross_market_value_usd"] = position["market_value_usd"]
+        position["market_value_usd"] = round(
+            float(position["units"]) * float(price) * (1.0 - SLIPPAGE_RATE) * (1.0 - FEE_RATE), 10
+        )
+    shared["gross_market_value_usd"] = gross_market_value
+    shared["estimated_exit_costs_usd"] = gross_market_value - net_market_value
+    shared["market_value_usd"] = net_market_value
+    shared["equity_usd"] = float(shared["cash_usd"]) + net_market_value
+    shared["pnl_usd"] = shared["equity_usd"] - float(shared["initial_cash_usd"])
     by_strategy = {}
     for name in SUPPORTED_STRATEGIES:
         positions = [p for p in shared["open_positions"] if p["strategy"] == name]
