@@ -19,7 +19,7 @@ class SharedPaperRunnerTests(unittest.TestCase):
         want_long, want_flat = strategy_signal("sma_trend", history)
         self.assertTrue(want_long)
         self.assertFalse(want_flat)
-        for strategy in SUPPORTED_STRATEGIES - {"sma_trend"}:
+        for strategy in (name for name in SUPPORTED_STRATEGIES if name != "sma_trend"):
             want_long, want_flat = strategy_signal(strategy, history)
             self.assertFalse(want_long)
             self.assertFalse(want_flat)
