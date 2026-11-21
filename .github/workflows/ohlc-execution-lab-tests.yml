@@ -1,0 +1,36 @@
+name: WHJ Isolated OHLC Execution Lab Tests
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - research/global-evidence-strategy-lab-20261112
+    paths:
+      - "ohlc_execution_lab.py"
+      - "tests/test_ohlc_execution_lab.py"
+      - ".github/workflows/ohlc-execution-lab-tests.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: whj-ohlc-execution-lab-tests
+  cancel-in-progress: false
+
+jobs:
+  isolated-ohcl-simulator-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout research branch
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Compile isolated simulator
+        run: python -m py_compile ohlc_execution_lab.py
+      - name: Run OHLC simulator regression tests
+        run: python -m unittest discover -s tests -p 'test_ohlc_execution_lab.py' -v
+      - name: Check patch whitespace
+        run: git diff --check
