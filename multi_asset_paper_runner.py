@@ -28,7 +28,7 @@ METALS = ("XAUUSD", "XAGUSD")  # shared $100 ledger: only metals with validated 
 TRADE_ALLOCATION = 0.02
 MAX_GROSS_EXPOSURE = 0.50
 # No fixed position-count cap; cash, exposure and risk guards remain active.
-MAX_OPEN_POSITIONS = 8
+MAX_OPEN_POSITIONS = 20  # 2% per entry and 50% gross exposure remain the binding risk limits
 MIN_TRADE_USD = 1.0
 FEE_RATE = 0.001
 SLIPPAGE_RATE = 0.0005
