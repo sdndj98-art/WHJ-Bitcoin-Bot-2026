@@ -6,7 +6,7 @@
   "compounding_enabled": true,
   "sizing_mode": "SHARED_100USD_EQUITY_FRACTION",
   "initial_capital_usd": 100.0,
-  "updated_at": "2026-11-21T00:47:44.866169+00:00",
+  "updated_at": "2026-11-21T00:55:56.065764+00:00",
   "shared_portfolio": {
     "mode": "PAPER_ONLY",
     "live_trading_enabled": false,
@@ -46,7 +46,7 @@
     "cash_usd": 100.0,
     "data_quality": {
       "quality": "HEALTHY",
-      "latest_closed_candle_age_minutes": 47.75,
+      "latest_closed_candle_age_minutes": 55.89,
       "total_hourly_candles": 7200,
       "observed_hourly_candles": 7195,
       "imputed_hourly_candles": 5,
@@ -333,5 +333,31 @@
     "Gold is disabled until a fresh validated two-way XAUUSD feed is available.",
     "Historical candles warm indicators only; first run seeds the forward-only cursor without historical trades.",
     "No real exchange or broker orders are sent."
-  ]
+  ],
+  "multi_asset_paper": {
+    "status": "PAPER_ONLY",
+    "markets_scanned": [
+      "ETH/USD",
+      "EUR/USD",
+      "XBT/USD"
+    ],
+    "markets_with_errors": {
+      "XAGUSD": "HTTP Error 404: Not Found",
+      "XAUUSD": "HTTP Error 404: Not Found"
+    },
+    "seeded_markets": [
+      "XBT/USD",
+      "ETH/USD",
+      "EUR/USD"
+    ],
+    "processed_closed_candles": 0,
+    "events_this_run": [],
+    "daily_loss_paused": false,
+    "drawdown_paused": false,
+    "drawdown_pct": 0.0,
+    "max_open_positions": 8,
+    "trade_allocation_pct": 2.0,
+    "live_orders_enabled": false,
+    "orders_submitted": false
+  }
 }
