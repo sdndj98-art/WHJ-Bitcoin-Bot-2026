@@ -31,7 +31,7 @@ def atomic_json(path, payload):
                 prefix="." + target.name + ".", suffix=".tmp", delete=False) as handle:
             temporary = handle.name
             json.dump(payload, handle, indent=2, allow_nan=False)
-            handle.write("\\n")
+            handle.write("\n")
             handle.flush()
             os.fsync(handle.fileno())
         os.replace(temporary, target)
@@ -213,7 +213,7 @@ def main():
                             except ValueError as exc:
                                 if "Insufficient shared cash" not in str(exc):
                                     raise
-                if position and name in ("bollinger_mean_reversion", "rsi14_mean_reversion"):
+                if position and not (want_flat or paused) and name in ("bollinger_mean_reversion", "rsi14_mean_reversion"):
                     state["holding_bars"] += 1
             state["recent_closes"] = (history + [close])[-200:]
             state["last_timestamp"] = timestamp
