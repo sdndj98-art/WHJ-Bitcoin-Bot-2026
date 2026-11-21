@@ -85,16 +85,19 @@ def _crypto_market(pair, now_seconds):
     if key is None:
         raise ValueError("Kraken OHLC pair response missing")
     rows, quality = normalize_kraken_ohlc({"rows": payload[key]}, now_seconds)
-    if len(rows) < 200:
-        raise ValueError("Fewer than 200 completed hourly crypto candles")
+    if len(rows) < 2:
+        raise ValueError("Fewer than 2 completed hourly crypto candles; cannot validate a mark")
     symbol = "BTC/USD" if pair["base"].upper() == "XBT" else pair["symbol"]
+    enough_history = len(rows) >= 200
     return {
         "symbol": symbol, "asset": symbol, "rows": rows,
         "price": float(rows[-1][4]), "quality": "HEALTHY",
         "provider": "Kraken public spot market data",
         "quote_volume_24h_estimate": pair.get("quote_volume_24h_estimate", 0),
         "latest_closed_candle": rows[-1][0],
-        "trade_allowed": _is_eligible_crypto_pair(pair),
+        "history_bars": len(rows),
+        "strategy_history_ready": enough_history,
+        "trade_allowed": _is_eligible_crypto_pair(pair) and enough_history,
     }
 
 
@@ -152,7 +155,10 @@ def _load_markets(book):
     errors = {}
     for index, pair in enumerate(selected):
         try:
-            markets[pair["symbol"]] = _crypto_market(pair, now)
+            market = _crypto_market(pair, now)
+            # Use the canonical market symbol returned by the adapter. Kraken
+            # calls Bitcoin XBT/USD; WHJ positions are stored as BTC/USD.
+            markets[market["symbol"]] = market
         except Exception as exc:
             errors[pair["symbol"]] = str(exc)[:250]
         if index < len(selected) - 1:
