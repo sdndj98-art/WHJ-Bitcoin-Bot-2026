@@ -29,6 +29,7 @@ on:
       - ".github/workflows/whj-agent-office-nightly.yml"
   schedule:
     # 12 scheduled cycles per day (every 2 hours, UTC).
+    # Push-triggered kickoff: run the research office after this workflow is updated.
     - cron: "0 */2 * * *"
 
 permissions:
