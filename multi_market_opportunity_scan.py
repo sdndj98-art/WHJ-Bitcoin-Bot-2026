@@ -216,13 +216,13 @@ def normalize_biquote_metals(symbol, now_seconds):
         "computed_at": quote["computed_at"],
         "research_only": True, "execution_enabled": False,
     }
-    if symbol in ("XPTUSD", "XPDUSD"):
+    if symbol in ("XPTUSD", "XPDUSD", "XCUUSD"):
         base.update({
             "history_interval": None, "closed_daily_bars": 0,
             "data_quality": {
                 "quality_status": "TIMESTAMP_VALIDATED_SPOT_ONLY",
                 "paper_execution_allowed": False,
-                "reason": "Free validated OHLC history is not available for platinum/palladium",
+                "reason": "Free validated closed daily OHLC history is not available for this metal",
             },
             "directional_research": "WATCH",
         })
