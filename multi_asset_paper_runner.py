@@ -315,6 +315,7 @@ def run_engine():
                 if len(history) < minimum_history:
                     strategy_state["recent_closes"] = (history + [close])[-200:]
                     strategy_state["last_timestamp"] = timestamp
+                    strategy_state["seeded_pending_latest"] = False
                     continue
                 risk = _risk_state(book, marks, risk, timestamp)
                 want_long, want_flat = strategy_signal(
@@ -366,6 +367,7 @@ def run_engine():
                     strategy_state["holding_bars"] = int(strategy_state.get("holding_bars", 0)) + 1
                 strategy_state["recent_closes"] = (history + [close])[-200:]
                 strategy_state["last_timestamp"] = timestamp
+                strategy_state["seeded_pending_latest"] = False
                 processed_candles += 1
 
     # Metal execution requires timestamp-validated spot and validated daily OHLC.
