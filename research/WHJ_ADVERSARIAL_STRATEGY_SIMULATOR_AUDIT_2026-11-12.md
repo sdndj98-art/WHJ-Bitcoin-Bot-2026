@@ -870,3 +870,18 @@ A boundary audit of the verified Coinbase #52 and Bitstamp #34 artifacts correct
 This does not invalidate either historical report; it limits the independence claim. The fixed 70/30 OOS and three-fold walk-forward results are overlapping historical diagnostics, not independent replications. A final holdout must consist of future observations collected only after V1/V2 candidate definitions, parameters, ranking rules, and cost assumptions are frozen. Do not tune on that prospective holdout, and report its sample size and calendar coverage separately.
 
 No code or strategy rule changed for this boundary audit. No candidate is promoted and no paper/live execution is enabled.
+
+
+## F37 — gap-through-stop cost-path regression and isolated CI (2026-11-21)
+
+The existing OHLC gap regression asserted that a stop gap uses the opening price rather than the stop level, but it used zero fees and zero slippage. A separate intrabar-low test covered costs, but did not exercise the opening-gap branch. Added a deterministic test that covers both together:
+
+- Entry reference open: 100; entry slippage: 0.20%; fee: 0.10% per side.
+- Stop: 5% below the slipped entry fill; the next bar opens at 90, below the stop.
+- Required gap exit reference: 90 (not the stop level of 95.19).
+- Required exit fill after adverse slippage: 89.82.
+- Required final net-liquidation equity: $973.6538 from $1,000; return and recorded OHLC-envelope drawdown: -2.6346% / 2.6346%.
+
+Added `.github/workflows/ohlc-execution-lab-tests.yml` as a dedicated, isolated regression workflow. It is limited to pushes on this research branch that touch the OHLC simulator, its tests, or the workflow itself, plus manual dispatch. It has read-only contents permission, no schedule, no secrets, no network/data acquisition, and runs only module compilation, the focused OHLC test file, and a whitespace check. The existing regime-EMA workflow targets `regime_ema_ohlc_lab.py` and its tests; it did not provide a focused trigger for `ohlc_execution_lab.py`.
+
+This is regression coverage and CI isolation only. No simulator source, strategy rule, allocation, stop/target parameter, paper balance, ledger, risk limit, or schedule was changed. The new workflow result must be inspected before claiming this added test passed. Spread, depth, market impact, latency, partial fills, and tick-level path reconstruction remain unresolved.
