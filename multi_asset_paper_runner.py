@@ -34,7 +34,13 @@ MAX_DRAWDOWN = 0.10
 DAILY_LOSS_LIMIT = 0.03
 STATE_KEY = "multi_asset_strategy_state"
 RISK_KEY = "multi_asset_risk_state"
-EXCLUDED_BASES = {"BTC", "USDT", "USDC", "DAI", "EURC", "USDS"}
+EXCLUDED_BASES = {"BTC", "XBT", "USDT", "USDC", "DAI", "EURC", "USDS"}
+FIAT_BASES = {
+    "EUR", "GBP", "CAD", "AUD", "CHF", "JPY", "NZD", "CNY", "CNH",
+    "SGD", "HKD", "MXN", "BRL", "ZAR", "TRY", "PLN", "SEK", "NOK",
+    "DKK", "CZK", "HUF", "ILS", "AED", "SAR", "THB", "IDR", "INR",
+    "KRW", "UAH", "RUB",
+}
 
 
 def _finite(value, label):
@@ -109,13 +115,23 @@ def _crypto_market(pair, now_seconds):
     rows, quality = normalize_kraken_ohlc({"rows": payload[key]}, now_seconds)
     if len(rows) < 200:
         raise ValueError("Fewer than 200 completed hourly crypto candles")
+    symbol = "BTC/USD" if pair["base"].upper() == "XBT" else pair["symbol"]
     return {
-        "symbol": pair["symbol"], "asset": pair["symbol"], "rows": rows,
+        "symbol": symbol, "asset": symbol, "rows": rows,
         "price": float(rows[-1][4]), "quality": "HEALTHY",
         "provider": "Kraken public spot market data",
         "quote_volume_24h_estimate": pair.get("quote_volume_24h_estimate", 0),
         "latest_closed_candle": rows[-1][0],
     }
+
+
+def _is_eligible_crypto_pair(pair):
+    return (
+        isinstance(pair, dict)
+        and pair.get("quote") == "USD"
+        and str(pair.get("base", "")).upper() not in EXCLUDED_BASES
+        and str(pair.get("base", "")).upper() not in FIAT_BASES
+    )
 
 
 def _position_market_symbols(book):
@@ -129,13 +145,15 @@ def _load_markets(book):
     now = datetime.now(timezone.utc).timestamp()
     universe = discover_kraken_universe()
     ranked, _ = rank_kraken_pairs(universe)
-    usd_pairs = [
-        pair for pair in ranked
-        if pair["quote"] == "USD" and pair["base"].upper() not in EXCLUDED_BASES
-    ]
+    usd_pairs = [pair for pair in ranked if _is_eligible_crypto_pair(pair)]
     selected = usd_pairs[:MAX_CRYPTO_MARKETS]
     open_assets = _position_market_symbols(book)
     pair_by_symbol = {pair["symbol"]: pair for pair in universe if pair["quote"] == "USD"}
+    # Kraken names Bitcoin XBT; the shared WHJ ledger uses the canonical BTC/USD label.
+    xbt_pair = next((pair for pair in universe
+                     if pair["base"].upper() == "XBT" and pair["quote"] == "USD"), None)
+    if xbt_pair:
+        pair_by_symbol["BTC/USD"] = xbt_pair
     required_crypto = {
         asset for asset in open_assets
         if isinstance(asset, str) and asset.endswith("/USD")
