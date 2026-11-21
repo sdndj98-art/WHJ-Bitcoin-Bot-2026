@@ -1,4 +1,4 @@
-name: WHJ Dual $10 BTC + Gold Paper Portfolios
+name: WHJ Shared $100 Seven-Strategy Paper Portfolio
 on:
   workflow_dispatch:
   schedule:
@@ -6,32 +6,27 @@ on:
   push:
     branches: [main]
     paths:
-      - "btc_paper_runner.py"
-      - "gold_paper_runner.py"
+      - "shared_paper_runner.py"
+      - "shared_paper_portfolio.py"
       - "whj_agents.py"
-      - "paper_learning.py"
-      - "tests/test_paper_learning.py"
-      - "tests/test_whj_agents.py"
-      - "state/xauusd_paper_initialized.json"
-      - "paper_account.py"
       - "historical_research.py"
       - "forward_paper_monitor.py"
       - "dual_portfolio.json"
-      - "index.html"
+      - "web/index.html"
       - "dual_portfolio_dashboard.html"
-      - "research/multi_market_scan/latest.json"
+      - "tests/**"
       - ".github/workflows/btc-10usd-paper.yml"
 permissions:
   contents: write
   pages: write
   id-token: write
 concurrency:
-  group: whj-dual-paper-portfolios
+  group: whj-shared-100usd-paper
   cancel-in-progress: false
 jobs:
-  btc-paper:
+  shared-paper:
     runs-on: ubuntu-latest
-    timeout-minutes: 12
+    timeout-minutes: 15
     environment:
       name: github-pages
     steps:
@@ -43,80 +38,68 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-      - name: Restore the independent $10 BTC ledger
-        id: restore-ledger
+      - name: Restore shared $100 paper ledger
+        id: restore-shared-ledger
         uses: actions/cache/restore@v4
         with:
-          path: state/btc_10usd_rsi14_mean_reversion.json
-          key: whj-btc10-ledger-${{ github.run_id }}-${{ github.run_attempt }}
+          path: state/shared_paper_100usd.json
+          key: whj-shared100-ledger-${{ github.run_id }}-${{ github.run_attempt }}
           restore-keys: |
-            whj-btc10-ledger-
-      - name: Refuse silent ledger reset
-        if: steps.restore-ledger.outputs.cache-matched-key == '' && github.run_number != '1'
+            whj-shared100-ledger-
+      - name: Refuse silent shared-ledger reset
         run: |
-          echo "::error::Persistent $10 BTC ledger cache is missing; refusing to reset the account."
-          exit 1
-      - name: Restore independent $10 Gold ledger
-        id: restore-gold-ledger
-        uses: actions/cache/restore@v4
-        with:
-          path: state/xauusd_10usd_ema_trend.json
-          key: whj-xau10-ledger-${{ github.run_id }}-${{ github.run_attempt }}
-          restore-keys: |
-            whj-xau10-ledger-
-      - name: Refuse silent Gold ledger reset
-        run: |
-          if [ ! -f state/xauusd_10usd_ema_trend.json ] && [ "$(cat state/xauusd_paper_initialized.json)" = "INITIALIZED" ]; then
-            echo "::error::Persistent $10 XAUUSD paper ledger cache is missing. Refusing to reset."
+          if [ -f state/shared_paper_initialized.json ] && [ ! -f state/shared_paper_100usd.json ]; then
+            echo "::error::Shared $100 ledger cache is missing; refusing to recreate or reset capital."
             exit 1
           fi
-      - name: Compile and run focused tests
+      - name: Compile and run complete test suite
         run: |
-          python -m py_compile btc_paper_runner.py gold_paper_runner.py paper_account.py historical_research.py forward_paper_monitor.py paper_learning.py
+          python -m py_compile shared_paper_runner.py shared_paper_portfolio.py historical_research.py forward_paper_monitor.py whj_agents.py
           python -m unittest discover -s tests -v
-      - name: Run BTC forward paper engine
-        run: python btc_paper_runner.py
-      - name: Run XAUUSD forward paper engine
-        run: python gold_paper_runner.py
-      - name: Generate read-only paper learning comparison
-        run: python paper_learning.py
-      - name: Run six-agent decision office with research advisory
+      - name: Run seven strategies against the one shared paper wallet
+        run: python shared_paper_runner.py
+      - name: Run six-agent decision office
         run: |
           python -m py_compile whj_agents.py
           python -m unittest discover -s tests -p 'test_whj_agents.py' -v
-          python whj_agents.py --input dual_portfolio.json --research-report research/paper_learning/latest_report.json --output state/whj_agents.json
-      - name: Save independent Gold ledger
-        if: success() && hashFiles('state/xauusd_10usd_ema_trend.json') != ''
-        uses: actions/cache/save@v4
-        with:
-          path: state/xauusd_10usd_ema_trend.json
-          key: whj-xau10-ledger-${{ github.run_id }}-${{ github.run_attempt }}
-      - name: Save independent BTC ledger
+          python whj_agents.py --input dual_portfolio.json --output state/whj_agents.json
+      - name: Confirm ledger and record first initialization
+        run: |
+          test -s state/shared_paper_100usd.json
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          marker = Path("state/shared_paper_initialized.json")
+          if not marker.exists():
+              marker.write_text(json.dumps({
+                  "schema_version": 1,
+                  "initial_capital_usd": 100.0,
+                  "paper_only": True,
+                  "ledger": "state/shared_paper_100usd.json"
+              }, indent=2) + "\\n", encoding="utf-8")
+          PY
+      - name: Save shared paper ledger cache
         if: success()
         uses: actions/cache/save@v4
         with:
-          path: state/btc_10usd_rsi14_mean_reversion.json
-          key: whj-btc10-ledger-${{ github.run_id }}-${{ github.run_attempt }}
-      - name: Persist dashboard snapshot
+          path: state/shared_paper_100usd.json
+          key: whj-shared100-ledger-${{ github.run_id }}-${{ github.run_attempt }}
+      - name: Persist dashboard snapshot and initialization marker
         if: success()
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add dual_portfolio.json
+          git add -f state/shared_paper_initialized.json
           git add -f state/whj_agents.json
-          git add research/paper_learning/latest_report.json
-          if [ -f state/xauusd_10usd_ema_trend.json ] && [ "$(cat state/xauusd_paper_initialized.json)" != "INITIALIZED" ]; then
-            echo "INITIALIZED" > state/xauusd_paper_initialized.json
-            git add -f state/xauusd_paper_initialized.json
-          fi
           if ! git diff --cached --quiet; then
-            git commit -m "chore: update BTC $10 paper portfolio snapshot"
+            git commit -m "chore: update shared $100 paper portfolio snapshot"
             git push
           fi
       - name: Configure GitHub Pages
         if: success()
         uses: actions/configure-pages@v5
-      - name: Assemble dashboard
+      - name: Assemble existing WHJ dashboard
         if: success()
         run: |
           mkdir -p _site
@@ -132,23 +115,22 @@ jobs:
         if: success()
         uses: actions/upload-pages-artifact@v3
         with:
-          name: whj-pages-${{ github.run_id }}-${{ github.run_attempt }}
+          name: whj-shared-pages-${{ github.run_id }}-${{ github.run_attempt }}
           path: _site
       - name: Deploy dashboard
         if: success()
         uses: actions/deploy-pages@v4
         with:
-          artifact_name: whj-pages-${{ github.run_id }}-${{ github.run_attempt }}
-      - name: Upload BTC paper snapshot
+          artifact_name: whj-shared-pages-${{ github.run_id }}-${{ github.run_attempt }}
+      - name: Upload shared paper audit artifact
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: whj-dual-paper-${{ github.run_number }}
+          name: whj-shared-paper-${{ github.run_number }}
           path: |
             dual_portfolio.json
-            state/btc_10usd_rsi14_mean_reversion.json
-            state/xauusd_10usd_ema_trend.json
+            state/shared_paper_100usd.json
+            state/shared_paper_initialized.json
             state/whj_agents.json
-            research/paper_learning/latest_report.json
           if-no-files-found: warn
           retention-days: 30
