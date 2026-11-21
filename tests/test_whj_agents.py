@@ -36,6 +36,8 @@ class WhjAgentsTests(unittest.TestCase):
         self.assertEqual(state["mode"], "PAPER_ONLY")
         self.assertFalse(state["live_trading_enabled"])
         self.assertEqual(state["agents"][3]["status"], "PAPER_READY")
+        self.assertEqual(state["agents"][4]["status"], "READY_NO_EVENTS")
+        self.assertEqual(state["summary"]["ready_count"], 6)
         self.assertEqual(state["summary"]["markets"], ["BTC/USD", "XAUUSD"])
 
     def test_blocks_when_live_flag_is_not_explicitly_false(self):
@@ -102,6 +104,7 @@ class WhjAgentsTests(unittest.TestCase):
         self.assertEqual(equity["closed_trades"], 3)
         self.assertEqual(state["summary"]["markets"], ["BTC/USD", "XAUUSD", "ETH/USD", "XAGUSD"])
         self.assertEqual(scanner["markets_scanned"], ["BTC/USD", "XAUUSD", "ETH/USD", "XAGUSD"])
+        self.assertEqual(scanner["healthy_markets"], ["BTC/USD", "XAUUSD", "ETH/USD", "XAGUSD"])
         self.assertEqual(scanner["markets_scanned"], state["summary"]["markets"])
 
     def test_scanned_markets_are_explicit_watch_only_holds_without_signal(self):
