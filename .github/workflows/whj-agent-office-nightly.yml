@@ -9,15 +9,27 @@ on:
       - "whj_agents.py"
       - "whj_grok_worker.py"
       - "whj_free_worker.py"
+      - "whj_24h_development_team.py"
+      - "whj_repair_advisor.py"
+      - "whj_evidence_verifier.py"
+      - "shared_paper_runner.py"
+      - "shared_paper_portfolio.py"
+      - "paper_account.py"
+      - "market_scanner.py"
+      - "multi_market_opportunity_scan.py"
+      - "gold_paper_runner.py"
       - "tests/test_whj_free_worker.py"
       - "tests/test_whj_agent_office.py"
       - "tests/test_whj_grok_worker.py"
-      - "whj_evidence_verifier.py"
       - "tests/test_whj_evidence_verifier.py"
+      - "tests/test_whj_agents.py"
+      - "tests/test_shared_paper_runner.py"
+      - "tests/test_shared_paper_portfolio.py"
       - "dual_portfolio.json"
       - ".github/workflows/whj-agent-office-nightly.yml"
   schedule:
-    - cron: "0 22,2,6,10,14,18 * * *"
+    # 12 scheduled cycles per day (every 2 hours, UTC).
+    - cron: "0 */2 * * *"
 
 permissions:
   contents: read
@@ -43,7 +55,7 @@ jobs:
           python -m unittest discover -s tests -p 'test_whj_grok_worker.py' -v
           python -m unittest discover -s tests -p 'test_whj_evidence_verifier.py' -v
           python -m unittest discover -s tests -p 'test_whj_free_worker.py' -v
-      - name: Generate nightly research work plan
+      - name: Generate research-office work plan
         run: python whj_agent_office.py plan --output-dir research/agent_office
       - name: Generate six-agent paper status when portfolio snapshot exists
         run: |
@@ -62,8 +74,8 @@ jobs:
         run: |
           echo "FREE_ONLY=true"
           echo "No paid model provider is called. No API key or paid secret is read."
-          echo "The nightly office runs deterministic local audits, validation, planning, and paper-status reporting only."
-      - name: Upload nightly office outputs
+          echo "The office runs deterministic repository audits, validation, planning, and paper-status reporting only."
+      - name: Upload office outputs
         uses: actions/upload-artifact@v4
         with:
           name: whj-agent-office-${{ github.run_number }}
