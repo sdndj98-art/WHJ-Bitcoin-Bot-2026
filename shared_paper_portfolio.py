@@ -161,7 +161,7 @@ class SharedPaperPortfolio:
         self._save()
         return {"position_id": position_id, **position, "cash_usd": self.state["cash_usd"]}
 
-    def close_position(self, position_id, price):
+    def close_position(self, position_id, price, reason=None):
         if position_id not in self.state["positions"]:
             raise ValueError("Unknown open position")
         price = _finite(price, "price", 0.00000001)
@@ -180,6 +180,8 @@ class SharedPaperPortfolio:
             "gross_proceeds_usd": proceeds, "fees_usd": total_fees,
             "pnl_usd": pnl,
         }
+        if reason:
+            trade["exit_reason"] = str(reason)[:120]
         self.state["cash_usd"] = round(self.state["cash_usd"] + net_proceeds, 10)
         self.state["fees_paid_usd"] = round(self.state["fees_paid_usd"] + exit_fee, 10)
         self.state["closed_trades"].append(trade)

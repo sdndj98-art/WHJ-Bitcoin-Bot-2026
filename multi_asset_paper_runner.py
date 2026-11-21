@@ -244,6 +244,22 @@ def run_engine():
     for symbol, market in markets.items():
         if symbol == "BTC/USD":
             continue
+        base = symbol.split("/", 1)[0].upper() if "/" in symbol else ""
+        if base in EXCLUDED_BASES or base in FIAT_BASES:
+            # Close legacy positions in stable/fiat base pairs at current validated marks.
+            for position_id, position in list(book.state["positions"].items()):
+                if position.get("asset") == symbol:
+                    trade = book.close_position(
+                        position_id, marks[symbol], reason="INELIGIBLE_STABLE_OR_FIAT_BASE"
+                    )
+                    events.append({
+                        "event": "CLOSE", "market": symbol,
+                        "strategy": position.get("strategy"),
+                        "timestamp": int(time.time()),
+                        "reason": "INELIGIBLE_STABLE_OR_FIAT_BASE",
+                        "pnl_usd": trade.get("pnl_usd"),
+                    })
+            continue
         rows = market["rows"]
         state = market_state.get(symbol)
         if not isinstance(state, dict):
