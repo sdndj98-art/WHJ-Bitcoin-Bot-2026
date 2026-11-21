@@ -5,78 +5,198 @@
       "metrics": {
         "healthy_markets": [
           "BTC/USD",
+          "AAVE/USD",
+          "AB/USD",
           "ADA/USD",
+          "AERO/USD",
+          "AKE/USD",
+          "ALGO/USD",
+          "ARB/USD",
+          "ASTER/USD",
           "AVAX/USD",
+          "BCH/USD",
+          "BLESS/USD",
+          "BNB/USD",
+          "CC/USD",
+          "CRV/USD",
+          "DASH/USD",
+          "DOT/USD",
+          "DRV/USD",
+          "ENA/USD",
           "ETH/USD",
+          "FET/USD",
+          "FIDD/USD",
+          "HBAR/USD",
           "HYPE/USD",
+          "ICP/USD",
+          "INJ/USD",
+          "KAS/USD",
+          "LIGHTER/USD",
           "LINK/USD",
           "LTC/USD",
           "NEAR/USD",
+          "NIGHT/USD",
+          "ONDO/USD",
           "PAXG/USD",
+          "PENGU/USD",
+          "PEPE/USD",
+          "PUMP/USD",
           "QNT/USD",
+          "RENDER/USD",
+          "SHIB/USD",
+          "SOFID/USDT",
           "SOL/USD",
+          "SPX/USD",
           "SUI/USD",
           "TAO/USD",
+          "TON/USD",
+          "TRUMP/USD",
           "TRX/USD",
           "UNI/USD",
+          "USELESS/USD",
           "VVV/USD",
+          "WLD/USD",
           "XAGUSD",
           "XAUUSD",
+          "XDC/USD",
           "XDG/USD",
           "XLM/USD",
           "XMR/USD",
+          "XMR/USDT",
+          "XPL/USD",
           "XRP/USD",
-          "ZEC/USD"
+          "ZEC/USD",
+          "ZRO/USD"
         ],
         "markets": [
           "BTC/USD",
           "XAUUSD",
+          "AAVE/USD",
+          "AB/USD",
           "ADA/USD",
+          "AERO/USD",
+          "AKE/USD",
+          "ALGO/USD",
+          "ARB/USD",
+          "ASTER/USD",
           "AVAX/USD",
+          "BCH/USD",
+          "BLESS/USD",
+          "BNB/USD",
+          "CC/USD",
+          "CRV/USD",
+          "DASH/USD",
+          "DOT/USD",
+          "DRV/USD",
+          "ENA/USD",
           "ETH/USD",
+          "FET/USD",
+          "FIDD/USD",
+          "HBAR/USD",
           "HYPE/USD",
+          "ICP/USD",
+          "INJ/USD",
+          "KAS/USD",
+          "LIGHTER/USD",
           "LINK/USD",
           "LTC/USD",
           "NEAR/USD",
+          "NIGHT/USD",
+          "ONDO/USD",
           "PAXG/USD",
+          "PENGU/USD",
+          "PEPE/USD",
+          "PUMP/USD",
           "QNT/USD",
+          "RENDER/USD",
+          "SHIB/USD",
+          "SOFID/USDT",
           "SOL/USD",
+          "SPX/USD",
           "SUI/USD",
           "TAO/USD",
+          "TON/USD",
+          "TRUMP/USD",
           "TRX/USD",
           "UNI/USD",
+          "USELESS/USD",
           "VVV/USD",
+          "WLD/USD",
           "XAGUSD",
+          "XDC/USD",
           "XDG/USD",
           "XLM/USD",
           "XMR/USD",
+          "XMR/USDT",
+          "XPL/USD",
           "XRP/USD",
-          "ZEC/USD"
+          "ZEC/USD",
+          "ZRO/USD"
         ],
         "markets_scanned": [
           "BTC/USD",
           "XAUUSD",
+          "AAVE/USD",
+          "AB/USD",
           "ADA/USD",
+          "AERO/USD",
+          "AKE/USD",
+          "ALGO/USD",
+          "ARB/USD",
+          "ASTER/USD",
           "AVAX/USD",
+          "BCH/USD",
+          "BLESS/USD",
+          "BNB/USD",
+          "CC/USD",
+          "CRV/USD",
+          "DASH/USD",
+          "DOT/USD",
+          "DRV/USD",
+          "ENA/USD",
           "ETH/USD",
+          "FET/USD",
+          "FIDD/USD",
+          "HBAR/USD",
           "HYPE/USD",
+          "ICP/USD",
+          "INJ/USD",
+          "KAS/USD",
+          "LIGHTER/USD",
           "LINK/USD",
           "LTC/USD",
           "NEAR/USD",
+          "NIGHT/USD",
+          "ONDO/USD",
           "PAXG/USD",
+          "PENGU/USD",
+          "PEPE/USD",
+          "PUMP/USD",
           "QNT/USD",
+          "RENDER/USD",
+          "SHIB/USD",
+          "SOFID/USDT",
           "SOL/USD",
+          "SPX/USD",
           "SUI/USD",
           "TAO/USD",
+          "TON/USD",
+          "TRUMP/USD",
           "TRX/USD",
           "UNI/USD",
+          "USELESS/USD",
           "VVV/USD",
+          "WLD/USD",
           "XAGUSD",
+          "XDC/USD",
           "XDG/USD",
           "XLM/USD",
           "XMR/USD",
+          "XMR/USDT",
+          "XPL/USD",
           "XRP/USD",
-          "ZEC/USD"
+          "ZEC/USD",
+          "ZRO/USD"
         ],
         "shared_wallet": true
       },
@@ -130,48 +250,88 @@
       "detail": "Equity is read from the single shared paper wallet when available.",
       "metrics": {
         "closed_trades": 4,
-        "equity_usd": 99.956,
+        "equity_usd": 100.1567,
         "initial_equity_usd": 100.0,
-        "pnl_usd": -0.044,
-        "return_pct": -0.044,
+        "pnl_usd": 0.1567,
+        "return_pct": 0.1567,
         "shared_wallet": true
       },
       "name": "EQUITY",
       "status": "TRACKING"
     }
   ],
-  "generated_at_utc": "2026-11-21T12:15:23.929584+00:00",
+  "generated_at_utc": "2026-11-21T17:10:08.794659+00:00",
   "live_trading_enabled": false,
   "mode": "PAPER_ONLY",
-  "portfolio_status": "WAITING_NEXT_CLOSED_CANDLE",
+  "portfolio_status": "PAPER_RUNNING",
   "schema_version": 2,
-  "source_updated_at": "2026-11-21T12:15:23.644075+00:00",
+  "source_updated_at": "2026-11-21T17:10:08.479120+00:00",
   "summary": {
     "agent_count": 6,
     "markets": [
       "BTC/USD",
       "XAUUSD",
+      "AAVE/USD",
+      "AB/USD",
       "ADA/USD",
+      "AERO/USD",
+      "AKE/USD",
+      "ALGO/USD",
+      "ARB/USD",
+      "ASTER/USD",
       "AVAX/USD",
+      "BCH/USD",
+      "BLESS/USD",
+      "BNB/USD",
+      "CC/USD",
+      "CRV/USD",
+      "DASH/USD",
+      "DOT/USD",
+      "DRV/USD",
+      "ENA/USD",
       "ETH/USD",
+      "FET/USD",
+      "FIDD/USD",
+      "HBAR/USD",
       "HYPE/USD",
+      "ICP/USD",
+      "INJ/USD",
+      "KAS/USD",
+      "LIGHTER/USD",
       "LINK/USD",
       "LTC/USD",
       "NEAR/USD",
+      "NIGHT/USD",
+      "ONDO/USD",
       "PAXG/USD",
+      "PENGU/USD",
+      "PEPE/USD",
+      "PUMP/USD",
       "QNT/USD",
+      "RENDER/USD",
+      "SHIB/USD",
+      "SOFID/USDT",
       "SOL/USD",
+      "SPX/USD",
       "SUI/USD",
       "TAO/USD",
+      "TON/USD",
+      "TRUMP/USD",
       "TRX/USD",
       "UNI/USD",
+      "USELESS/USD",
       "VVV/USD",
+      "WLD/USD",
       "XAGUSD",
+      "XDC/USD",
       "XDG/USD",
       "XLM/USD",
       "XMR/USD",
+      "XMR/USDT",
+      "XPL/USD",
       "XRP/USD",
-      "ZEC/USD"
+      "ZEC/USD",
+      "ZRO/USD"
     ],
     "paper_only": true,
     "ready_count": 6
@@ -187,7 +347,84 @@
     ],
     "live_trading_enabled": false,
     "market_decisions": {
+      "AAVE/USD": {
+        "approved_by_consensus": false,
+        "decision": "HOLD",
+        "execution_mode": "PAPER_ONLY",
+        "live_orders_enabled": false,
+        "reason_codes": [
+          "WATCH_ONLY_NO_CLOSED_CANDLE_SIGNAL"
+        ],
+        "strategy_signal": "HOLD",
+        "watch_only": true
+      },
+      "AB/USD": {
+        "approved_by_consensus": false,
+        "decision": "HOLD",
+        "execution_mode": "PAPER_ONLY",
+        "live_orders_enabled": false,
+        "reason_codes": [
+          "WATCH_ONLY_NO_CLOSED_CANDLE_SIGNAL"
+        ],
+        "strategy_signal": "HOLD",
+        "watch_only": true
+      },
       "ADA/USD": {
+        "approved_by_consensus": false,
+        "decision": "HOLD",
+        "execution_mode": "PAPER_ONLY",
+        "live_orders_enabled": false,
+        "reason_codes": [
+          "WATCH_ONLY_NO_CLOSED_CANDLE_SIGNAL"
+        ],
+        "strategy_signal": "HOLD",
+        "watch_only": true
+      },
+      "AERO/USD": {
+        "approved_by_consensus": false,
+        "decision": "HOLD",
+        "execution_mode": "PAPER_ONLY",
+        "live_orders_enabled": false,
+        "reason_codes": [
+          "WATCH_ONLY_NO_CLOSED_CANDLE_SIGNAL"
+        ],
+        "strategy_signal": "HOLD",
+        "watch_only": true
+      },
+      "AKE/USD": {
+        "approved_by_consensus": false,
+        "decision": "HOLD",
+        "execution_mode": "PAPER_ONLY",
+        "live_orders_enabled": false,
+        "reason_codes": [
+          "WATCH_ONLY_NO_CLOSED_CANDLE_SIGNAL"
+        ],
+        "strategy_signal": "HOLD",
+        "watch_only": true
+      },
+      "ALGO/USD": {
+        "approved_by_consensus": false,
+        "decision": "HOLD",
+        "execution_mode": "PAPER_ONLY",
+        "live_orders_enabled": false,
+        "reason_codes": [
+          "WATCH_ONLY_NO_CLOSED_CANDLE_SIGNAL"
+        ],
+        "strategy_signal": "HOLD",
+        "watch_only": true
+      },
+      "ARB/USD": {
+        "approved_by_consensus": false,
+        "decision": "HOLD",
+        "execution_mode": "PAPER_ONLY",
+        "live_orders_enabled": false,
+        "reason_codes": [
+          "WATCH_ONLY_NO_CLOSED_CANDLE_SIGNAL"
+        ],
+        "strategy_signal": "HOLD",
+        "watch_only": true
+      },
+      "ASTER/USD": {
         "approved_by_consensus": false,
         "decision": "HOLD",
         "execution_mode": "PAPER_ONLY",
@@ -209,6 +446,39 @@
         "strategy_signal": "HOLD",
         "watch_only": true
       },
+      "BCH/USD": {
+        "approved_by_consensus": false,
+        "decision": "HOLD",
+        "execution_mode": "PAPER_ONLY",
+        "live_orders_enabled": false,
+        "reason_codes": [
+          "WATCH_ONLY_NO_CLOSED_CANDLE_SIGNAL"
+        ],
+        "strategy_signal": "HOLD",
+        "watch_only": true
+      },
+      "BLESS/USD": {
+        "approved_by_consensus": false,
+        "decision": "HOLD",
+        "execution_mode": "PAPER_ONLY",
+        "live_orders_enabled": false,
+        "reason_codes": [
+          "WATCH_ONLY_NO_CLOSED_CANDLE_SIGNAL"
+        ],
+        "strategy_signal": "HOLD",
+        "watch_only": true
+      },
+      "BNB/USD": {
+        "approved_by_consensus": false,
+        "decision": "HOLD",
+        "execution_mode": "PAPER_ONLY",
+        "live_orders_enabled": false,
+        "reason_codes": [
+          "WATCH_ONLY_NO_CLOSED_CANDLE_SIGNAL"
+        ],
+        "strategy_signal": "HOLD",
+        "watch_only": true
+      },
       "BTC": {
         "approved_by_consensus": false,
         "decision": "HOLD",
@@ -218,6 +488,72 @@
           "NO_EXPLICIT_BUY_OR_SELL_SIGNAL"
         ],
         "strategy_signal": "HOLD"
+      },
+      "CC/USD": {
+        "approved_by_consensus": false,
+        "decision": "HOLD",
+        "execution_mode": "PAPER_ONLY",
+        "live_orders_enabled": false,
+        "reason_codes": [
+          "WATCH_ONLY_NO_CLOSED_CANDLE_SIGNAL"
+        ],
+        "strategy_signal": "HOLD",
+        "watch_only": true
+      },
+      "CRV/USD": {
+        "approved_by_consensus": false,
+        "decision": "HOLD",
+        "execution_mode": "PAPER_ONLY",
+        "live_orders_enabled": false,
+        "reason_codes": [
+          "WATCH_ONLY_NO_CLOSED_CANDLE_SIGNAL"
+        ],
+        "strategy_signal": "HOLD",
+        "watch_only": true
+      },
+      "DASH/USD": {
+        "approved_by_consensus": false,
+        "decision": "HOLD",
+        "execution_mode": "PAPER_ONLY",
+        "live_orders_enabled": false,
+        "reason_codes": [
+          "WATCH_ONLY_NO_CLOSED_CANDLE_SIGNAL"
+        ],
+        "strategy_signal": "HOLD",
+        "watch_only": true
+      },
+      "DOT/USD": {
+        "approved_by_consensus": false,
+        "decision": "HOLD",
+        "execution_mode": "PAPER_ONLY",
+        "live_orders_enabled": false,
+        "reason_codes": [
+          "WATCH_ONLY_NO_CLOSED_CANDLE_SIGNAL"
+        ],
+        "strategy_signal": "HOLD",
+        "watch_only": true
+      },
+      "DRV/USD": {
+        "approved_by_consensus": false,
+        "decision": "HOLD",
+        "execution_mode": "PAPER_ONLY",
+        "live_orders_enabled": false,
+        "reason_codes": [
+          "WATCH_ONLY_NO_CLOSED_CANDLE_SIGNAL"
+        ],
+        "strategy_signal": "HOLD",
+        "watch_only": true
+      },
+      "ENA/USD": {
+        "approved_by_consensus": false,
+        "decision": "HOLD",
+        "execution_mode": "PAPER_ONLY",
+        "live_orders_enabled": false,
+        "reason_codes": [
+          "WATCH_ONLY_NO_CLOSED_CANDLE_SIGNAL"
+        ],
+        "strategy_signal": "HOLD",
+        "watch_only": true
       },
       "ETH/USD": {
         "approved_by_consensus": false,
@@ -230,7 +566,84 @@
         "strategy_signal": "HOLD",
         "watch_only": true
       },
+      "FET/USD": {
+        "approved_by_consensus": false,
+        "decision": "HOLD",
+        "execution_mode": "PAPER_ONLY",
+        "live_orders_enabled": false,
+        "reason_codes": [
+          "WATCH_ONLY_NO_CLOSED_CANDLE_SIGNAL"
+        ],
+        "strategy_signal": "HOLD",
+        "watch_only": true
+      },
+      "FIDD/USD": {
+        "approved_by_consensus": false,
+        "decision": "HOLD",
+        "execution_mode": "PAPER_ONLY",
+        "live_orders_enabled": false,
+        "reason_codes": [
+          "WATCH_ONLY_NO_CLOSED_CANDLE_SIGNAL"
+        ],
+        "strategy_signal": "HOLD",
+        "watch_only": true
+      },
+      "HBAR/USD": {
+        "approved_by_consensus": false,
+        "decision": "HOLD",
+        "execution_mode": "PAPER_ONLY",
+        "live_orders_enabled": false,
+        "reason_codes": [
+          "WATCH_ONLY_NO_CLOSED_CANDLE_SIGNAL"
+        ],
+        "strategy_signal": "HOLD",
+        "watch_only": true
+      },
       "HYPE/USD": {
+        "approved_by_consensus": false,
+        "decision": "HOLD",
+        "execution_mode": "PAPER_ONLY",
+        "live_orders_enabled": false,
+        "reason_codes": [
+          "WATCH_ONLY_NO_CLOSED_CANDLE_SIGNAL"
+        ],
+        "strategy_signal": "HOLD",
+        "watch_only": true
+      },
+      "ICP/USD": {
+        "approved_by_consensus": false,
+        "decision": "HOLD",
+        "execution_mode": "PAPER_ONLY",
+        "live_orders_enabled": false,
+        "reason_codes": [
+          "WATCH_ONLY_NO_CLOSED_CANDLE_SIGNAL"
+        ],
+        "strategy_signal": "HOLD",
+        "watch_only": true
+      },
+      "INJ/USD": {
+        "approved_by_consensus": false,
+        "decision": "HOLD",
+        "execution_mode": "PAPER_ONLY",
+        "live_orders_enabled": false,
+        "reason_codes": [
+          "WATCH_ONLY_NO_CLOSED_CANDLE_SIGNAL"
+        ],
+        "strategy_signal": "HOLD",
+        "watch_only": true
+      },
+      "KAS/USD": {
+        "approved_by_consensus": false,
+        "decision": "HOLD",
+        "execution_mode": "PAPER_ONLY",
+        "live_orders_enabled": false,
+        "reason_codes": [
+          "WATCH_ONLY_NO_CLOSED_CANDLE_SIGNAL"
+        ],
+        "strategy_signal": "HOLD",
+        "watch_only": true
+      },
+      "LIGHTER/USD": {
         "approved_by_consensus": false,
         "decision": "HOLD",
         "execution_mode": "PAPER_ONLY",
@@ -274,7 +687,62 @@
         "strategy_signal": "HOLD",
         "watch_only": true
       },
+      "NIGHT/USD": {
+        "approved_by_consensus": false,
+        "decision": "HOLD",
+        "execution_mode": "PAPER_ONLY",
+        "live_orders_enabled": false,
+        "reason_codes": [
+          "WATCH_ONLY_NO_CLOSED_CANDLE_SIGNAL"
+        ],
+        "strategy_signal": "HOLD",
+        "watch_only": true
+      },
+      "ONDO/USD": {
+        "approved_by_consensus": false,
+        "decision": "HOLD",
+        "execution_mode": "PAPER_ONLY",
+        "live_orders_enabled": false,
+        "reason_codes": [
+          "WATCH_ONLY_NO_CLOSED_CANDLE_SIGNAL"
+        ],
+        "strategy_signal": "HOLD",
+        "watch_only": true
+      },
       "PAXG/USD": {
+        "approved_by_consensus": false,
+        "decision": "HOLD",
+        "execution_mode": "PAPER_ONLY",
+        "live_orders_enabled": false,
+        "reason_codes": [
+          "WATCH_ONLY_NO_CLOSED_CANDLE_SIGNAL"
+        ],
+        "strategy_signal": "HOLD",
+        "watch_only": true
+      },
+      "PENGU/USD": {
+        "approved_by_consensus": false,
+        "decision": "HOLD",
+        "execution_mode": "PAPER_ONLY",
+        "live_orders_enabled": false,
+        "reason_codes": [
+          "WATCH_ONLY_NO_CLOSED_CANDLE_SIGNAL"
+        ],
+        "strategy_signal": "HOLD",
+        "watch_only": true
+      },
+      "PEPE/USD": {
+        "approved_by_consensus": false,
+        "decision": "HOLD",
+        "execution_mode": "PAPER_ONLY",
+        "live_orders_enabled": false,
+        "reason_codes": [
+          "WATCH_ONLY_NO_CLOSED_CANDLE_SIGNAL"
+        ],
+        "strategy_signal": "HOLD",
+        "watch_only": true
+      },
+      "PUMP/USD": {
         "approved_by_consensus": false,
         "decision": "HOLD",
         "execution_mode": "PAPER_ONLY",
@@ -296,7 +764,51 @@
         "strategy_signal": "HOLD",
         "watch_only": true
       },
+      "RENDER/USD": {
+        "approved_by_consensus": false,
+        "decision": "HOLD",
+        "execution_mode": "PAPER_ONLY",
+        "live_orders_enabled": false,
+        "reason_codes": [
+          "WATCH_ONLY_NO_CLOSED_CANDLE_SIGNAL"
+        ],
+        "strategy_signal": "HOLD",
+        "watch_only": true
+      },
+      "SHIB/USD": {
+        "approved_by_consensus": false,
+        "decision": "HOLD",
+        "execution_mode": "PAPER_ONLY",
+        "live_orders_enabled": false,
+        "reason_codes": [
+          "WATCH_ONLY_NO_CLOSED_CANDLE_SIGNAL"
+        ],
+        "strategy_signal": "HOLD",
+        "watch_only": true
+      },
+      "SOFID/USDT": {
+        "approved_by_consensus": false,
+        "decision": "HOLD",
+        "execution_mode": "PAPER_ONLY",
+        "live_orders_enabled": false,
+        "reason_codes": [
+          "WATCH_ONLY_NO_CLOSED_CANDLE_SIGNAL"
+        ],
+        "strategy_signal": "HOLD",
+        "watch_only": true
+      },
       "SOL/USD": {
+        "approved_by_consensus": false,
+        "decision": "HOLD",
+        "execution_mode": "PAPER_ONLY",
+        "live_orders_enabled": false,
+        "reason_codes": [
+          "WATCH_ONLY_NO_CLOSED_CANDLE_SIGNAL"
+        ],
+        "strategy_signal": "HOLD",
+        "watch_only": true
+      },
+      "SPX/USD": {
         "approved_by_consensus": false,
         "decision": "HOLD",
         "execution_mode": "PAPER_ONLY",
@@ -329,6 +841,28 @@
         "strategy_signal": "HOLD",
         "watch_only": true
       },
+      "TON/USD": {
+        "approved_by_consensus": false,
+        "decision": "HOLD",
+        "execution_mode": "PAPER_ONLY",
+        "live_orders_enabled": false,
+        "reason_codes": [
+          "WATCH_ONLY_NO_CLOSED_CANDLE_SIGNAL"
+        ],
+        "strategy_signal": "HOLD",
+        "watch_only": true
+      },
+      "TRUMP/USD": {
+        "approved_by_consensus": false,
+        "decision": "HOLD",
+        "execution_mode": "PAPER_ONLY",
+        "live_orders_enabled": false,
+        "reason_codes": [
+          "WATCH_ONLY_NO_CLOSED_CANDLE_SIGNAL"
+        ],
+        "strategy_signal": "HOLD",
+        "watch_only": true
+      },
       "TRX/USD": {
         "approved_by_consensus": false,
         "decision": "HOLD",
@@ -351,7 +885,29 @@
         "strategy_signal": "HOLD",
         "watch_only": true
       },
+      "USELESS/USD": {
+        "approved_by_consensus": false,
+        "decision": "HOLD",
+        "execution_mode": "PAPER_ONLY",
+        "live_orders_enabled": false,
+        "reason_codes": [
+          "WATCH_ONLY_NO_CLOSED_CANDLE_SIGNAL"
+        ],
+        "strategy_signal": "HOLD",
+        "watch_only": true
+      },
       "VVV/USD": {
+        "approved_by_consensus": false,
+        "decision": "HOLD",
+        "execution_mode": "PAPER_ONLY",
+        "live_orders_enabled": false,
+        "reason_codes": [
+          "WATCH_ONLY_NO_CLOSED_CANDLE_SIGNAL"
+        ],
+        "strategy_signal": "HOLD",
+        "watch_only": true
+      },
+      "WLD/USD": {
         "approved_by_consensus": false,
         "decision": "HOLD",
         "execution_mode": "PAPER_ONLY",
@@ -384,6 +940,17 @@
           "POSITION_SIZE_INVALID"
         ],
         "strategy_signal": "HOLD"
+      },
+      "XDC/USD": {
+        "approved_by_consensus": false,
+        "decision": "HOLD",
+        "execution_mode": "PAPER_ONLY",
+        "live_orders_enabled": false,
+        "reason_codes": [
+          "WATCH_ONLY_NO_CLOSED_CANDLE_SIGNAL"
+        ],
+        "strategy_signal": "HOLD",
+        "watch_only": true
       },
       "XDG/USD": {
         "approved_by_consensus": false,
@@ -418,6 +985,28 @@
         "strategy_signal": "HOLD",
         "watch_only": true
       },
+      "XMR/USDT": {
+        "approved_by_consensus": false,
+        "decision": "HOLD",
+        "execution_mode": "PAPER_ONLY",
+        "live_orders_enabled": false,
+        "reason_codes": [
+          "WATCH_ONLY_NO_CLOSED_CANDLE_SIGNAL"
+        ],
+        "strategy_signal": "HOLD",
+        "watch_only": true
+      },
+      "XPL/USD": {
+        "approved_by_consensus": false,
+        "decision": "HOLD",
+        "execution_mode": "PAPER_ONLY",
+        "live_orders_enabled": false,
+        "reason_codes": [
+          "WATCH_ONLY_NO_CLOSED_CANDLE_SIGNAL"
+        ],
+        "strategy_signal": "HOLD",
+        "watch_only": true
+      },
       "XRP/USD": {
         "approved_by_consensus": false,
         "decision": "HOLD",
@@ -430,6 +1019,17 @@
         "watch_only": true
       },
       "ZEC/USD": {
+        "approved_by_consensus": false,
+        "decision": "HOLD",
+        "execution_mode": "PAPER_ONLY",
+        "live_orders_enabled": false,
+        "reason_codes": [
+          "WATCH_ONLY_NO_CLOSED_CANDLE_SIGNAL"
+        ],
+        "strategy_signal": "HOLD",
+        "watch_only": true
+      },
+      "ZRO/USD": {
         "approved_by_consensus": false,
         "decision": "HOLD",
         "execution_mode": "PAPER_ONLY",
