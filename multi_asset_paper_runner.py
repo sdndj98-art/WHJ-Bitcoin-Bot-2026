@@ -125,6 +125,15 @@ def _crypto_market(pair, now_seconds):
     }
 
 
+def _is_eligible_crypto_pair(pair):
+    return (
+        isinstance(pair, dict)
+        and pair.get("quote") == "USD"
+        and str(pair.get("base", "")).upper() not in EXCLUDED_BASES
+        and str(pair.get("base", "")).upper() not in FIAT_BASES
+    )
+
+
 def _position_market_symbols(book):
     symbols = set()
     for position in book.state["positions"].values():
@@ -136,12 +145,7 @@ def _load_markets(book):
     now = datetime.now(timezone.utc).timestamp()
     universe = discover_kraken_universe()
     ranked, _ = rank_kraken_pairs(universe)
-    usd_pairs = [
-        pair for pair in ranked
-        if pair["quote"] == "USD"
-        and pair["base"].upper() not in EXCLUDED_BASES
-        and pair["base"].upper() not in FIAT_BASES
-    ]
+    usd_pairs = [pair for pair in ranked if _is_eligible_crypto_pair(pair)]
     selected = usd_pairs[:MAX_CRYPTO_MARKETS]
     open_assets = _position_market_symbols(book)
     pair_by_symbol = {pair["symbol"]: pair for pair in universe if pair["quote"] == "USD"}
