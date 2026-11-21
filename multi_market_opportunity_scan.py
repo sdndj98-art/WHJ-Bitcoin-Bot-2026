@@ -11,6 +11,7 @@ import os
 import time
 from datetime import datetime, timezone
 from pathlib import Path
+from urllib.error import HTTPError
 from urllib.parse import urlencode
 from urllib.request import Request, urlopen
 
@@ -24,14 +25,33 @@ OUTPUT_DIR = Path("research/multi_market_scan")
 USER_AGENT = "WHJ-MultiMarket-PaperScanner/1.0"
 
 
-def fetch_json(url, timeout=25):
+def _fetch_payload(url, timeout=25):
+    """Fetch a JSON object, retrying only transient HTTP throttling/server errors."""
     request = Request(url, headers={"User-Agent": USER_AGENT, "Accept": "application/json"})
-    with urlopen(request, timeout=timeout) as response:
-        if response.status != 200:
-            raise ValueError("Market provider returned HTTP " + str(response.status))
-        payload = json.loads(response.read().decode("utf-8"))
-    if not isinstance(payload, dict):
-        raise ValueError("Market provider response is not a JSON object")
+    retryable_statuses = {429, 500, 502, 503, 504}
+    for attempt in range(3):
+        try:
+            with urlopen(request, timeout=timeout) as response:
+                if response.status != 200:
+                    raise ValueError("Market provider returned HTTP " + str(response.status))
+                payload = json.loads(response.read().decode("utf-8"))
+            if not isinstance(payload, dict):
+                raise ValueError("Market provider response is not a JSON object")
+            return payload
+        except HTTPError as exc:
+            if exc.code not in retryable_statuses or attempt == 2:
+                raise
+            retry_after = exc.headers.get("Retry-After") if exc.headers else None
+            try:
+                delay = min(8.0, max(1.0, float(retry_after)))
+            except (TypeError, ValueError, OverflowError):
+                delay = float(2 ** attempt)
+            time.sleep(delay)
+    raise RuntimeError("Market provider retry loop ended unexpectedly")
+
+
+def fetch_json(url, timeout=25):
+    payload = _fetch_payload(url, timeout=timeout)
     errors = payload.get("error", [])
     if errors:
         raise ValueError("Market provider error: " + "; ".join(str(x) for x in errors))
@@ -42,14 +62,7 @@ def fetch_json(url, timeout=25):
 
 
 def fetch_raw_json(url, timeout=25):
-    request = Request(url, headers={"User-Agent": USER_AGENT, "Accept": "application/json"})
-    with urlopen(request, timeout=timeout) as response:
-        if response.status != 200:
-            raise ValueError("Market provider returned HTTP " + str(response.status))
-        payload = json.loads(response.read().decode("utf-8"))
-    if not isinstance(payload, dict):
-        raise ValueError("Market provider response is not a JSON object")
-    return payload
+    return _fetch_payload(url, timeout=timeout)
 
 
 def finite(value, label):
