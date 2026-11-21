@@ -19,15 +19,17 @@ class FakeBook:
 
 
 class MultiAssetPaperRunnerTests(unittest.TestCase):
-    def test_seeds_each_strategy_at_the_latest_completed_candle(self):
+    def test_seeds_warmup_and_leaves_latest_completed_candle_pending(self):
         rows = [[i * 3600, 100, 101, 99, 100 + i, 0, 1] for i in range(250)]
         state = _seed_market_state(rows)
         self.assertEqual(set(state), set(SUPPORTED_STRATEGIES))
         self.assertEqual(
             {item["last_timestamp"] for item in state.values()},
-            {rows[-1][0]},
+            {rows[-2][0]},
         )
         self.assertTrue(all(len(item["recent_closes"]) == 200 for item in state.values()))
+        self.assertTrue(all(item["seeded_pending_latest"] for item in state.values()))
+        self.assertEqual(state["sma_trend"]["recent_closes"][-1], rows[-2][4])
 
     def test_missing_new_strategy_cursor_is_seeded_without_resetting_existing(self):
         rows = [[i * 3600, 100, 101, 99, 100 + i, 0, 1] for i in range(250)]
@@ -37,7 +39,7 @@ class MultiAssetPaperRunnerTests(unittest.TestCase):
         added = _ensure_market_strategy_state(state, rows)
         self.assertEqual(added, ["compound_momentum"])
         self.assertEqual(state["sma_trend"]["last_timestamp"], 12345)
-        self.assertEqual(state["compound_momentum"]["last_timestamp"], rows[-1][0])
+        self.assertEqual(state["compound_momentum"]["last_timestamp"], rows[-2][0])
 
     def test_daily_sma_trend_can_signal_after_20_closed_bars(self):
         history = [100.0] * 19 + [101.0]
