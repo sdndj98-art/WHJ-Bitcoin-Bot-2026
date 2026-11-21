@@ -8,7 +8,6 @@
           "AAVE/USD",
           "AB/USD",
           "ADA/USD",
-          "AERO/USD",
           "AKE/USD",
           "ALGO/USD",
           "ARB/USD",
@@ -56,6 +55,7 @@
           "UNI/USD",
           "USELESS/USD",
           "VVV/USD",
+          "WINGS/USD",
           "WLD/USD",
           "XAGUSD",
           "XAUUSD",
@@ -75,7 +75,6 @@
           "AAVE/USD",
           "AB/USD",
           "ADA/USD",
-          "AERO/USD",
           "AKE/USD",
           "ALGO/USD",
           "ARB/USD",
@@ -123,6 +122,7 @@
           "UNI/USD",
           "USELESS/USD",
           "VVV/USD",
+          "WINGS/USD",
           "WLD/USD",
           "XAGUSD",
           "XDC/USD",
@@ -141,7 +141,6 @@
           "AAVE/USD",
           "AB/USD",
           "ADA/USD",
-          "AERO/USD",
           "AKE/USD",
           "ALGO/USD",
           "ARB/USD",
@@ -189,6 +188,7 @@
           "UNI/USD",
           "USELESS/USD",
           "VVV/USD",
+          "WINGS/USD",
           "WLD/USD",
           "XAGUSD",
           "XDC/USD",
@@ -253,22 +253,22 @@
       "detail": "Equity is read from the single shared paper wallet when available.",
       "metrics": {
         "closed_trades": 12,
-        "equity_usd": 100.2113,
+        "equity_usd": 100.1903,
         "initial_equity_usd": 100.0,
-        "pnl_usd": 0.2113,
-        "return_pct": 0.2113,
+        "pnl_usd": 0.1903,
+        "return_pct": 0.1903,
         "shared_wallet": true
       },
       "name": "EQUITY",
       "status": "TRACKING"
     }
   ],
-  "generated_at_utc": "2026-11-21T21:54:50.283903+00:00",
+  "generated_at_utc": "2026-11-21T22:08:36.090021+00:00",
   "live_trading_enabled": false,
   "mode": "PAPER_ONLY",
   "portfolio_status": "PAPER_RUNNING",
   "schema_version": 2,
-  "source_updated_at": "2026-11-21T21:54:49.710709+00:00",
+  "source_updated_at": "2026-11-21T22:08:35.666509+00:00",
   "summary": {
     "agent_count": 6,
     "markets": [
@@ -277,7 +277,6 @@
       "AAVE/USD",
       "AB/USD",
       "ADA/USD",
-      "AERO/USD",
       "AKE/USD",
       "ALGO/USD",
       "ARB/USD",
@@ -325,6 +324,7 @@
       "UNI/USD",
       "USELESS/USD",
       "VVV/USD",
+      "WINGS/USD",
       "WLD/USD",
       "XAGUSD",
       "XDC/USD",
@@ -374,17 +374,6 @@
         "watch_only": true
       },
       "ADA/USD": {
-        "approved_by_consensus": false,
-        "decision": "HOLD",
-        "execution_mode": "PAPER_ONLY",
-        "live_orders_enabled": false,
-        "reason_codes": [
-          "WATCH_ONLY_NO_CLOSED_CANDLE_SIGNAL"
-        ],
-        "strategy_signal": "HOLD",
-        "watch_only": true
-      },
-      "AERO/USD": {
         "approved_by_consensus": false,
         "decision": "HOLD",
         "execution_mode": "PAPER_ONLY",
@@ -923,6 +912,17 @@
         "watch_only": true
       },
       "VVV/USD": {
+        "approved_by_consensus": false,
+        "decision": "HOLD",
+        "execution_mode": "PAPER_ONLY",
+        "live_orders_enabled": false,
+        "reason_codes": [
+          "WATCH_ONLY_NO_CLOSED_CANDLE_SIGNAL"
+        ],
+        "strategy_signal": "HOLD",
+        "watch_only": true
+      },
+      "WINGS/USD": {
         "approved_by_consensus": false,
         "decision": "HOLD",
         "execution_mode": "PAPER_ONLY",
