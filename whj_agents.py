@@ -193,12 +193,12 @@ def build_agent_state(snapshot, generated_at=None, research_report=None):
         symbol: _feed_ok(sleeve) and _quality_ok(sleeve)
         for symbol, sleeve in sleeves.items()
     }
-    scanner_ok = all(healthy.values())
+    scanner_ok = any(healthy.values())
     scanner = _agent(
         "SCANNER",
         "READY" if scanner_ok else "WAITING_DATA",
-        "Both BTC and XAUUSD feeds passed their snapshot quality checks."
-        if scanner_ok else "Waiting for fresh, healthy BTC and XAUUSD feed snapshots.",
+        "At least one market has a fresh, healthy feed; each market is gated independently."
+        if scanner_ok else "Waiting for at least one fresh, healthy market feed.",
         {"healthy_markets": [s for s, ok in healthy.items() if ok],
          "markets": list(sleeves)},
     )
@@ -207,39 +207,40 @@ def build_agent_state(snapshot, generated_at=None, research_report=None):
         symbol: list(sleeve.get("risk_pause_reasons") or [])
         for symbol, sleeve in sleeves.items()
     }
-    risk_ok = safety_ok and all(healthy.values()) and not any(pause_reasons.values())
+    risk_ok = safety_ok
     rug_check = _agent(
         "RUG CHECK",
         "PASS" if risk_ok else "BLOCKED",
-        "Paper-only guardrails, feed quality, and portfolio risk pauses checked."
-        if risk_ok else "Blocked: verify paper-only flags, feed quality, or risk pause reasons.",
+        "Paper-only safety passed; risk pauses are enforced separately for each market."
+        if risk_ok else "Blocked: paper-only safety flags did not pass.",
         {"paper_only": paper_only, "live_trading_disabled": live_disabled,
          "risk_pause_reasons": pause_reasons},
     )
 
     allocations = {}
-    sizing_ok = True
+    allocations_valid = {}
     for symbol, sleeve in sleeves.items():
         limits = sleeve.get("risk_limits") or {}
         allocation = limits.get("allocation_pct")
         if not _finite_number(allocation) or not 0 < allocation <= 10:
-            sizing_ok = False
-        else:
-            allocations[symbol] = float(allocation)
+            continue
+        allocations[symbol] = float(allocation)
+        allocations_valid[symbol] = healthy.get(symbol, False)
+    sizing_ok = any(allocations_valid.values())
     sizer = _agent(
         "SIZER",
         "READY" if sizing_ok and risk_ok else "BLOCKED",
-        "Validated per-sleeve allocation caps (maximum 10%); no order is submitted."
-        if sizing_ok and risk_ok else "Position sizing is blocked until risk and allocation limits are valid.",
+        "At least one healthy market has a valid allocation cap (maximum 10%)."
+        if sizing_ok and risk_ok else "Position sizing is blocked until a healthy market has a valid allocation.",
         {"allocation_pct": allocations, "maximum_allocation_pct": 10.0},
     )
 
-    executor_ok = safety_ok and scanner_ok and risk_ok and sizing_ok
+    executor_ok = safety_ok and scanner_ok and sizing_ok
     executor = _agent(
         "EXECUTOR",
         "PAPER_READY" if executor_ok else "BLOCKED",
-        "Paper ledger only; execution is limited to the existing simulated runners."
-        if executor_ok else "No execution: safety, feed, risk, or sizing gate did not pass.",
+        "Paper ledger only; every market still needs its own six-agent approval."
+        if executor_ok else "No execution: safety, healthy-feed, or sizing gate did not pass.",
         {"mode": "PAPER_ONLY", "live_orders_enabled": False,
          "order_submission_by_agent": False},
     )
@@ -286,7 +287,7 @@ def build_agent_state(snapshot, generated_at=None, research_report=None):
     )
 
     unified_decision = build_unified_decision(
-        sleeves, healthy, safety_ok, risk_ok, sizing_ok
+        sleeves, healthy, safety_ok, safety_ok, sizing_ok
     )
     unified_decision["research_advisory"] = _research_advisory(research_report)
 
