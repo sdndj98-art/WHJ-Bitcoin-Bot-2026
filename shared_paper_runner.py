@@ -429,11 +429,11 @@ def _make_snapshot(book, strategy_state, price, quality, status,
             for name in SUPPORTED_STRATEGIES
         ],
         "strategy_details": by_strategy,
-        "bull_summary": "Seven strategy families share one $100 paper-only BTC portfolio.",
+        "bull_summary": "Eight strategy families share one $100 paper-only BTC portfolio.",
         "bear_summary": "Entries require completed-candle signals, fresh feed quality, sizing and six-agent consensus.",
         "risk_decision": status,
         "notes": [
-            "One $100 simulated cash pool is shared across all seven BTC strategies; cash and net PnL compound together.",
+            "One $100 simulated cash pool is shared across all eight BTC strategies; cash and net PnL compound together.",
             "Legacy independent BTC/Gold $10 ledgers are preserved and are not added to the new account.",
             "Gold is disabled until a fresh validated two-way XAUUSD feed is available.",
             "Historical candles warm indicators only; first run seeds the forward-only cursor without historical trades.",
