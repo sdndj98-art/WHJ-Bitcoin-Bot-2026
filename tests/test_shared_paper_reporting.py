@@ -8,9 +8,9 @@ from shared_paper_portfolio import SUPPORTED_STRATEGIES
 
 
 class SharedPaperReportingTests(unittest.TestCase):
-    def test_report_exposes_one_100_dollar_pool_across_seven_strategy_rows(self):
+    def test_report_exposes_one_100_dollar_pool_across_eight_strategy_rows(self):
         rows = [{
-            "asset": "BTC", "strategy": name, "equity_usd": 100.0 / 7,
+            "asset": "BTC", "strategy": name, "equity_usd": 100.0 / len(SUPPORTED_STRATEGIES),
             "return_pct": 0.0, "closed_trades": 0, "max_drawdown_pct": 0.0,
             "paused": False, "paused_for_drawdown": False,
             "daily_loss_paused": False, "paused_for_loss_streak": False,
@@ -30,7 +30,7 @@ class SharedPaperReportingTests(unittest.TestCase):
             path.write_text(json.dumps(snapshot), encoding="utf-8")
             portfolio, summary = load_shared_paper_portfolio(path)
         self.assertEqual(portfolio["mode"], "SHARED_100USD_PAPER_ONLY")
-        self.assertEqual(len(portfolio["accounts"]), 7)
+        self.assertEqual(len(portfolio["accounts"]), len(SUPPORTED_STRATEGIES))
         self.assertAlmostEqual(sum(a["initial_cash_usd"] for a in portfolio["accounts"].values()), 100.0)
         self.assertAlmostEqual(sum(a["equity_after_estimated_exit_costs_usd"] for a in portfolio["accounts"].values()), 100.0)
         self.assertEqual(summary["initial_cash_usd"], 100.0)
