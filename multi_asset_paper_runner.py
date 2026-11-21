@@ -28,7 +28,7 @@ METALS = ("XAUUSD", "XAGUSD")  # shared $100 ledger: only metals with validated 
 TRADE_ALLOCATION = 0.02
 MAX_GROSS_EXPOSURE = 0.50
 # No fixed position-count cap; cash, exposure and risk guards remain active.
-MAX_OPEN_POSITIONS = 25  # 2% per entry; 50% gross exposure remains the binding risk limit
+MAX_OPEN_POSITIONS = None  # no cumulative position-count cap; cash/exposure/risk guards remain binding
 MIN_TRADE_USD = 1.0
 FEE_RATE = 0.001
 SLIPPAGE_RATE = 0.0005
@@ -370,7 +370,7 @@ def run_engine():
                         capacity,
                         book.state["cash_usd"] / (1.0 + FEE_RATE),
                     )
-                    if len(current["open_positions"]) >= MAX_OPEN_POSITIONS:
+                    if MAX_OPEN_POSITIONS is not None and len(current["open_positions"]) >= MAX_OPEN_POSITIONS:
                         note_block(strategy, "MAX_OPEN_POSITIONS")
                     elif notional < MIN_TRADE_USD:
                         note_block(strategy, "MIN_TRADE_OR_INSUFFICIENT_CASH")
