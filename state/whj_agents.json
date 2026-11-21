@@ -241,13 +241,13 @@
       "status": "PAPER_READY"
     },
     {
-      "detail": "Found trade events in the portfolio snapshot.",
+      "detail": "Logger is online; no new trade events were generated in this cycle.",
       "metrics": {
         "logger_ready": true,
-        "new_trade_events": 2
+        "new_trade_events": 0
       },
       "name": "LOGGER",
-      "status": "RECORDS_AVAILABLE"
+      "status": "READY_NO_EVENTS"
     },
     {
       "detail": "Equity is read from the single shared paper wallet when available.",
@@ -263,12 +263,12 @@
       "status": "TRACKING"
     }
   ],
-  "generated_at_utc": "2026-11-21T21:53:32.286670+00:00",
+  "generated_at_utc": "2026-11-21T21:54:50.283903+00:00",
   "live_trading_enabled": false,
   "mode": "PAPER_ONLY",
   "portfolio_status": "PAPER_RUNNING",
   "schema_version": 2,
-  "source_updated_at": "2026-11-21T21:53:31.821883+00:00",
+  "source_updated_at": "2026-11-21T21:54:49.710709+00:00",
   "summary": {
     "agent_count": 6,
     "markets": [
