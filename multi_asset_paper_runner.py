@@ -391,6 +391,8 @@ def run_engine():
     shared["live_trading_enabled"] = False
     snapshot.update({
         "updated_at": datetime.now(timezone.utc).isoformat(),
+        "status": "PAPER_RUNNING" if (processed_candles or events)
+                  else snapshot.get("status", "WAITING_NEXT_CLOSED_CANDLE"),
         "paper_only": True, "live_trading_enabled": False,
         "shared_portfolio": shared,
         "metals_paper": {
