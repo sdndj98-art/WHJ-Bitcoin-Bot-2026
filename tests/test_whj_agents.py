@@ -81,6 +81,28 @@ class WhjAgentsTests(unittest.TestCase):
         self.assertEqual(equity["equity_usd"], 20.0)
         self.assertEqual(equity["pnl_usd"], 0.0)
 
+    def test_shared_wallet_is_source_of_truth_and_reports_scanned_markets(self):
+        snapshot = healthy_snapshot()
+        snapshot["shared_portfolio"] = {
+            "initial_cash_usd": 100.0, "equity_usd": 102.5,
+            "pnl_usd": 2.5, "closed_trades": 3,
+        }
+        snapshot["multi_asset_paper"] = {
+            "markets_scanned": ["BTC/USD", "ETH/USD", "XAUUSD", "XAGUSD"],
+        }
+        # Per-market sleeve values intentionally differ; do not double count them.
+        snapshot["btc"]["equity_usd"] = 110.0
+        snapshot["gold"]["equity_usd"] = 20.0
+        state = build_agent_state(snapshot)
+        equity = state["agents"][5]["metrics"]
+        scanner = state["agents"][0]["metrics"]
+        self.assertTrue(equity["shared_wallet"])
+        self.assertEqual(equity["equity_usd"], 102.5)
+        self.assertEqual(equity["pnl_usd"], 2.5)
+        self.assertEqual(equity["closed_trades"], 3)
+        self.assertEqual(state["summary"]["markets"], ["BTC/USD", "ETH/USD", "XAUUSD", "XAGUSD"])
+        self.assertEqual(scanner["markets_scanned"], ["BTC/USD", "ETH/USD", "XAUUSD", "XAGUSD"])
+
     def test_unified_consensus_emits_one_safe_decision_per_market(self):
         state = build_agent_state(healthy_snapshot())
         consensus = state["unified_decision"]
