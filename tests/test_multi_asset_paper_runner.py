@@ -43,6 +43,11 @@ class MultiAssetPaperRunnerTests(unittest.TestCase):
         self.assertTrue(_is_eligible_crypto_pair({"base": "ETH", "quote": "USDT"}))
         self.assertTrue(_is_eligible_crypto_pair({"base": "ETH", "quote": "USDC"}))
 
+    def test_universe_excludes_stablecoin_base_pairs(self):
+        for base in ("USDG", "USDP", "FDUSD", "PYUSD", "USDE", "USDD"):
+            self.assertFalse(_is_eligible_crypto_pair({"base": base, "quote": "USDC"}))
+        self.assertTrue(_is_eligible_crypto_pair({"base": "ETH", "quote": "USDC"}))
+
     def test_position_ids_are_deterministic_and_market_specific(self):
         first = _market_position_id("ETH/USD", "ema_trend")
         second = _market_position_id("XAUUSD", "ema_trend")
