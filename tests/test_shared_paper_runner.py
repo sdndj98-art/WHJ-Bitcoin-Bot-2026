@@ -24,6 +24,32 @@ class SharedPaperRunnerTests(unittest.TestCase):
             self.assertFalse(want_long)
             self.assertFalse(want_flat)
 
+    def test_mean_reversion_strategies_use_indicator_specific_warmups(self):
+        falling_15 = [100.0] * 14 + [80.0]
+        rsi_entry, _ = strategy_signal("rsi14_mean_reversion", falling_15)
+        self.assertTrue(rsi_entry)
+        bollinger_entry, _ = strategy_signal("bollinger_mean_reversion", falling_15)
+        self.assertFalse(bollinger_entry)
+
+        falling_20 = [100.0] * 19 + [80.0]
+        bollinger_entry, _ = strategy_signal("bollinger_mean_reversion", falling_20)
+        self.assertTrue(bollinger_entry)
+        rsi_entry, _ = strategy_signal("rsi14_mean_reversion", falling_20)
+        self.assertTrue(rsi_entry)
+
+        for strategy in ("ema_trend", "rsi_momentum", "sma200_regime",
+                         "ema50_200_regime"):
+            want_long, want_flat = strategy_signal(strategy, falling_20)
+            self.assertFalse(want_long)
+            self.assertFalse(want_flat)
+
+    def test_mean_reversion_exits_have_defined_paper_conditions(self):
+        falling = [100.0] * 19 + [80.0]
+        _, bollinger_exit = strategy_signal("bollinger_mean_reversion", falling, holding_bars=10)
+        _, rsi_exit = strategy_signal("rsi14_mean_reversion", falling, holding_bars=1)
+        self.assertTrue(bollinger_exit)
+        self.assertTrue(rsi_exit)
+
     def test_trend_signals_are_boolean_and_use_prior_completed_history(self):
         rising = [100.0 + i for i in range(220)]
         for strategy in ("sma_trend", "ema_trend", "sma200_regime", "ema50_200_regime"):
