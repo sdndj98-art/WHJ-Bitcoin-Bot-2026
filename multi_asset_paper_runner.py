@@ -241,7 +241,7 @@ def run_engine():
     markets, errors = _load_markets(book)
     marks = {symbol: float(item["price"]) for symbol, item in markets.items()}
     # Existing BTC positions are marked from Kraken's USD spot feed, but BTC
-    # entries remain owned by the original seven-strategy BTC engine.
+    # entries remain owned by the shared eight-strategy BTC engine.
     for asset in _position_market_symbols(book):
         if asset not in marks:
             raise RuntimeError("No current mark for open asset " + asset)
