@@ -1,10 +1,32 @@
 {
   "agents": [
     {
-      "detail": "At least one market has a fresh, healthy feed; each market is gated independently.",
+      "detail": "Fresh, validated market data is available for the listed symbols; each market is gated independently.",
       "metrics": {
         "healthy_markets": [
-          "BTC"
+          "BTC/USD",
+          "ADA/USD",
+          "AVAX/USD",
+          "ETH/USD",
+          "HYPE/USD",
+          "LINK/USD",
+          "LTC/USD",
+          "NEAR/USD",
+          "PAXG/USD",
+          "QNT/USD",
+          "SOL/USD",
+          "SUI/USD",
+          "TAO/USD",
+          "TRX/USD",
+          "UNI/USD",
+          "VVV/USD",
+          "XAGUSD",
+          "XAUUSD",
+          "XDG/USD",
+          "XLM/USD",
+          "XMR/USD",
+          "XRP/USD",
+          "ZEC/USD"
         ],
         "markets": [
           "BTC/USD",
@@ -96,12 +118,13 @@
       "status": "PAPER_READY"
     },
     {
-      "detail": "No new trade events are present in this snapshot.",
+      "detail": "Logger is online; no new trade events were generated in this cycle.",
       "metrics": {
+        "logger_ready": true,
         "new_trade_events": 0
       },
       "name": "LOGGER",
-      "status": "WAITING_EVENTS"
+      "status": "READY_NO_EVENTS"
     },
     {
       "detail": "Equity is read from the single shared paper wallet when available.",
@@ -117,12 +140,12 @@
       "status": "TRACKING"
     }
   ],
-  "generated_at_utc": "2026-11-21T12:10:40.303077+00:00",
+  "generated_at_utc": "2026-11-21T12:13:30.030654+00:00",
   "live_trading_enabled": false,
   "mode": "PAPER_ONLY",
   "portfolio_status": "WAITING_NEXT_CLOSED_CANDLE",
   "schema_version": 2,
-  "source_updated_at": "2026-11-21T12:10:39.986323+00:00",
+  "source_updated_at": "2026-11-21T12:13:29.590493+00:00",
   "summary": {
     "agent_count": 6,
     "markets": [
@@ -151,7 +174,7 @@
       "ZEC/USD"
     ],
     "paper_only": true,
-    "ready_count": 5
+    "ready_count": 6
   },
   "unified_decision": {
     "agent_roles": [
