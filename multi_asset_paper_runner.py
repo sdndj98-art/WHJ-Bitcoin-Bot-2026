@@ -182,26 +182,48 @@ def _liquidation_equity(book, marks):
 
 
 def _seed_market_state(rows):
-    closes = [float(row[4]) for row in rows[-200:]]
-    cursor = int(rows[-1][0])
+    # Warm up on prior completed bars, but leave the newest completed bar pending.
+    # The next run can evaluate that bar once instead of waiting another full
+    # hour/day after a fresh deployment or first-time market seed.
+    if len(rows) < 2:
+        raise ValueError("At least two completed candles are required to seed")
+    history = [float(row[4]) for row in rows[-201:-1]]
+    cursor = int(rows[-2][0])
     return {
         name: {
-            "last_timestamp": cursor, "recent_closes": closes,
+            "last_timestamp": cursor, "recent_closes": history[-200:],
             "holding_bars": 0, "trades": 0,
+            "seeded_pending_latest": True,
         } for name in SUPPORTED_STRATEGIES
     }
 
 
 def _ensure_market_strategy_state(state, rows):
-    """Seed missing strategy cursors at the latest closed bar, preserving others."""
+    """Add missing strategy cursors and safely release a seeded latest candle once."""
     if not isinstance(state, dict):
         raise ValueError("Saved multi-asset market state is malformed; refusing reset")
     fresh = _seed_market_state(rows)
     added = []
+    latest_ts, latest_close = int(rows[-1][0]), float(rows[-1][4])
+    prior_ts = int(rows[-2][0])
     for name in SUPPORTED_STRATEGIES:
-        if not isinstance(state.get(name), dict):
+        current = state.get(name)
+        if not isinstance(current, dict):
             state[name] = fresh[name]
             added.append(name)
+            continue
+        # Older deployments seeded the cursor at the latest bar without
+        # evaluating it. Release that one bar only when the saved close proves
+        # it was a seed (zero trades, matching last close); never rewind a
+        # strategy that has already traded or processed forward.
+        closes = current.get("recent_closes", [])
+        if (not current.get("seeded_pending_latest")
+                and int(current.get("trades", 0)) == 0
+                and int(current.get("last_timestamp", 0)) == latest_ts
+                and closes and math.isclose(float(closes[-1]), latest_close, rel_tol=1e-10, abs_tol=1e-12)):
+            current["last_timestamp"] = prior_ts
+            current["recent_closes"] = [float(x) for x in closes[:-1]][-200:]
+            current["seeded_pending_latest"] = True
     return added
 
 
