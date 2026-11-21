@@ -310,6 +310,43 @@ def run_engine():
                 strategy_state["last_timestamp"] = timestamp
                 processed_candles += 1
 
+    # Metal execution requires timestamp-validated spot and validated daily OHLC.
+    metal_status = {}
+    quote_now = datetime.now(timezone.utc).timestamp()
+    for symbol in (*METALS, "XPTUSD", "XPDUSD"):
+        market = markets.get(symbol)
+        if market:
+            metal_status[symbol] = {
+                "status": "PAPER_DAILY_READY", "paper_execution_enabled": True,
+                "symbol": symbol, "provider": market.get("provider"),
+                "last_price_usd": market.get("price"), "price_unit": market.get("price_unit"),
+                "quote_age_seconds": market.get("quote_age_seconds"),
+                "quote_timestamp": market.get("quote_timestamp"),
+                "history_interval": "1d", "closed_daily_bars": market.get("history_bars", 0),
+                "latest_closed_candle": market.get("latest_closed_candle"),
+                "reason": None, "closed_trades": 0,
+            }
+            continue
+        try:
+            quote = fetch_spot(symbol, quote_now)
+            metal_status[symbol] = {
+                "status": "SPOT_ONLY_HISTORY_BLOCKED" if symbol in METALS else "SPOT_ONLY_RESEARCH",
+                "paper_execution_enabled": False, "symbol": symbol,
+                "provider": quote.get("provider"), "last_price_usd": quote.get("price_usd"),
+                "price_unit": quote.get("price_unit"), "quote_age_seconds": quote.get("quote_age_seconds"),
+                "quote_timestamp": quote.get("computed_at"), "history_interval": None,
+                "closed_daily_bars": 0, "latest_closed_candle": None, "closed_trades": 0,
+                "reason": errors.get(symbol) or "No validated free daily OHLC feed for this metal",
+            }
+        except Exception as exc:
+            metal_status[symbol] = {
+                "status": "FEED_BLOCKED", "paper_execution_enabled": False, "symbol": symbol,
+                "provider": None, "last_price_usd": None, "price_unit": None,
+                "quote_age_seconds": None, "quote_timestamp": None, "history_interval": None,
+                "closed_daily_bars": 0, "latest_closed_candle": None, "closed_trades": 0,
+                "reason": str(exc)[:250],
+            }
+
     # Refresh risk using the latest marks and persist namespaced cursors without
     # replacing the original BTC strategy state in the same shared ledger.
     risk = _risk_state(book, marks, risk, int(datetime.now(timezone.utc).timestamp()))
@@ -334,6 +371,32 @@ def run_engine():
         "updated_at": datetime.now(timezone.utc).isoformat(),
         "paper_only": True, "live_trading_enabled": False,
         "shared_portfolio": shared,
+        "metals_paper": {
+            "account_scope": "SHARED_100USD_PAPER", "paper_only": True,
+            "live_trading_enabled": False, "spot_provider": "Gold-API",
+            "daily_history_provider": "goldprice.dev", "markets": metal_status,
+        },
+        "gold": {
+            **dict(snapshot.get("gold", {})),
+            "asset": "XAUUSD", "symbol": "XAU/USD spot",
+            "status": metal_status.get("XAUUSD", {}).get("status", "UNKNOWN"),
+            "feed_status": metal_status.get("XAUUSD", {}).get("status", "UNKNOWN"),
+            "account_scope": "SHARED_100USD_PAPER", "independent_ledger_enabled": False,
+            "paper_execution_enabled": bool(metal_status.get("XAUUSD", {}).get("paper_execution_enabled")),
+            "last_price_usd": metal_status.get("XAUUSD", {}).get("last_price_usd"),
+            "quote_timestamp": metal_status.get("XAUUSD", {}).get("quote_timestamp"),
+            "quote_age_seconds": metal_status.get("XAUUSD", {}).get("quote_age_seconds"),
+            "history_interval": metal_status.get("XAUUSD", {}).get("history_interval"),
+            "last_error": metal_status.get("XAUUSD", {}).get("reason"),
+        },
+        "notes": [
+            "One shared simulated $100 wallet covers BTC, selected liquid crypto pairs, and validated XAU/XAG daily paper markets.",
+            "Gold and silver use timestamp-validated Gold-API spot quotes plus completed goldprice.dev daily bars.",
+            "Copper spot is monitored; free daily OHLC is plan-gated, so copper entries are blocked.",
+            "Platinum and palladium are spot-only research; no validated free daily bars, so no paper entries.",
+            "Legacy independent $10 BTC/Gold ledgers are not used by the active shared-wallet engine.",
+            "No real exchange or broker orders are sent.",
+        ],
         "multi_asset_paper": {
             "status": "PAPER_ONLY",
             "markets_scanned": sorted(markets),
