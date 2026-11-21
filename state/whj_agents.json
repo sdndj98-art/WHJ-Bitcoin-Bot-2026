@@ -6,7 +6,6 @@
         "healthy_markets": [
           "BTC/USD",
           "AAVE/USD",
-          "AB/USD",
           "ADA/USD",
           "AERO/USD",
           "AKE/USD",
@@ -17,6 +16,7 @@
           "BCH/USD",
           "BLESS/USD",
           "BNB/USD",
+          "CAP/USD",
           "CC/USD",
           "CRV/USD",
           "DASH/USD",
@@ -73,7 +73,6 @@
           "BTC/USD",
           "XAUUSD",
           "AAVE/USD",
-          "AB/USD",
           "ADA/USD",
           "AERO/USD",
           "AKE/USD",
@@ -84,6 +83,7 @@
           "BCH/USD",
           "BLESS/USD",
           "BNB/USD",
+          "CAP/USD",
           "CC/USD",
           "CRV/USD",
           "DASH/USD",
@@ -139,7 +139,6 @@
           "BTC/USD",
           "XAUUSD",
           "AAVE/USD",
-          "AB/USD",
           "ADA/USD",
           "AERO/USD",
           "AKE/USD",
@@ -150,6 +149,7 @@
           "BCH/USD",
           "BLESS/USD",
           "BNB/USD",
+          "CAP/USD",
           "CC/USD",
           "CRV/USD",
           "DASH/USD",
@@ -253,29 +253,28 @@
       "detail": "Equity is read from the single shared paper wallet when available.",
       "metrics": {
         "closed_trades": 4,
-        "equity_usd": 99.9199,
+        "equity_usd": 99.9123,
         "initial_equity_usd": 100.0,
-        "pnl_usd": -0.0801,
-        "return_pct": -0.0801,
+        "pnl_usd": -0.0877,
+        "return_pct": -0.0877,
         "shared_wallet": true
       },
       "name": "EQUITY",
       "status": "TRACKING"
     }
   ],
-  "generated_at_utc": "2026-11-21T17:36:00.193677+00:00",
+  "generated_at_utc": "2026-11-21T18:19:51.318878+00:00",
   "live_trading_enabled": false,
   "mode": "PAPER_ONLY",
   "portfolio_status": "PAPER_RUNNING",
   "schema_version": 2,
-  "source_updated_at": "2026-11-21T17:35:59.853870+00:00",
+  "source_updated_at": "2026-11-21T18:19:50.987648+00:00",
   "summary": {
     "agent_count": 6,
     "markets": [
       "BTC/USD",
       "XAUUSD",
       "AAVE/USD",
-      "AB/USD",
       "ADA/USD",
       "AERO/USD",
       "AKE/USD",
@@ -286,6 +285,7 @@
       "BCH/USD",
       "BLESS/USD",
       "BNB/USD",
+      "CAP/USD",
       "CC/USD",
       "CRV/USD",
       "DASH/USD",
@@ -352,17 +352,6 @@
     "live_trading_enabled": false,
     "market_decisions": {
       "AAVE/USD": {
-        "approved_by_consensus": false,
-        "decision": "HOLD",
-        "execution_mode": "PAPER_ONLY",
-        "live_orders_enabled": false,
-        "reason_codes": [
-          "WATCH_ONLY_NO_CLOSED_CANDLE_SIGNAL"
-        ],
-        "strategy_signal": "HOLD",
-        "watch_only": true
-      },
-      "AB/USD": {
         "approved_by_consensus": false,
         "decision": "HOLD",
         "execution_mode": "PAPER_ONLY",
@@ -494,6 +483,17 @@
         "strategy_signal": "HOLD"
       },
       "BTC/USD": {
+        "approved_by_consensus": false,
+        "decision": "HOLD",
+        "execution_mode": "PAPER_ONLY",
+        "live_orders_enabled": false,
+        "reason_codes": [
+          "WATCH_ONLY_NO_CLOSED_CANDLE_SIGNAL"
+        ],
+        "strategy_signal": "HOLD",
+        "watch_only": true
+      },
+      "CAP/USD": {
         "approved_by_consensus": false,
         "decision": "HOLD",
         "execution_mode": "PAPER_ONLY",
