@@ -47,7 +47,8 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git pull --rebase origin main
-          git add research/multi_market_scan/latest.json research/multi_market_scan/latest.md
+          git add research/multi_market_scan/latest.json
+          if [ -f research/multi_market_scan/latest.md ]; then git add research/multi_market_scan/latest.md; fi
           if ! git diff --cached --quiet; then
             git commit -m "chore: publish read-only multi-market scan report"
             git push origin HEAD:main
