@@ -7,12 +7,12 @@ from unittest.mock import patch
 
 from shared_paper_portfolio import SharedPaperPortfolio, SUPPORTED_STRATEGIES
 from shared_paper_runner import (
-    _make_snapshot, _new_strategy_state, liquidation_equity, strategy_signal,
+    _make_snapshot, _new_strategy_state, _ensure_strategy_state, liquidation_equity, strategy_signal,
 )
 
 
 class SharedPaperRunnerTests(unittest.TestCase):
-    def test_seven_strategies_are_seeded_from_same_forward_cursor(self):
+    def test_eight_strategies_are_seeded_from_same_forward_cursor(self):
         rows = [[i * 3600, 1, 1, 1, 100 + i, 0] for i in range(220)]
         state = _new_strategy_state(rows)
         self.assertEqual(set(state), set(SUPPORTED_STRATEGIES))
@@ -63,6 +63,32 @@ class SharedPaperRunnerTests(unittest.TestCase):
             self.assertIsInstance(want_flat, bool)
             self.assertTrue(want_long)
             self.assertFalse(want_flat)
+
+    def test_compound_momentum_requires_trend_and_moderate_rsi(self):
+        import math
+        rising_with_pullbacks = [100 + i * 0.15 + math.sin(i * 0.7) for i in range(100)]
+        want_long, want_flat = strategy_signal("compound_momentum", rising_with_pullbacks)
+        self.assertTrue(want_long)
+        self.assertFalse(want_flat)
+
+        overheated = [100.0 + i for i in range(100)]
+        want_long, _ = strategy_signal("compound_momentum", overheated)
+        self.assertFalse(want_long)
+
+        falling = [150.0 - i * 0.5 for i in range(100)]
+        want_long, want_flat = strategy_signal("compound_momentum", falling)
+        self.assertFalse(want_long)
+        self.assertTrue(want_flat)
+
+    def test_existing_strategy_state_migrates_without_resetting_cursors(self):
+        rows = [[i * 3600, 1, 1, 1, 100 + i, 0] for i in range(220)]
+        state = _new_strategy_state(rows)
+        state["sma_trend"]["last_timestamp"] = 12345
+        del state["compound_momentum"]
+        added = _ensure_strategy_state(state, rows)
+        self.assertEqual(added, ["compound_momentum"])
+        self.assertEqual(state["sma_trend"]["last_timestamp"], 12345)
+        self.assertEqual(state["compound_momentum"]["last_timestamp"], rows[-1][0])
 
     def test_btc_runner_marks_other_shared_assets_from_fresh_snapshot(self):
         with tempfile.TemporaryDirectory() as directory:
