@@ -2,7 +2,7 @@ import unittest
 from datetime import datetime, timezone
 
 from multi_asset_paper_runner import (
-    _market_position_id, _risk_state, _seed_market_state,
+    _is_eligible_crypto_pair, _market_position_id, _risk_state, _seed_market_state,
     MAX_GROSS_EXPOSURE, MAX_OPEN_POSITIONS, TRADE_ALLOCATION,
 )
 from shared_paper_portfolio import SUPPORTED_STRATEGIES
@@ -27,6 +27,13 @@ class MultiAssetPaperRunnerTests(unittest.TestCase):
             {rows[-1][0]},
         )
         self.assertTrue(all(len(item["recent_closes"]) == 200 for item in state.values()))
+
+    def test_universe_excludes_bitcoin_alias_and_fiat_fx_pairs(self):
+        self.assertTrue(_is_eligible_crypto_pair({"base": "ETH", "quote": "USD"}))
+        self.assertFalse(_is_eligible_crypto_pair({"base": "XBT", "quote": "USD"}))
+        self.assertFalse(_is_eligible_crypto_pair({"base": "BTC", "quote": "USD"}))
+        self.assertFalse(_is_eligible_crypto_pair({"base": "EUR", "quote": "USD"}))
+        self.assertFalse(_is_eligible_crypto_pair({"base": "ETH", "quote": "USDT"}))
 
     def test_position_ids_are_deterministic_and_market_specific(self):
         first = _market_position_id("ETH/USD", "ema_trend")
