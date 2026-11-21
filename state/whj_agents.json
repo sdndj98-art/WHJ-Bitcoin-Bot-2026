@@ -1,7 +1,7 @@
 {
   "agents": [
     {
-      "detail": "Waiting for fresh, healthy BTC and XAUUSD feed snapshots.",
+      "detail": "At least one market has a fresh, healthy feed; each market is gated independently.",
       "metrics": {
         "healthy_markets": [
           "BTC"
@@ -12,10 +12,10 @@
         ]
       },
       "name": "SCANNER",
-      "status": "WAITING_DATA"
+      "status": "READY"
     },
     {
-      "detail": "Blocked: verify paper-only flags, feed quality, or risk pause reasons.",
+      "detail": "Paper-only safety passed; risk pauses are enforced separately for each market.",
       "metrics": {
         "live_trading_disabled": true,
         "paper_only": true,
@@ -25,10 +25,10 @@
         }
       },
       "name": "RUG CHECK",
-      "status": "BLOCKED"
+      "status": "PASS"
     },
     {
-      "detail": "Position sizing is blocked until risk and allocation limits are valid.",
+      "detail": "At least one healthy market has a valid allocation cap (maximum 10%).",
       "metrics": {
         "allocation_pct": {
           "BTC": 10.0
@@ -36,17 +36,17 @@
         "maximum_allocation_pct": 10.0
       },
       "name": "SIZER",
-      "status": "BLOCKED"
+      "status": "READY"
     },
     {
-      "detail": "No execution: safety, feed, risk, or sizing gate did not pass.",
+      "detail": "Paper ledger only; every market still needs its own six-agent approval.",
       "metrics": {
         "live_orders_enabled": false,
         "mode": "PAPER_ONLY",
         "order_submission_by_agent": false
       },
       "name": "EXECUTOR",
-      "status": "BLOCKED"
+      "status": "PAPER_READY"
     },
     {
       "detail": "No new trade events are present in this snapshot.",
@@ -69,12 +69,12 @@
       "status": "TRACKING"
     }
   ],
-  "generated_at_utc": "2026-11-21T00:43:11.259507+00:00",
+  "generated_at_utc": "2026-11-21T00:46:28.472518+00:00",
   "live_trading_enabled": false,
   "mode": "PAPER_ONLY",
-  "portfolio_status": "WARMUP_SEEDED",
+  "portfolio_status": "WAITING_NEXT_CLOSED_CANDLE",
   "schema_version": 2,
-  "source_updated_at": "2026-11-21T00:43:11.096191+00:00",
+  "source_updated_at": "2026-11-21T00:46:28.365974+00:00",
   "summary": {
     "agent_count": 6,
     "markets": [
@@ -82,7 +82,7 @@
       "XAUUSD"
     ],
     "paper_only": true,
-    "ready_count": 1
+    "ready_count": 5
   },
   "unified_decision": {
     "agent_roles": [
@@ -101,8 +101,6 @@
         "execution_mode": "PAPER_ONLY",
         "live_orders_enabled": false,
         "reason_codes": [
-          "GLOBAL_RISK_GATE_FAILED",
-          "GLOBAL_SIZING_GATE_FAILED",
           "NO_EXPLICIT_BUY_OR_SELL_SIGNAL"
         ],
         "strategy_signal": "HOLD"
@@ -113,8 +111,6 @@
         "execution_mode": "PAPER_ONLY",
         "live_orders_enabled": false,
         "reason_codes": [
-          "GLOBAL_RISK_GATE_FAILED",
-          "GLOBAL_SIZING_GATE_FAILED",
           "MARKET_DATA_NOT_HEALTHY",
           "NO_EXPLICIT_BUY_OR_SELL_SIGNAL",
           "POSITION_SIZE_INVALID"
