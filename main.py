@@ -252,7 +252,7 @@ def load_shared_paper_portfolio(path="dual_portfolio.json"):
         "cash_usd": cash,
         "btc_units": units,
         "completed_trades": closed,
-        "win_rate_pct": (sum(float(t.get("pnl_usd", 0)) > 0 for t in snapshot.get("closed_trades", [])) / closed * 100.0) if closed and isinstance(snapshot.get("closed_trades"), list) else 0.0,
+        "win_rate_pct": (sum(a["win_rate_pct"] * a["completed_trades"] for a in accounts.values()) / closed) if closed else 0.0,
         "profit_factor": None,
         "max_drawdown_pct": max((a["max_drawdown_pct"] for a in accounts.values()), default=0.0),
         "fees_paid_usd": fees,
