@@ -1,6 +1,6 @@
 """Multi-market forward-only paper engine sharing WHJ's single $100 ledger.
 
-The engine trades only completed hourly candles from public market-data feeds.
+Crypto uses completed hourly candles; metals use validated completed daily spot bars.
 It never calls broker/exchange order endpoints and cannot enable live trading.
 """
 import json
@@ -17,14 +17,14 @@ from multi_market_opportunity_scan import (
 from shared_paper_portfolio import SharedPaperPortfolio, SUPPORTED_STRATEGIES
 from shared_paper_runner import strategy_signal
 from whj_agents import authorize_paper_entry
-from metal_price_sources import fetch_spot, fetch_hourly_bars
+from metal_price_sources import fetch_spot, fetch_daily_bars
 
 LEDGER = Path("state/shared_paper_100usd.json")
 SNAPSHOT = Path("dual_portfolio.json")
 REPORT = Path("state/multi_asset_paper_report.json")
 INITIAL_CASH = 100.0
 MAX_CRYPTO_MARKETS = 20
-METALS = ("XAUUSD", "XAGUSD")
+METALS = ("XAUUSD", "XAGUSD", "XCUUSD")
 TRADE_ALLOCATION = 0.02
 MAX_GROSS_EXPOSURE = 0.50
 MAX_OPEN_POSITIONS = 8
@@ -58,13 +58,15 @@ def _finite(value, label):
 
 def _metal_market(symbol, now_seconds):
     quote = fetch_spot(symbol, now_seconds)
-    rows = fetch_hourly_bars(symbol, now_seconds)
+    rows = fetch_daily_bars(symbol, now_seconds)
     return {
         "symbol": symbol, "asset": symbol, "rows": rows,
         "price": quote["price_usd"], "quality": "HEALTHY",
         "provider": quote["provider"],
         "quote_age_seconds": quote["quote_age_seconds"],
         "quote_delay_minutes": quote["expected_delay_minutes"],
+        "history_interval": "1d",
+        "history_bars": len(rows),
         "latest_closed_candle": rows[-1][0],
     }
 

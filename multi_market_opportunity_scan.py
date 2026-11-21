@@ -16,7 +16,7 @@ from urllib.parse import urlencode
 from urllib.request import Request, urlopen
 
 from market_scanner import scan_btc_market
-from metal_price_sources import fetch_spot
+from metal_price_sources import fetch_spot, fetch_daily_bars
 
 KRAKEN_API = "https://api.kraken.com/0/public"
 QUOTE_CURRENCIES = {"USD", "USDT", "USDC"}
@@ -205,21 +205,26 @@ def scan_crypto_pair(pair, now_seconds):
 
 
 def normalize_biquote_metals(symbol, now_seconds):
-    """Validated delayed spot only; the free tier does not provide intraday bars."""
+    """Validate delayed spot and daily bars available on the free tier."""
     quote = fetch_spot(symbol, now_seconds)
+    bars = fetch_daily_bars(symbol, now_seconds)
+    units = "pound" if symbol == "XCUUSD" else "troy_ounce"
     return {
         "asset_class": "METAL_SPOT", "symbol": symbol,
         "provider": quote["provider"], "last_price": quote["price_usd"],
-        "quote_currency": "USD", "quote_age_seconds": quote["quote_age_seconds"],
+        "quote_currency": "USD", "price_unit": units,
+        "quote_age_seconds": quote["quote_age_seconds"],
         "expected_delay_minutes": quote["expected_delay_minutes"],
         "computed_at": quote["computed_at"],
+        "history_interval": "1d", "closed_daily_bars": len(bars),
+        "latest_closed_bar": datetime.fromtimestamp(bars[-1][0], timezone.utc).isoformat(),
         "data_quality": {
-            "quality_status": "DELAYED_SPOT_VALIDATED",
+            "quality_status": "DELAYED_SPOT_AND_DAILY_BARS_VALIDATED",
             "paper_execution_allowed": False,
-            "reason": "Free/keyless provider supplies spot only; intraday OHLC bars are plan-gated",
+            "reason": "Scanner is read-only; paper engine can use validated daily candles",
         },
         "directional_research": "WATCH", "research_only": True,
-        "execution_enabled": False, "quote_only": True,
+        "execution_enabled": False,
     }
 
 

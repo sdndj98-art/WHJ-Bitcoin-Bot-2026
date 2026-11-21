@@ -10,6 +10,7 @@ on:
       - "shared_paper_runner.py"
       - "shared_paper_portfolio.py"
       - "multi_asset_paper_runner.py"
+      - "metal_price_sources.py"
       - "multi_market_opportunity_scan.py"
       - "tests/test_multi_asset_paper_runner.py"
       - "whj_agents.py"
@@ -58,7 +59,7 @@ jobs:
           fi
       - name: Compile and run complete test suite
         run: |
-          python -m py_compile shared_paper_runner.py shared_paper_portfolio.py multi_asset_paper_runner.py multi_market_opportunity_scan.py historical_research.py forward_paper_monitor.py whj_agents.py
+          python -m py_compile shared_paper_runner.py shared_paper_portfolio.py multi_asset_paper_runner.py multi_market_opportunity_scan.py metal_price_sources.py historical_research.py forward_paper_monitor.py whj_agents.py
           python -m unittest discover -s tests -v
       - name: Run seven BTC strategies against the one shared paper wallet
         run: python shared_paper_runner.py

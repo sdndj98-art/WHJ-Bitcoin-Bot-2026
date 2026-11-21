@@ -72,46 +72,48 @@ def fetch_spot(symbol, now_seconds=None):
         "computed_at": item["computed_at"], "quote_age_seconds": round(age, 1),
         "expected_delay_minutes": 15, "provider": SOURCE, "quality": "DELAYED_SPOT_VALIDATED"}
 
-def fetch_hourly_bars(symbol, now_seconds=None, days=35):
+def fetch_daily_bars(symbol, now_seconds=None, days=30):
+    """Fetch closed daily spot bars available on the Free/keyless tier."""
     if symbol not in SYMBOLS:
-        raise ValueError("Unsupported goldprice.dev hourly symbol: " + str(symbol))
+        raise ValueError("Unsupported goldprice.dev daily symbol: " + str(symbol))
+    if not isinstance(days, int) or days < 1 or days > 30:
+        raise ValueError("Free-tier daily history request must be 1..30 days")
     now_seconds = now_seconds if now_seconds is not None else datetime.now(timezone.utc).timestamp()
     end = datetime.fromtimestamp(now_seconds, timezone.utc)
-    start = end - timedelta(days=days)
-    query = urlencode({"symbol": SYMBOLS[symbol], "interval": "1h",
-        "from": start.isoformat(timespec="seconds").replace("+00:00", "Z"),
-        "to": end.isoformat(timespec="seconds").replace("+00:00", "Z"), "limit": 1000})
+    start = end - timedelta(days=days - 1)
+    query = urlencode({"symbol": SYMBOLS[symbol], "interval": "1d",
+        "from": start.date().isoformat(), "to": end.date().isoformat(), "limit": 1000})
     payload = _get_json(BASE_URL + "/bars?" + query)
     if payload.get("symbol") not in (CODES[symbol], SYMBOLS[symbol], symbol):
-        raise ValueError("goldprice.dev hourly bars symbol mismatch")
-    if payload.get("interval") != "1h":
-        raise ValueError("goldprice.dev hourly interval mismatch")
+        raise ValueError("goldprice.dev daily bars symbol mismatch")
+    if payload.get("interval") != "1d":
+        raise ValueError("goldprice.dev daily interval mismatch")
     source_bars = payload.get("bars")
     if not isinstance(source_bars, list):
-        raise ValueError("goldprice.dev hourly bars missing")
+        raise ValueError("goldprice.dev daily bars missing")
     bars = []
     for item in source_bars:
         if not isinstance(item, dict) or item.get("is_closed") is not True:
             continue
-        timestamp = int(_parse_timestamp(item.get("bar_start"), "hourly bar"))
-        if timestamp % 3600:
-            raise ValueError("goldprice.dev hourly bar is not UTC aligned")
-        op, high, low, close = [_number(item.get(key), "hourly OHLC") for key in ("open", "high", "low", "close")]
+        timestamp = int(_parse_timestamp(item.get("bar_start"), "daily bar"))
+        if timestamp % 86400:
+            raise ValueError("goldprice.dev daily bar is not UTC aligned")
+        op, high, low, close = [_number(item.get(key), "daily OHLC") for key in ("open", "high", "low", "close")]
         if min(op, high, low, close) <= 0 or high < max(op, close, low) or low > min(op, close, high):
-            raise ValueError("goldprice.dev hourly OHLC bounds invalid")
-        volume = 0.0 if item.get("volume") is None else _number(item["volume"], "hourly volume")
-        if volume < 0:
-            raise ValueError("goldprice.dev hourly volume cannot be negative")
-        bars.append([timestamp, op, high, low, close, 0.0, volume])
+            raise ValueError("goldprice.dev daily OHLC bounds invalid")
+        volume = None if item.get("volume") is None else _number(item.get("volume"), "daily volume")
+        if volume is not None and volume < 0:
+            raise ValueError("goldprice.dev daily volume cannot be negative")
+        bars.append([timestamp, op, high, low, close, 0.0, 0.0 if volume is None else volume])
     bars.sort(key=lambda row: row[0])
     unique = {row[0]: row for row in bars}
     bars = [unique[key] for key in sorted(unique)]
-    if len(bars) < 200:
-        raise ValueError("Insufficient closed 1h bars: goldprice.dev free/keyless tier is daily-only; intraday bars require Plus/Pro. Paper trading remains blocked.")
-    recent = bars[-51:]
-    if any(b[0] - a[0] > 4 * 3600 for a, b in zip(recent, recent[1:])):
-        raise ValueError("goldprice.dev recent hourly bars have a session gap over four hours")
-    age = now_seconds - (bars[-1][0] + 3600)
-    if age < -60 or age > 2 * 3600:
-        raise ValueError("goldprice.dev latest completed hourly bar is stale")
+    if len(bars) < 20:
+        raise ValueError("Insufficient closed daily spot bars: need at least 20 for daily strategy warmup")
+    recent = bars[-20:]
+    if any(b[0] - a[0] > 4 * 86400 for a, b in zip(recent, recent[1:])):
+        raise ValueError("goldprice.dev recent daily bars contain a gap over four days")
+    age = now_seconds - (bars[-1][0] + 86400)
+    if age < -120 or age > 4 * 86400:
+        raise ValueError("goldprice.dev latest completed daily bar is stale")
     return bars
