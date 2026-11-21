@@ -880,7 +880,7 @@ The existing OHLC gap regression asserted that a stop gap uses the opening price
 - Stop: 5% below the slipped entry fill; the next bar opens at 90, below the stop.
 - Required gap exit reference: 90 (not the stop level of 95.19).
 - Required exit fill after adverse slippage: 89.82.
-- Required final net-liquidation equity: $973.6538 from $1,000; return and recorded OHLC-envelope drawdown: -2.6346% / 2.6346%.
+- Required final net-liquidation equity: $973.6538 from $1,000; close-to-close return: -2.6346%; recorded OHLC-envelope drawdown: 2.7308%. The envelope is larger because the entry candle's $101 high is marked before the next candle gaps through the stop; the prior 2.6346% drawdown expectation incorrectly treated final return as peak-to-trough drawdown.
 
 Added `.github/workflows/ohlc-execution-lab-tests.yml` as a dedicated, isolated regression workflow. It is limited to pushes on this research branch that touch the OHLC simulator, its tests, or the workflow itself, plus manual dispatch. It has read-only contents permission, no schedule, no secrets, no network/data acquisition, and runs only module compilation, the focused OHLC test file, and a whitespace check. The existing regime-EMA workflow targets `regime_ema_ohlc_lab.py` and its tests; it did not provide a focused trigger for `ohlc_execution_lab.py`.
 
