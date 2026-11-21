@@ -1236,4 +1236,31 @@ document.querySelectorAll(".agent-nav button").forEach(b=>b.addEventListener("cl
  moduleNodes.forEach(n=>new MutationObserver(allState).observe(n,{attributes:true,attributeFilter:["data-live-state"]}));
 })();
 </script>
-<a href='./paper-trades.html' style='position:fixed;z-index:99;bottom:18px;left:18px;background:#17384d;border:1px solid #54d6e8;color:#edf5ff;padding:12px 16px;border-radius:12px;text-decoration:none;font:12px Tahoma,Arial,sans-serif;box-shadow:0 8px 28px #0007'>📊 صفقات المحفظة الورقية</a></body></html>
+<a href='./paper-trades.html' style='position:fixed;z-index:99;bottom:18px;left:18px;background:#17384d;border:1px solid #54d6e8;color:#edf5ff;padding:12px 16px;border-radius:12px;text-decoration:none;font:12px Tahoma,Arial,sans-serif;box-shadow:0 8px 28px #0007'>📊 صفقات المحفظة الورقية</a>
+<!-- WHJ CONTINUOUS WORKSPACE MODE -->
+<style id="whj-continuous-workspace-style">
+/* Keep every dashboard workspace visible in one long, continuously scrollable page. */
+html{scroll-behavior:smooth}
+.view{display:block!important;visibility:visible!important;opacity:1!important;height:auto!important;max-height:none!important;overflow:visible!important;position:relative!important;scroll-margin-top:18px;margin-bottom:26px}
+.view.active{display:block!important}
+.view[hidden]{display:block!important}
+#whj-continuous-mode-note{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin:0 0 18px;padding:12px 16px;border:1px solid #285a59;border-radius:13px;background:linear-gradient(100deg,#102d32,#102137);color:#b9f5e5;font-size:12px}
+#whj-continuous-mode-note strong{color:#72e5ce}
+#whj-continuous-mode-note small{color:#91a8c0;font-size:10px}
+@media(max-width:700px){.view{scroll-margin-top:12px;margin-bottom:18px}#whj-continuous-mode-note{font-size:10px;padding:10px}}
+</style>
+<script id="whj-continuous-workspace-script">
+(()=>{
+  const note=document.createElement('div');
+  note.id='whj-continuous-mode-note';
+  note.innerHTML='<strong>WHJ · وضع العرض المستمر</strong><span>كل أقسام اللوحة والوكلاء والصفقات تبقى ظاهرة — مرّر للأسفل لمشاهدة الكل</span><small>تحديث البيانات حسب آخر تشغيل للمحرك</small>';
+  const main=document.querySelector('main');
+  if(main && !document.getElementById(note.id)) main.insertBefore(note,main.firstChild);
+  document.querySelectorAll('.view').forEach(view=>{view.hidden=false;view.style.display='block';view.style.height='auto';view.style.maxHeight='none';view.style.overflow='visible'});
+  document.querySelectorAll('[data-view]').forEach(button=>button.addEventListener('click',()=>{
+    const target=document.getElementById(button.getAttribute('data-view'));
+    if(target) target.scrollIntoView({behavior:'smooth',block:'start'});
+  }));
+})();
+</script>
+</body></html>
