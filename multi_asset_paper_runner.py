@@ -64,6 +64,7 @@ def _metal_market(symbol, now_seconds):
         "price": quote["price_usd"], "quality": "HEALTHY",
         "provider": quote["provider"],
         "quote_age_seconds": quote["quote_age_seconds"],
+        "quote_timestamp": quote["computed_at"],
         "quote_delay_minutes": quote["expected_delay_minutes"],
         "history_interval": "1d",
         "history_bars": len(rows),
