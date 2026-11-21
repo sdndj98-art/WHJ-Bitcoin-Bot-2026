@@ -58,6 +58,9 @@ jobs:
           python -m unittest discover -s tests -v
       - name: Run seven strategies against the one shared paper wallet
         run: python shared_paper_runner.py
+      - name: Refresh existing dashboard report from the shared wallet
+        continue-on-error: true
+        run: python main.py
       - name: Run six-agent decision office
         run: |
           python -m py_compile whj_agents.py
@@ -107,6 +110,7 @@ jobs:
           cp dual_portfolio_dashboard.html _site/dual_portfolio_dashboard.html
           cp dual_portfolio.json _site/dual_portfolio.json
           cp state/whj_agents.json _site/whj_agents.json
+          if [ -s report.json ]; then cp report.json _site/report.json; fi
           if [ -s research/multi_market_scan/latest.json ]; then
             mkdir -p _site/research/multi_market_scan
             cp research/multi_market_scan/latest.json _site/research/multi_market_scan/latest.json
@@ -132,5 +136,6 @@ jobs:
             state/shared_paper_100usd.json
             state/shared_paper_initialized.json
             state/whj_agents.json
+            report.json
           if-no-files-found: warn
           retention-days: 30
