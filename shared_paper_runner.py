@@ -125,8 +125,14 @@ def strategy_signal(strategy, history, holding_bars=0):
         fast, slow = ema(values[-50:], 12), ema(values[-50:], 26)
         momentum = rsi(values, 14)
         return_20 = prior / values[-21] - 1.0 if values[-21] > 0 else 0.0
-        want = fast > slow and prior > slow and return_20 > 0 and 50 <= momentum <= 75
-        exit_signal = fast <= slow or prior <= slow or momentum >= 80 or return_20 <= 0
+        trend_confirmed = fast > slow and prior > slow and return_20 > 0
+        # Allow a mild RSI pullback while preserving positive trend and 20-bar
+        # return; avoid chasing overbought momentum above 72.
+        momentum_window = 45 <= momentum <= 72
+        want = trend_confirmed and momentum_window
+        exit_signal = (
+            fast <= slow or prior <= slow or momentum >= 80 or return_20 <= -0.01
+        )
         return want, exit_signal
     raise ValueError("Unsupported strategy: " + str(strategy))
 
