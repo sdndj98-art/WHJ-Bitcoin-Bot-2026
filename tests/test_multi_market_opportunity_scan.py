@@ -1,7 +1,8 @@
 import unittest
 from datetime import datetime, timezone
+from urllib.error import HTTPError
 from tempfile import TemporaryDirectory
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 import multi_market_opportunity_scan as multi_scan
 
@@ -13,6 +14,31 @@ from market_scanner import scan_btc_market
 
 
 class MultiMarketScannerTests(unittest.TestCase):
+    def test_fetch_json_retries_transient_http_429(self):
+        throttled = HTTPError(
+            "https://provider.example/markets", 429, "Too Many Requests",
+            {"Retry-After": "1"}, None,
+        )
+        response = MagicMock()
+        response.__enter__.return_value.status = 200
+        response.__enter__.return_value.read.return_value = b'{"result":{"PAIR":{"ok":true}}}'
+        with patch.object(multi_scan, "urlopen", side_effect=[throttled, response]) as request, \\
+             patch.object(multi_scan.time, "sleep") as sleep:
+            result = multi_scan.fetch_json("https://provider.example/markets")
+        self.assertEqual(result, {"PAIR": {"ok": True}})
+        self.assertEqual(request.call_count, 2)
+        sleep.assert_called_once_with(1.0)
+
+    def test_fetch_json_does_not_retry_permanent_http_400(self):
+        invalid_request = HTTPError(
+            "https://provider.example/markets", 400, "Bad Request", {}, None,
+        )
+        with patch.object(multi_scan, "urlopen", side_effect=invalid_request) as request, \\
+             patch.object(multi_scan.time, "sleep") as sleep:
+            with self.assertRaises(HTTPError):
+                multi_scan.fetch_json("https://provider.example/markets")
+        self.assertEqual(request.call_count, 1)
+        sleep.assert_not_called()
     def test_failed_universe_discovery_is_never_reported_complete(self):
         with TemporaryDirectory() as temp_dir:
             with patch.object(multi_scan, "OUTPUT_DIR", __import__("pathlib").Path(temp_dir)), \
