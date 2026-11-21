@@ -268,12 +268,30 @@ def _make_snapshot(book, strategy_state, price, quality, status,
         positions = [p for p in shared["open_positions"] if p["strategy"] == name]
         market_value = sum(p["market_value_usd"] for p in positions)
         state = strategy_state[name]
+        closed = [trade for trade in book.state["closed_trades"] if trade.get("strategy") == name]
+        pnls = [float(trade.get("pnl_usd", 0.0)) for trade in closed]
+        wins = [value for value in pnls if value > 0]
+        losses = [-value for value in pnls if value < 0]
+        gross_profit, gross_loss = sum(wins), sum(losses)
+        loss_streak = 0
+        for value in reversed(pnls):
+            if value < 0:
+                loss_streak += 1
+            else:
+                break
+        open_fees = sum(float(book.state["positions"][p["position_id"]]["entry_fee_usd"])
+                        for p in positions if p["position_id"] in book.state["positions"])
+        fees = sum(float(trade.get("fees_usd", 0.0)) for trade in closed) + open_fees
         peak = max(float(state.get("peak_equity", INITIAL_CASH)), 1e-12)
         drawdown = max(0.0, (peak - float(shared["equity_usd"])) / peak * 100.0)
         by_strategy[name] = {
             "asset": "BTC", "strategy": name,
             "open_positions": len(positions), "market_value_usd": round(market_value, 8),
-            "trades": int(state.get("trades", 0)),
+            "trades": len(closed),
+            "win_rate_pct": round(len(wins) / len(closed) * 100.0, 4) if closed else 0.0,
+            "profit_factor": round(gross_profit / gross_loss, 6) if gross_loss else (None if not gross_profit else None),
+            "fees_paid_usd": round(fees, 8),
+            "max_consecutive_losses": loss_streak,
             "max_drawdown_pct": round(drawdown, 4),
             "paused_for_drawdown": bool(state.get("paused_for_drawdown")),
             "daily_loss_paused": bool(state.get("daily_loss_paused")),
@@ -321,7 +339,11 @@ def _make_snapshot(book, strategy_state, price, quality, status,
              "return_pct": round(((shared["cash_usd"] / len(SUPPORTED_STRATEGIES)
                  + by_strategy[name]["market_value_usd"]) / (INITIAL_CASH / len(SUPPORTED_STRATEGIES)) - 1.0) * 100.0, 4),
              "closed_trades": by_strategy[name]["trades"],
-             "fees_usd": 0.0, "max_drawdown_pct": by_strategy[name]["max_drawdown_pct"],
+             "win_rate_pct": by_strategy[name]["win_rate_pct"],
+             "profit_factor": by_strategy[name]["profit_factor"],
+             "fees_usd": by_strategy[name]["fees_paid_usd"],
+             "max_consecutive_losses": by_strategy[name]["max_consecutive_losses"],
+             "max_drawdown_pct": by_strategy[name]["max_drawdown_pct"],
              "status": "PAPER_ONLY", "open_positions": by_strategy[name]["open_positions"],
              "paused": by_strategy[name]["paused"],
              "paused_for_drawdown": by_strategy[name]["paused_for_drawdown"],
