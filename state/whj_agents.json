@@ -241,34 +241,34 @@
       "status": "PAPER_READY"
     },
     {
-      "detail": "Logger is online; no new trade events were generated in this cycle.",
+      "detail": "Found trade events in the portfolio snapshot.",
       "metrics": {
         "logger_ready": true,
-        "new_trade_events": 0
+        "new_trade_events": 2
       },
       "name": "LOGGER",
-      "status": "READY_NO_EVENTS"
+      "status": "RECORDS_AVAILABLE"
     },
     {
       "detail": "Equity is read from the single shared paper wallet when available.",
       "metrics": {
-        "closed_trades": 11,
-        "equity_usd": 100.2095,
+        "closed_trades": 12,
+        "equity_usd": 100.2113,
         "initial_equity_usd": 100.0,
-        "pnl_usd": 0.2095,
-        "return_pct": 0.2095,
+        "pnl_usd": 0.2113,
+        "return_pct": 0.2113,
         "shared_wallet": true
       },
       "name": "EQUITY",
       "status": "TRACKING"
     }
   ],
-  "generated_at_utc": "2026-11-21T21:28:00.633472+00:00",
+  "generated_at_utc": "2026-11-21T21:53:32.286670+00:00",
   "live_trading_enabled": false,
   "mode": "PAPER_ONLY",
   "portfolio_status": "PAPER_RUNNING",
   "schema_version": 2,
-  "source_updated_at": "2026-11-21T21:28:00.114338+00:00",
+  "source_updated_at": "2026-11-21T21:53:31.821883+00:00",
   "summary": {
     "agent_count": 6,
     "markets": [
