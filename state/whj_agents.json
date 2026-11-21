@@ -13,7 +13,6 @@
           "AVAX/USD",
           "ETH/USD",
           "HYPE/USD",
-          "INJ/USD",
           "LINK/USD",
           "LTC/USD",
           "NEAR/USD",
@@ -22,8 +21,10 @@
           "SOL/USD",
           "SUI/USD",
           "TAO/USD",
+          "TRX/USD",
           "UNI/USD",
           "VVV/USD",
+          "XAGUSD",
           "XDG/USD",
           "XLM/USD",
           "XMR/USD",
@@ -37,7 +38,6 @@
           "AVAX/USD",
           "ETH/USD",
           "HYPE/USD",
-          "INJ/USD",
           "LINK/USD",
           "LTC/USD",
           "NEAR/USD",
@@ -46,8 +46,10 @@
           "SOL/USD",
           "SUI/USD",
           "TAO/USD",
+          "TRX/USD",
           "UNI/USD",
           "VVV/USD",
+          "XAGUSD",
           "XDG/USD",
           "XLM/USD",
           "XMR/USD",
@@ -115,12 +117,12 @@
       "status": "TRACKING"
     }
   ],
-  "generated_at_utc": "2026-11-21T12:08:50.912202+00:00",
+  "generated_at_utc": "2026-11-21T12:10:40.303077+00:00",
   "live_trading_enabled": false,
   "mode": "PAPER_ONLY",
   "portfolio_status": "WAITING_NEXT_CLOSED_CANDLE",
   "schema_version": 2,
-  "source_updated_at": "2026-11-21T12:08:50.370565+00:00",
+  "source_updated_at": "2026-11-21T12:10:39.986323+00:00",
   "summary": {
     "agent_count": 6,
     "markets": [
@@ -130,7 +132,6 @@
       "AVAX/USD",
       "ETH/USD",
       "HYPE/USD",
-      "INJ/USD",
       "LINK/USD",
       "LTC/USD",
       "NEAR/USD",
@@ -139,8 +140,10 @@
       "SOL/USD",
       "SUI/USD",
       "TAO/USD",
+      "TRX/USD",
       "UNI/USD",
       "VVV/USD",
+      "XAGUSD",
       "XDG/USD",
       "XLM/USD",
       "XMR/USD",
@@ -205,17 +208,6 @@
         "watch_only": true
       },
       "HYPE/USD": {
-        "approved_by_consensus": false,
-        "decision": "HOLD",
-        "execution_mode": "PAPER_ONLY",
-        "live_orders_enabled": false,
-        "reason_codes": [
-          "WATCH_ONLY_NO_CLOSED_CANDLE_SIGNAL"
-        ],
-        "strategy_signal": "HOLD",
-        "watch_only": true
-      },
-      "INJ/USD": {
         "approved_by_consensus": false,
         "decision": "HOLD",
         "execution_mode": "PAPER_ONLY",
@@ -314,6 +306,17 @@
         "strategy_signal": "HOLD",
         "watch_only": true
       },
+      "TRX/USD": {
+        "approved_by_consensus": false,
+        "decision": "HOLD",
+        "execution_mode": "PAPER_ONLY",
+        "live_orders_enabled": false,
+        "reason_codes": [
+          "WATCH_ONLY_NO_CLOSED_CANDLE_SIGNAL"
+        ],
+        "strategy_signal": "HOLD",
+        "watch_only": true
+      },
       "UNI/USD": {
         "approved_by_consensus": false,
         "decision": "HOLD",
@@ -326,6 +329,17 @@
         "watch_only": true
       },
       "VVV/USD": {
+        "approved_by_consensus": false,
+        "decision": "HOLD",
+        "execution_mode": "PAPER_ONLY",
+        "live_orders_enabled": false,
+        "reason_codes": [
+          "WATCH_ONLY_NO_CLOSED_CANDLE_SIGNAL"
+        ],
+        "strategy_signal": "HOLD",
+        "watch_only": true
+      },
+      "XAGUSD": {
         "approved_by_consensus": false,
         "decision": "HOLD",
         "execution_mode": "PAPER_ONLY",
