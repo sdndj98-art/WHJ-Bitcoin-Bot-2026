@@ -70,7 +70,7 @@ def strategy_signal(strategy, history, holding_bars=0):
     prior = float(history[-1])
     values = [float(x) for x in history]
     sma20 = sum(values[-20:]) / 20.0
-    sma50 = sum(values[-50:]) / 50.0
+    sma50 = sum(values[-50:]) / 50.0 if len(values) >= 50 else None
     if strategy == "sma_trend":
         # Faster paper-test entry: participate when price is above the 20-bar
         # mean, rather than waiting for the slower 50-bar trend confirmation.
