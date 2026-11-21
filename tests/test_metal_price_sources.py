@@ -6,19 +6,33 @@ import metal_price_sources as sources
 
 
 class MetalPriceSourceTests(unittest.TestCase):
-    def test_validated_xau_spot_maps_symbol_and_checks_15m_delay(self):
+    def test_gold_api_spot_maps_symbol_and_validates_timestamp_unit(self):
         now = datetime(2026, 11, 21, 12, 0, tzinfo=timezone.utc).timestamp()
-        payload = {"symbols": [{
-            "symbol": "XAU", "quote_currency": "USD", "contract_type": "spot",
-            "price": "4021.50", "is_stale": False,
-            "computed_at": datetime.fromtimestamp(now - 900, timezone.utc).isoformat(),
-        }]}
+        payload = {
+            "symbol": "XAU", "currency": "USD", "unit": "oz", "price": 4021.50,
+            "updatedAt": datetime.fromtimestamp(now - 35, timezone.utc).isoformat(),
+        }
         with patch.object(sources, "_get_json", return_value=payload) as get:
             quote = sources.fetch_spot("XAUUSD", now)
-        self.assertEqual(quote["provider_symbol"], "XAU-USD-SPOT")
+        self.assertEqual(quote["price_unit"], "troy_ounce")
         self.assertEqual(quote["price_usd"], 4021.5)
-        self.assertEqual(quote["expected_delay_minutes"], 15)
-        self.assertIn("XAU-USD-SPOT", get.call_args.args[0])
+        self.assertIn("/price/XAU", get.call_args.args[0])
+
+    def test_gold_api_rejects_stale_or_wrong_units(self):
+        now = datetime(2026, 11, 21, 12, 0, tzinfo=timezone.utc).timestamp()
+        payload = {
+            "symbol": "XPT", "currency": "USD", "unit": "oz", "price": 1234.5,
+            "updatedAt": datetime.fromtimestamp(now - 6 * 60, timezone.utc).isoformat(),
+        }
+        with patch.object(sources, "_get_json", return_value=payload):
+            with self.assertRaisesRegex(ValueError, "5-minute safety age"):
+                sources.fetch_spot("XPTUSD", now)
+        payload["unit"] = "lb"
+        payload["updatedAt"] = datetime.fromtimestamp(now - 30, timezone.utc).isoformat()
+        with patch.object(sources, "_get_json", return_value=payload):
+            with self.assertRaisesRegex(ValueError, "unit mismatch"):
+                sources.fetch_spot("XPTUSD", now)
+
 
     def test_delayed_spot_accepts_cache_margin_but_rejects_old_quote(self):
         now = datetime(2026, 11, 21, 12, 0, tzinfo=timezone.utc).timestamp()

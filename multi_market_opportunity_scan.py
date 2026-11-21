@@ -20,7 +20,7 @@ from metal_price_sources import fetch_spot, fetch_daily_bars
 
 KRAKEN_API = "https://api.kraken.com/0/public"
 QUOTE_CURRENCIES = {"USD", "USDT", "USDC"}
-METALS = ("XAUUSD", "XAGUSD", "XCUUSD")
+METALS = ("XAUUSD", "XAGUSD", "XPTUSD", "XPDUSD", "XCUUSD")
 INTERVAL_SECONDS = 3600
 OUTPUT_DIR = Path("research/multi_market_scan")
 USER_AGENT = "WHJ-MultiMarket-PaperScanner/1.0"
@@ -205,27 +205,41 @@ def scan_crypto_pair(pair, now_seconds):
 
 
 def normalize_biquote_metals(symbol, now_seconds):
-    """Validate delayed spot and daily bars available on the free tier."""
+    """Validate current spot; only XAU/XAG/HG have free daily bar history."""
     quote = fetch_spot(symbol, now_seconds)
-    bars = fetch_daily_bars(symbol, now_seconds)
-    units = "pound" if symbol == "XCUUSD" else "troy_ounce"
-    return {
+    units = quote["price_unit"]
+    base = {
         "asset_class": "METAL_SPOT", "symbol": symbol,
         "provider": quote["provider"], "last_price": quote["price_usd"],
         "quote_currency": "USD", "price_unit": units,
         "quote_age_seconds": quote["quote_age_seconds"],
         "expected_delay_minutes": quote["expected_delay_minutes"],
         "computed_at": quote["computed_at"],
+        "research_only": True, "execution_enabled": False,
+    }
+    if symbol in ("XPTUSD", "XPDUSD"):
+        base.update({
+            "history_interval": None, "closed_daily_bars": 0,
+            "data_quality": {
+                "quality_status": "TIMESTAMP_VALIDATED_SPOT_ONLY",
+                "paper_execution_allowed": False,
+                "reason": "Free validated OHLC history is not available for platinum/palladium",
+            },
+            "directional_research": "WATCH",
+        })
+        return base
+    bars = fetch_daily_bars(symbol, now_seconds)
+    base.update({
         "history_interval": "1d", "closed_daily_bars": len(bars),
         "latest_closed_bar": datetime.fromtimestamp(bars[-1][0], timezone.utc).isoformat(),
         "data_quality": {
-            "quality_status": "DELAYED_SPOT_AND_DAILY_BARS_VALIDATED",
+            "quality_status": "TIMESTAMP_VALIDATED_SPOT_AND_DAILY_BARS",
             "paper_execution_allowed": False,
-            "reason": "Scanner is read-only; paper engine can use validated daily candles",
+            "reason": "Scanner is read-only; shared paper engine evaluates daily bars",
         },
-        "directional_research": "WATCH", "research_only": True,
-        "execution_enabled": False,
-    }
+        "directional_research": "WATCH",
+    })
+    return base
 
 
 def opportunity_rank(item):

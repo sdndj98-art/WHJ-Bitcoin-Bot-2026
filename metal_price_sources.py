@@ -11,6 +11,8 @@ from urllib.error import HTTPError
 BASE_URL = "https://api.goldprice.dev/v1"
 SYMBOLS = {"XAUUSD": "XAU-USD-SPOT", "XAGUSD": "XAG-USD-SPOT", "XCUUSD": "HG-USD-SPOT"}
 CODES = {"XAUUSD": "XAU", "XAGUSD": "XAG", "XCUUSD": "HG"}
+SPOT_CODES = {"XAUUSD": "XAU", "XAGUSD": "XAG", "XPTUSD": "XPT", "XPDUSD": "XPD", "XCUUSD": "HG"}
+UNITS = {"XAUUSD": "troy_ounce", "XAGUSD": "troy_ounce", "XPTUSD": "troy_ounce", "XPDUSD": "troy_ounce", "XCUUSD": "pound"}
 UNITS = {"XAUUSD": "troy_ounce", "XAGUSD": "troy_ounce", "XCUUSD": "pound"}
 SOURCE = "goldprice.dev (15-minute delayed free/keyless spot feed)"
 
@@ -49,35 +51,37 @@ def _number(value, label):
     return number
 
 def fetch_spot(symbol, now_seconds=None):
-    if symbol not in SYMBOLS:
-        raise ValueError("Unsupported goldprice.dev spot symbol: " + str(symbol))
+    """Fetch timestamp-validated public spot from Gold-API (all five metals)."""
+    if symbol not in SPOT_CODES:
+        raise ValueError("Unsupported Gold-API spot symbol: " + str(symbol))
     now_seconds = now_seconds if now_seconds is not None else datetime.now(timezone.utc).timestamp()
-    url = BASE_URL + "/prices?" + urlencode({"symbol": SYMBOLS[symbol]})
-    payload = _get_json(url)
-    rows = payload.get("symbols")
-    if not isinstance(rows, list):
-        raise ValueError("goldprice.dev symbols array missing")
-    item = next((row for row in rows if isinstance(row, dict)
-        and row.get("symbol") == CODES[symbol] and row.get("quote_currency") == "USD"
-        and row.get("contract_type") == "spot"), None)
-    if item is None:
-        raise ValueError("goldprice.dev did not return requested USD spot symbol")
-    if item.get("is_stale") is not False:
-        raise ValueError("goldprice.dev spot is stale or freshness unconfirmed")
+    url = "https://api.gold-api.com/price/" + SPOT_CODES[symbol]
+    item = _get_json(url)
+    if item.get("symbol") != SPOT_CODES[symbol] or item.get("currency") != "USD":
+        raise ValueError("Gold-API spot symbol/currency mismatch")
+    expected_unit = "lb" if symbol == "XCUUSD" else "oz"
+    if item.get("unit") != expected_unit:
+        raise ValueError("Gold-API spot unit mismatch")
     price = _number(item.get("price"), "spot price")
-    stamp = _parse_timestamp(item.get("computed_at"), "spot")
+    stamp = _parse_timestamp(item.get("updatedAt"), "spot")
     age = now_seconds - stamp
     if price <= 0:
-        raise ValueError("goldprice.dev spot price must be positive")
+        raise ValueError("Gold-API spot price must be positive")
     if age < -60:
-        raise ValueError("goldprice.dev spot timestamp is future-dated")
-    # The source's own is_stale flag is authoritative; allow a cache margin
-    # beyond its advertised 15-minute delay.
-    if age > 60 * 60:
-        raise ValueError("goldprice.dev spot quote exceeds the 60-minute safety age")
-    return {"symbol": symbol, "provider_symbol": SYMBOLS[symbol], "price_usd": price, "price_unit": UNITS[symbol],
-        "computed_at": item["computed_at"], "quote_age_seconds": round(age, 1),
-        "expected_delay_minutes": 15, "provider": SOURCE, "quality": "DELAYED_SPOT_VALIDATED"}
+        raise ValueError("Gold-API spot timestamp is future-dated")
+    # Gold-API documents 30-second updates; five minutes is a conservative
+    # operational freshness ceiling, not an assumption about the quote itself.
+    if age > 5 * 60:
+        raise ValueError("Gold-API spot quote exceeds the 5-minute safety age")
+    return {
+        "symbol": symbol, "provider_symbol": SPOT_CODES[symbol],
+        "price_usd": price, "price_unit": UNITS[symbol],
+        "computed_at": item["updatedAt"], "quote_age_seconds": round(age, 1),
+        "expected_delay_minutes": 0,
+        "provider": "Gold-API public spot (approximately 30-second refresh)",
+        "quality": "TIMESTAMP_VALIDATED_SPOT",
+    }
+
 
 def fetch_daily_bars(symbol, now_seconds=None, days=30):
     """Fetch closed daily spot bars available on the Free/keyless tier."""
