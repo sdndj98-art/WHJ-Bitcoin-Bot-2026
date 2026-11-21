@@ -55,8 +55,8 @@ class SharedPaperPortfolioTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             SharedPaperPortfolio(self.path, initial_cash_usd=200)
 
-    def test_all_seven_strategy_families_are_supported(self):
-        self.assertEqual(len(SUPPORTED_STRATEGIES), 7)
+    def test_all_eight_strategy_families_are_supported(self):
+        self.assertEqual(len(SUPPORTED_STRATEGIES), 8)
         for strategy in SUPPORTED_STRATEGIES:
             self.book.open_position(strategy, strategy + "-asset", 10, 1)
         self.assertGreaterEqual(self.book.state["cash_usd"], 0)
