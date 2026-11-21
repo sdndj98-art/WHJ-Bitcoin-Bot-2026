@@ -25,6 +25,7 @@
           "UNI/USD",
           "USDG/USDC",
           "VVV/USD",
+          "XAGUSD",
           "XDG/USD",
           "XLM/USD",
           "XMR/USD",
@@ -50,6 +51,7 @@
           "UNI/USD",
           "USDG/USDC",
           "VVV/USD",
+          "XAGUSD",
           "XDG/USD",
           "XLM/USD",
           "XMR/USD",
@@ -117,12 +119,12 @@
       "status": "TRACKING"
     }
   ],
-  "generated_at_utc": "2026-11-21T12:03:16.591687+00:00",
+  "generated_at_utc": "2026-11-21T12:04:01.952552+00:00",
   "live_trading_enabled": false,
   "mode": "PAPER_ONLY",
-  "portfolio_status": "PAPER_RUNNING",
+  "portfolio_status": "WAITING_NEXT_CLOSED_CANDLE",
   "schema_version": 2,
-  "source_updated_at": "2026-11-21T12:03:16.098676+00:00",
+  "source_updated_at": "2026-11-21T12:04:01.563739+00:00",
   "summary": {
     "agent_count": 6,
     "markets": [
@@ -144,6 +146,7 @@
       "UNI/USD",
       "USDG/USDC",
       "VVV/USD",
+      "XAGUSD",
       "XDG/USD",
       "XLM/USD",
       "XMR/USD",
@@ -340,6 +343,17 @@
         "watch_only": true
       },
       "VVV/USD": {
+        "approved_by_consensus": false,
+        "decision": "HOLD",
+        "execution_mode": "PAPER_ONLY",
+        "live_orders_enabled": false,
+        "reason_codes": [
+          "WATCH_ONLY_NO_CLOSED_CANDLE_SIGNAL"
+        ],
+        "strategy_signal": "HOLD",
+        "watch_only": true
+      },
+      "XAGUSD": {
         "approved_by_consensus": false,
         "decision": "HOLD",
         "execution_mode": "PAPER_ONLY",
