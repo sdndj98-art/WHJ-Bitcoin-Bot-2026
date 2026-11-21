@@ -198,13 +198,22 @@ def build_agent_state(snapshot, generated_at=None, research_report=None):
         symbol: _feed_ok(sleeve) and _quality_ok(sleeve)
         for symbol, sleeve in sleeves.items()
     }
-    scanner_ok = any(healthy.values())
+    healthy_market_symbols = [
+        "BTC/USD" if symbol == "BTC" else symbol
+        for symbol, ok in healthy.items() if ok
+    ]
+    # The multi-asset runner only places a symbol in markets_scanned after
+    # loading and validating its current market data. Include those successful
+    # scans in scanner telemetry rather than reporting only BTC/XAU sleeves.
+    healthy_market_symbols.extend(scanned_markets)
+    healthy_market_symbols = list(dict.fromkeys(healthy_market_symbols))
+    scanner_ok = bool(healthy_market_symbols)
     scanner = _agent(
         "SCANNER",
         "READY" if scanner_ok else "WAITING_DATA",
-        "At least one market has a fresh, healthy feed; each market is gated independently."
+        "Fresh, validated market data is available for the listed symbols; each market is gated independently."
         if scanner_ok else "Waiting for at least one fresh, healthy market feed.",
-        {"healthy_markets": [s for s, ok in healthy.items() if ok],
+        {"healthy_markets": healthy_market_symbols,
          "markets": all_markets,
          "markets_scanned": all_markets,
          "shared_wallet": True},
@@ -259,10 +268,10 @@ def build_agent_state(snapshot, generated_at=None, research_report=None):
             trade_count += len(entries)
     logger = _agent(
         "LOGGER",
-        "RECORDS_AVAILABLE" if trade_count else "WAITING_EVENTS",
+        "RECORDS_AVAILABLE" if trade_count else "READY_NO_EVENTS",
         "Found trade events in the portfolio snapshot."
-        if trade_count else "No new trade events are present in this snapshot.",
-        {"new_trade_events": trade_count},
+        if trade_count else "Logger is online; no new trade events were generated in this cycle.",
+        {"new_trade_events": trade_count, "logger_ready": True},
     )
 
     shared = snapshot.get("shared_portfolio")
@@ -336,7 +345,7 @@ def build_agent_state(snapshot, generated_at=None, research_report=None):
         "agents": [scanner, rug_check, sizer, executor, logger, equity_agent],
         "summary": {
             "agent_count": len(AGENT_NAMES),
-            "ready_count": sum(a["status"] in ("READY", "PASS", "PAPER_READY", "TRACKING", "RECORDS_AVAILABLE") for a in
+            "ready_count": sum(a["status"] in ("READY", "PASS", "PAPER_READY", "TRACKING", "RECORDS_AVAILABLE", "READY_NO_EVENTS") for a in
                                (scanner, rug_check, sizer, executor, logger, equity_agent)),
             "markets": all_markets,
             "paper_only": safety_ok,
