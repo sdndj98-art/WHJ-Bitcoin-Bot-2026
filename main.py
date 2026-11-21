@@ -195,6 +195,12 @@ def load_shared_paper_portfolio(path="dual_portfolio.json"):
             or snapshot.get("live_trading_enabled") is not False):
         raise ValueError("Shared portfolio safety flags failed")
     shared = snapshot.get("shared_portfolio")
+    if shared is None:
+        return {
+            "mode": "WAITING_FOR_SHARED_100USD_LEDGER",
+            "accounts": {},
+            "note": "The legacy snapshot is retained; waiting for the first shared-ledger run.",
+        }, {}
     if not isinstance(shared, dict) or shared.get("mode") != "PAPER_ONLY" or shared.get("live_trading_enabled") is not False:
         raise ValueError("Shared $100 portfolio ledger is missing or unsafe")
     initial = float(shared.get("initial_cash_usd", 0))
