@@ -257,7 +257,8 @@ def _shared_mark_prices(book, btc_price):
     """Use the current BTC candle and fresh prior marks for other shared assets."""
     prices = {"BTC/USD": float(btc_price)}
     other_positions = [
-        position for position in book.state["positions"].values()
+        (position_id, position)
+        for position_id, position in book.state["positions"].items()
         if position.get("asset") != "BTC/USD"
     ]
     if not other_positions:
@@ -277,8 +278,7 @@ def _shared_mark_prices(book, btc_price):
         }
     except Exception as exc:
         raise RuntimeError("Cannot value non-BTC shared positions safely: " + str(exc)) from exc
-    for position in other_positions:
-        position_id = position.get("position_id")
+    for position_id, position in other_positions:
         mark = marks.get(position_id)
         if mark is None or not math.isfinite(mark) or mark <= 0:
             raise RuntimeError("Missing fresh prior mark for shared position " + str(position_id))
