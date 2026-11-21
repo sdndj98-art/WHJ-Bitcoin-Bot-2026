@@ -148,7 +148,7 @@ def main():
         gold.setdefault("pnl_usd", 0.0)
         gold.setdefault("return_pct", 0.0)
         gold.setdefault("closed_trades", 0)
-        gold["feed_status"] = "BIQUOTE_MT5_UNAVAILABLE"
+        gold["feed_status"] = "GOLDPRICE_DEV_INTRADAY_FEED_BLOCKED"
         gold["status"] = "FEED_BLOCKED_NO_NEW_TRADES"
         gold["strategy_signal"] = "HOLD"
         gold["entry_consensus"] = {
