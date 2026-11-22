@@ -885,3 +885,13 @@ The existing OHLC gap regression asserted that a stop gap uses the opening price
 Added `.github/workflows/ohlc-execution-lab-tests.yml` as a dedicated, isolated regression workflow. It is limited to pushes on this research branch that touch the OHLC simulator, its tests, or the workflow itself, plus manual dispatch. It has read-only contents permission, no schedule, no secrets, no network/data acquisition, and runs only module compilation, the focused OHLC test file, and a whitespace check. The existing regime-EMA workflow targets `regime_ema_ohlc_lab.py` and its tests; it did not provide a focused trigger for `ohlc_execution_lab.py`.
 
 This is regression coverage and CI isolation only. No simulator source, strategy rule, allocation, stop/target parameter, paper balance, ledger, risk limit, or schedule was changed. The new workflow result must be inspected before claiming this added test passed. Spread, depth, market impact, latency, partial fills, and tick-level path reconstruction remain unresolved.
+
+## F38 — direct cost-stress helper now shares evaluator input validation (2026-11-22)
+
+Source review found that `evaluate_cost_stress()` validated fee, slippage, and the cost multiplier, but did not validate the supplied candidate collection or the minimum/quality contract for its price history. In particular, an empty lookback collection returned an empty candidate report, while duplicate lookbacks were silently collapsed by the result dictionary.
+
+The helper now accepts only a list/tuple of lookbacks, normalizes it to a tuple, and calls the same `_validate()` contract used by `evaluate_slow_momentum()` before running stress scenarios. This rejects empty or duplicate candidates, booleans/non-positive lookbacks, invalid prices, and insufficient history consistently.
+
+Regression coverage checks empty, duplicate, boolean, zero, and wrong-container lookbacks; insufficient price history; and a valid list input. This is validation-only: valid candidate calculations, signal timing, fee/slippage multipliers, allocation, and historical results are unchanged.
+
+The slow-momentum isolated workflow path filter already includes both `slow_momentum_lab.py` and `tests/test_slow_momentum_lab.py`, so a branch push touching these files requests a fresh isolated evaluation. The available GitHub connector exposes PR-triggered runs only, not the push-run listing; the post-F38 workflow result and artifact must be retrieved before claiming validation or new performance evidence. No strategy is promoted.
