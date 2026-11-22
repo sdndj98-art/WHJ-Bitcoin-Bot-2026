@@ -34,6 +34,12 @@ class AutonomousManagerSelectionTests(unittest.TestCase):
         selected = select_next_task(self.tasks, [], {"ai-office/auto-first"})
         self.assertEqual(selected["id"], "second")
 
+    def test_skips_task_blocked_after_retry_limit(self):
+        selected = select_next_task(
+            self.tasks, [], set(), {"First"}
+        )
+        self.assertEqual(selected["id"], "second")
+
     def test_skips_closed_unmerged_attempt(self):
         prs = [{"headRefName": "ai-office/auto-first", "state": "CLOSED", "mergedAt": None}]
         selected = select_next_task(self.tasks, prs, set())
