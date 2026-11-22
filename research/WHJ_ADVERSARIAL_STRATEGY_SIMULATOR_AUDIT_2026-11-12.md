@@ -930,3 +930,25 @@ Commits:
 - PBO 0.40 covers only the three declared lookbacks on this 30% OOS return stream; it is not a global trial census or future-profit probability. The 30-trade screening gate is not met by any variant. No candidate is promoted, and the artifact confirms no paper ledger access or live orders.
 
 The latest test and isolated research workflows validate the input-contract correction and reproduce the same data hash; they do not convert the historical OOS result into rolling walk-forward or forward paper evidence.
+
+
+## F41 — current main-branch paper telemetry is separate from the 17-candidate historical evaluation (2026-11-22)
+
+Read-only review of the current main-branch scheduled outputs distinguishes existing paper telemetry from the research-branch backtests:
+
+### Shared multi-asset paper snapshot
+
+- [WHJ Shared $100 Multi-Asset Paper Engine #63](https://github.com/sdndj98-art/WHJ-Bitcoin-Bot-2026/actions/runs/45074791112) completed successfully on main. Artifact [14774073543](https://github.com/sdndj98-art/WHJ-Bitcoin-Bot-2026/actions/runs/45074791112/artifacts/14774073543), `whj-shared-100usd-paper-63`, ZIP SHA-256 independently matched: `9065811f8c4bd2595c98bda6f5e37c3671cc66e3da49e0840297eb509577fbb0`.
+- Only `state/multi_asset_paper_report.json` and `dual_portfolio.json` were read. The artifact also contains `state/shared_paper_100usd.json`; that ledger file was deliberately not opened, copied, or changed.
+- The report is `PAPER_ONLY`, `live_trading_enabled=false`, `orders_submitted=false`; initial cash $100, cash $50.4286, marked equity $100.7102, P&L +$0.7102, 55 closed trades, 25 open positions, 63 markets scanned, 530 processed closed candles, zero report errors, and zero markets seeded during this run.
+- The shared engine contains eight strategy families, not the 17 isolated V1 candidate proxies. Its diagnostics are mostly signal/block counts (many entries blocked by `MIN_TRADE_OR_INSUFFICIENT_CASH`); the snapshot is not a 17-candidate forward ranking and does not establish per-strategy profitability.
+- BTC sleeve summary: $100 initial equity, $99.9511 marked equity (-0.0489%), 13 closed trades, one open position, 7,200 hourly candles (7,195 observed and 5 imputed; 0.0694%), feed marked healthy. This is a small forward-paper sample and is not the same protocol or candidate universe as Coinbase #52/Bitstamp #34 historical OOS.
+- Gold sleeve summary: labelled XAU/USD spot, but $0 initial equity, $0 P&L, zero closed trades, no independent ledger, no entry event, and null bid/ask fields. Its reference price came from Gold-API spot plus goldprice.dev daily bars; the quote timestamp was 20.4 seconds later than the report's run clock (negative reported quote age), which requires clock/quote-age validation before using it for execution research. This is not broker Bid/Ask forward evidence.
+
+### Isolated ADX forward-paper gate
+
+- [WHJ Isolated ADX Forward Paper #276](https://github.com/sdndj98-art/WHJ-Bitcoin-Bot-2026/actions/runs/45077231290) ended with workflow conclusion `success`, but its job log reports: “No ADX ledger cache yet; waiting for the one-time manual bootstrap.”
+- Restore completed; the explicit refusal-to-reseed guard completed; safety tests, forward evaluation, ledger save, summary, and artifact upload were skipped. There is no artifact and no new ADX forward sample.
+- No bootstrap was attempted: creating/seeding the missing ledger is prohibited by the current research-session safety instructions.
+
+These snapshots are observational only. No paper ledger, balance, risk limit, schedule, or account state was modified during this audit. Do not combine the shared multi-asset snapshot with the isolated 17-candidate historical ranking, and do not promote a BTC or gold candidate from these small/incomplete forward samples.
