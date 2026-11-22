@@ -12,11 +12,11 @@
           "ARB/USD",
           "ASTER/USD",
           "AVAX/USD",
+          "BCH/USD",
           "BLESS/USD",
           "BNB/USD",
           "CAP/USD",
           "CC/USD",
-          "CCD/USD",
           "CRV/USD",
           "DASH/USD",
           "DRV/USD",
@@ -44,11 +44,12 @@
           "PUMP/USD",
           "QNT/USD",
           "RENDER/USD",
-          "SHIB/USD",
+          "RLUSD/USD",
           "SOFID/USD",
           "SOL/USD",
           "SUI/USD",
           "TAO/USD",
+          "TON/USD",
           "TRUMP/USD",
           "TRX/USD",
           "UNI/USD",
@@ -63,7 +64,6 @@
           "XLM/USD",
           "XMR/USD",
           "XMR/USDT",
-          "XPL/USD",
           "XRP/USD",
           "ZBCN/USD",
           "ZEC/USD",
@@ -79,11 +79,11 @@
           "ARB/USD",
           "ASTER/USD",
           "AVAX/USD",
+          "BCH/USD",
           "BLESS/USD",
           "BNB/USD",
           "CAP/USD",
           "CC/USD",
-          "CCD/USD",
           "CRV/USD",
           "DASH/USD",
           "DRV/USD",
@@ -111,11 +111,12 @@
           "PUMP/USD",
           "QNT/USD",
           "RENDER/USD",
-          "SHIB/USD",
+          "RLUSD/USD",
           "SOFID/USD",
           "SOL/USD",
           "SUI/USD",
           "TAO/USD",
+          "TON/USD",
           "TRUMP/USD",
           "TRX/USD",
           "UNI/USD",
@@ -129,7 +130,6 @@
           "XLM/USD",
           "XMR/USD",
           "XMR/USDT",
-          "XPL/USD",
           "XRP/USD",
           "ZBCN/USD",
           "ZEC/USD",
@@ -145,11 +145,11 @@
           "ARB/USD",
           "ASTER/USD",
           "AVAX/USD",
+          "BCH/USD",
           "BLESS/USD",
           "BNB/USD",
           "CAP/USD",
           "CC/USD",
-          "CCD/USD",
           "CRV/USD",
           "DASH/USD",
           "DRV/USD",
@@ -177,11 +177,12 @@
           "PUMP/USD",
           "QNT/USD",
           "RENDER/USD",
-          "SHIB/USD",
+          "RLUSD/USD",
           "SOFID/USD",
           "SOL/USD",
           "SUI/USD",
           "TAO/USD",
+          "TON/USD",
           "TRUMP/USD",
           "TRX/USD",
           "UNI/USD",
@@ -195,7 +196,6 @@
           "XLM/USD",
           "XMR/USD",
           "XMR/USDT",
-          "XPL/USD",
           "XRP/USD",
           "ZBCN/USD",
           "ZEC/USD",
@@ -253,22 +253,22 @@
       "detail": "Equity is read from the single shared paper wallet when available.",
       "metrics": {
         "closed_trades": 28,
-        "equity_usd": 99.7538,
+        "equity_usd": 100.4183,
         "initial_equity_usd": 100.0,
-        "pnl_usd": -0.2462,
-        "return_pct": -0.2462,
+        "pnl_usd": 0.4183,
+        "return_pct": 0.4183,
         "shared_wallet": true
       },
       "name": "EQUITY",
       "status": "TRACKING"
     }
   ],
-  "generated_at_utc": "2026-11-22T09:27:54.422729+00:00",
+  "generated_at_utc": "2026-11-22T10:14:04.418900+00:00",
   "live_trading_enabled": false,
   "mode": "PAPER_ONLY",
   "portfolio_status": "PAPER_RUNNING",
   "schema_version": 2,
-  "source_updated_at": "2026-11-22T09:27:53.914206+00:00",
+  "source_updated_at": "2026-11-22T10:14:03.924472+00:00",
   "summary": {
     "agent_count": 6,
     "markets": [
@@ -281,11 +281,11 @@
       "ARB/USD",
       "ASTER/USD",
       "AVAX/USD",
+      "BCH/USD",
       "BLESS/USD",
       "BNB/USD",
       "CAP/USD",
       "CC/USD",
-      "CCD/USD",
       "CRV/USD",
       "DASH/USD",
       "DRV/USD",
@@ -313,11 +313,12 @@
       "PUMP/USD",
       "QNT/USD",
       "RENDER/USD",
-      "SHIB/USD",
+      "RLUSD/USD",
       "SOFID/USD",
       "SOL/USD",
       "SUI/USD",
       "TAO/USD",
+      "TON/USD",
       "TRUMP/USD",
       "TRX/USD",
       "UNI/USD",
@@ -331,7 +332,6 @@
       "XLM/USD",
       "XMR/USD",
       "XMR/USDT",
-      "XPL/USD",
       "XRP/USD",
       "ZBCN/USD",
       "ZEC/USD",
@@ -428,6 +428,17 @@
         "strategy_signal": "HOLD",
         "watch_only": true
       },
+      "BCH/USD": {
+        "approved_by_consensus": false,
+        "decision": "HOLD",
+        "execution_mode": "PAPER_ONLY",
+        "live_orders_enabled": false,
+        "reason_codes": [
+          "WATCH_ONLY_NO_CLOSED_CANDLE_SIGNAL"
+        ],
+        "strategy_signal": "HOLD",
+        "watch_only": true
+      },
       "BLESS/USD": {
         "approved_by_consensus": false,
         "decision": "HOLD",
@@ -483,17 +494,6 @@
         "watch_only": true
       },
       "CC/USD": {
-        "approved_by_consensus": false,
-        "decision": "HOLD",
-        "execution_mode": "PAPER_ONLY",
-        "live_orders_enabled": false,
-        "reason_codes": [
-          "WATCH_ONLY_NO_CLOSED_CANDLE_SIGNAL"
-        ],
-        "strategy_signal": "HOLD",
-        "watch_only": true
-      },
-      "CCD/USD": {
         "approved_by_consensus": false,
         "decision": "HOLD",
         "execution_mode": "PAPER_ONLY",
@@ -801,7 +801,7 @@
         "strategy_signal": "HOLD",
         "watch_only": true
       },
-      "SHIB/USD": {
+      "RLUSD/USD": {
         "approved_by_consensus": false,
         "decision": "HOLD",
         "execution_mode": "PAPER_ONLY",
@@ -846,6 +846,17 @@
         "watch_only": true
       },
       "TAO/USD": {
+        "approved_by_consensus": false,
+        "decision": "HOLD",
+        "execution_mode": "PAPER_ONLY",
+        "live_orders_enabled": false,
+        "reason_codes": [
+          "WATCH_ONLY_NO_CLOSED_CANDLE_SIGNAL"
+        ],
+        "strategy_signal": "HOLD",
+        "watch_only": true
+      },
+      "TON/USD": {
         "approved_by_consensus": false,
         "decision": "HOLD",
         "execution_mode": "PAPER_ONLY",
@@ -1001,17 +1012,6 @@
         "watch_only": true
       },
       "XMR/USDT": {
-        "approved_by_consensus": false,
-        "decision": "HOLD",
-        "execution_mode": "PAPER_ONLY",
-        "live_orders_enabled": false,
-        "reason_codes": [
-          "WATCH_ONLY_NO_CLOSED_CANDLE_SIGNAL"
-        ],
-        "strategy_signal": "HOLD",
-        "watch_only": true
-      },
-      "XPL/USD": {
         "approved_by_consensus": false,
         "decision": "HOLD",
         "execution_mode": "PAPER_ONLY",
