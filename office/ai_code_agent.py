@@ -45,10 +45,10 @@ def github_get(url: str, token: str) -> dict:
         return json.loads(response.read().decode("utf-8"))
 
 
-def choose_gemini_model(models: list[dict], preferred: str = "auto") -> str:
-    """Choose only a model that advertises generateContent support."""
+def choose_gemini_models(models: list[dict], preferred: str = "auto") -> list[str]:
+    """Return ordered generateContent models, preferring current Flash-Lite."""
     if preferred and preferred != "auto":
-        return preferred
+        return [preferred]
     candidates = []
     for item in models:
         name = str(item.get("name", ""))
@@ -57,26 +57,37 @@ def choose_gemini_model(models: list[dict], preferred: str = "auto") -> str:
             continue
         model_id = name.split("/", 1)[1]
         lowered = model_id.lower()
-        if "embedding" in lowered or "image" in lowered or "audio" in lowered:
+        if any(kind in lowered for kind in ("embedding", "image", "audio")):
             continue
-        if "flash-lite" in lowered:
+        # New-user keys may see retired 2.5 model names in ListModels.
+        # Prefer the model explicitly recommended by the API error first.
+        if "3.5" in lowered and "flash-lite" in lowered:
             rank = 0
-        elif "flash" in lowered:
+        elif "flash-lite" in lowered:
             rank = 1
-        elif "pro" in lowered:
+        elif "3.5" in lowered and "flash" in lowered:
             rank = 2
-        else:
+        elif "flash" in lowered:
             rank = 3
+        elif "pro" in lowered:
+            rank = 4
+        else:
+            rank = 5
         candidates.append((rank, model_id))
     if not candidates:
         raise RuntimeError("Gemini API key exposes no model supporting generateContent.")
     candidates.sort(key=lambda item: (item[0], item[1]))
-    return candidates[0][1]
+    return [model_id for _, model_id in candidates]
 
 
-def discover_gemini_model(key: str, preferred: str = "auto") -> str:
+def choose_gemini_model(models: list[dict], preferred: str = "auto") -> str:
+    """Backward-compatible single-model selector."""
+    return choose_gemini_models(models, preferred)[0]
+
+
+def discover_gemini_models(key: str, preferred: str = "auto") -> list[str]:
     if preferred and preferred != "auto":
-        return preferred
+        return [preferred]
     req = urllib.request.Request(
         "https://generativelanguage.googleapis.com/v1beta/models",
         headers={"x-goog-api-key": key},
@@ -89,7 +100,12 @@ def discover_gemini_model(key: str, preferred: str = "auto") -> str:
             f"Gemini model discovery failed with HTTP {exc.code}: "
             f"{exc.read().decode(errors='replace')[:500]}"
         ) from None
-    return choose_gemini_model(data.get("models", []), preferred)
+    return choose_gemini_models(data.get("models", []), preferred)
+
+
+def discover_gemini_model(key: str, preferred: str = "auto") -> str:
+    """Backward-compatible single-model discovery."""
+    return discover_gemini_models(key, preferred)[0]
 
 
 def gemini_generate(prompt: str, key: str, model: str) -> str:
@@ -152,9 +168,35 @@ def main() -> int:
         "CURRENT FILES:\n" + json.dumps(files, ensure_ascii=False)
     )
     requested_model = os.environ.get("GEMINI_MODEL", "auto")
-    model = discover_gemini_model(key, requested_model)
-    print(f"Gemini selected an available generateContent model: {model}")
-    raw = gemini_generate(prompt, key, model)
+    models = discover_gemini_models(key, requested_model)
+    raw = None
+    selected_model = None
+    for model in models:
+        print(f"Trying Gemini generateContent model: {model}")
+        try:
+            raw = gemini_generate(prompt, key, model)
+            selected_model = model
+            break
+        except RuntimeError as exc:
+            message = str(exc).lower()
+            # ListModels can expose retired model IDs that reject new-user keys.
+            # Fall back only for model availability errors; preserve auth/quota
+            # and other failures so they are reported accurately.
+            if "http 404" in message and any(
+                phrase in message for phrase in (
+                    "no longer available", "not found", "isn't supported",
+                    "is not supported", "model not found",
+                )
+            ):
+                print(f"Gemini model unavailable; trying next advertised model: {model}")
+                continue
+            raise
+    if raw is None:
+        raise RuntimeError(
+            "All advertised Gemini generateContent models were unavailable. "
+            "Set GEMINI_MODEL to a currently supported model ID."
+        )
+    print(f"Gemini successfully generated a response with model: {selected_model}")
     try:
         result = json.loads(raw)
     except json.JSONDecodeError as exc:
