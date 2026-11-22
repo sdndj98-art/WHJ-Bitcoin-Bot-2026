@@ -290,9 +290,13 @@ def evaluate_slow_momentum(closes, fee=0.001, slippage=0.0005,
 
 
 def evaluate_cost_stress(closes, fee, slippage, lookbacks, multiplier=2.0):
-    """Re-run candidates and matched buy-and-hold at multiplied costs."""
-    _validate_cost_fraction("fee", fee)
-    _validate_cost_fraction("slippage", slippage)
+    """Re-run validated candidates and matched buy-and-hold at multiplied costs."""
+    if not isinstance(lookbacks, (list, tuple)):
+        raise ValueError("lookbacks must be a list or tuple")
+    lookbacks = tuple(lookbacks)
+    # Keep the direct stress helper's contract identical to the main evaluator:
+    # reject empty/duplicate variants and invalid or insufficient price history.
+    _validate(closes, fee, slippage, lookbacks)
     if not _is_finite_numeric(multiplier) or multiplier < 1:
         raise ValueError("cost multiplier must be finite and >= 1")
     stressed_fee = min(fee * multiplier, 0.999999)
