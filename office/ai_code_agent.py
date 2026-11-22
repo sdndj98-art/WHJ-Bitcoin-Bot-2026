@@ -16,7 +16,7 @@ ROOT = Path(__file__).resolve().parents[1]
 MAX_FILES = 3
 MAX_FILE_CHARS = 18000
 MAX_TOTAL_CONTEXT = 42000
-ALLOWED = re.compile(r"^(?:whj_[a-z0-9_]+\.py|strategy_[a-z0-9_]+\.py|tests/test_[a-z0-9_]+\.py|office/[a-z0-9_]+\.md)$")
+ALLOWED = re.compile(r"^(?:whj_[a-z0-9_]+\.py|strategy_[a-z0-9_]+\.py|shared_paper_[a-z0-9_]+\.py|paper_[a-z0-9_]+\.py|multi_asset_paper_runner\.py|market_scanner\.py|multi_market_opportunity_scan\.py|gold_paper_runner\.py|polymarket_six_agent_paper\.py|tests/test_[a-z0-9_]+\.py|office/[a-z0-9_]+\.md)$" )
 FILES_LINE = re.compile(r"^Files:\s*(.+)$", re.MULTILINE)
 
 
