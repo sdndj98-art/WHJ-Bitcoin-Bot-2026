@@ -5,7 +5,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
-from office.ai_code_agent import parse_requested_files
+from office.ai_code_agent import MAX_FILE_CHARS, parse_requested_files
 
 
 class AICodeAgentAllowlistTests(unittest.TestCase):
@@ -35,6 +35,10 @@ class AICodeAgentAllowlistTests(unittest.TestCase):
                 "Task\nFiles: whj_24h_development_team.py, "
                 "strategy_lab.py, tests/test_main.py, tests/test_dashboard_contract.py"
             )
+
+    def test_context_limit_covers_multi_market_scanner_source(self):
+        source = ROOT / "multi_market_opportunity_scan.py"
+        self.assertLessEqual(source.stat().st_size, MAX_FILE_CHARS)
 
     def test_rejects_missing_file(self):
         with self.assertRaises(ValueError):
