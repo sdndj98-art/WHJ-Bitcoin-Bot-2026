@@ -380,10 +380,31 @@ def _make_snapshot(book, strategy_state, price, quality, status,
         open_fees = sum(float(book.state["positions"][p["position_id"]]["entry_fee_usd"])
                         for p in positions if p["position_id"] in book.state["positions"])
         fees = sum(float(trade.get("fees_usd", 0.0)) for trade in closed) + open_fees
-        peak = max(float(state.get("peak_equity", INITIAL_CASH)), 1e-12)
-        drawdown = max(0.0, (peak - float(shared["equity_usd"])) / peak * 100.0)
+        # Attribute each strategy's own realized and open-position PnL.
+        # Shared cash is not divided equally: that misstates returns when
+        # strategies have different amounts of capital deployed.
+        realized_pnl = sum(pnls)
+        unrealized_pnl = sum(
+            float(book.state["positions"][p["position_id"]]["units"])
+            * float(prices[p["asset"]])
+            * (1.0 - SLIPPAGE_RATE) * (1.0 - FEE_RATE)
+            - float(book.state["positions"][p["position_id"]]["entry_notional_usd"])
+            - float(book.state["positions"][p["position_id"]]["entry_fee_usd"])
+            for p in positions
+        )
+        allocated_initial = INITIAL_CASH / len(SUPPORTED_STRATEGIES)
+        strategy_pnl = realized_pnl + unrealized_pnl
+        strategy_equity = allocated_initial + strategy_pnl
+        peak = max(float(state.get("peak_equity", allocated_initial)), 1e-12)
+        drawdown = max(0.0, (peak - strategy_equity) / peak * 100.0)
         by_strategy[name] = {
             "asset": "BTC", "strategy": name,
+            "initial_equity_usd": round(allocated_initial, 8),
+            "equity_usd": round(strategy_equity, 8),
+            "realized_pnl_usd": round(realized_pnl, 8),
+            "unrealized_pnl_usd": round(unrealized_pnl, 8),
+            "net_pnl_usd": round(strategy_pnl, 8),
+            "return_pct": round(strategy_pnl / allocated_initial * 100.0, 4),
             "open_positions": len(positions), "market_value_usd": round(market_value, 8),
             "trades": len(closed),
             "win_rate_pct": round(len(wins) / len(closed) * 100.0, 4) if closed else 0.0,
@@ -432,10 +453,12 @@ def _make_snapshot(book, strategy_state, price, quality, status,
         "initial_capital_usd": INITIAL_CASH, "updated_at": datetime.now(timezone.utc).isoformat(),
         "shared_portfolio": shared, "btc": btc, "gold": gold,
         "strategies": [
-            {"asset": "BTC", "strategy": name, "equity_usd": round(
-                shared["cash_usd"] / len(SUPPORTED_STRATEGIES) + by_strategy[name]["market_value_usd"], 4),
-             "return_pct": round(((shared["cash_usd"] / len(SUPPORTED_STRATEGIES)
-                 + by_strategy[name]["market_value_usd"]) / (INITIAL_CASH / len(SUPPORTED_STRATEGIES)) - 1.0) * 100.0, 4),
+            {"asset": "BTC", "strategy": name,
+             "equity_usd": by_strategy[name]["equity_usd"],
+             "return_pct": by_strategy[name]["return_pct"],
+             "realized_pnl_usd": by_strategy[name]["realized_pnl_usd"],
+             "unrealized_pnl_usd": by_strategy[name]["unrealized_pnl_usd"],
+             "net_pnl_usd": by_strategy[name]["net_pnl_usd"],
              "closed_trades": by_strategy[name]["trades"],
              "win_rate_pct": by_strategy[name]["win_rate_pct"],
              "profit_factor": by_strategy[name]["profit_factor"],
