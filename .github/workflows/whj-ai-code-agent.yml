@@ -1,0 +1,88 @@
+name: WHJ AI Code Agent (Issue to Draft PR)
+
+on:
+  workflow_dispatch:
+    inputs:
+      issue_number:
+        description: Issue number carrying the ai-office-task label
+        required: true
+        type: number
+  issues:
+    types: [labeled]
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: read
+
+concurrency:
+  group: whj-ai-code-agent-${{ github.event.issue.number || inputs.issue_number }}
+  cancel-in-progress: false
+
+jobs:
+  generate-test-draft-pr:
+    if: github.event_name == 'workflow_dispatch' || github.event.label.name == 'ai-office-task'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout default branch
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Set issue number
+        id: issue
+        shell: bash
+        env:
+          EVENT_ISSUE: ${{ github.event.issue.number }}
+          INPUT_ISSUE: ${{ inputs.issue_number }}
+        run: |
+          ISSUE_NUMBER="$EVENT_ISSUE"
+          if [ -z "$ISSUE_NUMBER" ]; then ISSUE_NUMBER="$INPUT_ISSUE"; fi
+          if ! [[ "$ISSUE_NUMBER" =~ ^[0-9]+$ ]]; then
+            echo "Invalid issue number"; exit 1
+          fi
+          echo "number=$ISSUE_NUMBER" >> "$GITHUB_OUTPUT"
+
+      - name: Generate bounded patch
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GEMINI_MODEL: gemini-3.5-flash-lite
+          ISSUE_NUMBER: ${{ steps.issue.outputs.number }}
+        run: python office/ai_code_agent.py
+
+      - name: Validate syntax and unit tests
+        run: |
+          python -m compileall -q .
+          python -m unittest discover -s tests -v
+
+      - name: Create isolated branch and draft PR
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ISSUE_NUMBER: ${{ steps.issue.outputs.number }}
+          REPOSITORY: ${{ github.repository }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          if git diff --quiet; then
+            echo "Agent produced no file changes"; exit 1
+          fi
+          BRANCH="ai-office/issue-${ISSUE_NUMBER}"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout -b "$BRANCH"
+          git add office/ai_code_agent.py tests/test_ai_code_agent.py
+          # Only explicitly requested files are staged by the agent; inspect and stage the remaining allowlisted diff.
+          git add whj_*.py strategy_*.py tests/test_*.py office/*.md
+          git commit -m "AI office: tested proposal for issue #${ISSUE_NUMBER}"
+          git push origin "$BRANCH"
+          gh pr create --repo "$REPOSITORY" --base main --head "$BRANCH" --draft \
+            --title "AI office proposal for issue #${ISSUE_NUMBER}" \
+            --body "Automated bounded proposal generated for issue #${ISSUE_NUMBER}.\n\n- Generated only for explicitly named allowlisted files\n- Python compile and unittest suite passed in this workflow\n- Draft PR only; human review and merge required\n- Paper-only; no live orders or exchange credentials"
