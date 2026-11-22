@@ -55,7 +55,7 @@ jobs:
           GITHUB_REPOSITORY: ${{ github.repository }}
           ISSUE_NUMBER: ${{ steps.manager.outputs.issue_number }}
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-          GEMINI_MODEL: gemini-3.5-flash-lite
+          GEMINI_MODEL: auto
         run: python office/ai_code_agent.py
 
       - name: Validate generated patch scope
