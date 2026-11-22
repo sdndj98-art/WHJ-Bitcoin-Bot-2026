@@ -7,6 +7,32 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 STATE = ROOT / "office" / "office_state.json"
+BRIDGE = ROOT / "office" / "paper_bridge_report.json"
+
+
+def read_bridge():
+    """Read the latest paper-workflow bridge report without changing it."""
+    if not BRIDGE.is_file():
+        return {"status": "WAITING_FOR_PAPER_WORKFLOW"}
+    try:
+        report = json.loads(BRIDGE.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return {"status": "INVALID_BRIDGE_REPORT"}
+    wallet = report.get("shared_wallet", {})
+    engine = report.get("multi_asset_engine", {})
+    agents = report.get("six_agent_office", {})
+    return {
+        "status": report.get("status", "UNKNOWN"),
+        "generated_at_utc": report.get("generated_at_utc"),
+        "paper_status": agents.get("status", "UNKNOWN"),
+        "agent_count": agents.get("agent_count", 0),
+        "markets_scanned": engine.get("markets_scanned", 0),
+        "open_positions": wallet.get("open_positions", 0),
+        "closed_trades": wallet.get("closed_trades", 0),
+        "equity_usd": wallet.get("equity_usd"),
+        "live_trading_enabled": report.get("live_trading_enabled", True),
+        "orders_submitted": report.get("orders_submitted", True),
+    }
 ROLES = [
     ("Coordinator", "select/sequence next backlog item"),
     ("Market-data QA", "check source freshness and candle integrity"),
@@ -29,6 +55,7 @@ def main():
     owner, task = ROLES[idx]
     next_owner, next_task = ROLES[(idx + 1) % len(ROLES)]
     now = datetime.now(timezone.utc).isoformat(timespec="seconds")
+    bridge = read_bridge()
     record = {
         "cycle": cycle,
         "timestamp_utc": now,
@@ -36,6 +63,7 @@ def main():
         "current_task": task,
         "handoff_to": next_owner,
         "handoff_task": next_task,
+        "paper_engine_bridge": bridge,
         "reminder": f"Cycle {cycle}: {owner} must hand off to {next_owner} before the next scheduled cycle."
     }
     state.update({
@@ -56,7 +84,9 @@ def main():
         f"**Current role:** {owner}  \n"
         f"**Task:** {task}  \n"
         f"**Handoff reminder:** {owner} → {next_owner}  \n"
-        f"**Next task:** {next_task}\n\n"
+        f"**Next task:** {next_task}\n"
+        f"**Paper bridge:** {bridge.get('status')} | agents={bridge.get('agent_count', 0)} | markets={bridge.get('markets_scanned', 0)} | paper trades={bridge.get('closed_trades', 0)}\n"
+        f"**Paper equity:** {bridge.get('equity_usd', 'not available')} USD | live orders disabled={bridge.get('live_trading_enabled') is False}\n\n"
         "> Scheduled rotation only. It does not represent autonomous AI staff, "
         "continuous uptime, or live trading. Trading mode remains paper-only.\n"
     )
