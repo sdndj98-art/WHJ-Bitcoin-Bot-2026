@@ -16,6 +16,7 @@
           "BNB/USD",
           "CAP/USD",
           "CC/USD",
+          "CCD/USD",
           "CRV/USD",
           "DASH/USD",
           "DOT/USD",
@@ -45,12 +46,10 @@
           "QNT/USD",
           "RENDER/USD",
           "RLUSD/USD",
-          "SHIB/USD",
           "SOFID/USD",
           "SOL/USD",
           "SUI/USD",
           "TAO/USD",
-          "TON/USD",
           "TRUMP/USD",
           "TRX/USD",
           "UNI/USD",
@@ -58,6 +57,7 @@
           "WINGS/USD",
           "WLD/USD",
           "XAGUSD",
+          "XAUT/USDT",
           "XAUUSD",
           "XCN/USD",
           "XDG/USD",
@@ -83,6 +83,7 @@
           "BNB/USD",
           "CAP/USD",
           "CC/USD",
+          "CCD/USD",
           "CRV/USD",
           "DASH/USD",
           "DOT/USD",
@@ -112,12 +113,10 @@
           "QNT/USD",
           "RENDER/USD",
           "RLUSD/USD",
-          "SHIB/USD",
           "SOFID/USD",
           "SOL/USD",
           "SUI/USD",
           "TAO/USD",
-          "TON/USD",
           "TRUMP/USD",
           "TRX/USD",
           "UNI/USD",
@@ -125,6 +124,7 @@
           "WINGS/USD",
           "WLD/USD",
           "XAGUSD",
+          "XAUT/USDT",
           "XCN/USD",
           "XDG/USD",
           "XLM/USD",
@@ -149,6 +149,7 @@
           "BNB/USD",
           "CAP/USD",
           "CC/USD",
+          "CCD/USD",
           "CRV/USD",
           "DASH/USD",
           "DOT/USD",
@@ -178,12 +179,10 @@
           "QNT/USD",
           "RENDER/USD",
           "RLUSD/USD",
-          "SHIB/USD",
           "SOFID/USD",
           "SOL/USD",
           "SUI/USD",
           "TAO/USD",
-          "TON/USD",
           "TRUMP/USD",
           "TRX/USD",
           "UNI/USD",
@@ -191,6 +190,7 @@
           "WINGS/USD",
           "WLD/USD",
           "XAGUSD",
+          "XAUT/USDT",
           "XCN/USD",
           "XDG/USD",
           "XLM/USD",
@@ -253,22 +253,22 @@
       "detail": "Equity is read from the single shared paper wallet when available.",
       "metrics": {
         "closed_trades": 33,
-        "equity_usd": 100.6329,
+        "equity_usd": 100.5145,
         "initial_equity_usd": 100.0,
-        "pnl_usd": 0.6329,
-        "return_pct": 0.6329,
+        "pnl_usd": 0.5145,
+        "return_pct": 0.5145,
         "shared_wallet": true
       },
       "name": "EQUITY",
       "status": "TRACKING"
     }
   ],
-  "generated_at_utc": "2026-11-22T17:26:18.133005+00:00",
+  "generated_at_utc": "2026-11-22T18:03:02.715513+00:00",
   "live_trading_enabled": false,
   "mode": "PAPER_ONLY",
   "portfolio_status": "PAPER_RUNNING",
   "schema_version": 2,
-  "source_updated_at": "2026-11-22T17:26:17.619989+00:00",
+  "source_updated_at": "2026-11-22T18:03:02.163723+00:00",
   "summary": {
     "agent_count": 6,
     "markets": [
@@ -285,6 +285,7 @@
       "BNB/USD",
       "CAP/USD",
       "CC/USD",
+      "CCD/USD",
       "CRV/USD",
       "DASH/USD",
       "DOT/USD",
@@ -314,12 +315,10 @@
       "QNT/USD",
       "RENDER/USD",
       "RLUSD/USD",
-      "SHIB/USD",
       "SOFID/USD",
       "SOL/USD",
       "SUI/USD",
       "TAO/USD",
-      "TON/USD",
       "TRUMP/USD",
       "TRX/USD",
       "UNI/USD",
@@ -327,6 +326,7 @@
       "WINGS/USD",
       "WLD/USD",
       "XAGUSD",
+      "XAUT/USDT",
       "XCN/USD",
       "XDG/USD",
       "XLM/USD",
@@ -483,6 +483,17 @@
         "watch_only": true
       },
       "CC/USD": {
+        "approved_by_consensus": false,
+        "decision": "HOLD",
+        "execution_mode": "PAPER_ONLY",
+        "live_orders_enabled": false,
+        "reason_codes": [
+          "WATCH_ONLY_NO_CLOSED_CANDLE_SIGNAL"
+        ],
+        "strategy_signal": "HOLD",
+        "watch_only": true
+      },
+      "CCD/USD": {
         "approved_by_consensus": false,
         "decision": "HOLD",
         "execution_mode": "PAPER_ONLY",
@@ -812,17 +823,6 @@
         "strategy_signal": "HOLD",
         "watch_only": true
       },
-      "SHIB/USD": {
-        "approved_by_consensus": false,
-        "decision": "HOLD",
-        "execution_mode": "PAPER_ONLY",
-        "live_orders_enabled": false,
-        "reason_codes": [
-          "WATCH_ONLY_NO_CLOSED_CANDLE_SIGNAL"
-        ],
-        "strategy_signal": "HOLD",
-        "watch_only": true
-      },
       "SOFID/USD": {
         "approved_by_consensus": false,
         "decision": "HOLD",
@@ -857,17 +857,6 @@
         "watch_only": true
       },
       "TAO/USD": {
-        "approved_by_consensus": false,
-        "decision": "HOLD",
-        "execution_mode": "PAPER_ONLY",
-        "live_orders_enabled": false,
-        "reason_codes": [
-          "WATCH_ONLY_NO_CLOSED_CANDLE_SIGNAL"
-        ],
-        "strategy_signal": "HOLD",
-        "watch_only": true
-      },
-      "TON/USD": {
         "approved_by_consensus": false,
         "decision": "HOLD",
         "execution_mode": "PAPER_ONLY",
@@ -945,6 +934,17 @@
         "watch_only": true
       },
       "XAGUSD": {
+        "approved_by_consensus": false,
+        "decision": "HOLD",
+        "execution_mode": "PAPER_ONLY",
+        "live_orders_enabled": false,
+        "reason_codes": [
+          "WATCH_ONLY_NO_CLOSED_CANDLE_SIGNAL"
+        ],
+        "strategy_signal": "HOLD",
+        "watch_only": true
+      },
+      "XAUT/USDT": {
         "approved_by_consensus": false,
         "decision": "HOLD",
         "execution_mode": "PAPER_ONLY",
