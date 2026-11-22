@@ -12,7 +12,6 @@
           "ARB/USD",
           "ASTER/USD",
           "AVAX/USD",
-          "BCH/USD",
           "BLESS/USD",
           "BNB/USD",
           "CAP/USD",
@@ -24,6 +23,7 @@
           "ETH/USD",
           "EVAA/USD",
           "FIDD/USD",
+          "GRASS/USD",
           "HBAR/USD",
           "HYPE/USD",
           "ICNT/USD",
@@ -79,7 +79,6 @@
           "ARB/USD",
           "ASTER/USD",
           "AVAX/USD",
-          "BCH/USD",
           "BLESS/USD",
           "BNB/USD",
           "CAP/USD",
@@ -91,6 +90,7 @@
           "ETH/USD",
           "EVAA/USD",
           "FIDD/USD",
+          "GRASS/USD",
           "HBAR/USD",
           "HYPE/USD",
           "ICNT/USD",
@@ -145,7 +145,6 @@
           "ARB/USD",
           "ASTER/USD",
           "AVAX/USD",
-          "BCH/USD",
           "BLESS/USD",
           "BNB/USD",
           "CAP/USD",
@@ -157,6 +156,7 @@
           "ETH/USD",
           "EVAA/USD",
           "FIDD/USD",
+          "GRASS/USD",
           "HBAR/USD",
           "HYPE/USD",
           "ICNT/USD",
@@ -263,12 +263,12 @@
       "status": "TRACKING"
     }
   ],
-  "generated_at_utc": "2026-11-22T10:14:04.418900+00:00",
+  "generated_at_utc": "2026-11-22T10:54:56.656275+00:00",
   "live_trading_enabled": false,
   "mode": "PAPER_ONLY",
   "portfolio_status": "PAPER_RUNNING",
   "schema_version": 2,
-  "source_updated_at": "2026-11-22T10:14:03.924472+00:00",
+  "source_updated_at": "2026-11-22T10:54:56.156005+00:00",
   "summary": {
     "agent_count": 6,
     "markets": [
@@ -281,7 +281,6 @@
       "ARB/USD",
       "ASTER/USD",
       "AVAX/USD",
-      "BCH/USD",
       "BLESS/USD",
       "BNB/USD",
       "CAP/USD",
@@ -293,6 +292,7 @@
       "ETH/USD",
       "EVAA/USD",
       "FIDD/USD",
+      "GRASS/USD",
       "HBAR/USD",
       "HYPE/USD",
       "ICNT/USD",
@@ -418,17 +418,6 @@
         "watch_only": true
       },
       "AVAX/USD": {
-        "approved_by_consensus": false,
-        "decision": "HOLD",
-        "execution_mode": "PAPER_ONLY",
-        "live_orders_enabled": false,
-        "reason_codes": [
-          "WATCH_ONLY_NO_CLOSED_CANDLE_SIGNAL"
-        ],
-        "strategy_signal": "HOLD",
-        "watch_only": true
-      },
-      "BCH/USD": {
         "approved_by_consensus": false,
         "decision": "HOLD",
         "execution_mode": "PAPER_ONLY",
@@ -571,6 +560,17 @@
         "watch_only": true
       },
       "FIDD/USD": {
+        "approved_by_consensus": false,
+        "decision": "HOLD",
+        "execution_mode": "PAPER_ONLY",
+        "live_orders_enabled": false,
+        "reason_codes": [
+          "WATCH_ONLY_NO_CLOSED_CANDLE_SIGNAL"
+        ],
+        "strategy_signal": "HOLD",
+        "watch_only": true
+      },
+      "GRASS/USD": {
         "approved_by_consensus": false,
         "decision": "HOLD",
         "execution_mode": "PAPER_ONLY",

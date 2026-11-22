@@ -1,12 +1,12 @@
 {
   "schema_version": 1,
-  "generated_at_utc": "2026-11-22T10:14:04+00:00",
+  "generated_at_utc": "2026-11-22T10:54:56+00:00",
   "status": "CONNECTED",
   "bridge_mode": "READ_ONLY_PAPER_AUDIT",
   "paper_only": true,
   "live_trading_enabled": false,
   "orders_submitted": false,
-  "source_workflow_run_id": "45011327968",
+  "source_workflow_run_id": "45014650572",
   "six_agent_office": {
     "status": "PAPER_RUNNING",
     "portfolio_decision": "UNKNOWN",
@@ -19,7 +19,7 @@
       "LOGGER",
       "EQUITY"
     ],
-    "generated_at_utc": "2026-11-22T10:14:04.418900+00:00"
+    "generated_at_utc": "2026-11-22T10:54:56.656275+00:00"
   },
   "shared_wallet": {
     "initial_capital_usd": 100.0,
@@ -34,35 +34,29 @@
     "status": "PAPER_ONLY",
     "markets_scanned": 64,
     "markets_with_errors": 0,
-    "processed_closed_candles": 578,
+    "processed_closed_candles": 605,
     "events_this_run": 0,
-    "strategy_entry_signals": 133,
+    "strategy_entry_signals": 142,
     "positions_opened_this_run": 0,
-    "entries_blocked_by_guards": 122,
+    "entries_blocked_by_guards": 133,
     "block_reasons": {
       "sma_trend": {
-        "MIN_TRADE_OR_INSUFFICIENT_CASH": 37
+        "MIN_TRADE_OR_INSUFFICIENT_CASH": 43
       },
       "ema_trend": {
-        "MIN_TRADE_OR_INSUFFICIENT_CASH": 25
+        "MIN_TRADE_OR_INSUFFICIENT_CASH": 33
       },
       "rsi_momentum": {
-        "MIN_TRADE_OR_INSUFFICIENT_CASH": 21
-      },
-      "sma200_regime": {
-        "MIN_TRADE_OR_INSUFFICIENT_CASH": 4
-      },
-      "ema50_200_regime": {
-        "MIN_TRADE_OR_INSUFFICIENT_CASH": 8
+        "MIN_TRADE_OR_INSUFFICIENT_CASH": 28
       },
       "bollinger_mean_reversion": {
         "MIN_TRADE_OR_INSUFFICIENT_CASH": 1
       },
       "rsi14_mean_reversion": {
-        "MIN_TRADE_OR_INSUFFICIENT_CASH": 5
+        "MIN_TRADE_OR_INSUFFICIENT_CASH": 4
       },
       "compound_momentum": {
-        "MIN_TRADE_OR_INSUFFICIENT_CASH": 21
+        "MIN_TRADE_OR_INSUFFICIENT_CASH": 24
       }
     }
   },
