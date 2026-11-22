@@ -11,7 +11,7 @@ Each eligible cycle:
 4. Runs patch-scope checks, Python compilation, and the full unit-test suite.
 5. Creates an isolated branch and a **draft pull request** only if every check passes.
 
-The manager allows only one open AI-generated draft PR at a time. After a task PR is merged, the next scheduled cycle advances to the next backlog item. A closed, unmerged attempt is not silently overwritten; it is skipped for manual diagnosis.
+The manager allows only one open AI-generated draft PR at a time. After a task PR is merged, the next scheduled cycle advances to the next backlog item. Failed generation/test runs are counted; after three failures the task is labeled `ai-office-blocked` and skipped so it cannot consume quota forever. A closed, unmerged attempt is not silently overwritten; it is skipped for manual diagnosis.
 
 ## Required repository secret
 
