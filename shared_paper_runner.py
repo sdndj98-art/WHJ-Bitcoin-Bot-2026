@@ -459,6 +459,7 @@ def _make_snapshot(book, strategy_state, price, quality, status,
         "shared_portfolio": shared, "btc": btc, "gold": gold,
         "strategies": [
             {"asset": "BTC", "strategy": name,
+             "initial_equity_usd": by_strategy[name]["initial_equity_usd"],
              "equity_usd": by_strategy[name]["equity_usd"],
              "return_pct": by_strategy[name]["return_pct"],
              "realized_pnl_usd": by_strategy[name]["realized_pnl_usd"],
