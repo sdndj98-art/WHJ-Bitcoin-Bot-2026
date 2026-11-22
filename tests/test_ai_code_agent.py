@@ -15,6 +15,12 @@ class AICodeAgentAllowlistTests(unittest.TestCase):
             ["whj_24h_development_team.py"],
         )
 
+    def test_accepts_shared_paper_engine_file(self):
+        self.assertEqual(
+            parse_requested_files("Task details\nFiles: shared_paper_portfolio.py"),
+            ["shared_paper_portfolio.py"],
+        )
+
     def test_rejects_workflow_path(self):
         with self.assertRaises(ValueError):
             parse_requested_files("Task\nFiles: .github/workflows/whj-ai-code-agent.yml")
