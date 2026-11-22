@@ -2,6 +2,12 @@ name: WHJ Profitability Development Office
 
 on:
   workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/whj-profitability-development-office.yml"
+      - "office/profitability_gate.py"
+      - "office/profitability_program.md"
   schedule:
     - cron: "41 3 * * *"
   workflow_run:
