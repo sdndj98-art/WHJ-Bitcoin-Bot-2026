@@ -48,10 +48,14 @@ def _validate(closes, fee, slippage, lookbacks):
             raise ValueError("Prices must be finite and positive")
     _validate_cost_fraction("fee", fee)
     _validate_cost_fraction("slippage", slippage)
-    if not lookbacks or len(set(lookbacks)) != len(lookbacks):
+    if not lookbacks:
         raise ValueError("lookbacks must be non-empty and unique")
+    # Validate element types before building a set: malformed nested values
+    # must fail with the public ValueError contract, not leak TypeError.
     if any(isinstance(x, bool) or not isinstance(x, int) or x < 1 for x in lookbacks):
         raise ValueError("lookbacks must be positive integers")
+    if len(set(lookbacks)) != len(lookbacks):
+        raise ValueError("lookbacks must be non-empty and unique")
     if max(lookbacks) >= int(len(closes) * 0.7):
         raise ValueError("lookback leaves too little in-sample history")
 
