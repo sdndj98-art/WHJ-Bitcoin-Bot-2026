@@ -1,0 +1,27 @@
+{
+  "cycle": 1,
+  "last_role_index": 0,
+  "history": [
+    {
+      "cycle": 1,
+      "timestamp_utc": "2026-11-22T01:12:10+00:00",
+      "current_owner": "Coordinator",
+      "current_task": "select/sequence next backlog item",
+      "handoff_to": "Market-data QA",
+      "handoff_task": "check source freshness and candle integrity",
+      "reminder": "Cycle 1: Coordinator must hand off to Market-data QA before the next scheduled cycle."
+    }
+  ],
+  "updated_at_utc": "2026-11-22T01:12:10+00:00",
+  "current_handoff": {
+    "cycle": 1,
+    "timestamp_utc": "2026-11-22T01:12:10+00:00",
+    "current_owner": "Coordinator",
+    "current_task": "select/sequence next backlog item",
+    "handoff_to": "Market-data QA",
+    "handoff_task": "check source freshness and candle integrity",
+    "reminder": "Cycle 1: Coordinator must hand off to Market-data QA before the next scheduled cycle."
+  },
+  "mode": "coordination_only_paper_trading",
+  "live_orders_enabled": false
+}
