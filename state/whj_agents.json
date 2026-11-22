@@ -7,6 +7,7 @@
           "BTC/USD",
           "AAVE/USD",
           "ADA/USD",
+          "AERO/USD",
           "AKE/USD",
           "ALGO/USD",
           "ARB/USD",
@@ -40,7 +41,6 @@
           "PEARL/USD",
           "PENGU/USD",
           "PEPE/USD",
-          "PIEVERSE/USD",
           "PUMP/USD",
           "QNT/USD",
           "RENDER/USD",
@@ -74,6 +74,7 @@
           "XAUUSD",
           "AAVE/USD",
           "ADA/USD",
+          "AERO/USD",
           "AKE/USD",
           "ALGO/USD",
           "ARB/USD",
@@ -107,7 +108,6 @@
           "PEARL/USD",
           "PENGU/USD",
           "PEPE/USD",
-          "PIEVERSE/USD",
           "PUMP/USD",
           "QNT/USD",
           "RENDER/USD",
@@ -140,6 +140,7 @@
           "XAUUSD",
           "AAVE/USD",
           "ADA/USD",
+          "AERO/USD",
           "AKE/USD",
           "ALGO/USD",
           "ARB/USD",
@@ -173,7 +174,6 @@
           "PEARL/USD",
           "PENGU/USD",
           "PEPE/USD",
-          "PIEVERSE/USD",
           "PUMP/USD",
           "QNT/USD",
           "RENDER/USD",
@@ -241,34 +241,34 @@
       "status": "PAPER_READY"
     },
     {
-      "detail": "Found trade events in the portfolio snapshot.",
+      "detail": "Logger is online; no new trade events were generated in this cycle.",
       "metrics": {
         "logger_ready": true,
-        "new_trade_events": 1
+        "new_trade_events": 0
       },
       "name": "LOGGER",
-      "status": "RECORDS_AVAILABLE"
+      "status": "READY_NO_EVENTS"
     },
     {
       "detail": "Equity is read from the single shared paper wallet when available.",
       "metrics": {
         "closed_trades": 13,
-        "equity_usd": 99.9769,
+        "equity_usd": 99.9527,
         "initial_equity_usd": 100.0,
-        "pnl_usd": -0.0231,
-        "return_pct": -0.0231,
+        "pnl_usd": -0.0473,
+        "return_pct": -0.0473,
         "shared_wallet": true
       },
       "name": "EQUITY",
       "status": "TRACKING"
     }
   ],
-  "generated_at_utc": "2026-11-22T01:48:22.328117+00:00",
+  "generated_at_utc": "2026-11-22T02:14:51.872674+00:00",
   "live_trading_enabled": false,
   "mode": "PAPER_ONLY",
   "portfolio_status": "PAPER_RUNNING",
   "schema_version": 2,
-  "source_updated_at": "2026-11-22T01:48:21.731660+00:00",
+  "source_updated_at": "2026-11-22T02:14:51.365353+00:00",
   "summary": {
     "agent_count": 6,
     "markets": [
@@ -276,6 +276,7 @@
       "XAUUSD",
       "AAVE/USD",
       "ADA/USD",
+      "AERO/USD",
       "AKE/USD",
       "ALGO/USD",
       "ARB/USD",
@@ -309,7 +310,6 @@
       "PEARL/USD",
       "PENGU/USD",
       "PEPE/USD",
-      "PIEVERSE/USD",
       "PUMP/USD",
       "QNT/USD",
       "RENDER/USD",
@@ -363,6 +363,17 @@
         "watch_only": true
       },
       "ADA/USD": {
+        "approved_by_consensus": false,
+        "decision": "HOLD",
+        "execution_mode": "PAPER_ONLY",
+        "live_orders_enabled": false,
+        "reason_codes": [
+          "WATCH_ONLY_NO_CLOSED_CANDLE_SIGNAL"
+        ],
+        "strategy_signal": "HOLD",
+        "watch_only": true
+      },
+      "AERO/USD": {
         "approved_by_consensus": false,
         "decision": "HOLD",
         "execution_mode": "PAPER_ONLY",
@@ -747,17 +758,6 @@
         "watch_only": true
       },
       "PEPE/USD": {
-        "approved_by_consensus": false,
-        "decision": "HOLD",
-        "execution_mode": "PAPER_ONLY",
-        "live_orders_enabled": false,
-        "reason_codes": [
-          "WATCH_ONLY_NO_CLOSED_CANDLE_SIGNAL"
-        ],
-        "strategy_signal": "HOLD",
-        "watch_only": true
-      },
-      "PIEVERSE/USD": {
         "approved_by_consensus": false,
         "decision": "HOLD",
         "execution_mode": "PAPER_ONLY",
