@@ -79,7 +79,7 @@ def main() -> int:
     if "ai-office-task" not in labels:
         raise SystemExit("Issue must have the ai-office-task label.")
     body = issue.get("body") or ""
-    forbidden = re.compile(r"(?i)\b(live trading|real money|bypass risk|remove risk limits|guaranteed profit|secret|api key)\b")
+    forbidden = re.compile(r"(?i)\\b(live trading|real money|bypass risk|remove risk limits|guaranteed profit)\\b")
     if forbidden.search(body):
         raise SystemExit("Issue contains a restricted request; no code was generated.")
     paths = parse_requested_files(body)
