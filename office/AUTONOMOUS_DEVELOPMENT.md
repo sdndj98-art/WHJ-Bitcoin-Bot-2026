@@ -17,7 +17,7 @@ The manager allows only one open AI-generated draft PR at a time. After a task P
 
 Add `GEMINI_API_KEY` under **Settings → Secrets and variables → Actions → Repository secrets**. The key is read only by the code-generation job, never printed, committed, included in artifacts, or passed into the prompt.
 
-The configured model is `gemini-3.5-flash-lite`. If Gemini returns an unavailable-model or quota error, the workflow fails without opening a PR. Model availability and free quota are not guaranteed.
+The agent lists models available to the configured API key and selects one that advertises `generateContent` support (preferring Flash-Lite, then Flash, then Pro). You can override this by setting the `GEMINI_MODEL` environment variable to an explicit model ID. If discovery fails or quota is exhausted, the workflow stops without opening a PR. Model availability and free quota are not guaranteed.
 
 ## Safety boundaries
 
