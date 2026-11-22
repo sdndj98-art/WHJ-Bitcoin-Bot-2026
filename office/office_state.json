@@ -1,6 +1,6 @@
 {
-  "cycle": 7,
-  "last_role_index": 6,
+  "cycle": 8,
+  "last_role_index": 0,
   "history": [
     {
       "cycle": 1,
@@ -124,29 +124,50 @@
         "orders_submitted": false
       },
       "reminder": "Cycle 7: Release QA must hand off to Coordinator before the next scheduled cycle."
+    },
+    {
+      "cycle": 8,
+      "timestamp_utc": "2026-11-22T13:20:46+00:00",
+      "current_owner": "Coordinator",
+      "current_task": "select/sequence next backlog item",
+      "handoff_to": "Market-data QA",
+      "handoff_task": "check source freshness and candle integrity",
+      "paper_engine_bridge": {
+        "status": "CONNECTED",
+        "generated_at_utc": "2026-11-22T12:26:22+00:00",
+        "paper_status": "PAPER_RUNNING",
+        "agent_count": 6,
+        "markets_scanned": 64,
+        "open_positions": 17,
+        "closed_trades": 32,
+        "equity_usd": 100.4143,
+        "live_trading_enabled": false,
+        "orders_submitted": false
+      },
+      "reminder": "Cycle 8: Coordinator must hand off to Market-data QA before the next scheduled cycle."
     }
   ],
-  "updated_at_utc": "2026-11-22T11:03:46+00:00",
+  "updated_at_utc": "2026-11-22T13:20:46+00:00",
   "current_handoff": {
-    "cycle": 7,
-    "timestamp_utc": "2026-11-22T11:03:46+00:00",
-    "current_owner": "Release QA",
-    "current_task": "summarize blockers and hand off to Coordinator",
-    "handoff_to": "Coordinator",
-    "handoff_task": "select/sequence next backlog item",
+    "cycle": 8,
+    "timestamp_utc": "2026-11-22T13:20:46+00:00",
+    "current_owner": "Coordinator",
+    "current_task": "select/sequence next backlog item",
+    "handoff_to": "Market-data QA",
+    "handoff_task": "check source freshness and candle integrity",
     "paper_engine_bridge": {
       "status": "CONNECTED",
-      "generated_at_utc": "2026-11-22T10:54:56+00:00",
+      "generated_at_utc": "2026-11-22T12:26:22+00:00",
       "paper_status": "PAPER_RUNNING",
       "agent_count": 6,
       "markets_scanned": 64,
       "open_positions": 17,
-      "closed_trades": 28,
-      "equity_usd": 100.4183,
+      "closed_trades": 32,
+      "equity_usd": 100.4143,
       "live_trading_enabled": false,
       "orders_submitted": false
     },
-    "reminder": "Cycle 7: Release QA must hand off to Coordinator before the next scheduled cycle."
+    "reminder": "Cycle 8: Coordinator must hand off to Market-data QA before the next scheduled cycle."
   },
   "mode": "coordination_only_paper_trading",
   "live_orders_enabled": false
