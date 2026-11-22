@@ -1,12 +1,12 @@
 {
   "schema_version": 1,
-  "generated_at_utc": "2026-11-22T01:16:28+00:00",
+  "generated_at_utc": "2026-11-22T01:48:22+00:00",
   "status": "CONNECTED",
   "bridge_mode": "READ_ONLY_PAPER_AUDIT",
   "paper_only": true,
   "live_trading_enabled": false,
   "orders_submitted": false,
-  "source_workflow_run_id": "44970586737",
+  "source_workflow_run_id": "44973073987",
   "six_agent_office": {
     "status": "PAPER_RUNNING",
     "portfolio_decision": "UNKNOWN",
@@ -19,7 +19,7 @@
       "LOGGER",
       "EQUITY"
     ],
-    "generated_at_utc": "2026-11-22T01:16:28.468696+00:00"
+    "generated_at_utc": "2026-11-22T01:48:22.328117+00:00"
   },
   "shared_wallet": {
     "initial_capital_usd": 100.0,
@@ -34,23 +34,29 @@
     "status": "PAPER_ONLY",
     "markets_scanned": 64,
     "markets_with_errors": 0,
-    "processed_closed_candles": 483,
+    "processed_closed_candles": 547,
     "events_this_run": 0,
-    "strategy_entry_signals": 127,
+    "strategy_entry_signals": 168,
     "positions_opened_this_run": 0,
-    "entries_blocked_by_guards": 112,
+    "entries_blocked_by_guards": 153,
     "block_reasons": {
       "sma_trend": {
-        "MIN_TRADE_OR_INSUFFICIENT_CASH": 43
+        "MIN_TRADE_OR_INSUFFICIENT_CASH": 52
       },
       "ema_trend": {
-        "MIN_TRADE_OR_INSUFFICIENT_CASH": 34
+        "MIN_TRADE_OR_INSUFFICIENT_CASH": 43
       },
       "rsi_momentum": {
-        "MIN_TRADE_OR_INSUFFICIENT_CASH": 22
+        "MIN_TRADE_OR_INSUFFICIENT_CASH": 25
+      },
+      "sma200_regime": {
+        "MIN_TRADE_OR_INSUFFICIENT_CASH": 9
+      },
+      "ema50_200_regime": {
+        "MIN_TRADE_OR_INSUFFICIENT_CASH": 9
       },
       "compound_momentum": {
-        "MIN_TRADE_OR_INSUFFICIENT_CASH": 13
+        "MIN_TRADE_OR_INSUFFICIENT_CASH": 15
       }
     }
   },
