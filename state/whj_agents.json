@@ -16,7 +16,6 @@
           "BNB/USD",
           "CAP/USD",
           "CC/USD",
-          "CCD/USD",
           "CRV/USD",
           "DASH/USD",
           "DOT/USD",
@@ -52,6 +51,7 @@
           "TRUMP/USD",
           "TRX/USD",
           "UNI/USD",
+          "USELESS/USD",
           "VVV/USD",
           "WINGS/USD",
           "WLD/USD",
@@ -83,7 +83,6 @@
           "BNB/USD",
           "CAP/USD",
           "CC/USD",
-          "CCD/USD",
           "CRV/USD",
           "DASH/USD",
           "DOT/USD",
@@ -119,6 +118,7 @@
           "TRUMP/USD",
           "TRX/USD",
           "UNI/USD",
+          "USELESS/USD",
           "VVV/USD",
           "WINGS/USD",
           "WLD/USD",
@@ -149,7 +149,6 @@
           "BNB/USD",
           "CAP/USD",
           "CC/USD",
-          "CCD/USD",
           "CRV/USD",
           "DASH/USD",
           "DOT/USD",
@@ -185,6 +184,7 @@
           "TRUMP/USD",
           "TRX/USD",
           "UNI/USD",
+          "USELESS/USD",
           "VVV/USD",
           "WINGS/USD",
           "WLD/USD",
@@ -253,22 +253,22 @@
       "detail": "Equity is read from the single shared paper wallet when available.",
       "metrics": {
         "closed_trades": 33,
-        "equity_usd": 100.6342,
+        "equity_usd": 100.6242,
         "initial_equity_usd": 100.0,
-        "pnl_usd": 0.6342,
-        "return_pct": 0.6342,
+        "pnl_usd": 0.6242,
+        "return_pct": 0.6242,
         "shared_wallet": true
       },
       "name": "EQUITY",
       "status": "TRACKING"
     }
   ],
-  "generated_at_utc": "2026-11-22T19:41:19.065020+00:00",
+  "generated_at_utc": "2026-11-22T20:26:50.130420+00:00",
   "live_trading_enabled": false,
   "mode": "PAPER_ONLY",
   "portfolio_status": "PAPER_RUNNING",
   "schema_version": 2,
-  "source_updated_at": "2026-11-22T19:41:18.563775+00:00",
+  "source_updated_at": "2026-11-22T20:26:49.618046+00:00",
   "summary": {
     "agent_count": 6,
     "markets": [
@@ -285,7 +285,6 @@
       "BNB/USD",
       "CAP/USD",
       "CC/USD",
-      "CCD/USD",
       "CRV/USD",
       "DASH/USD",
       "DOT/USD",
@@ -321,6 +320,7 @@
       "TRUMP/USD",
       "TRX/USD",
       "UNI/USD",
+      "USELESS/USD",
       "VVV/USD",
       "WINGS/USD",
       "WLD/USD",
@@ -483,17 +483,6 @@
         "watch_only": true
       },
       "CC/USD": {
-        "approved_by_consensus": false,
-        "decision": "HOLD",
-        "execution_mode": "PAPER_ONLY",
-        "live_orders_enabled": false,
-        "reason_codes": [
-          "WATCH_ONLY_NO_CLOSED_CANDLE_SIGNAL"
-        ],
-        "strategy_signal": "HOLD",
-        "watch_only": true
-      },
-      "CCD/USD": {
         "approved_by_consensus": false,
         "decision": "HOLD",
         "execution_mode": "PAPER_ONLY",
@@ -879,6 +868,17 @@
         "watch_only": true
       },
       "UNI/USD": {
+        "approved_by_consensus": false,
+        "decision": "HOLD",
+        "execution_mode": "PAPER_ONLY",
+        "live_orders_enabled": false,
+        "reason_codes": [
+          "WATCH_ONLY_NO_CLOSED_CANDLE_SIGNAL"
+        ],
+        "strategy_signal": "HOLD",
+        "watch_only": true
+      },
+      "USELESS/USD": {
         "approved_by_consensus": false,
         "decision": "HOLD",
         "execution_mode": "PAPER_ONLY",
