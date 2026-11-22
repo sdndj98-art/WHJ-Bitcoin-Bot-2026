@@ -1,6 +1,6 @@
 {
-  "cycle": 6,
-  "last_role_index": 5,
+  "cycle": 7,
+  "last_role_index": 6,
   "history": [
     {
       "cycle": 1,
@@ -103,29 +103,50 @@
         "orders_submitted": false
       },
       "reminder": "Cycle 6: Risk QA must hand off to Release QA before the next scheduled cycle."
+    },
+    {
+      "cycle": 7,
+      "timestamp_utc": "2026-11-22T11:03:46+00:00",
+      "current_owner": "Release QA",
+      "current_task": "summarize blockers and hand off to Coordinator",
+      "handoff_to": "Coordinator",
+      "handoff_task": "select/sequence next backlog item",
+      "paper_engine_bridge": {
+        "status": "CONNECTED",
+        "generated_at_utc": "2026-11-22T10:54:56+00:00",
+        "paper_status": "PAPER_RUNNING",
+        "agent_count": 6,
+        "markets_scanned": 64,
+        "open_positions": 17,
+        "closed_trades": 28,
+        "equity_usd": 100.4183,
+        "live_trading_enabled": false,
+        "orders_submitted": false
+      },
+      "reminder": "Cycle 7: Release QA must hand off to Coordinator before the next scheduled cycle."
     }
   ],
-  "updated_at_utc": "2026-11-22T09:06:26+00:00",
+  "updated_at_utc": "2026-11-22T11:03:46+00:00",
   "current_handoff": {
-    "cycle": 6,
-    "timestamp_utc": "2026-11-22T09:06:26+00:00",
-    "current_owner": "Risk QA",
-    "current_task": "verify drawdown, stale-data and duplicate-entry guards",
-    "handoff_to": "Release QA",
-    "handoff_task": "summarize blockers and hand off to Coordinator",
+    "cycle": 7,
+    "timestamp_utc": "2026-11-22T11:03:46+00:00",
+    "current_owner": "Release QA",
+    "current_task": "summarize blockers and hand off to Coordinator",
+    "handoff_to": "Coordinator",
+    "handoff_task": "select/sequence next backlog item",
     "paper_engine_bridge": {
       "status": "CONNECTED",
-      "generated_at_utc": "2026-11-22T08:40:39+00:00",
+      "generated_at_utc": "2026-11-22T10:54:56+00:00",
       "paper_status": "PAPER_RUNNING",
       "agent_count": 6,
       "markets_scanned": 64,
       "open_positions": 17,
-      "closed_trades": 27,
-      "equity_usd": 99.254,
+      "closed_trades": 28,
+      "equity_usd": 100.4183,
       "live_trading_enabled": false,
       "orders_submitted": false
     },
-    "reminder": "Cycle 6: Risk QA must hand off to Release QA before the next scheduled cycle."
+    "reminder": "Cycle 7: Release QA must hand off to Coordinator before the next scheduled cycle."
   },
   "mode": "coordination_only_paper_trading",
   "live_orders_enabled": false
