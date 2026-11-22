@@ -14,6 +14,7 @@ on:
       - "multi_market_opportunity_scan.py"
       - "tests/test_multi_asset_paper_runner.py"
       - "whj_agents.py"
+      - "office/paper_bridge.py"
       - "historical_research.py"
       - "forward_paper_monitor.py"
       - "dual_portfolio.json"
@@ -73,6 +74,8 @@ jobs:
           python -m py_compile whj_agents.py
           python -m unittest discover -s tests -p 'test_whj_agents.py' -v
           python whj_agents.py --input dual_portfolio.json --output state/whj_agents.json
+      - name: Connect office to the completed paper-engine outputs
+        run: python office/paper_bridge.py
       - name: Confirm ledger and record first initialization
         run: |
           test -s state/shared_paper_100usd.json
@@ -102,6 +105,7 @@ jobs:
           git add dual_portfolio.json
           git add -f state/shared_paper_initialized.json
           git add -f state/whj_agents.json
+          git add office/paper_bridge_report.json
           if ! git diff --cached --quiet; then
             git commit -m "chore: update shared $100 paper portfolio snapshot"
             # Concurrent code and dashboard commits can land while this paper
@@ -124,6 +128,8 @@ jobs:
           cp dual_portfolio_dashboard.html _site/dual_portfolio_dashboard.html
           cp dual_portfolio.json _site/dual_portfolio.json
           cp state/whj_agents.json _site/whj_agents.json
+          mkdir -p _site/office
+          cp office/paper_bridge_report.json _site/office/paper_bridge_report.json
           # The paper-trades page needs its live paper ledger and report under ./state/.
           cp state/shared_paper_100usd.json _site/state/shared_paper_100usd.json
           if [ -s report.json ]; then cp report.json _site/report.json; fi
@@ -156,6 +162,7 @@ jobs:
             state/shared_paper_100usd.json
             state/shared_paper_initialized.json
             state/whj_agents.json
+            office/paper_bridge_report.json
             state/multi_asset_paper_report.json
             report.json
           if-no-files-found: warn
