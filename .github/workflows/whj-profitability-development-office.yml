@@ -12,10 +12,7 @@ on:
     - cron: "41 3 * * *"
   workflow_run:
     workflows:
-      - WHJ Shared $100 Seven-Strategy Paper Portfolio
-      - WHJ 24x7 Development Team
       - WHJ Strategy Opportunity Research
-      - WHJ Daily BTC Multi-Strategy Research
     types: [completed]
     branches: [main]
 
