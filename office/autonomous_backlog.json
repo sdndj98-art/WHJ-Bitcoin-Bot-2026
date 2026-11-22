@@ -1,0 +1,17 @@
+[
+  {
+    "id": "strategy-ranking-sample-guard",
+    "title": "AI office task: harden strategy ranking against weak evidence",
+    "body": "Review strategy ranking for insufficient sample sizes, missing metrics, and non-finite values. Add regression tests and only make the smallest fix needed if a real defect is demonstrated. Preserve all existing profitability qualification thresholds. Do not change trade signals, capital allocation, risk limits, or execution behavior. Do not claim any strategy is profitable.\n\nFiles: strategy_ranking.py, tests/test_strategy_ranking.py"
+  },
+  {
+    "id": "market-data-quality-regressions",
+    "title": "AI office task: strengthen multi-market data-quality regression tests",
+    "body": "Review multi-market opportunity scanning for stale, missing, malformed, or future-dated quotes/candles. Add regression tests and make a minimal fail-closed fix only if a reproducible gap exists. Preserve provider contracts and unit validation. Do not change strategy signals, wallet sizing, or live execution.\n\nFiles: multi_market_opportunity_scan.py, tests/test_multi_market_opportunity_scan.py"
+  },
+  {
+    "id": "paper-ledger-recovery-regressions",
+    "title": "AI office task: validate shared paper-ledger state recovery",
+    "body": "Review shared paper portfolio state loading for missing, malformed, partial, or inconsistent persisted state. Add regression tests and a minimal validation fix only where needed. Never silently reset cash, equity, positions, or trade history. Preserve accounting, allocations, and paper-only safeguards. Do not change live trading behavior.\n\nFiles: shared_paper_portfolio.py, tests/test_shared_paper_portfolio.py"
+  }
+]
