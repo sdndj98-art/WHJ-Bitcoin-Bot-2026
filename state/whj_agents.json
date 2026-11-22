@@ -45,6 +45,7 @@
           "QNT/USD",
           "RENDER/USD",
           "RLUSD/USD",
+          "SHIB/USD",
           "SOFID/USD",
           "SOL/USD",
           "SUI/USD",
@@ -57,7 +58,6 @@
           "WINGS/USD",
           "WLD/USD",
           "XAGUSD",
-          "XAUT/USDT",
           "XAUUSD",
           "XCN/USD",
           "XDG/USD",
@@ -112,6 +112,7 @@
           "QNT/USD",
           "RENDER/USD",
           "RLUSD/USD",
+          "SHIB/USD",
           "SOFID/USD",
           "SOL/USD",
           "SUI/USD",
@@ -124,7 +125,6 @@
           "WINGS/USD",
           "WLD/USD",
           "XAGUSD",
-          "XAUT/USDT",
           "XCN/USD",
           "XDG/USD",
           "XLM/USD",
@@ -178,6 +178,7 @@
           "QNT/USD",
           "RENDER/USD",
           "RLUSD/USD",
+          "SHIB/USD",
           "SOFID/USD",
           "SOL/USD",
           "SUI/USD",
@@ -190,7 +191,6 @@
           "WINGS/USD",
           "WLD/USD",
           "XAGUSD",
-          "XAUT/USDT",
           "XCN/USD",
           "XDG/USD",
           "XLM/USD",
@@ -263,12 +263,12 @@
       "status": "TRACKING"
     }
   ],
-  "generated_at_utc": "2026-11-22T15:10:54.880616+00:00",
+  "generated_at_utc": "2026-11-22T15:51:31.963318+00:00",
   "live_trading_enabled": false,
   "mode": "PAPER_ONLY",
   "portfolio_status": "PAPER_RUNNING",
   "schema_version": 2,
-  "source_updated_at": "2026-11-22T15:10:54.494344+00:00",
+  "source_updated_at": "2026-11-22T15:51:31.379242+00:00",
   "summary": {
     "agent_count": 6,
     "markets": [
@@ -314,6 +314,7 @@
       "QNT/USD",
       "RENDER/USD",
       "RLUSD/USD",
+      "SHIB/USD",
       "SOFID/USD",
       "SOL/USD",
       "SUI/USD",
@@ -326,7 +327,6 @@
       "WINGS/USD",
       "WLD/USD",
       "XAGUSD",
-      "XAUT/USDT",
       "XCN/USD",
       "XDG/USD",
       "XLM/USD",
@@ -812,6 +812,17 @@
         "strategy_signal": "HOLD",
         "watch_only": true
       },
+      "SHIB/USD": {
+        "approved_by_consensus": false,
+        "decision": "HOLD",
+        "execution_mode": "PAPER_ONLY",
+        "live_orders_enabled": false,
+        "reason_codes": [
+          "WATCH_ONLY_NO_CLOSED_CANDLE_SIGNAL"
+        ],
+        "strategy_signal": "HOLD",
+        "watch_only": true
+      },
       "SOFID/USD": {
         "approved_by_consensus": false,
         "decision": "HOLD",
@@ -934,17 +945,6 @@
         "watch_only": true
       },
       "XAGUSD": {
-        "approved_by_consensus": false,
-        "decision": "HOLD",
-        "execution_mode": "PAPER_ONLY",
-        "live_orders_enabled": false,
-        "reason_codes": [
-          "WATCH_ONLY_NO_CLOSED_CANDLE_SIGNAL"
-        ],
-        "strategy_signal": "HOLD",
-        "watch_only": true
-      },
-      "XAUT/USDT": {
         "approved_by_consensus": false,
         "decision": "HOLD",
         "execution_mode": "PAPER_ONLY",
