@@ -216,3 +216,26 @@ This supersedes the earlier notes that listed run #22 or #24 as the newest verif
 - All three lookbacks remain negative at 1x/2x/3x. The 56-day candidate is less negative than the matched benchmark in this sample but still loses absolutely, has only 15 closed trades, PF below 1, concentrated winners, and a bootstrap interval spanning material losses and gains.
 
 **Decision: NO CANDIDATE PROMOTED.** This is historical OOS evidence only, not rolling walk-forward and not forward paper-trading evidence. The artifact explicitly reports `live_orders=false` and `paper_ledgers_read_or_written=false`; no paper or live execution was invoked.
+
+
+## 2026-11-22 refresh — isolated workflow run #32 (post-F40 validation)
+
+- Workflow: [WHJ Isolated Slow Momentum Historical Research #32](https://github.com/sdndj98-art/WHJ-Bitcoin-Bot-2026/actions/runs/45076926886).
+- Artifact: [whj-isolated-slow-momentum-32](https://github.com/sdndj98-art/WHJ-Bitcoin-Bot-2026/actions/runs/45076926886/artifacts/14776180050); downloaded ZIP SHA-256: `4f0d2da12f0117c0a09fb5ec27dcfedc0d94e4ad473e8a4417ebac0368d2e2a8`.
+- Evaluator/test commit: `f27c762ce52cb0c2bb714dfdd7d88d2f33890608`.
+- Source: Coinbase public BTC-USD spot hourly candles aggregated to 1,499 complete UTC daily bars, 2022-10-15 through 2026-11-21. The source contains 36,000 hourly bars, with 13 hourly observations explicitly imputed. OOS is 450 daily bars (2025-08-29 through 2026-11-21) after the fixed 70/30 split.
+- Canonical decompressed daily snapshot SHA-256: `0b8cf686acfb267bbb0cb400ae200608cd669aab8bd5d1aa556496d1bf4d30f6`; independently recomputed from the downloaded snapshot and matched the report and all three manifest entries. Daily timestamps are strictly increasing with no duplicate or missing UTC day.
+- Protocol unchanged: completed daily-close signal, next daily-close fill, 25% allocation, 0.10% fee and 0.05% slippage per side. Drawdown is close-to-close net-liquidation drawdown, not intraday OHLC drawdown.
+
+| Lookback | 1x net return | 2x | 3x | Max close DD | Closed-trade PF | Trades | 95% block-bootstrap CI | Top-1 winner share |
+|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| 56 days | -2.0545% | -3.1452% | -4.2220% | 7.3557% | 0.7126 | 15 | [-14.8577%, +15.2223%] | 87.1784% |
+| 84 days | -7.2307% | -7.7005% | -8.1672% | 10.2742% | 0.0948 | 7 | [-18.6284%, +5.6528%] | 77.2438% |
+| 112 days | -11.0823% | -11.9214% | -12.7512% | 14.2412% | 0.0423 | 13 | [-23.1379%, +1.3923%] | 41.7121% |
+
+- Matched 25%-allocation buy-and-hold: -11.1813% at 1x, -11.2227% at 2x, and -11.2641% at 3x.
+- The 56-day subperiod returns were -4.1715%, -2.5588%, and +4.8931%; only one of three slices was positive. The 56-day variant exceeded the matched benchmark by 9.1268 percentage points in aggregate, but remained negative in absolute terms. Its top five winners supplied 100% of gross winning P&L; removing them leaves -$71.484 net P&L.
+- CSCV/PBO was 0.40 across only these three declared variants (six partitions, ten splits, 75 observations per partition). It is a narrow selection-bias diagnostic, not a future-profit probability or global experiment census.
+- All three variants remain negative at 1x/2x/3x, all have fewer than 30 closed trades, and all bootstrap intervals span zero. The 56-day variant is only the least-negative descriptive result; no candidate is promoted.
+- These three fixed chronological slices are OOS subperiods, not rolling walk-forward retraining. This 70/30 segment has already been inspected and is not an untouched final holdout. No forward paper-trading evidence is represented.
+- Artifact flags: `live_orders=false`, `paper_ledgers_read_or_written=false`.
