@@ -59,7 +59,7 @@ def gemini_generate(prompt: str, key: str, model: str) -> str:
             data = json.loads(response.read().decode())
     except urllib.error.HTTPError as exc:
         # Do not echo request headers or the API key.
-        raise RuntimeError(f"Gemini HTTP {exc.code}: {exc.read().decode(errors='replace')[:700}") from None
+        raise RuntimeError(f"Gemini HTTP {exc.code}: {exc.read().decode(errors='replace')[:700]}") from None
     parts = data.get("candidates", [{}])[0].get("content", {}).get("parts", [])
     text = "\n".join(p.get("text", "") for p in parts if p.get("text"))
     if not text.strip():
