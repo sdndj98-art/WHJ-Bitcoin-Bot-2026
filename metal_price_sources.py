@@ -71,11 +71,15 @@ def fetch_spot(symbol, now_seconds=None):
     # for HG; only infer when the unit field is absent, never when conflicting.
     price = _number(item.get("price"), "spot price")
     stamp = _parse_timestamp(item.get("updatedAt"), "spot")
-    age = now_seconds - stamp
+    raw_age = now_seconds - stamp
     if price <= 0:
         raise ValueError("Gold-API spot price must be positive")
-    if age < -60:
+    if raw_age < -60:
         raise ValueError("Gold-API spot timestamp is future-dated")
+    # Tolerate up to 60 seconds of provider clock skew, but never expose a
+    # negative quote age to risk checks or dashboard consumers.
+    clock_skew = max(0.0, -raw_age)
+    age = max(0.0, raw_age)
     # Gold-API documents 30-second updates; five minutes is a conservative
     # operational freshness ceiling, not an assumption about the quote itself.
     if age > 5 * 60:
@@ -84,6 +88,7 @@ def fetch_spot(symbol, now_seconds=None):
         "symbol": symbol, "provider_symbol": SPOT_CODES[symbol],
         "price_usd": price, "price_unit": UNITS[symbol], "provider_unit": item.get("unit") or "symbol-contract-inferred",
         "computed_at": item["updatedAt"], "quote_age_seconds": round(age, 1),
+        "clock_skew_seconds": round(clock_skew, 1),
         "expected_delay_minutes": 0,
         "provider": "Gold-API public spot (approximately 30-second refresh)",
         "quality": "TIMESTAMP_VALIDATED_SPOT",
