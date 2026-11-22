@@ -204,6 +204,12 @@ class SlowMomentumLabTests(unittest.TestCase):
             evaluate_cost_stress(
                 closes, False, 0.0005, (56, 84, 112), multiplier=2.0
             )
+        with self.assertRaisesRegex(ValueError, "lookbacks"):
+            evaluate_slow_momentum(closes, lookbacks=([56],))
+        with self.assertRaisesRegex(ValueError, "lookbacks"):
+            evaluate_cost_stress(
+                closes, 0.001, 0.0005, ([56],), multiplier=2.0
+            )
 
     def test_cost_stress_validates_candidate_set_and_history(self):
         closes = [100.0 + index * 0.1 for index in range(220)]
