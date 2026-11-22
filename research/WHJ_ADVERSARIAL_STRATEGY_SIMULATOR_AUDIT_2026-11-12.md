@@ -895,3 +895,11 @@ The helper now accepts only a list/tuple of lookbacks, normalizes it to a tuple,
 Regression coverage checks empty, duplicate, boolean, zero, and wrong-container lookbacks; insufficient price history; and a valid list input. This is validation-only: valid candidate calculations, signal timing, fee/slippage multipliers, allocation, and historical results are unchanged.
 
 The slow-momentum isolated workflow path filter already includes both `slow_momentum_lab.py` and `tests/test_slow_momentum_lab.py`, so a branch push touching these files requests a fresh isolated evaluation. The available GitHub connector exposes PR-triggered runs only, not the push-run listing; the post-F38 workflow result and artifact must be retrieved before claiming validation or new performance evidence. No strategy is promoted.
+
+## F39 — malformed nested lookback leaked TypeError from uniqueness check (2026-11-22)
+
+A follow-up review of the shared slow-momentum validator found that it built `set(lookbacks)` before checking that each lookback was an integer. A malformed but iterable value such as `([56],)` therefore raised Python `TypeError` for an unhashable list instead of the documented `ValueError` validation response.
+
+The validator now checks that lookbacks are positive non-boolean integers before checking uniqueness. Regression tests exercise both the main evaluator and the direct cost-stress helper with a nested unhashable value. Valid lookback sets and all strategy calculations remain unchanged.
+
+This is input-contract hardening only. The post-F39 isolated slow-momentum workflow and its artifact remain pending; no new performance result is claimed.
