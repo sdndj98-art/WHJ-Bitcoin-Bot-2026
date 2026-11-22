@@ -217,6 +217,8 @@ def evaluate_slow_momentum(closes, fee=0.001, slippage=0.0005,
     are selected or retuned using the holdout. Buy-and-hold uses the same 25%
     initial allocation.
     """
+    if not isinstance(lookbacks, (list, tuple)):
+        raise ValueError("lookbacks must be a list or tuple")
     lookbacks = tuple(lookbacks)
     _validate(closes, fee, slippage, lookbacks)
     prices = [float(x) for x in closes]
