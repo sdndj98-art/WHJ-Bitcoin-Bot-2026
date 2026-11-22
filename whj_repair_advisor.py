@@ -2,11 +2,35 @@
 from __future__ import annotations
 
 import json
+import re
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent
 REPORT = ROOT / "research" / "development_team" / "latest_report.json"
 OUTPUT = ROOT / "research" / "development_team"
+
+
+AGENT_SOURCE_MAP = {
+    "architecture_agent": ("whj_architecture_audit.py", "test_architecture_audit.py"),
+    "syntax_agent": ("whj_syntax_check.py", "test_syntax_check.py"),
+    "compile_agent": ("whj_compile_check.py", "test_compile_check.py"),
+    "test_agent": ("run_tests.py", "test_suite"),
+    "paper_safety_agent": ("whj_risk_guard.py", "test_paper_safety.py"),
+    "workflow_agent": (".github/workflows/main.yml", "test_workflow.py"),
+    "dashboard_integrity_agent": ("whj_dashboard.py", "test_dashboard.py"),
+}
+
+SECRET_PATTERNS = [
+    re.compile(r"api[_-]?key[\s:=]+['\"']?[a-zA-Z0-9_\-\.]{8,}['\"']?", re.IGNORECASE),
+    re.compile(r"secret[\s:=]+['\"']?[a-zA-Z0-9_\-\.]{8,}['\"']?", re.IGNORECASE),
+    re.compile(r"token[\s:=]+['\"']?[a-zA-Z0-9_\-\.]{8,}['\"']?", re.IGNORECASE),
+    re.compile(r"bearer\s+[a-zA-Z0-9_\-\.]{10,}", re.IGNORECASE),
+    re.compile(r"ghp_[a-zA-Z0-9]{36}"),
+    re.compile(r"sk_(?:live|test)_[0-9a-zA-Z]{10,}"),
+]
+
+MAX_ERROR_LENGTH = 300
+MAX_LOG_LINES = 20
 
 
 RECOMMENDATIONS = {
@@ -27,7 +51,7 @@ RECOMMENDATIONS = {
         "Do not weaken, skip, or delete tests to obtain a green result."
     ),
     "paper_safety_agent": (
-        "P0", "Stop and investigate the paper-only/live-trading configuration mismatch.",
+        "P0", "Stop and investigate the paper-only/live-trading configuration mismatch. Human intervention required; never generate a code patch for safety mismatches.",
         "Never enable live trading, change risk limits, or mutate paper ledgers."
     ),
     "workflow_agent": (
@@ -41,6 +65,39 @@ RECOMMENDATIONS = {
 }
 
 
+def redact_secrets(text: str) -> str:
+    if not isinstance(text, str):
+        return str(text)
+    redacted = text
+    for pattern in SECRET_PATTERNS:
+        redacted = pattern.sub("[REDACTED_SECRET]", redacted)
+    return redacted
+
+
+def sanitize_error_excerpt(evidence: dict) -> str:
+    raw_excerpt = ""
+    if isinstance(evidence, dict):
+        for key in ["error", "message", "output_tail", "stderr", "details", "traceback"]:
+            if key in evidence:
+                val = evidence[key]
+                if isinstance(val, list):
+                    val = "\n".join(str(v) for v in val)
+                raw_excerpt += f"{key}: {val}\n"
+        if not raw_excerpt:
+            raw_excerpt = json.dumps(evidence)
+    else:
+        raw_excerpt = str(evidence)
+
+    redacted = redact_secrets(raw_excerpt)
+    lines = redacted.strip().splitlines()
+    if len(lines) > MAX_LOG_LINES:
+        lines = lines[-MAX_LOG_LINES:]
+    truncated = "\n".join(lines)
+    if len(truncated) > MAX_ERROR_LENGTH:
+        truncated = truncated[:MAX_ERROR_LENGTH] + "... [TRUNCATED]"
+    return truncated
+
+
 def build_repair_plan(report: dict) -> dict:
     agents = report.get("agents", {})
     proposals = []
@@ -48,17 +105,34 @@ def build_repair_plan(report: dict) -> dict:
         status = result.get("status", "unknown")
         if status == "passed":
             continue
+
         priority, action, guardrail = RECOMMENDATIONS.get(
             name, ("P2", "Inspect this audit result and write a reproducible diagnosis.", "No automatic source edits.")
         )
+
+        retry_count = result.get("retry_count", result.get("retries", 0))
+        source_file, regression_test = AGENT_SOURCE_MAP.get(
+            name, ("whj_unknown_module.py", "test_unknown.py")
+        )
+        sanitized_error = sanitize_error_excerpt(result)
+
+        if name == "paper_safety_agent":
+            action = "STOP: Paper-safety or live-trading mismatch detected. Human intervention required. Never generate a code patch."
+
         proposals.append({
             "agent": name,
             "observed_status": status,
             "priority": priority,
+            "failed_check": name,
+            "source_file": source_file,
+            "regression_test": regression_test,
+            "sanitized_error_excerpt": sanitized_error,
+            "retry_count": retry_count,
             "evidence": result,
             "recommended_action": action,
             "guardrail": guardrail,
             "state": "PROPOSAL_ONLY",
+            "linked_issue": "#165",
         })
 
     for item in report.get("improvement_backlog", []):
@@ -66,10 +140,16 @@ def build_repair_plan(report: dict) -> dict:
             "agent": "backlog_advisor",
             "observed_status": "backlog_item",
             "priority": "P3",
+            "failed_check": "backlog_item",
+            "source_file": "research/development_team/backlog",
+            "regression_test": "test_backlog.py",
+            "sanitized_error_excerpt": redact_secrets(str(item)),
+            "retry_count": 0,
             "evidence": item,
             "recommended_action": "Review whether this TODO/FIXME is still valid and create a focused test before changing code.",
             "guardrail": "Do not implement automatically.",
             "state": "PROPOSAL_ONLY",
+            "linked_issue": "#165",
         })
 
     return {
@@ -87,7 +167,7 @@ def build_repair_plan(report: dict) -> dict:
             "live_trading": False,
             "paid_ai_api": False,
         },
-        "next_gate": "A human reviews the evidence, prepares a minimal patch on a separate branch, and runs the full test suite before opening a PR.",
+        "next_gate": "A human reviews the evidence, prepares a minimal patch on a separate branch, and runs the full test suite before opening a PR. Linked to issue #165.",
     }
 
 
@@ -113,6 +193,10 @@ def write_plan(report_path: Path = REPORT, output_dir: Path = OUTPUT) -> dict:
     for proposal in plan["proposals"]:
         lines += [
             f"### [{proposal['priority']}] {proposal['agent']} — {proposal['observed_status']}",
+            f"- Failed check: `{proposal['failed_check']}`",
+            f"- Source file: `{proposal['source_file']}`",
+            f"- Regression test: `{proposal['regression_test']}`",
+            f"- Retry count: `{proposal['retry_count']}`",
             f"- Recommended action: {proposal['recommended_action']}",
             f"- Guardrail: {proposal['guardrail']}",
             "- State: proposal only; no source code changed",
