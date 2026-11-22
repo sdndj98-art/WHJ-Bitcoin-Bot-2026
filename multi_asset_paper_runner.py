@@ -239,6 +239,20 @@ def _market_position_id(symbol, strategy):
     return "multi-" + safe + "-" + strategy
 
 
+def _entry_block_reason(target_notional, capacity, available_cash):
+    """Explain which existing entry limit prevented a paper order.
+
+    Diagnostic only: does not change sizing, exposure, cash, or risk limits.
+    """
+    limits = {
+        "MIN_TRADE_SIZE": float(target_notional),
+        "MAX_GROSS_EXPOSURE": float(capacity),
+        "INSUFFICIENT_CASH": float(available_cash),
+    }
+    limiting_reason = min(limits, key=limits.get)
+    return limiting_reason if limits[limiting_reason] < MIN_TRADE_USD else None
+
+
 def _risk_state(book, marks, risk, timestamp):
     equity = _liquidation_equity(book, marks)
     day = datetime.fromtimestamp(timestamp, timezone.utc).date().isoformat()
@@ -365,15 +379,14 @@ def run_engine():
                     equity = _liquidation_equity(book, marks)
                     exposure = sum(float(p["market_value_usd"]) for p in current["open_positions"])
                     capacity = max(0.0, equity * MAX_GROSS_EXPOSURE - exposure)
-                    notional = min(
-                        equity * TRADE_ALLOCATION,
-                        capacity,
-                        book.state["cash_usd"] / (1.0 + FEE_RATE),
-                    )
+                    target_notional = equity * TRADE_ALLOCATION
+                    available_cash = book.state["cash_usd"] / (1.0 + FEE_RATE)
+                    notional = min(target_notional, capacity, available_cash)
                     if MAX_OPEN_POSITIONS is not None and len(current["open_positions"]) >= MAX_OPEN_POSITIONS:
                         note_block(strategy, "MAX_OPEN_POSITIONS")
                     elif notional < MIN_TRADE_USD:
-                        note_block(strategy, "MIN_TRADE_OR_INSUFFICIENT_CASH")
+                        reason = _entry_block_reason(target_notional, capacity, available_cash)
+                        note_block(strategy, reason or "MIN_TRADE_OR_INSUFFICIENT_CASH")
                     else:
                         approved = authorize_paper_entry(
                             symbol, market["quality"] == "HEALTHY",
