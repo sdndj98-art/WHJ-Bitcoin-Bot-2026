@@ -13,5 +13,10 @@
     "id": "paper-ledger-recovery-regressions",
     "title": "AI office task: validate shared paper-ledger state recovery",
     "body": "Review shared paper portfolio state loading for missing, malformed, partial, or inconsistent persisted state. Add regression tests and a minimal validation fix only where needed. Never silently reset cash, equity, positions, or trade history. Preserve accounting, allocations, and paper-only safeguards. Do not add any exchange order submission or execution.\n\nFiles: shared_paper_portfolio.py, tests/test_shared_paper_portfolio.py"
+  },
+  {
+    "id": "repair-advisor-evidence-to-patch",
+    "title": "AI office task: convert repair findings into safe, actionable patch plans",
+    "body": "Improve the existing deterministic repair advisor so failed QA results produce a structured, evidence-backed repair task: identify the failed check, exact source file and regression test from a fixed mapping, sanitized bounded error excerpt, severity, and retry count. Add tests for unknown failure types, secret/token redaction, log truncation, and paper-safety failures. For paper-safety or live-trading mismatch, stop and recommend human intervention; never generate a code patch. Keep the advisor proposal-only in this task: do not create PRs, modify workflows, change risk or trading behavior, weaken tests, or auto-merge. Link this phase to issue #165; workflow integration will be a separately reviewed step.\n\nFiles: whj_repair_advisor.py, tests/test_whj_repair_advisor.py"
   }
 ]
