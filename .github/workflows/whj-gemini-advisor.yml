@@ -1,0 +1,38 @@
+name: WHJ Gemini Development Advisor
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "35 4 * * *"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: whj-gemini-advisor
+  cancel-in-progress: false
+
+jobs:
+  advisor:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Call Gemini with repository secret
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GEMINI_MODEL: gemini-2.5-flash
+        run: python office/gemini_advisor.py
+      - name: Upload advisory report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: whj-gemini-advisor-${{ github.run_number }}
+          path: office/gemini_advisor_report.md
+          if-no-files-found: warn
+          retention-days: 14
