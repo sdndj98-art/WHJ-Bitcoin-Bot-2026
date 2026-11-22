@@ -151,6 +151,14 @@ class SlowMomentumLabTests(unittest.TestCase):
             momentum_signals([100.0, 101.0], True)
         with self.assertRaises(ValueError):
             evaluate_slow_momentum([100.0 + i for i in range(200)], lookbacks=(0,))
+
+        for invalid_lookbacks in (56, None, "56", {56: True}):
+            with self.subTest(lookbacks=repr(invalid_lookbacks)):
+                with self.assertRaisesRegex(ValueError, "lookbacks"):
+                    evaluate_slow_momentum(
+                        [100.0 + i for i in range(220)],
+                        lookbacks=invalid_lookbacks,
+                    )
         oversized = 10**1000
         with self.assertRaisesRegex(ValueError, "Prices"):
             evaluate_slow_momentum([oversized] + [100.0] * 219)
