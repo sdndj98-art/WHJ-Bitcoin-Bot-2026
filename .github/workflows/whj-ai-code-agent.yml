@@ -80,7 +80,7 @@ jobs:
           git checkout -b "$BRANCH"
           git add office/ai_code_agent.py tests/test_ai_code_agent.py
           # Only explicitly requested files are staged by the agent; inspect and stage the remaining allowlisted diff.
-          git add whj_*.py strategy_*.py tests/test_*.py office/*.md
+          git add whj_*.py strategy_*.py shared_paper_*.py paper_*.py\n          git add multi_asset_paper_runner.py market_scanner.py multi_market_opportunity_scan.py\n          git add gold_paper_runner.py polymarket_six_agent_paper.py tests/test_*.py office/*.md
           git commit -m "AI office: tested proposal for issue #${ISSUE_NUMBER}"
           git push origin "$BRANCH"
           gh pr create --repo "$REPOSITORY" --base main --head "$BRANCH" --draft \
