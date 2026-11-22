@@ -133,15 +133,15 @@ def gemini_generate(prompt: str, key: str, model: str) -> str:
 def is_restricted_request(body: str) -> bool:
     """Detect affirmative unsafe instructions without flagging safety prohibitions."""
     unsafe_action = re.compile(
-        r"\\b(?:enable|activate|turn on|start|place|submit|execute|bypass|disable|remove|ignore|weaken)\\b"
-        r"[^.!?;\\n]{0,100}\\b(?:live trading|real money|live orders|risk limits?|paper safeguards?|safety guards?)\\b",
+        r"\b(?:enable|activate|turn on|start|place|submit|execute|bypass|disable|remove|ignore|weaken)\b"
+        r"[^.!?;\n]{0,100}\b(?:live trading|real money|live orders|risk limits?|paper safeguards?|safety guards?)\b",
         re.IGNORECASE,
     )
     negation = re.compile(
-        r"^\\s*(?:never|no|not|do not|don't|must not|should not|cannot|can't)\\b",
+        r"^\s*(?:never|no|not|do not|don't|must not|should not|cannot|can't)\b",
         re.IGNORECASE,
     )
-    for clause in re.split(r"[.!?;\\n]+", body):
+    for clause in re.split(r"[.!?;\n]+", body):
         if negation.search(clause):
             continue
         if unsafe_action.search(clause):
