@@ -45,6 +45,53 @@ def github_get(url: str, token: str) -> dict:
         return json.loads(response.read().decode("utf-8"))
 
 
+def choose_gemini_model(models: list[dict], preferred: str = "auto") -> str:
+    """Choose only a model that advertises generateContent support."""
+    if preferred and preferred != "auto":
+        return preferred
+    candidates = []
+    for item in models:
+        name = str(item.get("name", ""))
+        methods = item.get("supportedGenerationMethods", [])
+        if not name.startswith("models/") or "generateContent" not in methods:
+            continue
+        model_id = name.split("/", 1)[1]
+        lowered = model_id.lower()
+        if "embedding" in lowered or "image" in lowered or "audio" in lowered:
+            continue
+        if "flash-lite" in lowered:
+            rank = 0
+        elif "flash" in lowered:
+            rank = 1
+        elif "pro" in lowered:
+            rank = 2
+        else:
+            rank = 3
+        candidates.append((rank, model_id))
+    if not candidates:
+        raise RuntimeError("Gemini API key exposes no model supporting generateContent.")
+    candidates.sort(key=lambda item: (item[0], item[1]))
+    return candidates[0][1]
+
+
+def discover_gemini_model(key: str, preferred: str = "auto") -> str:
+    if preferred and preferred != "auto":
+        return preferred
+    req = urllib.request.Request(
+        "https://generativelanguage.googleapis.com/v1beta/models",
+        headers={"x-goog-api-key": key},
+    )
+    try:
+        with urllib.request.urlopen(req, timeout=30) as response:
+            data = json.loads(response.read().decode("utf-8"))
+    except urllib.error.HTTPError as exc:
+        raise RuntimeError(
+            f"Gemini model discovery failed with HTTP {exc.code}: "
+            f"{exc.read().decode(errors='replace')[:500]}"
+        ) from None
+    return choose_gemini_model(data.get("models", []), preferred)
+
+
 def gemini_generate(prompt: str, key: str, model: str) -> str:
     payload = {
         "contents": [{"parts": [{"text": prompt}]}],
@@ -104,7 +151,9 @@ def main() -> int:
         f"ISSUE #{issue_number}: {issue.get('title','')}\n{body}\n\n"
         "CURRENT FILES:\n" + json.dumps(files, ensure_ascii=False)
     )
-    model = os.environ.get("GEMINI_MODEL", "gemini-3.5-flash-lite")
+    requested_model = os.environ.get("GEMINI_MODEL", "auto")
+    model = discover_gemini_model(key, requested_model)
+    print(f"Gemini selected an available generateContent model: {model}")
     raw = gemini_generate(prompt, key, model)
     try:
         result = json.loads(raw)
