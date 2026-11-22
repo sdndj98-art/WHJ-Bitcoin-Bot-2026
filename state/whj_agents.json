@@ -23,6 +23,7 @@
           "ENA/USD",
           "ETH/USD",
           "EVAA/USD",
+          "GRASS/USD",
           "HBAR/USD",
           "HYPE/USD",
           "ICNT/USD",
@@ -32,7 +33,6 @@
           "LIGHTER/USD",
           "LINK/USD",
           "LTC/USD",
-          "MON/USD",
           "NEAR/USD",
           "NIGHT/USD",
           "ONDO/USD",
@@ -90,6 +90,7 @@
           "ENA/USD",
           "ETH/USD",
           "EVAA/USD",
+          "GRASS/USD",
           "HBAR/USD",
           "HYPE/USD",
           "ICNT/USD",
@@ -99,7 +100,6 @@
           "LIGHTER/USD",
           "LINK/USD",
           "LTC/USD",
-          "MON/USD",
           "NEAR/USD",
           "NIGHT/USD",
           "ONDO/USD",
@@ -156,6 +156,7 @@
           "ENA/USD",
           "ETH/USD",
           "EVAA/USD",
+          "GRASS/USD",
           "HBAR/USD",
           "HYPE/USD",
           "ICNT/USD",
@@ -165,7 +166,6 @@
           "LIGHTER/USD",
           "LINK/USD",
           "LTC/USD",
-          "MON/USD",
           "NEAR/USD",
           "NIGHT/USD",
           "ONDO/USD",
@@ -252,23 +252,23 @@
     {
       "detail": "Equity is read from the single shared paper wallet when available.",
       "metrics": {
-        "closed_trades": 32,
-        "equity_usd": 100.4143,
+        "closed_trades": 33,
+        "equity_usd": 100.3843,
         "initial_equity_usd": 100.0,
-        "pnl_usd": 0.4143,
-        "return_pct": 0.4143,
+        "pnl_usd": 0.3843,
+        "return_pct": 0.3843,
         "shared_wallet": true
       },
       "name": "EQUITY",
       "status": "TRACKING"
     }
   ],
-  "generated_at_utc": "2026-11-22T12:26:22.350862+00:00",
+  "generated_at_utc": "2026-11-22T13:26:50.992767+00:00",
   "live_trading_enabled": false,
   "mode": "PAPER_ONLY",
   "portfolio_status": "PAPER_RUNNING",
   "schema_version": 2,
-  "source_updated_at": "2026-11-22T12:26:21.997472+00:00",
+  "source_updated_at": "2026-11-22T13:26:50.592034+00:00",
   "summary": {
     "agent_count": 6,
     "markets": [
@@ -292,6 +292,7 @@
       "ENA/USD",
       "ETH/USD",
       "EVAA/USD",
+      "GRASS/USD",
       "HBAR/USD",
       "HYPE/USD",
       "ICNT/USD",
@@ -301,7 +302,6 @@
       "LIGHTER/USD",
       "LINK/USD",
       "LTC/USD",
-      "MON/USD",
       "NEAR/USD",
       "NIGHT/USD",
       "ONDO/USD",
@@ -570,6 +570,17 @@
         "strategy_signal": "HOLD",
         "watch_only": true
       },
+      "GRASS/USD": {
+        "approved_by_consensus": false,
+        "decision": "HOLD",
+        "execution_mode": "PAPER_ONLY",
+        "live_orders_enabled": false,
+        "reason_codes": [
+          "WATCH_ONLY_NO_CLOSED_CANDLE_SIGNAL"
+        ],
+        "strategy_signal": "HOLD",
+        "watch_only": true
+      },
       "HBAR/USD": {
         "approved_by_consensus": false,
         "decision": "HOLD",
@@ -659,17 +670,6 @@
         "watch_only": true
       },
       "LTC/USD": {
-        "approved_by_consensus": false,
-        "decision": "HOLD",
-        "execution_mode": "PAPER_ONLY",
-        "live_orders_enabled": false,
-        "reason_codes": [
-          "WATCH_ONLY_NO_CLOSED_CANDLE_SIGNAL"
-        ],
-        "strategy_signal": "HOLD",
-        "watch_only": true
-      },
-      "MON/USD": {
         "approved_by_consensus": false,
         "decision": "HOLD",
         "execution_mode": "PAPER_ONLY",
