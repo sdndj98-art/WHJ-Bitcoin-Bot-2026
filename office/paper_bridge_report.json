@@ -1,0 +1,58 @@
+{
+  "schema_version": 1,
+  "generated_at_utc": "2026-11-22T01:16:28+00:00",
+  "status": "CONNECTED",
+  "bridge_mode": "READ_ONLY_PAPER_AUDIT",
+  "paper_only": true,
+  "live_trading_enabled": false,
+  "orders_submitted": false,
+  "source_workflow_run_id": "44970586737",
+  "six_agent_office": {
+    "status": "PAPER_RUNNING",
+    "portfolio_decision": "UNKNOWN",
+    "agent_count": 6,
+    "agent_names": [
+      "SCANNER",
+      "RUG CHECK",
+      "SIZER",
+      "EXECUTOR",
+      "LOGGER",
+      "EQUITY"
+    ],
+    "generated_at_utc": "2026-11-22T01:16:28.468696+00:00"
+  },
+  "shared_wallet": {
+    "initial_capital_usd": 100.0,
+    "cash_usd": 50.1012429971,
+    "open_positions": 17,
+    "closed_trades": 13,
+    "equity_usd": 99.9769,
+    "pnl_usd": -0.0231,
+    "return_pct": -0.0231
+  },
+  "multi_asset_engine": {
+    "status": "PAPER_ONLY",
+    "markets_scanned": 64,
+    "markets_with_errors": 0,
+    "processed_closed_candles": 483,
+    "events_this_run": 0,
+    "strategy_entry_signals": 127,
+    "positions_opened_this_run": 0,
+    "entries_blocked_by_guards": 112,
+    "block_reasons": {
+      "sma_trend": {
+        "MIN_TRADE_OR_INSUFFICIENT_CASH": 43
+      },
+      "ema_trend": {
+        "MIN_TRADE_OR_INSUFFICIENT_CASH": 34
+      },
+      "rsi_momentum": {
+        "MIN_TRADE_OR_INSUFFICIENT_CASH": 22
+      },
+      "compound_momentum": {
+        "MIN_TRADE_OR_INSUFFICIENT_CASH": 13
+      }
+    }
+  },
+  "note": "Bridge validates and summarizes outputs from the paper workflow. It does not execute trading logic or live orders."
+}
