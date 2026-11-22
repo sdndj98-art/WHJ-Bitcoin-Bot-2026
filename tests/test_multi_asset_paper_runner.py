@@ -3,7 +3,7 @@ from datetime import datetime, timezone
 from unittest.mock import patch
 
 from multi_asset_paper_runner import (
-    _crypto_market, _ensure_market_strategy_state, _is_eligible_crypto_pair, _market_position_id, _risk_state, _seed_market_state,
+    _crypto_market, _ensure_market_strategy_state, _entry_block_reason, _is_eligible_crypto_pair, _market_position_id, _risk_state, _seed_market_state,
     MAX_GROSS_EXPOSURE, MAX_OPEN_POSITIONS, TRADE_ALLOCATION,
 )
 from shared_paper_portfolio import SUPPORTED_STRATEGIES
@@ -79,6 +79,13 @@ class MultiAssetPaperRunnerTests(unittest.TestCase):
         second = _market_position_id("XAUUSD", "ema_trend")
         self.assertEqual(first, "multi-ETH_USD-ema_trend")
         self.assertNotEqual(first, second)
+
+    def test_entry_block_reason_identifies_binding_constraint(self):
+        # Idle cash can coexist with a reached gross-exposure cap.
+        self.assertEqual(_entry_block_reason(2.0, 0.05, 50.0), "MAX_GROSS_EXPOSURE")
+        self.assertEqual(_entry_block_reason(2.0, 50.0, 0.25), "INSUFFICIENT_CASH")
+        self.assertEqual(_entry_block_reason(0.4, 50.0, 50.0), "MIN_TRADE_SIZE")
+        self.assertIsNone(_entry_block_reason(2.0, 5.0, 50.0))
 
     def test_allocation_and_exposure_limits_are_conservative(self):
         self.assertEqual(TRADE_ALLOCATION, 0.02)
