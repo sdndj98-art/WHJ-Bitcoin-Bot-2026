@@ -133,6 +133,33 @@ class SharedPaperRunnerTests(unittest.TestCase):
             self.assertEqual(positions["BTC/USD"]["mark_price"], 51000.0)
             self.assertAlmostEqual(output["shared_portfolio"]["equity_usd"], equity, places=6)
 
+    def test_strategy_equity_attribution_matches_shared_portfolio_equity(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            book = SharedPaperPortfolio(root / "ledger.json", 100)
+            book.open_position("sma_trend", "BTC/USD", 100.0, 10.0, "open-sma")
+            book.open_position("ema_trend", "BTC/USD", 100.0, 10.0, "closed-ema")
+            book.close_position("closed-ema", 110.0, reason="TEST_PROFIT")
+            rows = [[i * 3600, 1, 1, 1, 100 + i, 0] for i in range(220)]
+            with patch("shared_paper_runner.SNAPSHOT", root / "dual_portfolio.json"):
+                output = _make_snapshot(
+                    book, _new_strategy_state(rows), 110.0,
+                    {"quality": "HEALTHY"}, "PAPER_RUNNING",
+                )
+            strategy_rows = output["strategies"]
+            strategy_equity = sum(item["equity_usd"] for item in strategy_rows)
+            shared_equity = output["shared_portfolio"]["equity_usd"]
+            self.assertAlmostEqual(strategy_equity, shared_equity, places=6)
+            by_name = {item["strategy"]: item for item in strategy_rows}
+            self.assertGreater(by_name["ema_trend"]["realized_pnl_usd"], 0)
+            self.assertGreater(by_name["sma_trend"]["unrealized_pnl_usd"], 0)
+            self.assertAlmostEqual(
+                by_name["ema_trend"]["equity_usd"],
+                by_name["ema_trend"]["initial_equity_usd"]
+                + by_name["ema_trend"]["net_pnl_usd"],
+                places=6,
+            )
+
     def test_btc_runner_fails_closed_when_non_btc_mark_is_stale(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
