@@ -9,7 +9,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 API_KEY = os.environ.get("GEMINI_API_KEY", "").strip()
-MODEL = os.environ.get("GEMINI_MODEL", "gemini-2.5-flash").strip()
+MODEL = os.environ.get("GEMINI_MODEL", "gemini-3.5-flash-lite").strip()
 REPORT = Path("office/gemini_advisor_report.md")
 
 
