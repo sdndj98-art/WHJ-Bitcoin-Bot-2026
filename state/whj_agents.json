@@ -12,7 +12,6 @@
           "ARB/USD",
           "ASTER/USD",
           "AVAX/USD",
-          "BCH/USD",
           "BLESS/USD",
           "BNB/USD",
           "CAP/USD",
@@ -44,7 +43,8 @@
           "PUMP/USD",
           "QNT/USD",
           "RENDER/USD",
-          "RLUSD/USD",
+          "RLUSD/USDT",
+          "SHIB/USD",
           "SOFID/USDT",
           "SOL/USD",
           "SUI/USD",
@@ -79,7 +79,6 @@
           "ARB/USD",
           "ASTER/USD",
           "AVAX/USD",
-          "BCH/USD",
           "BLESS/USD",
           "BNB/USD",
           "CAP/USD",
@@ -111,7 +110,8 @@
           "PUMP/USD",
           "QNT/USD",
           "RENDER/USD",
-          "RLUSD/USD",
+          "RLUSD/USDT",
+          "SHIB/USD",
           "SOFID/USDT",
           "SOL/USD",
           "SUI/USD",
@@ -145,7 +145,6 @@
           "ARB/USD",
           "ASTER/USD",
           "AVAX/USD",
-          "BCH/USD",
           "BLESS/USD",
           "BNB/USD",
           "CAP/USD",
@@ -177,7 +176,8 @@
           "PUMP/USD",
           "QNT/USD",
           "RENDER/USD",
-          "RLUSD/USD",
+          "RLUSD/USDT",
+          "SHIB/USD",
           "SOFID/USDT",
           "SOL/USD",
           "SUI/USD",
@@ -253,22 +253,22 @@
       "detail": "Equity is read from the single shared paper wallet when available.",
       "metrics": {
         "closed_trades": 25,
-        "equity_usd": 99.1893,
+        "equity_usd": 99.067,
         "initial_equity_usd": 100.0,
-        "pnl_usd": -0.8107,
-        "return_pct": -0.8107,
+        "pnl_usd": -0.933,
+        "return_pct": -0.933,
         "shared_wallet": true
       },
       "name": "EQUITY",
       "status": "TRACKING"
     }
   ],
-  "generated_at_utc": "2026-11-22T05:45:48.614191+00:00",
+  "generated_at_utc": "2026-11-22T06:40:19.868149+00:00",
   "live_trading_enabled": false,
   "mode": "PAPER_ONLY",
   "portfolio_status": "PAPER_RUNNING",
   "schema_version": 2,
-  "source_updated_at": "2026-11-22T05:45:48.171928+00:00",
+  "source_updated_at": "2026-11-22T06:40:19.324457+00:00",
   "summary": {
     "agent_count": 6,
     "markets": [
@@ -281,7 +281,6 @@
       "ARB/USD",
       "ASTER/USD",
       "AVAX/USD",
-      "BCH/USD",
       "BLESS/USD",
       "BNB/USD",
       "CAP/USD",
@@ -313,7 +312,8 @@
       "PUMP/USD",
       "QNT/USD",
       "RENDER/USD",
-      "RLUSD/USD",
+      "RLUSD/USDT",
+      "SHIB/USD",
       "SOFID/USDT",
       "SOL/USD",
       "SUI/USD",
@@ -418,17 +418,6 @@
         "watch_only": true
       },
       "AVAX/USD": {
-        "approved_by_consensus": false,
-        "decision": "HOLD",
-        "execution_mode": "PAPER_ONLY",
-        "live_orders_enabled": false,
-        "reason_codes": [
-          "WATCH_ONLY_NO_CLOSED_CANDLE_SIGNAL"
-        ],
-        "strategy_signal": "HOLD",
-        "watch_only": true
-      },
-      "BCH/USD": {
         "approved_by_consensus": false,
         "decision": "HOLD",
         "execution_mode": "PAPER_ONLY",
@@ -801,7 +790,18 @@
         "strategy_signal": "HOLD",
         "watch_only": true
       },
-      "RLUSD/USD": {
+      "RLUSD/USDT": {
+        "approved_by_consensus": false,
+        "decision": "HOLD",
+        "execution_mode": "PAPER_ONLY",
+        "live_orders_enabled": false,
+        "reason_codes": [
+          "WATCH_ONLY_NO_CLOSED_CANDLE_SIGNAL"
+        ],
+        "strategy_signal": "HOLD",
+        "watch_only": true
+      },
+      "SHIB/USD": {
         "approved_by_consensus": false,
         "decision": "HOLD",
         "execution_mode": "PAPER_ONLY",
