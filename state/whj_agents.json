@@ -37,7 +37,6 @@
           "ONDO/USD",
           "PAXG/USD",
           "PEARL/USD",
-          "PENGU/USD",
           "PEPE/USD",
           "PIEVERSE/USD",
           "PUMP/USD",
@@ -49,15 +48,16 @@
           "SOL/USD",
           "SUI/USD",
           "TAO/USD",
-          "TON/USD",
           "TRUMP/USD",
           "TRX/USD",
           "UNI/USD",
           "USELESS/USD",
+          "USTABLES/USD",
           "VVV/USD",
           "WINGS/USD",
           "WLD/USD",
           "XAGUSD",
+          "XAUT/USDT",
           "XAUUSD",
           "XDC/USD",
           "XDG/USD",
@@ -104,7 +104,6 @@
           "ONDO/USD",
           "PAXG/USD",
           "PEARL/USD",
-          "PENGU/USD",
           "PEPE/USD",
           "PIEVERSE/USD",
           "PUMP/USD",
@@ -116,15 +115,16 @@
           "SOL/USD",
           "SUI/USD",
           "TAO/USD",
-          "TON/USD",
           "TRUMP/USD",
           "TRX/USD",
           "UNI/USD",
           "USELESS/USD",
+          "USTABLES/USD",
           "VVV/USD",
           "WINGS/USD",
           "WLD/USD",
           "XAGUSD",
+          "XAUT/USDT",
           "XDC/USD",
           "XDG/USD",
           "XLM/USD",
@@ -170,7 +170,6 @@
           "ONDO/USD",
           "PAXG/USD",
           "PEARL/USD",
-          "PENGU/USD",
           "PEPE/USD",
           "PIEVERSE/USD",
           "PUMP/USD",
@@ -182,15 +181,16 @@
           "SOL/USD",
           "SUI/USD",
           "TAO/USD",
-          "TON/USD",
           "TRUMP/USD",
           "TRX/USD",
           "UNI/USD",
           "USELESS/USD",
+          "USTABLES/USD",
           "VVV/USD",
           "WINGS/USD",
           "WLD/USD",
           "XAGUSD",
+          "XAUT/USDT",
           "XDC/USD",
           "XDG/USD",
           "XLM/USD",
@@ -252,23 +252,23 @@
     {
       "detail": "Equity is read from the single shared paper wallet when available.",
       "metrics": {
-        "closed_trades": 25,
-        "equity_usd": 99.067,
+        "closed_trades": 27,
+        "equity_usd": 99.2065,
         "initial_equity_usd": 100.0,
-        "pnl_usd": -0.933,
-        "return_pct": -0.933,
+        "pnl_usd": -0.7935,
+        "return_pct": -0.7935,
         "shared_wallet": true
       },
       "name": "EQUITY",
       "status": "TRACKING"
     }
   ],
-  "generated_at_utc": "2026-11-22T06:40:19.868149+00:00",
+  "generated_at_utc": "2026-11-22T07:52:39.744132+00:00",
   "live_trading_enabled": false,
   "mode": "PAPER_ONLY",
   "portfolio_status": "PAPER_RUNNING",
   "schema_version": 2,
-  "source_updated_at": "2026-11-22T06:40:19.324457+00:00",
+  "source_updated_at": "2026-11-22T07:52:39.235876+00:00",
   "summary": {
     "agent_count": 6,
     "markets": [
@@ -306,7 +306,6 @@
       "ONDO/USD",
       "PAXG/USD",
       "PEARL/USD",
-      "PENGU/USD",
       "PEPE/USD",
       "PIEVERSE/USD",
       "PUMP/USD",
@@ -318,15 +317,16 @@
       "SOL/USD",
       "SUI/USD",
       "TAO/USD",
-      "TON/USD",
       "TRUMP/USD",
       "TRX/USD",
       "UNI/USD",
       "USELESS/USD",
+      "USTABLES/USD",
       "VVV/USD",
       "WINGS/USD",
       "WLD/USD",
       "XAGUSD",
+      "XAUT/USDT",
       "XDC/USD",
       "XDG/USD",
       "XLM/USD",
@@ -724,17 +724,6 @@
         "strategy_signal": "HOLD",
         "watch_only": true
       },
-      "PENGU/USD": {
-        "approved_by_consensus": false,
-        "decision": "HOLD",
-        "execution_mode": "PAPER_ONLY",
-        "live_orders_enabled": false,
-        "reason_codes": [
-          "WATCH_ONLY_NO_CLOSED_CANDLE_SIGNAL"
-        ],
-        "strategy_signal": "HOLD",
-        "watch_only": true
-      },
       "PEPE/USD": {
         "approved_by_consensus": false,
         "decision": "HOLD",
@@ -856,17 +845,6 @@
         "strategy_signal": "HOLD",
         "watch_only": true
       },
-      "TON/USD": {
-        "approved_by_consensus": false,
-        "decision": "HOLD",
-        "execution_mode": "PAPER_ONLY",
-        "live_orders_enabled": false,
-        "reason_codes": [
-          "WATCH_ONLY_NO_CLOSED_CANDLE_SIGNAL"
-        ],
-        "strategy_signal": "HOLD",
-        "watch_only": true
-      },
       "TRUMP/USD": {
         "approved_by_consensus": false,
         "decision": "HOLD",
@@ -911,6 +889,17 @@
         "strategy_signal": "HOLD",
         "watch_only": true
       },
+      "USTABLES/USD": {
+        "approved_by_consensus": false,
+        "decision": "HOLD",
+        "execution_mode": "PAPER_ONLY",
+        "live_orders_enabled": false,
+        "reason_codes": [
+          "WATCH_ONLY_NO_CLOSED_CANDLE_SIGNAL"
+        ],
+        "strategy_signal": "HOLD",
+        "watch_only": true
+      },
       "VVV/USD": {
         "approved_by_consensus": false,
         "decision": "HOLD",
@@ -945,6 +934,17 @@
         "watch_only": true
       },
       "XAGUSD": {
+        "approved_by_consensus": false,
+        "decision": "HOLD",
+        "execution_mode": "PAPER_ONLY",
+        "live_orders_enabled": false,
+        "reason_codes": [
+          "WATCH_ONLY_NO_CLOSED_CANDLE_SIGNAL"
+        ],
+        "strategy_signal": "HOLD",
+        "watch_only": true
+      },
+      "XAUT/USDT": {
         "approved_by_consensus": false,
         "decision": "HOLD",
         "execution_mode": "PAPER_ONLY",
