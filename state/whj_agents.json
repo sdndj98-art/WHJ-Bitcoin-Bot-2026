@@ -22,6 +22,7 @@
           "DRV/USD",
           "ENA/USD",
           "ETH/USD",
+          "EURCV/USDC",
           "EVAA/USD",
           "GRASS/USD",
           "HBAR/USD",
@@ -44,12 +45,11 @@
           "PUMP/USD",
           "QNT/USD",
           "RENDER/USD",
-          "SHIB/USD",
+          "RLUSD/USD",
           "SOFID/USD",
           "SOL/USD",
           "SUI/USD",
           "TAO/USD",
-          "TON/USD",
           "TRUMP/USD",
           "TRX/USD",
           "UNI/USD",
@@ -89,6 +89,7 @@
           "DRV/USD",
           "ENA/USD",
           "ETH/USD",
+          "EURCV/USDC",
           "EVAA/USD",
           "GRASS/USD",
           "HBAR/USD",
@@ -111,12 +112,11 @@
           "PUMP/USD",
           "QNT/USD",
           "RENDER/USD",
-          "SHIB/USD",
+          "RLUSD/USD",
           "SOFID/USD",
           "SOL/USD",
           "SUI/USD",
           "TAO/USD",
-          "TON/USD",
           "TRUMP/USD",
           "TRX/USD",
           "UNI/USD",
@@ -155,6 +155,7 @@
           "DRV/USD",
           "ENA/USD",
           "ETH/USD",
+          "EURCV/USDC",
           "EVAA/USD",
           "GRASS/USD",
           "HBAR/USD",
@@ -177,12 +178,11 @@
           "PUMP/USD",
           "QNT/USD",
           "RENDER/USD",
-          "SHIB/USD",
+          "RLUSD/USD",
           "SOFID/USD",
           "SOL/USD",
           "SUI/USD",
           "TAO/USD",
-          "TON/USD",
           "TRUMP/USD",
           "TRX/USD",
           "UNI/USD",
@@ -253,22 +253,22 @@
       "detail": "Equity is read from the single shared paper wallet when available.",
       "metrics": {
         "closed_trades": 34,
-        "equity_usd": 100.7018,
+        "equity_usd": 100.6838,
         "initial_equity_usd": 100.0,
-        "pnl_usd": 0.7018,
-        "return_pct": 0.7018,
+        "pnl_usd": 0.6838,
+        "return_pct": 0.6838,
         "shared_wallet": true
       },
       "name": "EQUITY",
       "status": "TRACKING"
     }
   ],
-  "generated_at_utc": "2026-11-22T21:49:27.976781+00:00",
+  "generated_at_utc": "2026-11-22T22:32:44.282293+00:00",
   "live_trading_enabled": false,
   "mode": "PAPER_ONLY",
   "portfolio_status": "PAPER_RUNNING",
   "schema_version": 2,
-  "source_updated_at": "2026-11-22T21:49:27.538593+00:00",
+  "source_updated_at": "2026-11-22T22:32:43.819488+00:00",
   "summary": {
     "agent_count": 6,
     "markets": [
@@ -291,6 +291,7 @@
       "DRV/USD",
       "ENA/USD",
       "ETH/USD",
+      "EURCV/USDC",
       "EVAA/USD",
       "GRASS/USD",
       "HBAR/USD",
@@ -313,12 +314,11 @@
       "PUMP/USD",
       "QNT/USD",
       "RENDER/USD",
-      "SHIB/USD",
+      "RLUSD/USD",
       "SOFID/USD",
       "SOL/USD",
       "SUI/USD",
       "TAO/USD",
-      "TON/USD",
       "TRUMP/USD",
       "TRX/USD",
       "UNI/USD",
@@ -549,6 +549,17 @@
         "watch_only": true
       },
       "ETH/USD": {
+        "approved_by_consensus": false,
+        "decision": "HOLD",
+        "execution_mode": "PAPER_ONLY",
+        "live_orders_enabled": false,
+        "reason_codes": [
+          "WATCH_ONLY_NO_CLOSED_CANDLE_SIGNAL"
+        ],
+        "strategy_signal": "HOLD",
+        "watch_only": true
+      },
+      "EURCV/USDC": {
         "approved_by_consensus": false,
         "decision": "HOLD",
         "execution_mode": "PAPER_ONLY",
@@ -801,7 +812,7 @@
         "strategy_signal": "HOLD",
         "watch_only": true
       },
-      "SHIB/USD": {
+      "RLUSD/USD": {
         "approved_by_consensus": false,
         "decision": "HOLD",
         "execution_mode": "PAPER_ONLY",
@@ -846,17 +857,6 @@
         "watch_only": true
       },
       "TAO/USD": {
-        "approved_by_consensus": false,
-        "decision": "HOLD",
-        "execution_mode": "PAPER_ONLY",
-        "live_orders_enabled": false,
-        "reason_codes": [
-          "WATCH_ONLY_NO_CLOSED_CANDLE_SIGNAL"
-        ],
-        "strategy_signal": "HOLD",
-        "watch_only": true
-      },
-      "TON/USD": {
         "approved_by_consensus": false,
         "decision": "HOLD",
         "execution_mode": "PAPER_ONLY",

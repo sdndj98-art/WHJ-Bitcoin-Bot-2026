@@ -1,12 +1,12 @@
 {
   "schema_version": 1,
-  "generated_at_utc": "2026-11-22T21:49:28+00:00",
+  "generated_at_utc": "2026-11-22T22:32:44+00:00",
   "status": "CONNECTED",
   "bridge_mode": "READ_ONLY_PAPER_AUDIT",
   "paper_only": true,
   "live_trading_enabled": false,
   "orders_submitted": false,
-  "source_workflow_run_id": "45074155515",
+  "source_workflow_run_id": "45078223320",
   "six_agent_office": {
     "status": "PAPER_RUNNING",
     "portfolio_decision": "UNKNOWN",
@@ -19,38 +19,44 @@
       "LOGGER",
       "EQUITY"
     ],
-    "generated_at_utc": "2026-11-22T21:49:27.976781+00:00"
+    "generated_at_utc": "2026-11-22T22:32:44.282293+00:00"
   },
   "shared_wallet": {
     "initial_capital_usd": 100.0,
     "cash_usd": 50.4243959879,
     "open_positions": 17,
     "closed_trades": 34,
-    "equity_usd": 100.7018,
-    "pnl_usd": 0.7018,
-    "return_pct": 0.7018
+    "equity_usd": 100.6838,
+    "pnl_usd": 0.6838,
+    "return_pct": 0.6838
   },
   "multi_asset_engine": {
     "status": "PAPER_ONLY",
     "markets_scanned": 64,
     "markets_with_errors": 0,
-    "processed_closed_candles": 487,
+    "processed_closed_candles": 506,
     "events_this_run": 0,
-    "strategy_entry_signals": 150,
+    "strategy_entry_signals": 188,
     "positions_opened_this_run": 0,
-    "entries_blocked_by_guards": 140,
+    "entries_blocked_by_guards": 173,
     "block_reasons": {
       "sma_trend": {
-        "MIN_TRADE_OR_INSUFFICIENT_CASH": 37
+        "MIN_TRADE_OR_INSUFFICIENT_CASH": 45
       },
       "ema_trend": {
-        "MIN_TRADE_OR_INSUFFICIENT_CASH": 42
+        "MIN_TRADE_OR_INSUFFICIENT_CASH": 43
       },
       "rsi_momentum": {
-        "MIN_TRADE_OR_INSUFFICIENT_CASH": 39
+        "MIN_TRADE_OR_INSUFFICIENT_CASH": 49
+      },
+      "sma200_regime": {
+        "MIN_TRADE_OR_INSUFFICIENT_CASH": 6
+      },
+      "ema50_200_regime": {
+        "MIN_TRADE_OR_INSUFFICIENT_CASH": 9
       },
       "compound_momentum": {
-        "MIN_TRADE_OR_INSUFFICIENT_CASH": 22
+        "MIN_TRADE_OR_INSUFFICIENT_CASH": 21
       }
     }
   },
