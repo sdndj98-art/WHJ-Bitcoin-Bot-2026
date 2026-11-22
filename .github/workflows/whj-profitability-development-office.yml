@@ -1,0 +1,63 @@
+name: WHJ Profitability Development Office
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "41 3 * * *"
+  workflow_run:
+    workflows:
+      - WHJ Shared $100 Seven-Strategy Paper Portfolio
+      - WHJ 24x7 Development Team
+      - WHJ Strategy Opportunity Research
+      - WHJ Daily BTC Multi-Strategy Research
+    types: [completed]
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: whj-profitability-development-office
+  cancel-in-progress: false
+
+jobs:
+  research-and-qualification:
+    if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Run development council and full regression tests
+        run: python whj_24h_development_team.py
+      - name: Run historical BTC and Gold opportunity research
+        run: python strategy_opportunity_research.py
+      - name: Apply conservative historical profitability gate
+        run: python office/profitability_gate.py
+      - name: Publish office decision
+        if: always()
+        run: |
+          if [ -f office/profitability_gate_report.md ]; then
+            cat office/profitability_gate_report.md >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "## WHJ Profitability Office" >> "$GITHUB_STEP_SUMMARY"
+            echo "Research or qualification did not produce a report; inspect failed steps." >> "$GITHUB_STEP_SUMMARY"
+          fi
+      - name: Upload research and office evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: whj-profitability-office-\${{ github.run_number }}
+          path: |
+            research/strategy_opportunities/
+            office/profitability_gate_report.json
+            office/profitability_gate_report.md
+            research/development_team/
+          if-no-files-found: warn
+          retention-days: 30
