@@ -14,7 +14,6 @@
           "AVAX/USD",
           "BLESS/USD",
           "BNB/USD",
-          "CAP/USD",
           "CC/USD",
           "CCD/USD",
           "CRV/USD",
@@ -50,13 +49,13 @@
           "SOL/USD",
           "SUI/USD",
           "TAO/USD",
+          "TON/USD",
           "TRUMP/USD",
           "TRX/USD",
           "UNI/USD",
           "VVV/USD",
           "WINGS/USD",
           "WLD/USD",
-          "XAGUSD",
           "XAUT/USDT",
           "XAUUSD",
           "XCN/USD",
@@ -81,7 +80,6 @@
           "AVAX/USD",
           "BLESS/USD",
           "BNB/USD",
-          "CAP/USD",
           "CC/USD",
           "CCD/USD",
           "CRV/USD",
@@ -117,13 +115,13 @@
           "SOL/USD",
           "SUI/USD",
           "TAO/USD",
+          "TON/USD",
           "TRUMP/USD",
           "TRX/USD",
           "UNI/USD",
           "VVV/USD",
           "WINGS/USD",
           "WLD/USD",
-          "XAGUSD",
           "XAUT/USDT",
           "XCN/USD",
           "XDG/USD",
@@ -147,7 +145,6 @@
           "AVAX/USD",
           "BLESS/USD",
           "BNB/USD",
-          "CAP/USD",
           "CC/USD",
           "CCD/USD",
           "CRV/USD",
@@ -183,13 +180,13 @@
           "SOL/USD",
           "SUI/USD",
           "TAO/USD",
+          "TON/USD",
           "TRUMP/USD",
           "TRX/USD",
           "UNI/USD",
           "VVV/USD",
           "WINGS/USD",
           "WLD/USD",
-          "XAGUSD",
           "XAUT/USDT",
           "XCN/USD",
           "XDG/USD",
@@ -263,12 +260,12 @@
       "status": "TRACKING"
     }
   ],
-  "generated_at_utc": "2026-11-22T18:03:02.715513+00:00",
+  "generated_at_utc": "2026-11-22T18:54:10.259926+00:00",
   "live_trading_enabled": false,
   "mode": "PAPER_ONLY",
   "portfolio_status": "PAPER_RUNNING",
   "schema_version": 2,
-  "source_updated_at": "2026-11-22T18:03:02.163723+00:00",
+  "source_updated_at": "2026-11-22T18:54:09.706197+00:00",
   "summary": {
     "agent_count": 6,
     "markets": [
@@ -283,7 +280,6 @@
       "AVAX/USD",
       "BLESS/USD",
       "BNB/USD",
-      "CAP/USD",
       "CC/USD",
       "CCD/USD",
       "CRV/USD",
@@ -319,13 +315,13 @@
       "SOL/USD",
       "SUI/USD",
       "TAO/USD",
+      "TON/USD",
       "TRUMP/USD",
       "TRX/USD",
       "UNI/USD",
       "VVV/USD",
       "WINGS/USD",
       "WLD/USD",
-      "XAGUSD",
       "XAUT/USDT",
       "XCN/USD",
       "XDG/USD",
@@ -461,17 +457,6 @@
         "strategy_signal": "HOLD"
       },
       "BTC/USD": {
-        "approved_by_consensus": false,
-        "decision": "HOLD",
-        "execution_mode": "PAPER_ONLY",
-        "live_orders_enabled": false,
-        "reason_codes": [
-          "WATCH_ONLY_NO_CLOSED_CANDLE_SIGNAL"
-        ],
-        "strategy_signal": "HOLD",
-        "watch_only": true
-      },
-      "CAP/USD": {
         "approved_by_consensus": false,
         "decision": "HOLD",
         "execution_mode": "PAPER_ONLY",
@@ -867,6 +852,17 @@
         "strategy_signal": "HOLD",
         "watch_only": true
       },
+      "TON/USD": {
+        "approved_by_consensus": false,
+        "decision": "HOLD",
+        "execution_mode": "PAPER_ONLY",
+        "live_orders_enabled": false,
+        "reason_codes": [
+          "WATCH_ONLY_NO_CLOSED_CANDLE_SIGNAL"
+        ],
+        "strategy_signal": "HOLD",
+        "watch_only": true
+      },
       "TRUMP/USD": {
         "approved_by_consensus": false,
         "decision": "HOLD",
@@ -923,17 +919,6 @@
         "watch_only": true
       },
       "WLD/USD": {
-        "approved_by_consensus": false,
-        "decision": "HOLD",
-        "execution_mode": "PAPER_ONLY",
-        "live_orders_enabled": false,
-        "reason_codes": [
-          "WATCH_ONLY_NO_CLOSED_CANDLE_SIGNAL"
-        ],
-        "strategy_signal": "HOLD",
-        "watch_only": true
-      },
-      "XAGUSD": {
         "approved_by_consensus": false,
         "decision": "HOLD",
         "execution_mode": "PAPER_ONLY",

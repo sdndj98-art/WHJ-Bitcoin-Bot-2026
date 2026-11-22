@@ -6,7 +6,7 @@
   "compounding_enabled": true,
   "sizing_mode": "SHARED_100USD_EQUITY_FRACTION",
   "initial_capital_usd": 100.0,
-  "updated_at": "2026-11-22T18:03:02.163723+00:00",
+  "updated_at": "2026-11-22T18:54:09.706197+00:00",
   "shared_portfolio": {
     "mode": "PAPER_ONLY",
     "live_trading_enabled": false,
@@ -223,8 +223,8 @@
     "independent_ledger_enabled": false,
     "paper_execution_enabled": true,
     "last_price_usd": 3539.0,
-    "quote_timestamp": "2026-11-22T18:02:40Z",
-    "quote_age_seconds": -21.6,
+    "quote_timestamp": "2026-11-22T18:53:40Z",
+    "quote_age_seconds": -8.3,
     "history_interval": "1d",
     "source": "Gold-API spot + goldprice.dev daily bars",
     "bid_usd_oz": null,
@@ -536,8 +536,8 @@
         "provider": "Gold-API public spot (approximately 30-second refresh)",
         "last_price_usd": 3539.0,
         "price_unit": "troy_ounce",
-        "quote_age_seconds": -21.6,
-        "quote_timestamp": "2026-11-22T18:02:40Z",
+        "quote_age_seconds": -8.3,
+        "quote_timestamp": "2026-11-22T18:53:40Z",
         "history_interval": "1d",
         "closed_daily_bars": 20,
         "latest_closed_candle": 1795046400,
@@ -545,19 +545,19 @@
         "closed_trades": 0
       },
       "XAGUSD": {
-        "status": "PAPER_DAILY_READY",
-        "paper_execution_enabled": true,
+        "status": "SPOT_ONLY_RESEARCH",
+        "paper_execution_enabled": false,
         "symbol": "XAGUSD",
         "provider": "Gold-API public spot (approximately 30-second refresh)",
         "last_price_usd": 41.080002,
         "price_unit": "troy_ounce",
-        "quote_age_seconds": -20.6,
-        "quote_timestamp": "2026-11-22T18:02:39Z",
-        "history_interval": "1d",
-        "closed_daily_bars": 20,
-        "latest_closed_candle": 1795046400,
-        "reason": null,
-        "closed_trades": 0
+        "quote_age_seconds": 28.5,
+        "quote_timestamp": "2026-11-22T18:53:39Z",
+        "history_interval": null,
+        "closed_daily_bars": 0,
+        "latest_closed_candle": null,
+        "closed_trades": 0,
+        "reason": "<urlopen error [Errno -2] Name or service not known>"
       },
       "XCUUSD": {
         "status": "SPOT_ONLY_HISTORY_BLOCKED",
@@ -566,8 +566,8 @@
         "provider": "Gold-API public spot (approximately 30-second refresh)",
         "last_price_usd": 5.621824,
         "price_unit": "pound",
-        "quote_age_seconds": 10.6,
-        "quote_timestamp": "2026-11-22T18:02:42Z",
+        "quote_age_seconds": 25.5,
+        "quote_timestamp": "2026-11-22T18:53:42Z",
         "history_interval": null,
         "closed_daily_bars": 0,
         "latest_closed_candle": null,
@@ -581,8 +581,8 @@
         "provider": "Gold-API public spot (approximately 30-second refresh)",
         "last_price_usd": 1286.0,
         "price_unit": "troy_ounce",
-        "quote_age_seconds": 9.6,
-        "quote_timestamp": "2026-11-22T18:02:43Z",
+        "quote_age_seconds": 24.5,
+        "quote_timestamp": "2026-11-22T18:53:43Z",
         "history_interval": null,
         "closed_daily_bars": 0,
         "latest_closed_candle": null,
@@ -596,8 +596,8 @@
         "provider": "Gold-API public spot (approximately 30-second refresh)",
         "last_price_usd": 893.0,
         "price_unit": "troy_ounce",
-        "quote_age_seconds": 10.6,
-        "quote_timestamp": "2026-11-22T18:02:42Z",
+        "quote_age_seconds": 25.5,
+        "quote_timestamp": "2026-11-22T18:53:42Z",
         "history_interval": null,
         "closed_daily_bars": 0,
         "latest_closed_candle": null,
@@ -619,7 +619,6 @@
       "BLESS/USD",
       "BNB/USD",
       "BTC/USD",
-      "CAP/USD",
       "CC/USD",
       "CCD/USD",
       "CRV/USD",
@@ -655,13 +654,13 @@
       "SOL/USD",
       "SUI/USD",
       "TAO/USD",
+      "TON/USD",
       "TRUMP/USD",
       "TRX/USD",
       "UNI/USD",
       "VVV/USD",
       "WINGS/USD",
       "WLD/USD",
-      "XAGUSD",
       "XAUT/USDT",
       "XAUUSD",
       "XCN/USD",
@@ -674,63 +673,61 @@
       "ZEC/USD",
       "ZRO/USD"
     ],
-    "markets_with_errors": {},
+    "markets_with_errors": {
+      "XAGUSD": "<urlopen error [Errno -2] Name or service not known>"
+    },
     "seeded_markets": [],
-    "processed_closed_candles": 514,
+    "processed_closed_candles": 463,
     "events_this_run": [],
     "strategy_diagnostics": {
       "sma_trend": {
-        "candles_evaluated": 66,
-        "entry_signals": 54,
-        "exit_signals": 12,
+        "candles_evaluated": 51,
+        "entry_signals": 42,
+        "exit_signals": 9,
         "opened": 0,
-        "blocked": 52,
+        "blocked": 41,
         "block_reasons": {
-          "MIN_TRADE_OR_INSUFFICIENT_CASH": 52
+          "MIN_TRADE_OR_INSUFFICIENT_CASH": 41
         }
       },
       "ema_trend": {
-        "candles_evaluated": 64,
-        "entry_signals": 55,
-        "exit_signals": 9,
+        "candles_evaluated": 58,
+        "entry_signals": 51,
+        "exit_signals": 7,
         "opened": 0,
-        "blocked": 50,
+        "blocked": 46,
         "block_reasons": {
-          "MIN_TRADE_OR_INSUFFICIENT_CASH": 50
+          "MIN_TRADE_OR_INSUFFICIENT_CASH": 46
         }
       },
       "rsi_momentum": {
-        "candles_evaluated": 64,
-        "entry_signals": 45,
-        "exit_signals": 19,
+        "candles_evaluated": 52,
+        "entry_signals": 35,
+        "exit_signals": 17,
         "opened": 0,
-        "blocked": 44,
+        "blocked": 35,
         "block_reasons": {
-          "MIN_TRADE_OR_INSUFFICIENT_CASH": 44
+          "MIN_TRADE_OR_INSUFFICIENT_CASH": 35
         }
       },
       "sma200_regime": {
-        "candles_evaluated": 64,
-        "entry_signals": 9,
-        "exit_signals": 55,
+        "candles_evaluated": 61,
+        "entry_signals": 0,
+        "exit_signals": 1,
         "opened": 0,
-        "blocked": 8,
-        "block_reasons": {
-          "MIN_TRADE_OR_INSUFFICIENT_CASH": 8
-        }
+        "blocked": 0,
+        "block_reasons": {}
       },
       "ema50_200_regime": {
-        "candles_evaluated": 64,
-        "entry_signals": 9,
-        "exit_signals": 55,
+        "candles_evaluated": 61,
+        "entry_signals": 0,
+        "exit_signals": 1,
         "opened": 0,
-        "blocked": 8,
-        "block_reasons": {
-          "MIN_TRADE_OR_INSUFFICIENT_CASH": 8
-        }
+        "blocked": 0,
+        "block_reasons": {}
       },
       "bollinger_mean_reversion": {
-        "candles_evaluated": 64,
+        "candles_evaluated": 61,
         "entry_signals": 0,
         "exit_signals": 0,
         "opened": 0,
@@ -738,7 +735,7 @@
         "block_reasons": {}
       },
       "rsi14_mean_reversion": {
-        "candles_evaluated": 64,
+        "candles_evaluated": 58,
         "entry_signals": 3,
         "exit_signals": 0,
         "opened": 0,
@@ -748,9 +745,9 @@
         }
       },
       "compound_momentum": {
-        "candles_evaluated": 64,
+        "candles_evaluated": 61,
         "entry_signals": 24,
-        "exit_signals": 13,
+        "exit_signals": 12,
         "opened": 0,
         "blocked": 23,
         "block_reasons": {
