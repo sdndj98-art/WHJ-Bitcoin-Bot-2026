@@ -5,7 +5,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
-from office.ai_code_agent import MAX_FILE_CHARS, parse_requested_files
+from office.ai_code_agent import MAX_FILE_CHARS, choose_gemini_model, parse_requested_files
 
 
 class AICodeAgentAllowlistTests(unittest.TestCase):
@@ -39,6 +39,23 @@ class AICodeAgentAllowlistTests(unittest.TestCase):
     def test_context_limit_covers_multi_market_scanner_source(self):
         source = ROOT / "multi_market_opportunity_scan.py"
         self.assertLessEqual(source.stat().st_size, MAX_FILE_CHARS)
+
+    def test_auto_model_prefers_available_flash_lite(self):
+        models = [
+            {"name": "models/gemini-pro-x", "supportedGenerationMethods": ["generateContent"]},
+            {"name": "models/gemini-flash-lite-x", "supportedGenerationMethods": ["generateContent"]},
+            {"name": "models/text-embedding-x", "supportedGenerationMethods": ["embedContent"]},
+        ]
+        self.assertEqual(choose_gemini_model(models), "gemini-flash-lite-x")
+
+    def test_auto_model_rejects_models_without_generation_support(self):
+        with self.assertRaises(RuntimeError):
+            choose_gemini_model([
+                {"name": "models/embedding-x", "supportedGenerationMethods": ["embedContent"]}
+            ])
+
+    def test_explicit_model_is_preserved(self):
+        self.assertEqual(choose_gemini_model([], "custom-model-id"), "custom-model-id")
 
     def test_rejects_missing_file(self):
         with self.assertRaises(ValueError):
