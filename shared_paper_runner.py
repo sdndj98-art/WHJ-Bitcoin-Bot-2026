@@ -206,6 +206,7 @@ def main():
         book.save_strategy_state(strategy_state)
         latest = rows[-1]
         snapshot = _make_snapshot(book, strategy_state, latest[4], quality, "WARMUP_SEEDED")
+        book.save_strategy_state(strategy_state)
         atomic_json(SNAPSHOT, snapshot)
         print(json.dumps({"status": "WARMUP_SEEDED", "initial_cash_usd": INITIAL_CASH,
                           "strategies": len(SUPPORTED_STRATEGIES), "processed_new_candles": 0}, indent=2))
@@ -284,6 +285,7 @@ def main():
     snapshot = _make_snapshot(book, strategy_state, latest_close, quality,
                               "PAPER_RUNNING" if processed else "WAITING_NEXT_CLOSED_CANDLE",
                               processed, new_trades)
+    book.save_strategy_state(strategy_state)
     atomic_json(SNAPSHOT, snapshot)
     print(json.dumps({
         "status": snapshot["status"], "initial_cash_usd": INITIAL_CASH,
@@ -380,17 +382,51 @@ def _make_snapshot(book, strategy_state, price, quality, status,
         open_fees = sum(float(book.state["positions"][p["position_id"]]["entry_fee_usd"])
                         for p in positions if p["position_id"] in book.state["positions"])
         fees = sum(float(trade.get("fees_usd", 0.0)) for trade in closed) + open_fees
-        peak = max(float(state.get("peak_equity", INITIAL_CASH)), 1e-12)
-        drawdown = max(0.0, (peak - float(shared["equity_usd"])) / peak * 100.0)
+        # Attribute each strategy's own realized and open-position PnL.
+        # Shared cash is not divided equally: that misstates returns when
+        # strategies have different amounts of capital deployed.
+        realized_pnl = sum(pnls)
+        unrealized_pnl = sum(
+            float(book.state["positions"][p["position_id"]]["units"])
+            * float(prices[p["asset"]])
+            * (1.0 - SLIPPAGE_RATE) * (1.0 - FEE_RATE)
+            - float(book.state["positions"][p["position_id"]]["entry_notional_usd"])
+            - float(book.state["positions"][p["position_id"]]["entry_fee_usd"])
+            for p in positions
+        )
+        allocated_initial = INITIAL_CASH / len(SUPPORTED_STRATEGIES)
+        strategy_pnl = realized_pnl + unrealized_pnl
+        strategy_equity = allocated_initial + strategy_pnl
+        # Persist a per-strategy high-water mark at each completed snapshot.
+        # This is candle/snapshot-sampled drawdown, not tick-level intrabar DD.
+        peak = max(
+            float(state.get("peak_strategy_equity_usd", allocated_initial)),
+            strategy_equity,
+        )
+        current_drawdown = max(0.0, (peak - strategy_equity) / peak * 100.0)
+        max_drawdown = max(
+            float(state.get("max_strategy_drawdown_pct", 0.0)),
+            current_drawdown,
+        )
+        state["peak_strategy_equity_usd"] = round(peak, 8)
+        state["max_strategy_drawdown_pct"] = round(max_drawdown, 4)
         by_strategy[name] = {
             "asset": "BTC", "strategy": name,
+            "initial_equity_usd": round(allocated_initial, 8),
+            "equity_usd": round(strategy_equity, 8),
+            "realized_pnl_usd": round(realized_pnl, 8),
+            "unrealized_pnl_usd": round(unrealized_pnl, 8),
+            "net_pnl_usd": round(strategy_pnl, 8),
+            "return_pct": round(strategy_pnl / allocated_initial * 100.0, 4),
             "open_positions": len(positions), "market_value_usd": round(market_value, 8),
             "trades": len(closed),
             "win_rate_pct": round(len(wins) / len(closed) * 100.0, 4) if closed else 0.0,
             "profit_factor": round(gross_profit / gross_loss, 6) if gross_loss else (None if not gross_profit else None),
             "fees_paid_usd": round(fees, 8),
             "max_consecutive_losses": loss_streak,
-            "max_drawdown_pct": round(drawdown, 4),
+            "current_drawdown_pct": round(current_drawdown, 4),
+            "max_drawdown_pct": round(max_drawdown, 4),
+            "drawdown_observation": "COMPLETED_CANDLE_SNAPSHOT_SAMPLED",
             "paused_for_drawdown": bool(state.get("paused_for_drawdown")),
             "daily_loss_paused": bool(state.get("daily_loss_paused")),
             "paused_for_loss_streak": bool(state.get("paused_for_loss_streak")),
@@ -432,16 +468,21 @@ def _make_snapshot(book, strategy_state, price, quality, status,
         "initial_capital_usd": INITIAL_CASH, "updated_at": datetime.now(timezone.utc).isoformat(),
         "shared_portfolio": shared, "btc": btc, "gold": gold,
         "strategies": [
-            {"asset": "BTC", "strategy": name, "equity_usd": round(
-                shared["cash_usd"] / len(SUPPORTED_STRATEGIES) + by_strategy[name]["market_value_usd"], 4),
-             "return_pct": round(((shared["cash_usd"] / len(SUPPORTED_STRATEGIES)
-                 + by_strategy[name]["market_value_usd"]) / (INITIAL_CASH / len(SUPPORTED_STRATEGIES)) - 1.0) * 100.0, 4),
+            {"asset": "BTC", "strategy": name,
+             "initial_equity_usd": by_strategy[name]["initial_equity_usd"],
+             "equity_usd": by_strategy[name]["equity_usd"],
+             "return_pct": by_strategy[name]["return_pct"],
+             "realized_pnl_usd": by_strategy[name]["realized_pnl_usd"],
+             "unrealized_pnl_usd": by_strategy[name]["unrealized_pnl_usd"],
+             "net_pnl_usd": by_strategy[name]["net_pnl_usd"],
              "closed_trades": by_strategy[name]["trades"],
              "win_rate_pct": by_strategy[name]["win_rate_pct"],
              "profit_factor": by_strategy[name]["profit_factor"],
              "fees_usd": by_strategy[name]["fees_paid_usd"],
              "max_consecutive_losses": by_strategy[name]["max_consecutive_losses"],
+             "current_drawdown_pct": by_strategy[name]["current_drawdown_pct"],
              "max_drawdown_pct": by_strategy[name]["max_drawdown_pct"],
+             "drawdown_observation": by_strategy[name]["drawdown_observation"],
              "status": "PAPER_ONLY", "open_positions": by_strategy[name]["open_positions"],
              "paused": by_strategy[name]["paused"],
              "paused_for_drawdown": by_strategy[name]["paused_for_drawdown"],
