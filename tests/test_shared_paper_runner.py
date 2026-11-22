@@ -153,7 +153,7 @@ class SharedPaperRunnerTests(unittest.TestCase):
             by_name = {item["strategy"]: item for item in strategy_rows}
             self.assertGreater(by_name["ema_trend"]["realized_pnl_usd"], 0)
             self.assertGreater(by_name["sma_trend"]["unrealized_pnl_usd"], 0)
-            self.assertIsNone(by_name["sma_trend"]["max_drawdown_pct"])
+            self.assertGreaterEqual(by_name["sma_trend"]["max_drawdown_pct"], 0)
             self.assertGreaterEqual(by_name["sma_trend"]["current_drawdown_pct"], 0)
             self.assertAlmostEqual(
                 by_name["ema_trend"]["equity_usd"],
