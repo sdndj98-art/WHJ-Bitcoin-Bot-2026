@@ -12,6 +12,6 @@
   {
     "id": "paper-ledger-recovery-regressions",
     "title": "AI office task: validate shared paper-ledger state recovery",
-    "body": "Review shared paper portfolio state loading for missing, malformed, partial, or inconsistent persisted state. Add regression tests and a minimal validation fix only where needed. Never silently reset cash, equity, positions, or trade history. Preserve accounting, allocations, and paper-only safeguards. Do not change live trading behavior.\n\nFiles: shared_paper_portfolio.py, tests/test_shared_paper_portfolio.py"
+    "body": "Review shared paper portfolio state loading for missing, malformed, partial, or inconsistent persisted state. Add regression tests and a minimal validation fix only where needed. Never silently reset cash, equity, positions, or trade history. Preserve accounting, allocations, and paper-only safeguards. Do not add any exchange order submission or execution.\n\nFiles: shared_paper_portfolio.py, tests/test_shared_paper_portfolio.py"
   }
 ]
