@@ -40,13 +40,26 @@ class AICodeAgentAllowlistTests(unittest.TestCase):
         source = ROOT / "multi_market_opportunity_scan.py"
         self.assertLessEqual(source.stat().st_size, MAX_FILE_CHARS)
 
-    def test_auto_model_prefers_available_flash_lite(self):
+    def test_auto_model_prefers_current_flash_lite_version(self):
         models = [
             {"name": "models/gemini-pro-x", "supportedGenerationMethods": ["generateContent"]},
-            {"name": "models/gemini-flash-lite-x", "supportedGenerationMethods": ["generateContent"]},
+            {"name": "models/gemini-2.5-flash-lite", "supportedGenerationMethods": ["generateContent"]},
+            {"name": "models/gemini-3.5-flash-lite", "supportedGenerationMethods": ["generateContent"]},
             {"name": "models/text-embedding-x", "supportedGenerationMethods": ["embedContent"]},
         ]
-        self.assertEqual(choose_gemini_model(models), "gemini-flash-lite-x")
+        self.assertEqual(choose_gemini_model(models), "gemini-3.5-flash-lite")
+
+    def test_model_candidates_keep_fallbacks_in_preference_order(self):
+        from office.ai_code_agent import choose_gemini_models
+        models = [
+            {"name": "models/gemini-2.5-flash-lite", "supportedGenerationMethods": ["generateContent"]},
+            {"name": "models/gemini-3.5-flash", "supportedGenerationMethods": ["generateContent"]},
+            {"name": "models/gemini-3.5-flash-lite", "supportedGenerationMethods": ["generateContent"]},
+        ]
+        self.assertEqual(
+            choose_gemini_models(models),
+            ["gemini-3.5-flash-lite", "gemini-2.5-flash-lite", "gemini-3.5-flash"],
+        )
 
     def test_auto_model_rejects_models_without_generation_support(self):
         with self.assertRaises(RuntimeError):
