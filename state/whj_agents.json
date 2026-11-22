@@ -16,13 +16,13 @@
           "BNB/USD",
           "CAP/USD",
           "CC/USD",
+          "CCD/USD",
           "CRV/USD",
           "DASH/USD",
           "DRV/USD",
           "ENA/USD",
           "ETH/USD",
           "EVAA/USD",
-          "FIDD/USD",
           "GRASS/USD",
           "HBAR/USD",
           "HYPE/USD",
@@ -33,7 +33,6 @@
           "LIGHTER/USD",
           "LINK/USD",
           "LTC/USD",
-          "MON/USD",
           "NEAR/USD",
           "NIGHT/USD",
           "ONDO/USD",
@@ -64,6 +63,7 @@
           "XLM/USD",
           "XMR/USD",
           "XMR/USDT",
+          "XPL/USD",
           "XRP/USD",
           "ZBCN/USD",
           "ZEC/USD",
@@ -83,13 +83,13 @@
           "BNB/USD",
           "CAP/USD",
           "CC/USD",
+          "CCD/USD",
           "CRV/USD",
           "DASH/USD",
           "DRV/USD",
           "ENA/USD",
           "ETH/USD",
           "EVAA/USD",
-          "FIDD/USD",
           "GRASS/USD",
           "HBAR/USD",
           "HYPE/USD",
@@ -100,7 +100,6 @@
           "LIGHTER/USD",
           "LINK/USD",
           "LTC/USD",
-          "MON/USD",
           "NEAR/USD",
           "NIGHT/USD",
           "ONDO/USD",
@@ -130,6 +129,7 @@
           "XLM/USD",
           "XMR/USD",
           "XMR/USDT",
+          "XPL/USD",
           "XRP/USD",
           "ZBCN/USD",
           "ZEC/USD",
@@ -149,13 +149,13 @@
           "BNB/USD",
           "CAP/USD",
           "CC/USD",
+          "CCD/USD",
           "CRV/USD",
           "DASH/USD",
           "DRV/USD",
           "ENA/USD",
           "ETH/USD",
           "EVAA/USD",
-          "FIDD/USD",
           "GRASS/USD",
           "HBAR/USD",
           "HYPE/USD",
@@ -166,7 +166,6 @@
           "LIGHTER/USD",
           "LINK/USD",
           "LTC/USD",
-          "MON/USD",
           "NEAR/USD",
           "NIGHT/USD",
           "ONDO/USD",
@@ -196,6 +195,7 @@
           "XLM/USD",
           "XMR/USD",
           "XMR/USDT",
+          "XPL/USD",
           "XRP/USD",
           "ZBCN/USD",
           "ZEC/USD",
@@ -252,23 +252,23 @@
     {
       "detail": "Equity is read from the single shared paper wallet when available.",
       "metrics": {
-        "closed_trades": 28,
-        "equity_usd": 100.4183,
+        "closed_trades": 32,
+        "equity_usd": 100.4933,
         "initial_equity_usd": 100.0,
-        "pnl_usd": 0.4183,
-        "return_pct": 0.4183,
+        "pnl_usd": 0.4933,
+        "return_pct": 0.4933,
         "shared_wallet": true
       },
       "name": "EQUITY",
       "status": "TRACKING"
     }
   ],
-  "generated_at_utc": "2026-11-22T10:54:56.656275+00:00",
+  "generated_at_utc": "2026-11-22T11:34:34.699650+00:00",
   "live_trading_enabled": false,
   "mode": "PAPER_ONLY",
   "portfolio_status": "PAPER_RUNNING",
   "schema_version": 2,
-  "source_updated_at": "2026-11-22T10:54:56.156005+00:00",
+  "source_updated_at": "2026-11-22T11:34:34.335577+00:00",
   "summary": {
     "agent_count": 6,
     "markets": [
@@ -285,13 +285,13 @@
       "BNB/USD",
       "CAP/USD",
       "CC/USD",
+      "CCD/USD",
       "CRV/USD",
       "DASH/USD",
       "DRV/USD",
       "ENA/USD",
       "ETH/USD",
       "EVAA/USD",
-      "FIDD/USD",
       "GRASS/USD",
       "HBAR/USD",
       "HYPE/USD",
@@ -302,7 +302,6 @@
       "LIGHTER/USD",
       "LINK/USD",
       "LTC/USD",
-      "MON/USD",
       "NEAR/USD",
       "NIGHT/USD",
       "ONDO/USD",
@@ -332,6 +331,7 @@
       "XLM/USD",
       "XMR/USD",
       "XMR/USDT",
+      "XPL/USD",
       "XRP/USD",
       "ZBCN/USD",
       "ZEC/USD",
@@ -493,6 +493,17 @@
         "strategy_signal": "HOLD",
         "watch_only": true
       },
+      "CCD/USD": {
+        "approved_by_consensus": false,
+        "decision": "HOLD",
+        "execution_mode": "PAPER_ONLY",
+        "live_orders_enabled": false,
+        "reason_codes": [
+          "WATCH_ONLY_NO_CLOSED_CANDLE_SIGNAL"
+        ],
+        "strategy_signal": "HOLD",
+        "watch_only": true
+      },
       "CRV/USD": {
         "approved_by_consensus": false,
         "decision": "HOLD",
@@ -549,17 +560,6 @@
         "watch_only": true
       },
       "EVAA/USD": {
-        "approved_by_consensus": false,
-        "decision": "HOLD",
-        "execution_mode": "PAPER_ONLY",
-        "live_orders_enabled": false,
-        "reason_codes": [
-          "WATCH_ONLY_NO_CLOSED_CANDLE_SIGNAL"
-        ],
-        "strategy_signal": "HOLD",
-        "watch_only": true
-      },
-      "FIDD/USD": {
         "approved_by_consensus": false,
         "decision": "HOLD",
         "execution_mode": "PAPER_ONLY",
@@ -670,17 +670,6 @@
         "watch_only": true
       },
       "LTC/USD": {
-        "approved_by_consensus": false,
-        "decision": "HOLD",
-        "execution_mode": "PAPER_ONLY",
-        "live_orders_enabled": false,
-        "reason_codes": [
-          "WATCH_ONLY_NO_CLOSED_CANDLE_SIGNAL"
-        ],
-        "strategy_signal": "HOLD",
-        "watch_only": true
-      },
-      "MON/USD": {
         "approved_by_consensus": false,
         "decision": "HOLD",
         "execution_mode": "PAPER_ONLY",
@@ -1012,6 +1001,17 @@
         "watch_only": true
       },
       "XMR/USDT": {
+        "approved_by_consensus": false,
+        "decision": "HOLD",
+        "execution_mode": "PAPER_ONLY",
+        "live_orders_enabled": false,
+        "reason_codes": [
+          "WATCH_ONLY_NO_CLOSED_CANDLE_SIGNAL"
+        ],
+        "strategy_signal": "HOLD",
+        "watch_only": true
+      },
+      "XPL/USD": {
         "approved_by_consensus": false,
         "decision": "HOLD",
         "execution_mode": "PAPER_ONLY",
