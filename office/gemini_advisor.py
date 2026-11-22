@@ -52,12 +52,12 @@ def main() -> int:
     }
     url = (
         "https://generativelanguage.googleapis.com/v1beta/models/"
-        + MODEL + ":generateContent?key=" + API_KEY
+        + MODEL + ":generateContent"
     )
     req = urllib.request.Request(
         url,
         data=json.dumps(payload).encode("utf-8"),
-        headers={"Content-Type": "application/json"},
+        headers={"Content-Type": "application/json", "x-goog-api-key": API_KEY},
         method="POST",
     )
     try:
