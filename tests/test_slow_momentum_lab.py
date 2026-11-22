@@ -205,6 +205,26 @@ class SlowMomentumLabTests(unittest.TestCase):
                 closes, False, 0.0005, (56, 84, 112), multiplier=2.0
             )
 
+    def test_cost_stress_validates_candidate_set_and_history(self):
+        closes = [100.0 + index * 0.1 for index in range(220)]
+        for lookbacks in ((), (56, 56), (True,), (0,), "56"):
+            with self.subTest(lookbacks=repr(lookbacks)):
+                with self.assertRaises(ValueError):
+                    evaluate_cost_stress(
+                        closes, 0.001, 0.0005, lookbacks, multiplier=2.0
+                    )
+
+        with self.assertRaisesRegex(ValueError, "160"):
+            evaluate_cost_stress(
+                [100.0] * 159, 0.001, 0.0005, (56,), multiplier=2.0
+            )
+
+        # Lists remain an accepted input form for a valid candidate set.
+        result = evaluate_cost_stress(
+            closes, 0.001, 0.0005, [56], multiplier=2.0
+        )
+        self.assertIn("56", result["candidates"])
+
 
 if __name__ == "__main__":
     unittest.main()
