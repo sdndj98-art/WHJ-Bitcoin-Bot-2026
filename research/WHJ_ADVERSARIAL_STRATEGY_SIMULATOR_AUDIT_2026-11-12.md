@@ -903,3 +903,30 @@ A follow-up review of the shared slow-momentum validator found that it built `se
 The validator now checks that lookbacks are positive non-boolean integers before checking uniqueness. Regression tests exercise both the main evaluator and the direct cost-stress helper with a nested unhashable value. Valid lookback sets and all strategy calculations remain unchanged.
 
 This is input-contract hardening only. The post-F39 isolated slow-momentum workflow and its artifact remain pending; no new performance result is claimed.
+
+
+## F39/F40 validation closure — 2026-11-22
+
+### F39 — nested unhashable lookbacks
+
+- The type-before-uniqueness correction is present in `slow_momentum_lab.py`; nested unhashable lookbacks now raise the documented `ValueError` rather than leaking `TypeError`.
+- Isolated slow-momentum run [#30](https://github.com/sdndj98-art/WHJ-Bitcoin-Bot-2026/actions/runs/45058432829) succeeded and uploaded artifact [14767834613](https://github.com/sdndj98-art/WHJ-Bitcoin-Bot-2026/actions/runs/45058432829/artifacts/14767834613). The later run #32 below supersedes its data/report refresh.
+
+### F40 — main evaluator accepted non-sequence lookback containers until tuple conversion
+
+A final API-contract pass found that `evaluate_slow_momentum()` converted `lookbacks` to a tuple before checking its container type. A scalar integer or `None` therefore raised `TypeError`, unlike `evaluate_cost_stress()`, which already returned the documented `ValueError` for non-list/tuple input.
+
+**Research-only correction:** the main evaluator now checks for a list/tuple before conversion. Regression coverage verifies that integer, `None`, string, and dictionary containers fail with `ValueError`. Valid list/tuple candidates and all valid strategy calculations are unchanged.
+
+Commits:
+- [ab5f061 — validate the lookback container](https://github.com/sdndj98-art/WHJ-Bitcoin-Bot-2026/commit/ab5f061db361394760296be33ea34918d1e125d1)
+- [f27c762 — add invalid-container regression coverage](https://github.com/sdndj98-art/WHJ-Bitcoin-Bot-2026/commit/f27c762ce52cb0c2bb714dfdd7d88d2f33890608)
+
+### Latest post-F40 evidence
+
+- [Termux Repository Audit #2276](https://github.com/sdndj98-art/WHJ-Bitcoin-Bot-2026/actions/runs/45076926931), commit `f27c762ce52cb0c2bb714dfdd7d88d2f33890608`: **597 tests passed in 6.507 seconds** under Python 3.13.18; tracked Python compilation and `git diff --check` passed. The log explicitly shows `test_validation_rejects_bad_prices_and_parameters ... ok`.
+- [Isolated Slow Momentum #32](https://github.com/sdndj98-art/WHJ-Bitcoin-Bot-2026/actions/runs/45076926886) completed successfully and uploaded artifact [14776180050](https://github.com/sdndj98-art/WHJ-Bitcoin-Bot-2026/actions/runs/45076926886/artifacts/14776180050). Its ZIP SHA-256 was independently recomputed as `4f0d2da12f0117c0a09fb5ec27dcfedc0d94e4ad473e8a4417ebac0368d2e2a8`; the decompressed 1,499-row daily snapshot SHA-256 `0b8cf686acfb267bbb0cb400ae200608cd669aab8bd5d1aa556496d1bf4d30f6` matched the report and all three manifest entries.
+- Latest 56/84/112-day OOS returns were -2.0545%/-7.2307%/-11.0823%; 2x costs -3.1452%/-7.7005%/-11.9214%; 3x costs -4.2220%/-8.1672%/-12.7512%. Closed trades were 15/7/13, PF 0.7126/0.0948/0.0423, and max close-to-close DD 7.3557%/10.2742%/14.2412%. The 56-day bootstrap interval remains wide (-14.8577% to +15.2223%) and its top five winners contribute 100% of gross winning P&L.
+- PBO 0.40 covers only the three declared lookbacks on this 30% OOS return stream; it is not a global trial census or future-profit probability. The 30-trade screening gate is not met by any variant. No candidate is promoted, and the artifact confirms no paper ledger access or live orders.
+
+The latest test and isolated research workflows validate the input-contract correction and reproduce the same data hash; they do not convert the historical OOS result into rolling walk-forward or forward paper evidence.
