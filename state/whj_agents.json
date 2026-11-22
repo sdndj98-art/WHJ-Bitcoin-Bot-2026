@@ -7,7 +7,6 @@
           "BTC/USD",
           "AAVE/USD",
           "ADA/USD",
-          "AERO/USD",
           "AKE/USD",
           "ALGO/USD",
           "ARB/USD",
@@ -24,7 +23,6 @@
           "DRV/USD",
           "ENA/USD",
           "ETH/USD",
-          "FET/USD",
           "FIDD/USD",
           "HBAR/USD",
           "HYPE/USD",
@@ -41,10 +39,12 @@
           "PEARL/USD",
           "PENGU/USD",
           "PEPE/USD",
+          "PIEVERSE/USD",
           "PUMP/USD",
           "QNT/USD",
           "RENDER/USD",
           "RLUSD/USD",
+          "SHIB/USD",
           "SOFID/USDT",
           "SOL/USD",
           "SUI/USD",
@@ -74,7 +74,6 @@
           "XAUUSD",
           "AAVE/USD",
           "ADA/USD",
-          "AERO/USD",
           "AKE/USD",
           "ALGO/USD",
           "ARB/USD",
@@ -91,7 +90,6 @@
           "DRV/USD",
           "ENA/USD",
           "ETH/USD",
-          "FET/USD",
           "FIDD/USD",
           "HBAR/USD",
           "HYPE/USD",
@@ -108,10 +106,12 @@
           "PEARL/USD",
           "PENGU/USD",
           "PEPE/USD",
+          "PIEVERSE/USD",
           "PUMP/USD",
           "QNT/USD",
           "RENDER/USD",
           "RLUSD/USD",
+          "SHIB/USD",
           "SOFID/USDT",
           "SOL/USD",
           "SUI/USD",
@@ -140,7 +140,6 @@
           "XAUUSD",
           "AAVE/USD",
           "ADA/USD",
-          "AERO/USD",
           "AKE/USD",
           "ALGO/USD",
           "ARB/USD",
@@ -157,7 +156,6 @@
           "DRV/USD",
           "ENA/USD",
           "ETH/USD",
-          "FET/USD",
           "FIDD/USD",
           "HBAR/USD",
           "HYPE/USD",
@@ -174,10 +172,12 @@
           "PEARL/USD",
           "PENGU/USD",
           "PEPE/USD",
+          "PIEVERSE/USD",
           "PUMP/USD",
           "QNT/USD",
           "RENDER/USD",
           "RLUSD/USD",
+          "SHIB/USD",
           "SOFID/USDT",
           "SOL/USD",
           "SUI/USD",
@@ -253,22 +253,22 @@
       "detail": "Equity is read from the single shared paper wallet when available.",
       "metrics": {
         "closed_trades": 13,
-        "equity_usd": 99.9527,
+        "equity_usd": 99.4372,
         "initial_equity_usd": 100.0,
-        "pnl_usd": -0.0473,
-        "return_pct": -0.0473,
+        "pnl_usd": -0.5628,
+        "return_pct": -0.5628,
         "shared_wallet": true
       },
       "name": "EQUITY",
       "status": "TRACKING"
     }
   ],
-  "generated_at_utc": "2026-11-22T03:00:06.356642+00:00",
+  "generated_at_utc": "2026-11-22T03:49:29.900750+00:00",
   "live_trading_enabled": false,
   "mode": "PAPER_ONLY",
   "portfolio_status": "PAPER_RUNNING",
   "schema_version": 2,
-  "source_updated_at": "2026-11-22T03:00:05.994211+00:00",
+  "source_updated_at": "2026-11-22T03:49:29.448294+00:00",
   "summary": {
     "agent_count": 6,
     "markets": [
@@ -276,7 +276,6 @@
       "XAUUSD",
       "AAVE/USD",
       "ADA/USD",
-      "AERO/USD",
       "AKE/USD",
       "ALGO/USD",
       "ARB/USD",
@@ -293,7 +292,6 @@
       "DRV/USD",
       "ENA/USD",
       "ETH/USD",
-      "FET/USD",
       "FIDD/USD",
       "HBAR/USD",
       "HYPE/USD",
@@ -310,10 +308,12 @@
       "PEARL/USD",
       "PENGU/USD",
       "PEPE/USD",
+      "PIEVERSE/USD",
       "PUMP/USD",
       "QNT/USD",
       "RENDER/USD",
       "RLUSD/USD",
+      "SHIB/USD",
       "SOFID/USDT",
       "SOL/USD",
       "SUI/USD",
@@ -363,17 +363,6 @@
         "watch_only": true
       },
       "ADA/USD": {
-        "approved_by_consensus": false,
-        "decision": "HOLD",
-        "execution_mode": "PAPER_ONLY",
-        "live_orders_enabled": false,
-        "reason_codes": [
-          "WATCH_ONLY_NO_CLOSED_CANDLE_SIGNAL"
-        ],
-        "strategy_signal": "HOLD",
-        "watch_only": true
-      },
-      "AERO/USD": {
         "approved_by_consensus": false,
         "decision": "HOLD",
         "execution_mode": "PAPER_ONLY",
@@ -581,17 +570,6 @@
         "strategy_signal": "HOLD",
         "watch_only": true
       },
-      "FET/USD": {
-        "approved_by_consensus": false,
-        "decision": "HOLD",
-        "execution_mode": "PAPER_ONLY",
-        "live_orders_enabled": false,
-        "reason_codes": [
-          "WATCH_ONLY_NO_CLOSED_CANDLE_SIGNAL"
-        ],
-        "strategy_signal": "HOLD",
-        "watch_only": true
-      },
       "FIDD/USD": {
         "approved_by_consensus": false,
         "decision": "HOLD",
@@ -768,6 +746,17 @@
         "strategy_signal": "HOLD",
         "watch_only": true
       },
+      "PIEVERSE/USD": {
+        "approved_by_consensus": false,
+        "decision": "HOLD",
+        "execution_mode": "PAPER_ONLY",
+        "live_orders_enabled": false,
+        "reason_codes": [
+          "WATCH_ONLY_NO_CLOSED_CANDLE_SIGNAL"
+        ],
+        "strategy_signal": "HOLD",
+        "watch_only": true
+      },
       "PUMP/USD": {
         "approved_by_consensus": false,
         "decision": "HOLD",
@@ -802,6 +791,17 @@
         "watch_only": true
       },
       "RLUSD/USD": {
+        "approved_by_consensus": false,
+        "decision": "HOLD",
+        "execution_mode": "PAPER_ONLY",
+        "live_orders_enabled": false,
+        "reason_codes": [
+          "WATCH_ONLY_NO_CLOSED_CANDLE_SIGNAL"
+        ],
+        "strategy_signal": "HOLD",
+        "watch_only": true
+      },
+      "SHIB/USD": {
         "approved_by_consensus": false,
         "decision": "HOLD",
         "execution_mode": "PAPER_ONLY",
