@@ -162,6 +162,33 @@ class SharedPaperRunnerTests(unittest.TestCase):
                 places=6,
             )
 
+    def test_strategy_drawdown_peak_is_persisted_and_sampled_per_strategy(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            book = SharedPaperPortfolio(root / "ledger.json", 100)
+            book.open_position("sma_trend", "BTC/USD", 100.0, 10.0, "open-sma")
+            rows = [[i * 3600, 1, 1, 1, 100 + i, 0] for i in range(220)]
+            state = _new_strategy_state(rows)
+            with patch("shared_paper_runner.SNAPSHOT", root / "dual_portfolio.json"):
+                first = _make_snapshot(
+                    book, state, 110.0, {"quality": "HEALTHY"}, "PAPER_RUNNING"
+                )
+                second = _make_snapshot(
+                    book, state, 90.0, {"quality": "HEALTHY"}, "PAPER_RUNNING"
+                )
+            first_row = next(x for x in first["strategies"] if x["strategy"] == "sma_trend")
+            second_row = next(x for x in second["strategies"] if x["strategy"] == "sma_trend")
+            self.assertGreater(first_row["equity_usd"], second_row["equity_usd"])
+            self.assertGreater(second_row["max_drawdown_pct"], 0)
+            self.assertEqual(
+                state["sma_trend"]["max_strategy_drawdown_pct"],
+                second_row["max_drawdown_pct"],
+            )
+            self.assertEqual(
+                second_row["drawdown_observation"],
+                "COMPLETED_CANDLE_SNAPSHOT_SAMPLED",
+            )
+
     def test_btc_runner_fails_closed_when_non_btc_mark_is_stale(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
