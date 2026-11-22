@@ -77,8 +77,8 @@ class AICodeAgentAllowlistTests(unittest.TestCase):
 
     def test_safety_prohibitions_do_not_trigger_restricted_request(self):
         issue_body = (
-            "Never run live trading, never alter secrets, and never patch workflow permissions.\\n"
-            "Never weaken tests, risk limits, or paper-only safeguards."
+            "Never enable live trading, never alter secrets, and never patch workflow permissions.\n"
+            "Do not bypass risk limits or weaken paper-only safeguards."
         )
         self.assertFalse(is_restricted_request(issue_body))
 
