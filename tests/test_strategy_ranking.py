@@ -61,6 +61,19 @@ class StrategyRankingTests(unittest.TestCase):
         self.assertEqual(result["ranked_strategies"], [])
         self.assertEqual(result["excluded_strategies"][0]["status"], "INVALID_OR_INCOMPLETE_METRICS")
 
+    def test_missing_window_metrics_are_excluded(self):
+        bad_window_result = {
+            "out_of_sample": {"return_pct": 5.0, "max_drawdown_pct": 5.0, "closed_trades": 30},
+            "walk_forward_windows": [
+                {"metrics": {"return_pct": 2.0}},
+                {"metrics": {}},
+                {"metrics": {"return_pct": 1.0}},
+            ],
+        }
+        result = rank_strategy_results({"incomplete_window": bad_window_result})
+        self.assertEqual(result["ranked_strategies"], [])
+        self.assertEqual(result["excluded_strategies"][0]["status"], "INVALID_OR_INCOMPLETE_METRICS")
+
 
 if __name__ == "__main__":
     unittest.main()

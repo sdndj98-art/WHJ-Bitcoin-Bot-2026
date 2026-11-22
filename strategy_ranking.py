@@ -56,10 +56,11 @@ def rank_strategy_results(strategies, min_closed_trades=10, required_windows=3):
                     "window_count": len(windows), "required_windows": required_windows,
                 })
                 continue
-            returns = [
-                _finite_number(item["metrics"]["return_pct"], "window return")
-                for item in windows
-            ]
+            returns = []
+            for item in windows:
+                if not isinstance(item, dict) or "metrics" not in item or not isinstance(item["metrics"], dict):
+                    raise ValueError("window metrics missing")
+                returns.append(_finite_number(item["metrics"].get("return_pct"), "window return"))
             if len(returns) != required_windows:
                 raise ValueError("unexpected walk-forward window count")
             oos_return = _finite_number(oos.get("return_pct"), "out_of_sample return")
