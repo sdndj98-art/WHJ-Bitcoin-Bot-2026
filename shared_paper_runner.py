@@ -206,6 +206,7 @@ def main():
         book.save_strategy_state(strategy_state)
         latest = rows[-1]
         snapshot = _make_snapshot(book, strategy_state, latest[4], quality, "WARMUP_SEEDED")
+        book.save_strategy_state(strategy_state)
         atomic_json(SNAPSHOT, snapshot)
         print(json.dumps({"status": "WARMUP_SEEDED", "initial_cash_usd": INITIAL_CASH,
                           "strategies": len(SUPPORTED_STRATEGIES), "processed_new_candles": 0}, indent=2))
@@ -284,6 +285,7 @@ def main():
     snapshot = _make_snapshot(book, strategy_state, latest_close, quality,
                               "PAPER_RUNNING" if processed else "WAITING_NEXT_CLOSED_CANDLE",
                               processed, new_trades)
+    book.save_strategy_state(strategy_state)
     atomic_json(SNAPSHOT, snapshot)
     print(json.dumps({
         "status": snapshot["status"], "initial_cash_usd": INITIAL_CASH,
@@ -395,12 +397,19 @@ def _make_snapshot(book, strategy_state, price, quality, status,
         allocated_initial = INITIAL_CASH / len(SUPPORTED_STRATEGIES)
         strategy_pnl = realized_pnl + unrealized_pnl
         strategy_equity = allocated_initial + strategy_pnl
-        # Historical per-strategy equity peaks are not yet persisted, so
-        # report current drawdown from allocated starting capital and leave
-        # maximum drawdown explicitly unavailable rather than mislabel it.
-        current_drawdown = max(
-            0.0, (allocated_initial - strategy_equity) / allocated_initial * 100.0
+        # Persist a per-strategy high-water mark at each completed snapshot.
+        # This is candle/snapshot-sampled drawdown, not tick-level intrabar DD.
+        peak = max(
+            float(state.get("peak_strategy_equity_usd", allocated_initial)),
+            strategy_equity,
         )
+        current_drawdown = max(0.0, (peak - strategy_equity) / peak * 100.0)
+        max_drawdown = max(
+            float(state.get("max_strategy_drawdown_pct", 0.0)),
+            current_drawdown,
+        )
+        state["peak_strategy_equity_usd"] = round(peak, 8)
+        state["max_strategy_drawdown_pct"] = round(max_drawdown, 4)
         by_strategy[name] = {
             "asset": "BTC", "strategy": name,
             "initial_equity_usd": round(allocated_initial, 8),
@@ -416,7 +425,8 @@ def _make_snapshot(book, strategy_state, price, quality, status,
             "fees_paid_usd": round(fees, 8),
             "max_consecutive_losses": loss_streak,
             "current_drawdown_pct": round(current_drawdown, 4),
-            "max_drawdown_pct": None,
+            "max_drawdown_pct": round(max_drawdown, 4),
+            "drawdown_observation": "COMPLETED_CANDLE_SNAPSHOT_SAMPLED",
             "paused_for_drawdown": bool(state.get("paused_for_drawdown")),
             "daily_loss_paused": bool(state.get("daily_loss_paused")),
             "paused_for_loss_streak": bool(state.get("paused_for_loss_streak")),
