@@ -395,8 +395,12 @@ def _make_snapshot(book, strategy_state, price, quality, status,
         allocated_initial = INITIAL_CASH / len(SUPPORTED_STRATEGIES)
         strategy_pnl = realized_pnl + unrealized_pnl
         strategy_equity = allocated_initial + strategy_pnl
-        peak = max(float(state.get("peak_equity", allocated_initial)), 1e-12)
-        drawdown = max(0.0, (peak - strategy_equity) / peak * 100.0)
+        # Historical per-strategy equity peaks are not yet persisted, so
+        # report current drawdown from allocated starting capital and leave
+        # maximum drawdown explicitly unavailable rather than mislabel it.
+        current_drawdown = max(
+            0.0, (allocated_initial - strategy_equity) / allocated_initial * 100.0
+        )
         by_strategy[name] = {
             "asset": "BTC", "strategy": name,
             "initial_equity_usd": round(allocated_initial, 8),
@@ -411,7 +415,8 @@ def _make_snapshot(book, strategy_state, price, quality, status,
             "profit_factor": round(gross_profit / gross_loss, 6) if gross_loss else (None if not gross_profit else None),
             "fees_paid_usd": round(fees, 8),
             "max_consecutive_losses": loss_streak,
-            "max_drawdown_pct": round(drawdown, 4),
+            "current_drawdown_pct": round(current_drawdown, 4),
+            "max_drawdown_pct": None,
             "paused_for_drawdown": bool(state.get("paused_for_drawdown")),
             "daily_loss_paused": bool(state.get("daily_loss_paused")),
             "paused_for_loss_streak": bool(state.get("paused_for_loss_streak")),
