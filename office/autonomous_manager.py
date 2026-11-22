@@ -23,6 +23,7 @@ def select_next_task(
     tasks: list[dict[str, Any]],
     pull_requests: list[dict[str, Any]],
     remote_branches: set[str],
+    blocked_task_titles: set[str] | None = None,
 ) -> dict[str, Any] | None:
     """Return the first not-yet-attempted task; never overlap an active AI PR."""
     if any(
@@ -39,7 +40,10 @@ def select_next_task(
     }
     attempted = {str(pr.get("headRefName")) for pr in pull_requests if pr.get("headRefName")}
 
+    blocked_task_titles = blocked_task_titles or set()
     for task in tasks:
+        if str(task.get("title", "")) in blocked_task_titles:
+            continue
         branch = BRANCH_PREFIX + str(task["id"])
         if branch in merged:
             continue
@@ -89,7 +93,16 @@ def main() -> int:
         "--json", "headRefName,mergedAt,state",
     ])
     branches = remote_branch_names()
-    task = select_next_task(tasks, prs, branches)
+    issues = gh_json([
+        "issue", "list", "--state", "all", "--label", LABEL,
+        "--limit", "100", "--json", "number,title,labels,state",
+    ])
+    blocked_titles = {
+        str(issue.get("title", ""))
+        for issue in issues
+        if any(label.get("name") == "ai-office-blocked" for label in issue.get("labels", []))
+    }
+    task = select_next_task(tasks, prs, branches, blocked_titles)
     if task is None:
         message = (
             "## WHJ autonomous development manager\n\n"
@@ -106,11 +119,10 @@ def main() -> int:
         "--description", "Reviewed task for the bounded WHJ AI code agent",
     ], check=False)
 
-    open_issues = gh_json([
-        "issue", "list", "--state", "open", "--label", LABEL,
-        "--limit", "100", "--json", "number,title",
-    ])
-    issue = next((item for item in open_issues if item.get("title") == task["title"]), None)
+    issue = next((
+        item for item in issues
+        if item.get("state") == "OPEN" and item.get("title") == task["title"]
+    ), None)
     if issue:
         issue_number = int(issue["number"])
     else:
