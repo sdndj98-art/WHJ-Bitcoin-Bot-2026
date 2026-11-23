@@ -650,18 +650,20 @@ def render_markdown_report(report):
             f"- Bitstamp matched returns: {matched['bitstamp']['open_to_open_returns']}; matched slice SHA-256: `{matched['bitstamp']['matched_oos_slice_sha256']}`.",
             f"- CSCV/PBO: {matched['cscv_pbo']['pbo_estimate'] if matched['cscv_pbo'] else 'not computed'} ({matched['cscv_pbo_status']}).",
             "",
-            "| Rank | Candidate | 1x net | Matched B&H | Excess | Max DD | Period PF | Sharpe | Trades | 2x | 3x |",
-            "|---:|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|",
+            "| Rank | Candidate | 1x net | Matched B&H | Excess | Max DD | Period PF | Sharpe | Sortino | Trades | 2x | 3x |",
+            "|---:|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|",
         ])
         for row in matched["ranking_by_net_return"]:
             pf = row["periodic_profit_factor"]
             pf_text = pf if isinstance(pf, str) else (f"{pf:.3f}" if pf is not None else "—")
             sharpe = row["period_sharpe"]
             sharpe_text = f"{sharpe:.3f}" if sharpe is not None else "—"
+            sortino = row["period_sortino"]
+            sortino_text = sortino if isinstance(sortino, str) else (f"{sortino:.3f}" if sortino is not None else "—")
             lines.append(
                 f"| {row['rank_by_net_return']} | {row['candidate']} | {row['net_return_pct']:.2f}% | "
                 f"{row['matched_buy_and_hold_pct']:.2f}% | {row['excess_vs_buy_and_hold_pp']:+.2f} pp | "
-                f"{row['max_open_to_open_drawdown_pct']:.2f}% | {pf_text} | {sharpe_text} | "
+                f"{row['max_open_to_open_drawdown_pct']:.2f}% | {pf_text} | {sharpe_text} | {sortino_text} | "
                 f"{row['closed_trades']} | {row['return_2x_pct']:.2f}% | {row['return_3x_pct']:.2f}% |"
             )
         lines.extend([
@@ -684,10 +686,12 @@ def render_markdown_report(report):
         benchmark = metrics["buy_and_hold"]
         sharpe = strategy["period_sharpe"]
         sharpe_text = f"{sharpe:.3f}" if sharpe is not None else "—"
+        sortino = strategy["period_sortino"]
+        sortino_text = sortino if isinstance(sortino, str) else (f"{sortino:.3f}" if sortino is not None else "—")
         lines.append(
             f"- {level}: strategy {strategy['net_return']*100:.2f}%, matched B&H "
             f"{benchmark['net_return']*100:.2f}%, DD {abs(strategy['max_open_to_open_drawdown'])*100:.2f}%, "
-            f"Sharpe {sharpe_text}, closed trades {strategy['closed_trades']}."
+            f"Sharpe {sharpe_text}, Sortino {sortino_text}, closed trades {strategy['closed_trades']}."
         )
     lines.extend(["", "## Fold selections", ""])
     for fold in report["rolling_walk_forward_selection_margins"]:
@@ -700,8 +704,8 @@ def render_markdown_report(report):
         "", "## Fixed-candidate walk-forward ranking (all 17)", "",
         f"- Method: {ranking['method']}; weights: {ranking['weights_pct']}",
         f"- Each fixed candidate is evaluated across the same {report['rolling_walk_forward']['fold_count']} contiguous OOS folds; this is separate from the adaptive selector.",
-        "| Rank | Candidate | Score | Screen | 1x | DD | PF | Sharpe | Trades | 2x | 3x | Positive folds | Regimes covered |",
-        "|---:|---|---:|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|",
+        "| Rank | Candidate | Score | Screen | 1x | DD | PF | Sharpe | Sortino | Trades | 2x | 3x | Positive folds | Regimes covered |",
+        "|---:|---|---:|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|",
     ])
     for item in ranking["ranked_candidates"]:
         m = item["metrics"]
@@ -709,9 +713,11 @@ def render_markdown_report(report):
         pf_text = pf if isinstance(pf, str) else (f"{pf:.3f}" if pf is not None else "—")
         sharpe = m["period_sharpe"]
         sharpe_text = f"{sharpe:.3f}" if sharpe is not None else "—"
+        sortino = m["period_sortino"]
+        sortino_text = sortino if isinstance(sortino, str) else (f"{sortino:.3f}" if sortino is not None else "—")
         lines.append(
             f"| {item['rank']} | {item['candidate']} | {item['score']:.2f} | {item['screening_status']} | "
-            f"{m['net_return_1x_pct']:.2f}% | {m['max_drawdown_pct']:.2f}% | {pf_text} | {sharpe_text} | "
+            f"{m['net_return_1x_pct']:.2f}% | {m['max_drawdown_pct']:.2f}% | {pf_text} | {sharpe_text} | {sortino_text} | "
             f"{m['closed_trades']} | {m['net_return_2x_pct']:.2f}% | {m['net_return_3x_pct']:.2f}% | "
             f"{m['positive_folds']}/{len(m['fold_returns_pct'])} | {m['regime_coverage_count']}/3 |"
         )
