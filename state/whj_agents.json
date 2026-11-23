@@ -33,6 +33,7 @@
           "LINK/USD",
           "LTC/USD",
           "MON/USD",
+          "MORPHO/USD",
           "NEAR/USD",
           "NIGHT/USD",
           "ONDO/USD",
@@ -65,7 +66,6 @@
           "XMR/USDT",
           "XPL/USD",
           "XRP/USD",
-          "ZBCN/USD",
           "ZEC/USD",
           "ZRO/USD"
         ],
@@ -100,6 +100,7 @@
           "LINK/USD",
           "LTC/USD",
           "MON/USD",
+          "MORPHO/USD",
           "NEAR/USD",
           "NIGHT/USD",
           "ONDO/USD",
@@ -131,7 +132,6 @@
           "XMR/USDT",
           "XPL/USD",
           "XRP/USD",
-          "ZBCN/USD",
           "ZEC/USD",
           "ZRO/USD"
         ],
@@ -166,6 +166,7 @@
           "LINK/USD",
           "LTC/USD",
           "MON/USD",
+          "MORPHO/USD",
           "NEAR/USD",
           "NIGHT/USD",
           "ONDO/USD",
@@ -197,7 +198,6 @@
           "XMR/USDT",
           "XPL/USD",
           "XRP/USD",
-          "ZBCN/USD",
           "ZEC/USD",
           "ZRO/USD"
         ],
@@ -253,22 +253,22 @@
       "detail": "Equity is read from the single shared paper wallet when available.",
       "metrics": {
         "closed_trades": 63,
-        "equity_usd": 101.8695,
+        "equity_usd": 101.4584,
         "initial_equity_usd": 100.0,
-        "pnl_usd": 1.8695,
-        "return_pct": 1.8695,
+        "pnl_usd": 1.4584,
+        "return_pct": 1.4584,
         "shared_wallet": true
       },
       "name": "EQUITY",
       "status": "TRACKING"
     }
   ],
-  "generated_at_utc": "2026-11-23T17:13:41.167610+00:00",
+  "generated_at_utc": "2026-11-23T18:09:03.300280+00:00",
   "live_trading_enabled": false,
   "mode": "PAPER_ONLY",
   "portfolio_status": "PAPER_RUNNING",
   "schema_version": 2,
-  "source_updated_at": "2026-11-23T17:13:40.694664+00:00",
+  "source_updated_at": "2026-11-23T18:09:02.649443+00:00",
   "summary": {
     "agent_count": 6,
     "markets": [
@@ -302,6 +302,7 @@
       "LINK/USD",
       "LTC/USD",
       "MON/USD",
+      "MORPHO/USD",
       "NEAR/USD",
       "NIGHT/USD",
       "ONDO/USD",
@@ -333,7 +334,6 @@
       "XMR/USDT",
       "XPL/USD",
       "XRP/USD",
-      "ZBCN/USD",
       "ZEC/USD",
       "ZRO/USD"
     ],
@@ -670,6 +670,17 @@
         "watch_only": true
       },
       "MON/USD": {
+        "approved_by_consensus": false,
+        "decision": "HOLD",
+        "execution_mode": "PAPER_ONLY",
+        "live_orders_enabled": false,
+        "reason_codes": [
+          "WATCH_ONLY_NO_CLOSED_CANDLE_SIGNAL"
+        ],
+        "strategy_signal": "HOLD",
+        "watch_only": true
+      },
+      "MORPHO/USD": {
         "approved_by_consensus": false,
         "decision": "HOLD",
         "execution_mode": "PAPER_ONLY",
@@ -1023,17 +1034,6 @@
         "watch_only": true
       },
       "XRP/USD": {
-        "approved_by_consensus": false,
-        "decision": "HOLD",
-        "execution_mode": "PAPER_ONLY",
-        "live_orders_enabled": false,
-        "reason_codes": [
-          "WATCH_ONLY_NO_CLOSED_CANDLE_SIGNAL"
-        ],
-        "strategy_signal": "HOLD",
-        "watch_only": true
-      },
-      "ZBCN/USD": {
         "approved_by_consensus": false,
         "decision": "HOLD",
         "execution_mode": "PAPER_ONLY",
