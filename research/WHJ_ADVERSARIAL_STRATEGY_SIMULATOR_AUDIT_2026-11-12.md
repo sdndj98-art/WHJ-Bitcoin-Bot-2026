@@ -980,3 +980,31 @@ Read-only review of the latest main-branch paper workflow and the scheduled isol
 - After the F42 evidence refresh, PR #122 remains open, draft, unmerged, and not mergeable. Its current head is `a9d5afc979b74c18f75ae4e2d92d6a436b88a5a8`; current main is `58429cc12d94655f6c29d0b560810fda191e3892`.
 - Current main-versus-research comparison is diverged: research is 345 commits ahead and 698 behind, with merge base `d1890f30b383bcae1ae07dbb5b09a1f46067c9fb`. Do not rebase, merge, or replace portfolio state as part of this audit.
 - This section is a documentation-only evidence refresh. No ledger file was opened or modified; no paper balance, risk limit, schedule, credential, or order pathway was changed. No strategy is promoted.
+
+
+## F43 — PR workflow overlap with the active shared paper engine (2026-11-23)
+
+A read-only workflow comparison identifies an operational conflict that must be resolved before PR #122 can be considered for merge:
+
+### Existing main-branch engine
+
+- Main's `.github/workflows/whj-100usd-multi-asset-paper.yml` is scheduled at minute 17 of every hour.
+- It restores and saves the existing shared simulated $100 wallet cache, runs `multi_asset_paper_runner.py`, uploads the report and portfolio snapshot, and assembles/deploys the paper dashboard through GitHub Pages.
+- Its paper-engine job has `contents: read`; its separate deploy job has Pages write and OIDC permissions. Its Pages concurrency group is `pages` with `cancel-in-progress: false`.
+- The latest inspected run was #76 (F42), which completed successfully. Its artifact is the current run evidence; the tracked `dual_portfolio.json` is committed separately and can lag the artifact snapshot.
+
+### Additional workflows proposed by PR #122
+
+- `.github/workflows/btc-10usd-paper.yml` also schedules at minute 17 every hour. It restores a separate `state/btc_10usd_rsi14_mean_reversion.json` cache, runs `btc_paper_runner.py`, saves that independent ledger, commits `dual_portfolio.json` back to `main`, and deploys another Pages dashboard. It requests `contents: write`, `pages: write`, and `id-token: write`.
+- `.github/workflows/deploy-dashboard-pages.yml` adds another Pages deployment from the research branch on pushes to `index.html`, `dual_portfolio_dashboard.html`, `dual_portfolio.json`, or the workflow itself. It requests Pages write and OIDC permissions and uses the same `pages` concurrency group with `cancel-in-progress: true`.
+- The latest 100 research-branch workflow runs returned no run named for this new dashboard workflow. The connector did not expose a workflow-specific run-history endpoint, so older run history was not exhaustively checked; no claim is made that this Pages workflow has or has not deployed previously.
+
+### Merge blocker
+
+The PR's `dual_portfolio.json` still defines separate $10 BTC and $10 Gold sleeves as `CONFIGURED_NOT_ACTIVE` / `BLOCKED_PENDING_VALIDATED_XAUUSD_FEED`. Main instead has a $100 shared BTC wallet, with Gold configured as a zero-capital shared-wallet market and no independent ledger. The two snapshots and account models are not interchangeable.
+
+Merging the PR unchanged would add a second hourly BTC paper engine at the same scheduled minute, introduce a separate persistent ledger and automatic main-branch portfolio commits, and add competing Pages deployment definitions alongside the active shared-wallet dashboard. This is an operational architecture conflict, not a strategy-performance question.
+
+**Required before any future merge review:** choose one authoritative paper-wallet architecture; remove or redesign the duplicate schedule, ledger persistence, snapshot writer, and Pages deployment; document migration without resetting or replacing existing state; then run a fresh full CI and inspect the exact deployment/workflow permissions. This review makes no such operational changes.
+
+This finding is documentation-only. No workflow was dispatched, no paper ledger was opened or modified, no balance or schedule was changed, and no Pages deployment was initiated. PR #122 remains draft and unmerged; no strategy is promoted.
