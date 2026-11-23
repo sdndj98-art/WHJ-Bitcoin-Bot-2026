@@ -24,7 +24,6 @@
           "ETH/USD",
           "EURCV/USDC",
           "EVAA/USD",
-          "GRASS/USD",
           "HBAR/USD",
           "HYPE/USD",
           "ICNT/USD",
@@ -64,6 +63,7 @@
           "XLM/USD",
           "XMR/USD",
           "XMR/USDT",
+          "XPL/USD",
           "XRP/USD",
           "ZBCN/USD",
           "ZEC/USD",
@@ -91,7 +91,6 @@
           "ETH/USD",
           "EURCV/USDC",
           "EVAA/USD",
-          "GRASS/USD",
           "HBAR/USD",
           "HYPE/USD",
           "ICNT/USD",
@@ -130,6 +129,7 @@
           "XLM/USD",
           "XMR/USD",
           "XMR/USDT",
+          "XPL/USD",
           "XRP/USD",
           "ZBCN/USD",
           "ZEC/USD",
@@ -157,7 +157,6 @@
           "ETH/USD",
           "EURCV/USDC",
           "EVAA/USD",
-          "GRASS/USD",
           "HBAR/USD",
           "HYPE/USD",
           "ICNT/USD",
@@ -196,6 +195,7 @@
           "XLM/USD",
           "XMR/USD",
           "XMR/USDT",
+          "XPL/USD",
           "XRP/USD",
           "ZBCN/USD",
           "ZEC/USD",
@@ -252,23 +252,23 @@
     {
       "detail": "Equity is read from the single shared paper wallet when available.",
       "metrics": {
-        "closed_trades": 34,
-        "equity_usd": 100.9261,
+        "closed_trades": 36,
+        "equity_usd": 100.6121,
         "initial_equity_usd": 100.0,
-        "pnl_usd": 0.9261,
-        "return_pct": 0.9261,
+        "pnl_usd": 0.6121,
+        "return_pct": 0.6121,
         "shared_wallet": true
       },
       "name": "EQUITY",
       "status": "TRACKING"
     }
   ],
-  "generated_at_utc": "2026-11-23T01:18:13.959580+00:00",
+  "generated_at_utc": "2026-11-23T02:31:09.000900+00:00",
   "live_trading_enabled": false,
   "mode": "PAPER_ONLY",
   "portfolio_status": "PAPER_RUNNING",
   "schema_version": 2,
-  "source_updated_at": "2026-11-23T01:18:13.463166+00:00",
+  "source_updated_at": "2026-11-23T02:31:08.576339+00:00",
   "summary": {
     "agent_count": 6,
     "markets": [
@@ -293,7 +293,6 @@
       "ETH/USD",
       "EURCV/USDC",
       "EVAA/USD",
-      "GRASS/USD",
       "HBAR/USD",
       "HYPE/USD",
       "ICNT/USD",
@@ -332,6 +331,7 @@
       "XLM/USD",
       "XMR/USD",
       "XMR/USDT",
+      "XPL/USD",
       "XRP/USD",
       "ZBCN/USD",
       "ZEC/USD",
@@ -571,17 +571,6 @@
         "watch_only": true
       },
       "EVAA/USD": {
-        "approved_by_consensus": false,
-        "decision": "HOLD",
-        "execution_mode": "PAPER_ONLY",
-        "live_orders_enabled": false,
-        "reason_codes": [
-          "WATCH_ONLY_NO_CLOSED_CANDLE_SIGNAL"
-        ],
-        "strategy_signal": "HOLD",
-        "watch_only": true
-      },
-      "GRASS/USD": {
         "approved_by_consensus": false,
         "decision": "HOLD",
         "execution_mode": "PAPER_ONLY",
@@ -1012,6 +1001,17 @@
         "watch_only": true
       },
       "XMR/USDT": {
+        "approved_by_consensus": false,
+        "decision": "HOLD",
+        "execution_mode": "PAPER_ONLY",
+        "live_orders_enabled": false,
+        "reason_codes": [
+          "WATCH_ONLY_NO_CLOSED_CANDLE_SIGNAL"
+        ],
+        "strategy_signal": "HOLD",
+        "watch_only": true
+      },
+      "XPL/USD": {
         "approved_by_consensus": false,
         "decision": "HOLD",
         "execution_mode": "PAPER_ONLY",
