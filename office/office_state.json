@@ -1,6 +1,6 @@
 {
-  "cycle": 18,
-  "last_role_index": 3,
+  "cycle": 19,
+  "last_role_index": 4,
   "history": [
     {
       "cycle": 1,
@@ -355,29 +355,50 @@
         "orders_submitted": false
       },
       "reminder": "Cycle 18: Paper-engine QA must hand off to Dashboard QA before the next scheduled cycle."
+    },
+    {
+      "cycle": 19,
+      "timestamp_utc": "2026-11-23T11:21:03+00:00",
+      "current_owner": "Dashboard QA",
+      "current_task": "verify report/dashboard fields and refresh",
+      "handoff_to": "Risk QA",
+      "handoff_task": "verify drawdown, stale-data and duplicate-entry guards",
+      "paper_engine_bridge": {
+        "status": "CONNECTED",
+        "generated_at_utc": "2026-11-23T10:55:46+00:00",
+        "paper_status": "PAPER_RUNNING",
+        "agent_count": 6,
+        "markets_scanned": 64,
+        "open_positions": 17,
+        "closed_trades": 50,
+        "equity_usd": 100.9126,
+        "live_trading_enabled": false,
+        "orders_submitted": false
+      },
+      "reminder": "Cycle 19: Dashboard QA must hand off to Risk QA before the next scheduled cycle."
     }
   ],
-  "updated_at_utc": "2026-11-23T09:43:20+00:00",
+  "updated_at_utc": "2026-11-23T11:21:03+00:00",
   "current_handoff": {
-    "cycle": 18,
-    "timestamp_utc": "2026-11-23T09:43:20+00:00",
-    "current_owner": "Paper-engine QA",
-    "current_task": "verify simulated entry/exit and ledger consistency",
-    "handoff_to": "Dashboard QA",
-    "handoff_task": "verify report/dashboard fields and refresh",
+    "cycle": 19,
+    "timestamp_utc": "2026-11-23T11:21:03+00:00",
+    "current_owner": "Dashboard QA",
+    "current_task": "verify report/dashboard fields and refresh",
+    "handoff_to": "Risk QA",
+    "handoff_task": "verify drawdown, stale-data and duplicate-entry guards",
     "paper_engine_bridge": {
       "status": "CONNECTED",
-      "generated_at_utc": "2026-11-23T08:42:24+00:00",
+      "generated_at_utc": "2026-11-23T10:55:46+00:00",
       "paper_status": "PAPER_RUNNING",
       "agent_count": 6,
       "markets_scanned": 64,
       "open_positions": 17,
-      "closed_trades": 47,
-      "equity_usd": 100.9736,
+      "closed_trades": 50,
+      "equity_usd": 100.9126,
       "live_trading_enabled": false,
       "orders_submitted": false
     },
-    "reminder": "Cycle 18: Paper-engine QA must hand off to Dashboard QA before the next scheduled cycle."
+    "reminder": "Cycle 19: Dashboard QA must hand off to Risk QA before the next scheduled cycle."
   },
   "mode": "coordination_only_paper_trading",
   "live_orders_enabled": false
