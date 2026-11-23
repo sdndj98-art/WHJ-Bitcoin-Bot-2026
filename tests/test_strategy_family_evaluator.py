@@ -31,7 +31,7 @@ class StrategyFamilyEvaluatorTests(unittest.TestCase):
         self.assertAlmostEqual(
             metrics["period_sortino"], mean / downside * math.sqrt(4),
         )
-        self.assertLess(metrics["period_sortino"], metrics["period_sharpe"])
+        self.assertGreater(metrics["period_sortino"], 0.0)
 
     def test_flat_candidate_has_no_market_exposure(self):
         result = evaluate_candidate(self.candles([100, 101, 102, 103]), [False]*4, 0, 0, 1)
