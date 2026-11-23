@@ -255,6 +255,8 @@ def evaluate_rolling_walk_forward(
             "open_position_at_end": aggregate["strategy"]["open_position_at_end"],
             "periodic_profit_factor": aggregate["strategy"]["profit_factor"],
             "period_sharpe": aggregate["strategy"]["period_sharpe"],
+            "period_sortino": aggregate["strategy"]["period_sortino"],
+            "downside_deviation": aggregate["strategy"]["downside_deviation"],
             "bar_return_volatility": aggregate["strategy"]["bar_return_volatility"],
         })
         benchmark_summary = _path_summary(aggregate["benchmark_net_returns"])
