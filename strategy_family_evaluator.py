@@ -76,11 +76,22 @@ def _metrics(returns, exposure, turnover, closed_trades, bars_per_year, equity):
     variance = sum((r-mean)**2 for r in returns) / max(1, len(returns)-1)
     volatility = math.sqrt(variance)
     sharpe = (mean / volatility * math.sqrt(bars_per_year)) if volatility > 0 else None
+    downside_variance = (
+        sum(min(value, 0.0) ** 2 for value in returns) / len(returns)
+        if returns else 0.0
+    )
+    downside_deviation = math.sqrt(downside_variance)
+    if downside_deviation > 0:
+        sortino = mean / downside_deviation * math.sqrt(bars_per_year)
+    else:
+        sortino = "infinite" if mean > 0 else None
     return {
         "net_return": equity[-1] - 1.0,
         "max_drawdown": _max_drawdown(equity),
         "profit_factor": gross_profit / gross_loss if gross_loss > 0 else (None if gross_profit == 0 else "infinite"),
         "period_sharpe": sharpe,
+        "period_sortino": sortino,
+        "downside_deviation": downside_deviation,
         "bars": len(returns),
         "exposure": sum(exposure) / len(exposure) if exposure else 0.0,
         "turnover": sum(turnover),
