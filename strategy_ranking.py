@@ -204,6 +204,13 @@ def rank_fixed_candidate_walk_forward(
                 _finite_number(sharpe_value, "period_sharpe")
                 if sharpe_value is not None else None
             )
+            sortino_value = strategy.get("period_sortino")
+            if sortino_value == "infinite" or sortino_value == math.inf:
+                sortino = math.inf
+            elif sortino_value is None:
+                sortino = None
+            else:
+                sortino = _finite_number(sortino_value, "period_sortino")
             pf_value = strategy.get("profit_factor", strategy.get("periodic_profit_factor"))
             if pf_value == "infinite" or pf_value == math.inf:
                 profit_factor = math.inf
@@ -244,6 +251,11 @@ def rank_fixed_candidate_walk_forward(
                         positive_regimes += 1
 
             sharpe_score = _clamp_score(50.0 + 10.0 * (sharpe if sharpe is not None else -5.0))
+            sortino_score = (
+                100.0 if sortino == math.inf
+                else _clamp_score(50.0 + 10.0 * sortino) if sortino is not None
+                else 0.0
+            )
             pf_score = (
                 100.0 if profit_factor == math.inf
                 else _clamp_score(50.0 + 25.0 * ((profit_factor if profit_factor is not None else 0.0) - 1.0))
@@ -253,7 +265,7 @@ def rank_fixed_candidate_walk_forward(
                 "drawdown_control": _clamp_score(100.0 - 4.0 * drawdown),
                 "worst_fold": _clamp_score(50.0 + 2.0 * worst_fold),
                 "positive_fold_consistency": positive_folds / required_folds * 100.0,
-                "risk_adjusted": (sharpe_score + pf_score) / 2.0,
+                "risk_adjusted": (sharpe_score + sortino_score + pf_score) / 3.0,
                 "cost_robustness": _clamp_score(50.0 + 2.0 * min(returns["2x"], returns["3x"])),
                 "regime_robustness": positive_regimes / 3.0 * 100.0,
                 "sample_size": min(100.0, trades / float(min_closed_trades) * 100.0),
@@ -264,6 +276,7 @@ def rank_fixed_candidate_walk_forward(
                 and drawdown <= 15.0
                 and profit_factor is not None and profit_factor > 1.0
                 and sharpe is not None and sharpe > 0
+                and sortino is not None and sortino > 0
                 and trades >= min_closed_trades
                 and positive_folds >= required_positive_folds
                 and regime_coverage == 3 and positive_regimes >= 2
@@ -293,6 +306,9 @@ def rank_fixed_candidate_walk_forward(
                         round(profit_factor, 4) if profit_factor is not None else None
                     ),
                     "period_sharpe": round(sharpe, 4) if sharpe is not None else None,
+                    "period_sortino": "infinite" if sortino == math.inf else (
+                        round(sortino, 4) if sortino is not None else None
+                    ),
                     "closed_trades": trades,
                     "fold_returns_pct": [round(value, 4) for value in fold_returns],
                     "positive_folds": positive_folds,
@@ -322,7 +338,7 @@ def rank_fixed_candidate_walk_forward(
         item["rank"] = position
     excluded.sort(key=lambda item: item["candidate"])
     return {
-        "method": "FIXED_CANDIDATE_WALK_FORWARD_EVIDENCE_SCORE_V1",
+        "method": "FIXED_CANDIDATE_WALK_FORWARD_EVIDENCE_SCORE_V2_SORTINO",
         "weights_pct": weights,
         "minimum_closed_trades": min_closed_trades,
         "minimum_active_bars_per_regime": min_regime_bars,
@@ -332,7 +348,7 @@ def rank_fixed_candidate_walk_forward(
         "screening_rules": [
             "positive net return at 1x, 2x, and 3x costs",
             "maximum drawdown <= 15%",
-            "periodic profit factor > 1 and period Sharpe > 0",
+            "periodic profit factor > 1, period Sharpe > 0, and period Sortino > 0",
             "at least 30 closed trades",
             "at least 75% positive walk-forward folds",
             "at least 30 active signal bars in all three regimes and positive contribution in at least two",
