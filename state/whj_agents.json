@@ -16,7 +16,6 @@
           "BLESS/USD",
           "BNB/USD",
           "CC/USD",
-          "CPOOL/USD",
           "CRV/USD",
           "DOT/USD",
           "DRV/USD",
@@ -45,6 +44,7 @@
           "PIEVERSE/USD",
           "PUMP/USD",
           "QNT/USD",
+          "SKY/USD",
           "SOFID/USD",
           "SOL/USD",
           "SUI/USD",
@@ -83,7 +83,6 @@
           "BLESS/USD",
           "BNB/USD",
           "CC/USD",
-          "CPOOL/USD",
           "CRV/USD",
           "DOT/USD",
           "DRV/USD",
@@ -112,6 +111,7 @@
           "PIEVERSE/USD",
           "PUMP/USD",
           "QNT/USD",
+          "SKY/USD",
           "SOFID/USD",
           "SOL/USD",
           "SUI/USD",
@@ -149,7 +149,6 @@
           "BLESS/USD",
           "BNB/USD",
           "CC/USD",
-          "CPOOL/USD",
           "CRV/USD",
           "DOT/USD",
           "DRV/USD",
@@ -178,6 +177,7 @@
           "PIEVERSE/USD",
           "PUMP/USD",
           "QNT/USD",
+          "SKY/USD",
           "SOFID/USD",
           "SOL/USD",
           "SUI/USD",
@@ -252,23 +252,23 @@
     {
       "detail": "Equity is read from the single shared paper wallet when available.",
       "metrics": {
-        "closed_trades": 50,
-        "equity_usd": 100.9126,
+        "closed_trades": 52,
+        "equity_usd": 100.9689,
         "initial_equity_usd": 100.0,
-        "pnl_usd": 0.9126,
-        "return_pct": 0.9126,
+        "pnl_usd": 0.9689,
+        "return_pct": 0.9689,
         "shared_wallet": true
       },
       "name": "EQUITY",
       "status": "TRACKING"
     }
   ],
-  "generated_at_utc": "2026-11-23T10:55:46.761925+00:00",
+  "generated_at_utc": "2026-11-23T11:43:12.007473+00:00",
   "live_trading_enabled": false,
   "mode": "PAPER_ONLY",
   "portfolio_status": "PAPER_RUNNING",
   "schema_version": 2,
-  "source_updated_at": "2026-11-23T10:55:46.395758+00:00",
+  "source_updated_at": "2026-11-23T11:43:11.524738+00:00",
   "summary": {
     "agent_count": 6,
     "markets": [
@@ -285,7 +285,6 @@
       "BLESS/USD",
       "BNB/USD",
       "CC/USD",
-      "CPOOL/USD",
       "CRV/USD",
       "DOT/USD",
       "DRV/USD",
@@ -314,6 +313,7 @@
       "PIEVERSE/USD",
       "PUMP/USD",
       "QNT/USD",
+      "SKY/USD",
       "SOFID/USD",
       "SOL/USD",
       "SUI/USD",
@@ -483,17 +483,6 @@
         "watch_only": true
       },
       "CC/USD": {
-        "approved_by_consensus": false,
-        "decision": "HOLD",
-        "execution_mode": "PAPER_ONLY",
-        "live_orders_enabled": false,
-        "reason_codes": [
-          "WATCH_ONLY_NO_CLOSED_CANDLE_SIGNAL"
-        ],
-        "strategy_signal": "HOLD",
-        "watch_only": true
-      },
-      "CPOOL/USD": {
         "approved_by_consensus": false,
         "decision": "HOLD",
         "execution_mode": "PAPER_ONLY",
@@ -802,6 +791,17 @@
         "watch_only": true
       },
       "QNT/USD": {
+        "approved_by_consensus": false,
+        "decision": "HOLD",
+        "execution_mode": "PAPER_ONLY",
+        "live_orders_enabled": false,
+        "reason_codes": [
+          "WATCH_ONLY_NO_CLOSED_CANDLE_SIGNAL"
+        ],
+        "strategy_signal": "HOLD",
+        "watch_only": true
+      },
+      "SKY/USD": {
         "approved_by_consensus": false,
         "decision": "HOLD",
         "execution_mode": "PAPER_ONLY",
