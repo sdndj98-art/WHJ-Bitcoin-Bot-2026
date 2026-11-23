@@ -11,11 +11,34 @@ class StrategyFamilyEvaluatorTests(unittest.TestCase):
         result = evaluate_candidate(rows, [True, True, True, True, True], 0, 0, 1)
         self.assertAlmostEqual(result["strategy"]["net_return"], 0.331)
         self.assertEqual(result["strategy"]["bars"], 3)
+        self.assertEqual(result["strategy"]["period_sortino"], "infinite")
+        self.assertEqual(result["strategy"]["downside_deviation"], 0.0)
+
+    def test_sortino_uses_zero_target_downside_deviation_and_annualization(self):
+        import math
+
+        rows = self.candles([100, 100, 110, 99, 110])
+        result = evaluate_candidate(
+            rows, [True] * len(rows), 0, 0, bars_per_year=4,
+        )
+        returns = result["net_returns"]
+        downside = math.sqrt(
+            sum(min(value, 0.0) ** 2 for value in returns) / len(returns)
+        )
+        mean = sum(returns) / len(returns)
+        metrics = result["strategy"]
+        self.assertAlmostEqual(metrics["downside_deviation"], downside)
+        self.assertAlmostEqual(
+            metrics["period_sortino"], mean / downside * math.sqrt(4),
+        )
+        self.assertLess(metrics["period_sortino"], metrics["period_sharpe"])
 
     def test_flat_candidate_has_no_market_exposure(self):
         result = evaluate_candidate(self.candles([100, 101, 102, 103]), [False]*4, 0, 0, 1)
         self.assertEqual(result["strategy"]["net_return"], 0)
         self.assertEqual(result["strategy"]["exposure"], 0)
+        self.assertIsNone(result["strategy"]["period_sortino"])
+        self.assertEqual(result["strategy"]["downside_deviation"], 0.0)
 
     def test_turnover_costs_are_charged_on_entry_and_exit(self):
         rows = self.candles([100, 100, 110, 110, 110])
