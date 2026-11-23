@@ -13,17 +13,18 @@
           "AVAX/USD",
           "BLESS/USD",
           "BNB/USD",
-          "CAP/USD",
           "CC/USD",
           "CPOOL/USD",
           "CRV/USD",
-          "DASH/USD",
           "DOT/USD",
           "DRV/USD",
           "ENA/USD",
           "ETH/USD",
           "EURCV/USDC",
           "EVAA/USD",
+          "FET/USD",
+          "FIDD/USD",
+          "GRASS/USD",
           "HBAR/USD",
           "HYPE/USD",
           "ICNT/USD",
@@ -44,8 +45,7 @@
           "PUMP/USD",
           "QNT/USD",
           "RENDER/USD",
-          "SHIB/USD",
-          "SOFID/USDT",
+          "SOFID/USD",
           "SOL/USD",
           "SUI/USD",
           "TAO/USD",
@@ -80,17 +80,18 @@
           "AVAX/USD",
           "BLESS/USD",
           "BNB/USD",
-          "CAP/USD",
           "CC/USD",
           "CPOOL/USD",
           "CRV/USD",
-          "DASH/USD",
           "DOT/USD",
           "DRV/USD",
           "ENA/USD",
           "ETH/USD",
           "EURCV/USDC",
           "EVAA/USD",
+          "FET/USD",
+          "FIDD/USD",
+          "GRASS/USD",
           "HBAR/USD",
           "HYPE/USD",
           "ICNT/USD",
@@ -111,8 +112,7 @@
           "PUMP/USD",
           "QNT/USD",
           "RENDER/USD",
-          "SHIB/USD",
-          "SOFID/USDT",
+          "SOFID/USD",
           "SOL/USD",
           "SUI/USD",
           "TAO/USD",
@@ -146,17 +146,18 @@
           "AVAX/USD",
           "BLESS/USD",
           "BNB/USD",
-          "CAP/USD",
           "CC/USD",
           "CPOOL/USD",
           "CRV/USD",
-          "DASH/USD",
           "DOT/USD",
           "DRV/USD",
           "ENA/USD",
           "ETH/USD",
           "EURCV/USDC",
           "EVAA/USD",
+          "FET/USD",
+          "FIDD/USD",
+          "GRASS/USD",
           "HBAR/USD",
           "HYPE/USD",
           "ICNT/USD",
@@ -177,8 +178,7 @@
           "PUMP/USD",
           "QNT/USD",
           "RENDER/USD",
-          "SHIB/USD",
-          "SOFID/USDT",
+          "SOFID/USD",
           "SOL/USD",
           "SUI/USD",
           "TAO/USD",
@@ -252,23 +252,23 @@
     {
       "detail": "Equity is read from the single shared paper wallet when available.",
       "metrics": {
-        "closed_trades": 36,
-        "equity_usd": 100.6121,
+        "closed_trades": 39,
+        "equity_usd": 100.3616,
         "initial_equity_usd": 100.0,
-        "pnl_usd": 0.6121,
-        "return_pct": 0.6121,
+        "pnl_usd": 0.3616,
+        "return_pct": 0.3616,
         "shared_wallet": true
       },
       "name": "EQUITY",
       "status": "TRACKING"
     }
   ],
-  "generated_at_utc": "2026-11-23T02:31:09.000900+00:00",
+  "generated_at_utc": "2026-11-23T03:37:39.045578+00:00",
   "live_trading_enabled": false,
   "mode": "PAPER_ONLY",
   "portfolio_status": "PAPER_RUNNING",
   "schema_version": 2,
-  "source_updated_at": "2026-11-23T02:31:08.576339+00:00",
+  "source_updated_at": "2026-11-23T03:37:38.642301+00:00",
   "summary": {
     "agent_count": 6,
     "markets": [
@@ -282,17 +282,18 @@
       "AVAX/USD",
       "BLESS/USD",
       "BNB/USD",
-      "CAP/USD",
       "CC/USD",
       "CPOOL/USD",
       "CRV/USD",
-      "DASH/USD",
       "DOT/USD",
       "DRV/USD",
       "ENA/USD",
       "ETH/USD",
       "EURCV/USDC",
       "EVAA/USD",
+      "FET/USD",
+      "FIDD/USD",
+      "GRASS/USD",
       "HBAR/USD",
       "HYPE/USD",
       "ICNT/USD",
@@ -313,8 +314,7 @@
       "PUMP/USD",
       "QNT/USD",
       "RENDER/USD",
-      "SHIB/USD",
-      "SOFID/USDT",
+      "SOFID/USD",
       "SOL/USD",
       "SUI/USD",
       "TAO/USD",
@@ -460,17 +460,6 @@
         "strategy_signal": "HOLD",
         "watch_only": true
       },
-      "CAP/USD": {
-        "approved_by_consensus": false,
-        "decision": "HOLD",
-        "execution_mode": "PAPER_ONLY",
-        "live_orders_enabled": false,
-        "reason_codes": [
-          "WATCH_ONLY_NO_CLOSED_CANDLE_SIGNAL"
-        ],
-        "strategy_signal": "HOLD",
-        "watch_only": true
-      },
       "CC/USD": {
         "approved_by_consensus": false,
         "decision": "HOLD",
@@ -494,17 +483,6 @@
         "watch_only": true
       },
       "CRV/USD": {
-        "approved_by_consensus": false,
-        "decision": "HOLD",
-        "execution_mode": "PAPER_ONLY",
-        "live_orders_enabled": false,
-        "reason_codes": [
-          "WATCH_ONLY_NO_CLOSED_CANDLE_SIGNAL"
-        ],
-        "strategy_signal": "HOLD",
-        "watch_only": true
-      },
-      "DASH/USD": {
         "approved_by_consensus": false,
         "decision": "HOLD",
         "execution_mode": "PAPER_ONLY",
@@ -571,6 +549,39 @@
         "watch_only": true
       },
       "EVAA/USD": {
+        "approved_by_consensus": false,
+        "decision": "HOLD",
+        "execution_mode": "PAPER_ONLY",
+        "live_orders_enabled": false,
+        "reason_codes": [
+          "WATCH_ONLY_NO_CLOSED_CANDLE_SIGNAL"
+        ],
+        "strategy_signal": "HOLD",
+        "watch_only": true
+      },
+      "FET/USD": {
+        "approved_by_consensus": false,
+        "decision": "HOLD",
+        "execution_mode": "PAPER_ONLY",
+        "live_orders_enabled": false,
+        "reason_codes": [
+          "WATCH_ONLY_NO_CLOSED_CANDLE_SIGNAL"
+        ],
+        "strategy_signal": "HOLD",
+        "watch_only": true
+      },
+      "FIDD/USD": {
+        "approved_by_consensus": false,
+        "decision": "HOLD",
+        "execution_mode": "PAPER_ONLY",
+        "live_orders_enabled": false,
+        "reason_codes": [
+          "WATCH_ONLY_NO_CLOSED_CANDLE_SIGNAL"
+        ],
+        "strategy_signal": "HOLD",
+        "watch_only": true
+      },
+      "GRASS/USD": {
         "approved_by_consensus": false,
         "decision": "HOLD",
         "execution_mode": "PAPER_ONLY",
@@ -801,18 +812,7 @@
         "strategy_signal": "HOLD",
         "watch_only": true
       },
-      "SHIB/USD": {
-        "approved_by_consensus": false,
-        "decision": "HOLD",
-        "execution_mode": "PAPER_ONLY",
-        "live_orders_enabled": false,
-        "reason_codes": [
-          "WATCH_ONLY_NO_CLOSED_CANDLE_SIGNAL"
-        ],
-        "strategy_signal": "HOLD",
-        "watch_only": true
-      },
-      "SOFID/USDT": {
+      "SOFID/USD": {
         "approved_by_consensus": false,
         "decision": "HOLD",
         "execution_mode": "PAPER_ONLY",

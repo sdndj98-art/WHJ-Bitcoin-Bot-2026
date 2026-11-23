@@ -1,12 +1,12 @@
 {
   "schema_version": 1,
-  "generated_at_utc": "2026-11-23T02:31:09+00:00",
+  "generated_at_utc": "2026-11-23T03:37:39+00:00",
   "status": "CONNECTED",
   "bridge_mode": "READ_ONLY_PAPER_AUDIT",
   "paper_only": true,
   "live_trading_enabled": false,
   "orders_submitted": false,
-  "source_workflow_run_id": "45100562777",
+  "source_workflow_run_id": "45106970381",
   "six_agent_office": {
     "status": "PAPER_RUNNING",
     "portfolio_decision": "UNKNOWN",
@@ -19,50 +19,50 @@
       "LOGGER",
       "EQUITY"
     ],
-    "generated_at_utc": "2026-11-23T02:31:09.000900+00:00"
+    "generated_at_utc": "2026-11-23T03:37:39.045578+00:00"
   },
   "shared_wallet": {
     "initial_capital_usd": 100.0,
-    "cash_usd": 50.4088833951,
+    "cash_usd": 50.2540920767,
     "open_positions": 17,
-    "closed_trades": 36,
-    "equity_usd": 100.6121,
-    "pnl_usd": 0.6121,
-    "return_pct": 0.6121
+    "closed_trades": 39,
+    "equity_usd": 100.3616,
+    "pnl_usd": 0.3616,
+    "return_pct": 0.3616
   },
   "multi_asset_engine": {
     "status": "PAPER_ONLY",
     "markets_scanned": 64,
     "markets_with_errors": 0,
-    "processed_closed_candles": 530,
-    "events_this_run": 4,
-    "strategy_entry_signals": 167,
-    "positions_opened_this_run": 2,
-    "entries_blocked_by_guards": 152,
+    "processed_closed_candles": 770,
+    "events_this_run": 6,
+    "strategy_entry_signals": 179,
+    "positions_opened_this_run": 3,
+    "entries_blocked_by_guards": 164,
     "block_reasons": {
       "sma_trend": {
-        "MIN_TRADE_OR_INSUFFICIENT_CASH": 34
+        "MIN_TRADE_OR_INSUFFICIENT_CASH": 35
       },
       "ema_trend": {
-        "MIN_TRADE_OR_INSUFFICIENT_CASH": 36
+        "MIN_TRADE_OR_INSUFFICIENT_CASH": 27
       },
       "rsi_momentum": {
-        "MIN_TRADE_OR_INSUFFICIENT_CASH": 31
+        "MIN_TRADE_OR_INSUFFICIENT_CASH": 42
       },
       "sma200_regime": {
-        "MIN_TRADE_OR_INSUFFICIENT_CASH": 8
+        "MIN_TRADE_OR_INSUFFICIENT_CASH": 7
       },
       "ema50_200_regime": {
-        "MIN_TRADE_OR_INSUFFICIENT_CASH": 9
+        "MIN_TRADE_OR_INSUFFICIENT_CASH": 10
       },
       "bollinger_mean_reversion": {
-        "MIN_TRADE_OR_INSUFFICIENT_CASH": 1
+        "MIN_TRADE_OR_INSUFFICIENT_CASH": 4
       },
       "rsi14_mean_reversion": {
-        "MIN_TRADE_OR_INSUFFICIENT_CASH": 3
+        "MIN_TRADE_OR_INSUFFICIENT_CASH": 17
       },
       "compound_momentum": {
-        "MIN_TRADE_OR_INSUFFICIENT_CASH": 30
+        "MIN_TRADE_OR_INSUFFICIENT_CASH": 22
       }
     }
   },
