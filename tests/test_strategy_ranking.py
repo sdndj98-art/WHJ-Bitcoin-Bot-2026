@@ -66,7 +66,7 @@ class StrategyRankingTests(unittest.TestCase):
     @staticmethod
     def fixed_candidate(
         return_1x=8.0, return_2x=6.0, return_3x=4.0,
-        drawdown=5.0, profit_factor=1.4, sharpe=1.0, trades=60,
+        drawdown=5.0, profit_factor=1.4, sharpe=1.0, sortino=1.0, trades=60,
         fold_returns=(4.0, 5.0, 2.0, 1.0), regime_active=50,
         regime_contribution=1.0,
     ):
@@ -77,6 +77,7 @@ class StrategyRankingTests(unittest.TestCase):
                     "max_drawdown": -drawdown / 100.0,
                     "profit_factor": profit_factor,
                     "period_sharpe": sharpe,
+                    "period_sortino": sortino,
                     "closed_trades": trades,
                 }},
                 "2x": {"strategy": {"net_return": return_2x / 100.0}},
@@ -136,6 +137,25 @@ class StrategyRankingTests(unittest.TestCase):
         self.assertEqual(len(result["ranked_candidates"]), 1)
         self.assertEqual(result["excluded_candidates"], [])
         self.assertTrue(result["ranked_candidates"][0]["eligible_for_next_stage"])
+
+    def test_sortino_contributes_to_risk_adjusted_rank_and_screen(self):
+        from strategy_ranking import rank_fixed_candidate_walk_forward
+
+        result = rank_fixed_candidate_walk_forward({
+            "higher_sortino": self.fixed_candidate(sortino=2.0),
+            "negative_sortino": self.fixed_candidate(sortino=-1.0),
+        })
+        ranked = result["ranked_candidates"]
+        self.assertEqual(
+            [item["candidate"] for item in ranked],
+            ["higher_sortino", "negative_sortino"],
+        )
+        self.assertGreater(
+            ranked[0]["components"]["risk_adjusted"],
+            ranked[1]["components"]["risk_adjusted"],
+        )
+        self.assertEqual(ranked[0]["metrics"]["period_sortino"], 2.0)
+        self.assertEqual(ranked[1]["screening_status"], "NO_PASS")
 
     def test_fixed_candidate_screen_rejects_negative_cost_stress(self):
         from strategy_ranking import rank_fixed_candidate_walk_forward
