@@ -952,3 +952,31 @@ Read-only review of the current main-branch scheduled outputs distinguishes exis
 - No bootstrap was attempted: creating/seeding the missing ledger is prohibited by the current research-session safety instructions.
 
 These snapshots are observational only. No paper ledger, balance, risk limit, schedule, or account state was modified during this audit. Do not combine the shared multi-asset snapshot with the isolated 17-candidate historical ranking, and do not promote a BTC or gold candidate from these small/incomplete forward samples.
+
+
+## F42 — refreshed main paper telemetry and isolated ADX cache gate (2026-11-23)
+
+Read-only review of the latest main-branch paper workflow and the scheduled isolated ADX forward-paper workflow:
+
+### Shared $100 paper engine run #76
+
+- [Run #76](https://github.com/sdndj98-art/WHJ-Bitcoin-Bot-2026/actions/runs/45236304416) completed successfully on main commit `546710cc5d28301b5a811eafa16345756fe576ac` (scheduled 2026-11-23 18:14 UTC).
+- Artifact [14850096852](https://github.com/sdndj98-art/WHJ-Bitcoin-Bot-2026/actions/runs/45236304416/artifacts/14850096852), `whj-shared-100usd-paper-76`, is 502,059 bytes. Recomputed ZIP SHA-256 `235239a794cb2fd6cdf2372742450389c8443606d68e1926b32011a4a3e5d187` matches GitHub's artifact digest.
+- Only `state/multi_asset_paper_report.json` and `dual_portfolio.json` were extracted/read. The archive also contains `state/shared_paper_100usd.json`; that ledger was deliberately not opened, copied, or changed.
+- The report states `mode=PAPER_ONLY`, `live_trading_enabled=false`, and `orders_submitted=false`. It records $100 initial cash, $50.8386 cash, $101.2341 equity, +$1.2341 P&L, 116 closed trades, 25 open positions, 65 markets, 890 processed closed candles, zero market errors, and no seeded markets.
+- BTC sleeve: $100 initial equity, $99.9511 equity (-$0.0489 / -0.0489%), 13 closed trades, one open position, and a healthy Coinbase hourly feed. The 7,200-candle window contains 7,195 observed and five imputed bars (0.0694%).
+- Gold remains a zero-capital/zero-trade shared-wallet research sleeve with no independent ledger. Its public spot quote has timestamp `2026-11-23T18:15:12Z`, reported quote age `-13.3` seconds, and no bid/ask fields. This is not broker execution evidence; timestamp/clock validation and executable bid/ask data remain prerequisites for any execution-quality research.
+- The eight-family shared-wallet telemetry is not the same universe or protocol as the 17 isolated historical BTC candidate proxies. Its aggregate positive P&L must not be used to rank or promote those 17 candidates.
+
+### Isolated ADX forward-paper run #289
+
+- [Run #289](https://github.com/sdndj98-art/WHJ-Bitcoin-Bot-2026/actions/runs/45238428902) completed with workflow conclusion `success` on main commit `58429cc12d94655f6c29d0b560810fda191e3892`.
+- The job log reports a cache miss for `whj-adx-forward-v1` and explicitly says: `No ADX ledger cache yet; waiting for the one-time manual bootstrap.`
+- The explicit refuse-to-reseed guard completed. ADX safety tests, forward evaluation, ledger save, summary, and artifact upload were all skipped. The run has no artifacts and contributes no new forward-paper sample.
+- No bootstrap was attempted. Creating or seeding the missing ledger is outside this research review and remains prohibited by the session's preservation requirements.
+
+### Branch/PR context
+
+- At this review, PR #122 is still open, draft, unmerged, and not mergeable. Its head is `8450760ef3364b4aec703cddfc711ff1e19b5f1a`; current main is `58429cc12d94655f6c29d0b560810fda191e3892`.
+- Current main-versus-research comparison is diverged: research is 344 commits ahead and 698 behind, with merge base `d1890f30b383bcae1ae07dbb5b09a1f46067c9fb`. Do not rebase, merge, or replace portfolio state as part of this audit.
+- This section is a documentation-only evidence refresh. No ledger file was opened or modified; no paper balance, risk limit, schedule, credential, or order pathway was changed. No strategy is promoted.
