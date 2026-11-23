@@ -280,8 +280,8 @@ jobs:
               "", "## Fixed-candidate walk-forward ranking (all 17)", "",
               f"- Method: {walk_forward_candidate_ranking['method']}; weights: {walk_forward_candidate_ranking['weights_pct']}",
               f"- Each fixed candidate is evaluated across the same {walk_forward['fold_count']} contiguous OOS folds; this is separate from the adaptive selector above.",
-              "| Rank | Candidate | Score | Screen | 1x | DD | PF | Sharpe | Trades | 2x | 3x | Positive folds | Regimes covered |",
-              "|---:|---|---:|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|",
+              "| Rank | Candidate | Score | Screen | 1x | DD | PF | Sharpe | Sortino | Trades | 2x | 3x | Positive folds | Regimes covered |",
+              "|---:|---|---:|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|",
           ]
           for item in walk_forward_candidate_ranking["ranked_candidates"]:
               m = item["metrics"]
@@ -289,9 +289,11 @@ jobs:
               pf_text = pf if isinstance(pf, str) else (f"{pf:.3f}" if pf is not None else "—")
               sharpe = m["period_sharpe"]
               sharpe_text = f"{sharpe:.3f}" if sharpe is not None else "—"
+              sortino = m["period_sortino"]
+              sortino_text = sortino if isinstance(sortino, str) else (f"{sortino:.3f}" if sortino is not None else "—")
               lines.append(
                   f"| {item['rank']} | {item['candidate']} | {item['score']:.2f} | {item['screening_status']} | "
-                  f"{m['net_return_1x_pct']:.2f}% | {m['max_drawdown_pct']:.2f}% | {pf_text} | {sharpe_text} | "
+                  f"{m['net_return_1x_pct']:.2f}% | {m['max_drawdown_pct']:.2f}% | {pf_text} | {sharpe_text} | {sortino_text} | "
                   f"{m['closed_trades']} | {m['net_return_2x_pct']:.2f}% | {m['net_return_3x_pct']:.2f}% | "
                   f"{m['positive_folds']}/{len(m['fold_returns_pct'])} | {m['regime_coverage_count']}/3 |"
               )
