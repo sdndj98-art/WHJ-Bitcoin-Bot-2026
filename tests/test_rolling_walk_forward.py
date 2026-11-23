@@ -189,6 +189,8 @@ class RollingWalkForwardTests(unittest.TestCase):
                 set(candidate["aggregate_oos_cost_scenarios"]), {"1x", "2x", "3x"}
             )
             one_x = candidate["aggregate_oos_cost_scenarios"]["1x"]["strategy"]
+            self.assertIn("period_sortino", one_x)
+            self.assertIn("downside_deviation", one_x)
             self.assertEqual(
                 one_x["bars"],
                 sum(fold["strategy"]["bars"] for fold in candidate["folds"]),
