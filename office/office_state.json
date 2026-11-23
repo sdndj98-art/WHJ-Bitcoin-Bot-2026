@@ -1,6 +1,6 @@
 {
-  "cycle": 22,
-  "last_role_index": 0,
+  "cycle": 23,
+  "last_role_index": 1,
   "history": [
     {
       "cycle": 1,
@@ -439,29 +439,50 @@
         "orders_submitted": false
       },
       "reminder": "Cycle 22: Coordinator must hand off to Market-data QA before the next scheduled cycle."
+    },
+    {
+      "cycle": 23,
+      "timestamp_utc": "2026-11-23T19:24:45+00:00",
+      "current_owner": "Market-data QA",
+      "current_task": "check source freshness and candle integrity",
+      "handoff_to": "Strategy QA",
+      "handoff_task": "review paper strategy gates and signal sanity",
+      "paper_engine_bridge": {
+        "status": "CONNECTED",
+        "generated_at_utc": "2026-11-23T19:07:18+00:00",
+        "paper_status": "PAPER_RUNNING",
+        "agent_count": 6,
+        "markets_scanned": 64,
+        "open_positions": 17,
+        "closed_trades": 64,
+        "equity_usd": 101.3649,
+        "live_trading_enabled": false,
+        "orders_submitted": false
+      },
+      "reminder": "Cycle 23: Market-data QA must hand off to Strategy QA before the next scheduled cycle."
     }
   ],
-  "updated_at_utc": "2026-11-23T17:23:28+00:00",
+  "updated_at_utc": "2026-11-23T19:24:45+00:00",
   "current_handoff": {
-    "cycle": 22,
-    "timestamp_utc": "2026-11-23T17:23:28+00:00",
-    "current_owner": "Coordinator",
-    "current_task": "select/sequence next backlog item",
-    "handoff_to": "Market-data QA",
-    "handoff_task": "check source freshness and candle integrity",
+    "cycle": 23,
+    "timestamp_utc": "2026-11-23T19:24:45+00:00",
+    "current_owner": "Market-data QA",
+    "current_task": "check source freshness and candle integrity",
+    "handoff_to": "Strategy QA",
+    "handoff_task": "review paper strategy gates and signal sanity",
     "paper_engine_bridge": {
       "status": "CONNECTED",
-      "generated_at_utc": "2026-11-23T17:13:41+00:00",
+      "generated_at_utc": "2026-11-23T19:07:18+00:00",
       "paper_status": "PAPER_RUNNING",
       "agent_count": 6,
       "markets_scanned": 64,
       "open_positions": 17,
-      "closed_trades": 63,
-      "equity_usd": 101.8695,
+      "closed_trades": 64,
+      "equity_usd": 101.3649,
       "live_trading_enabled": false,
       "orders_submitted": false
     },
-    "reminder": "Cycle 22: Coordinator must hand off to Market-data QA before the next scheduled cycle."
+    "reminder": "Cycle 23: Market-data QA must hand off to Strategy QA before the next scheduled cycle."
   },
   "mode": "coordination_only_paper_trading",
   "live_orders_enabled": false
