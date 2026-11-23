@@ -12,6 +12,7 @@
           "ARB/USD",
           "ASTER/USD",
           "AVAX/USD",
+          "BCH/USD",
           "BLESS/USD",
           "BNB/USD",
           "CC/USD",
@@ -53,7 +54,6 @@
           "UNI/USD",
           "USELESS/USD",
           "VVV/USD",
-          "WINGS/USD",
           "WLD/USD",
           "XAGUSD",
           "XAUT/USDT",
@@ -79,6 +79,7 @@
           "ARB/USD",
           "ASTER/USD",
           "AVAX/USD",
+          "BCH/USD",
           "BLESS/USD",
           "BNB/USD",
           "CC/USD",
@@ -120,7 +121,6 @@
           "UNI/USD",
           "USELESS/USD",
           "VVV/USD",
-          "WINGS/USD",
           "WLD/USD",
           "XAGUSD",
           "XAUT/USDT",
@@ -145,6 +145,7 @@
           "ARB/USD",
           "ASTER/USD",
           "AVAX/USD",
+          "BCH/USD",
           "BLESS/USD",
           "BNB/USD",
           "CC/USD",
@@ -186,7 +187,6 @@
           "UNI/USD",
           "USELESS/USD",
           "VVV/USD",
-          "WINGS/USD",
           "WLD/USD",
           "XAGUSD",
           "XAUT/USDT",
@@ -252,23 +252,23 @@
     {
       "detail": "Equity is read from the single shared paper wallet when available.",
       "metrics": {
-        "closed_trades": 41,
-        "equity_usd": 101.1626,
+        "closed_trades": 44,
+        "equity_usd": 101.0097,
         "initial_equity_usd": 100.0,
-        "pnl_usd": 1.1626,
-        "return_pct": 1.1626,
+        "pnl_usd": 1.0097,
+        "return_pct": 1.0097,
         "shared_wallet": true
       },
       "name": "EQUITY",
       "status": "TRACKING"
     }
   ],
-  "generated_at_utc": "2026-11-23T04:51:07.438495+00:00",
+  "generated_at_utc": "2026-11-23T05:53:51.029819+00:00",
   "live_trading_enabled": false,
   "mode": "PAPER_ONLY",
   "portfolio_status": "PAPER_RUNNING",
   "schema_version": 2,
-  "source_updated_at": "2026-11-23T04:51:07.124898+00:00",
+  "source_updated_at": "2026-11-23T05:53:50.705505+00:00",
   "summary": {
     "agent_count": 6,
     "markets": [
@@ -281,6 +281,7 @@
       "ARB/USD",
       "ASTER/USD",
       "AVAX/USD",
+      "BCH/USD",
       "BLESS/USD",
       "BNB/USD",
       "CC/USD",
@@ -322,7 +323,6 @@
       "UNI/USD",
       "USELESS/USD",
       "VVV/USD",
-      "WINGS/USD",
       "WLD/USD",
       "XAGUSD",
       "XAUT/USDT",
@@ -418,6 +418,17 @@
         "watch_only": true
       },
       "AVAX/USD": {
+        "approved_by_consensus": false,
+        "decision": "HOLD",
+        "execution_mode": "PAPER_ONLY",
+        "live_orders_enabled": false,
+        "reason_codes": [
+          "WATCH_ONLY_NO_CLOSED_CANDLE_SIGNAL"
+        ],
+        "strategy_signal": "HOLD",
+        "watch_only": true
+      },
+      "BCH/USD": {
         "approved_by_consensus": false,
         "decision": "HOLD",
         "execution_mode": "PAPER_ONLY",
@@ -890,17 +901,6 @@
         "watch_only": true
       },
       "VVV/USD": {
-        "approved_by_consensus": false,
-        "decision": "HOLD",
-        "execution_mode": "PAPER_ONLY",
-        "live_orders_enabled": false,
-        "reason_codes": [
-          "WATCH_ONLY_NO_CLOSED_CANDLE_SIGNAL"
-        ],
-        "strategy_signal": "HOLD",
-        "watch_only": true
-      },
-      "WINGS/USD": {
         "approved_by_consensus": false,
         "decision": "HOLD",
         "execution_mode": "PAPER_ONLY",
