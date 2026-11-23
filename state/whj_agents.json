@@ -23,7 +23,6 @@
           "ETH/USD",
           "EVAA/USD",
           "FET/USD",
-          "FIDD/USD",
           "HBAR/USD",
           "HYPE/USD",
           "ICNT/USD",
@@ -40,6 +39,7 @@
           "ONDO/USD",
           "PAXG/USD",
           "PEARL/USD",
+          "PENGU/USD",
           "PEPE/USD",
           "PIEVERSE/USD",
           "PUMP/USD",
@@ -54,7 +54,6 @@
           "USELESS/USD",
           "VVV/USD",
           "WLD/USD",
-          "XAGUSD",
           "XAUT/USDT",
           "XAUUSD",
           "XCN/USD",
@@ -90,7 +89,6 @@
           "ETH/USD",
           "EVAA/USD",
           "FET/USD",
-          "FIDD/USD",
           "HBAR/USD",
           "HYPE/USD",
           "ICNT/USD",
@@ -107,6 +105,7 @@
           "ONDO/USD",
           "PAXG/USD",
           "PEARL/USD",
+          "PENGU/USD",
           "PEPE/USD",
           "PIEVERSE/USD",
           "PUMP/USD",
@@ -121,7 +120,6 @@
           "USELESS/USD",
           "VVV/USD",
           "WLD/USD",
-          "XAGUSD",
           "XAUT/USDT",
           "XCN/USD",
           "XDC/USD",
@@ -156,7 +154,6 @@
           "ETH/USD",
           "EVAA/USD",
           "FET/USD",
-          "FIDD/USD",
           "HBAR/USD",
           "HYPE/USD",
           "ICNT/USD",
@@ -173,6 +170,7 @@
           "ONDO/USD",
           "PAXG/USD",
           "PEARL/USD",
+          "PENGU/USD",
           "PEPE/USD",
           "PIEVERSE/USD",
           "PUMP/USD",
@@ -187,7 +185,6 @@
           "USELESS/USD",
           "VVV/USD",
           "WLD/USD",
-          "XAGUSD",
           "XAUT/USDT",
           "XCN/USD",
           "XDC/USD",
@@ -253,22 +250,22 @@
       "detail": "Equity is read from the single shared paper wallet when available.",
       "metrics": {
         "closed_trades": 52,
-        "equity_usd": 100.9689,
+        "equity_usd": 100.8873,
         "initial_equity_usd": 100.0,
-        "pnl_usd": 0.9689,
-        "return_pct": 0.9689,
+        "pnl_usd": 0.8873,
+        "return_pct": 0.8873,
         "shared_wallet": true
       },
       "name": "EQUITY",
       "status": "TRACKING"
     }
   ],
-  "generated_at_utc": "2026-11-23T11:43:12.007473+00:00",
+  "generated_at_utc": "2026-11-23T12:43:37.281824+00:00",
   "live_trading_enabled": false,
   "mode": "PAPER_ONLY",
   "portfolio_status": "PAPER_RUNNING",
   "schema_version": 2,
-  "source_updated_at": "2026-11-23T11:43:11.524738+00:00",
+  "source_updated_at": "2026-11-23T12:43:36.858856+00:00",
   "summary": {
     "agent_count": 6,
     "markets": [
@@ -292,7 +289,6 @@
       "ETH/USD",
       "EVAA/USD",
       "FET/USD",
-      "FIDD/USD",
       "HBAR/USD",
       "HYPE/USD",
       "ICNT/USD",
@@ -309,6 +305,7 @@
       "ONDO/USD",
       "PAXG/USD",
       "PEARL/USD",
+      "PENGU/USD",
       "PEPE/USD",
       "PIEVERSE/USD",
       "PUMP/USD",
@@ -323,7 +320,6 @@
       "USELESS/USD",
       "VVV/USD",
       "WLD/USD",
-      "XAGUSD",
       "XAUT/USDT",
       "XCN/USD",
       "XDC/USD",
@@ -570,17 +566,6 @@
         "strategy_signal": "HOLD",
         "watch_only": true
       },
-      "FIDD/USD": {
-        "approved_by_consensus": false,
-        "decision": "HOLD",
-        "execution_mode": "PAPER_ONLY",
-        "live_orders_enabled": false,
-        "reason_codes": [
-          "WATCH_ONLY_NO_CLOSED_CANDLE_SIGNAL"
-        ],
-        "strategy_signal": "HOLD",
-        "watch_only": true
-      },
       "HBAR/USD": {
         "approved_by_consensus": false,
         "decision": "HOLD",
@@ -757,6 +742,17 @@
         "strategy_signal": "HOLD",
         "watch_only": true
       },
+      "PENGU/USD": {
+        "approved_by_consensus": false,
+        "decision": "HOLD",
+        "execution_mode": "PAPER_ONLY",
+        "live_orders_enabled": false,
+        "reason_codes": [
+          "WATCH_ONLY_NO_CLOSED_CANDLE_SIGNAL"
+        ],
+        "strategy_signal": "HOLD",
+        "watch_only": true
+      },
       "PEPE/USD": {
         "approved_by_consensus": false,
         "decision": "HOLD",
@@ -901,17 +897,6 @@
         "watch_only": true
       },
       "WLD/USD": {
-        "approved_by_consensus": false,
-        "decision": "HOLD",
-        "execution_mode": "PAPER_ONLY",
-        "live_orders_enabled": false,
-        "reason_codes": [
-          "WATCH_ONLY_NO_CLOSED_CANDLE_SIGNAL"
-        ],
-        "strategy_signal": "HOLD",
-        "watch_only": true
-      },
-      "XAGUSD": {
         "approved_by_consensus": false,
         "decision": "HOLD",
         "execution_mode": "PAPER_ONLY",
