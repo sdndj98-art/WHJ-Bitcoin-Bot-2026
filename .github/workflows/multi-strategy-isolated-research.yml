@@ -259,15 +259,17 @@ jobs:
           lines.append(f"- Unused trailing bars: {walk_forward['unused_tail_bars']} ({walk_forward['unused_tail_fraction']:.1%}), excluded from this WF selector only.")
           lines.append(f"- Holdout scope: {output['walk_forward_tail_scope_warning']}")
           lines.append("")
-          lines.append("| Cost | Aggregate strategy | Matched buy/hold | Excess | Max open-to-open DD | Periodic PF | Sharpe | Closed trades | Exposure | OOS bars |")
-          lines.append("|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|")
+          lines.append("| Cost | Aggregate strategy | Matched buy/hold | Excess | Max open-to-open DD | Periodic PF | Sharpe | Sortino | Closed trades | Exposure | OOS bars |")
+          lines.append("|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|")
           for level, aggregate in walk_forward["aggregate_oos_cost_scenarios"].items():
               sm, bm = aggregate["strategy"], aggregate["buy_and_hold"]
               pf = sm["periodic_profit_factor"]
               pf_text = pf if isinstance(pf, str) else (f"{pf:.2f}" if pf is not None else "—")
               sharpe = sm["period_sharpe"]
               sharpe_text = f"{sharpe:.2f}" if sharpe is not None else "—"
-              lines.append(f"| {level} | {sm['net_return']*100:.2f}% | {bm['net_return']*100:.2f}% | {aggregate['excess_return']*100:.2f} pp | {sm['max_open_to_open_drawdown']*100:.2f}% | {pf_text} | {sharpe_text} | {sm['closed_trades']} | {sm['exposure']*100:.1f}% | {sm['bars']} |")
+              sortino = sm["period_sortino"]
+              sortino_text = sortino if isinstance(sortino, str) else (f"{sortino:.2f}" if sortino is not None else "—")
+              lines.append(f"| {level} | {sm['net_return']*100:.2f}% | {bm['net_return']*100:.2f}% | {aggregate['excess_return']*100:.2f} pp | {sm['max_open_to_open_drawdown']*100:.2f}% | {pf_text} | {sharpe_text} | {sortino_text} | {sm['closed_trades']} | {sm['exposure']*100:.1f}% | {sm['bars']} |")
           lines.append("")
           lines.append("- Aggregate walk-forward metrics describe one adaptive selection process, not a single fixed candidate. The selected candidate may change at fold boundaries.")
           for fold in walk_forward["folds"]:
