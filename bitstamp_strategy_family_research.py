@@ -184,6 +184,7 @@ def _ranking_rows(base_report, cost_reports):
             "max_open_to_open_drawdown_pct": round(abs(strategy["max_drawdown"]) * 100, 4),
             "periodic_profit_factor": strategy["profit_factor"],
             "period_sharpe": strategy["period_sharpe"],
+            "period_sortino": strategy["period_sortino"],
             "closed_trades": strategy["closed_trades"],
             "exposure_pct": round(strategy["exposure"] * 100, 4),
             "open_position_at_end": strategy["open_position_at_end"],
@@ -598,18 +599,20 @@ def render_markdown_report(report):
         f"- CSCV/PBO: {report['cscv_pbo']['pbo_estimate'] if report['cscv_pbo'] else 'not computed'} ({report['cscv_pbo_status']})",
         "- Status: RESEARCH ONLY — NO CANDIDATE PROMOTED",
         "",
-        "| Rank | Candidate | 1x net | Matched B&H | Excess | Max DD | Period PF | Sharpe | Trades | 2x | 3x |",
-        "|---:|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|",
+        "| Rank | Candidate | 1x net | Matched B&H | Excess | Max DD | Period PF | Sharpe | Sortino | Trades | 2x | 3x |",
+        "|---:|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|",
     ]
     for row in report["ranking_by_net_return"]:
         pf = row["periodic_profit_factor"]
         pf_text = pf if isinstance(pf, str) else (f"{pf:.3f}" if pf is not None else "—")
         sharpe = row["period_sharpe"]
         sharpe_text = f"{sharpe:.3f}" if sharpe is not None else "—"
+        sortino = row["period_sortino"]
+        sortino_text = sortino if isinstance(sortino, str) else (f"{sortino:.3f}" if sortino is not None else "—")
         lines.append(
             f"| {row['rank_by_net_return']} | {row['candidate']} | {row['net_return_pct']:.2f}% | "
             f"{row['matched_buy_and_hold_pct']:.2f}% | {row['excess_vs_buy_and_hold_pp']:+.2f} pp | "
-            f"{row['max_open_to_open_drawdown_pct']:.2f}% | {pf_text} | {sharpe_text} | "
+            f"{row['max_open_to_open_drawdown_pct']:.2f}% | {pf_text} | {sharpe_text} | {sortino_text} | "
             f"{row['closed_trades']} | {row['return_2x_pct']:.2f}% | {row['return_3x_pct']:.2f}% |"
         )
     semantics = report["signal_semantics"]
