@@ -1039,7 +1039,7 @@ This finding is documentation-only. No workflow was dispatched, no paper ledger 
 ### Current reference pin and CI state
 
 - The Bitstamp overlap contract is now pinned to Coinbase run #62, code commit `a60685becdc5b7693fa461ee17b8bafea3e04f06`, dataset hash `f3f4f857e54a402c98b03cf971f1a1aa00223c6912e0ea793bd6d31c30c554f9`, first OOS open `2025-08-30T22:00:00+00:00`, last candle `2026-11-23T21:00:00+00:00`, and 10,799 returns.
-- The first two reference-pin reruns (#45/#46) failed because one additional immutable-provenance test still expected Coinbase #52. Both stale test pins were updated to #62. The latest Bitstamp run #47 was still evaluating the full Bitstamp history when this section was written; its final report/artifact must be checked before treating the refreshed exact-calendar overlap as complete.
+- The first two reference-pin reruns (#45/#46) failed because one additional immutable-provenance test still expected Coinbase #52. Both stale test pins were updated to #62. The final rerun #47 completed successfully and its artifact and refreshed exact-calendar overlap were verified directly; see F45.
 - [Termux Repository Audit #2301](https://github.com/sdndj98-art/WHJ-Bitcoin-Bot-2026/actions/runs/45281368946) passed 599 tests in 8.116 seconds on Python 3.13.18; tracked Python `py_compile` and `git diff --check` passed.
 
 ### Separate slow-momentum and gold status
@@ -1049,3 +1049,15 @@ This finding is documentation-only. No workflow was dispatched, no paper ledger 
 - `xauusd_broker_data.py` and its tests provide a separate Bid/Ask, contract-size, session/DST, commission, slippage, and swap data contract. No real broker XAUUSD Bid/Ask history or verified broker cost schedule is present, so there is still no defensible XAUUSD spot backtest. Do not substitute GC=F or generic BTC cost assumptions for it.
 
 No strategy was promoted. No live order path, paper balance, ledger, risk limit, schedule, credential, Telegram channel, or deployment was accessed or changed during this evidence refresh.
+
+
+## F45 — refreshed exact-calendar Bitstamp replication against Coinbase #62 (2026-11-24)
+
+- [Bitstamp run #47](https://github.com/sdndj98-art/WHJ-Bitcoin-Bot-2026/actions/runs/45281368923) completed successfully on commit `7e45cc1f0634538a5c120ae1a8e5255c571199fd`. It passed the Bitstamp report/regime tests (10), shared 17-candidate signal/evaluator/runner tests (11), fixed-candidate walk-forward ranking tests (13), and module compilation before the historical evaluation.
+- Artifact [14869976306](https://github.com/sdndj98-art/WHJ-Bitcoin-Bot-2026/actions/runs/45281368923/artifacts/14869976306), `whj-bitstamp-17-strategy-research-47`, SHA-256 `beb971c0f8e9bfe3e1da6805f69f80e96e60e8f408fddf3297c727fb8dcfc2db`, independently matched the GitHub artifact digest.
+- The full Bitstamp dataset remains 72,000 hourly bars with zero duplicates, zero gaps, and zero imputed bars; decompressed data hash `d3e10765c9a4fccd17a3d90520fe3262b58b159172e809ea7828112e4f378492` was reverified. Full 70/30 OOS remains 21,599 returns; all 17 candidates are negative at 1x/2x/3x and the fixed-candidate walk-forward gate remains 0/17.
+- The exact matched window now uses Coinbase run #62, not the stale #52 reference: 10,799 open-to-open returns from 2025-08-30 22:00 UTC through 2026-11-23 21:00 UTC. Bitstamp uses 10,801 candles including the prior signal candle and final endpoint; the matched-slice SHA-256 `9b20610b52cd14c76a0ddc519414ebd79e32febf2e93eaa9ed947907af73186c` was independently recomputed and matched.
+- On this same exact calendar and identical 1x cost assumptions, net-return ranking correlations across all 17 proxies are Pearson 0.99648, Spearman 0.99265, and Kendall 0.97059. Every candidate is negative on both venues. RSI14 is least negative: Coinbase -1.3633%, Bitstamp -1.3451%; both have only 11 closed trades on this matched segment, negative Sharpe/Sortino, and PF below 1. This is strong relative venue-series rank consistency, not evidence of profitability.
+- The refreshed matched-window PBO diagnostic is 0.057143 across 17 trials and 35 splits (10,792 of 10,799 observations; seven trimmed for equal partitions). It remains a selection-bias diagnostic only. The report's fixed-candidate walk-forward ranking method is V2_SORTINO and passes 0/17.
+- The Bitstamp Markdown artifact now contains Sortino columns in all three ranking tables; the JSON includes per-candidate Sortino, and the report still explicitly states research-only/no-promotion. The report cost model is held equal to Coinbase for comparison, not represented as actual Bitstamp fees/spread.
+- The previous report-rendering omission is therefore closed, and the exact-calendar reference pin is now current to Coinbase #62. No strategy is promoted.
