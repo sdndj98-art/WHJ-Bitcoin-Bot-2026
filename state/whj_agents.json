@@ -11,7 +11,6 @@
           "AKE/USD",
           "ALGO/USD",
           "ARB/USD",
-          "ASTER/USD",
           "AVAX/USD",
           "BCH/USD",
           "BLESS/USD",
@@ -45,6 +44,7 @@
           "PUMP/USD",
           "QNT/USD",
           "RENDER/USD",
+          "SHIB/USD",
           "SKY/USD",
           "SOFID/USD",
           "SOL/USD",
@@ -78,7 +78,6 @@
           "AKE/USD",
           "ALGO/USD",
           "ARB/USD",
-          "ASTER/USD",
           "AVAX/USD",
           "BCH/USD",
           "BLESS/USD",
@@ -112,6 +111,7 @@
           "PUMP/USD",
           "QNT/USD",
           "RENDER/USD",
+          "SHIB/USD",
           "SKY/USD",
           "SOFID/USD",
           "SOL/USD",
@@ -144,7 +144,6 @@
           "AKE/USD",
           "ALGO/USD",
           "ARB/USD",
-          "ASTER/USD",
           "AVAX/USD",
           "BCH/USD",
           "BLESS/USD",
@@ -178,6 +177,7 @@
           "PUMP/USD",
           "QNT/USD",
           "RENDER/USD",
+          "SHIB/USD",
           "SKY/USD",
           "SOFID/USD",
           "SOL/USD",
@@ -263,12 +263,12 @@
       "status": "TRACKING"
     }
   ],
-  "generated_at_utc": "2026-11-23T20:09:22.885206+00:00",
+  "generated_at_utc": "2026-11-23T20:58:06.632837+00:00",
   "live_trading_enabled": false,
   "mode": "PAPER_ONLY",
   "portfolio_status": "PAPER_RUNNING",
   "schema_version": 2,
-  "source_updated_at": "2026-11-23T20:09:22.368072+00:00",
+  "source_updated_at": "2026-11-23T20:58:06.148487+00:00",
   "summary": {
     "agent_count": 6,
     "markets": [
@@ -280,7 +280,6 @@
       "AKE/USD",
       "ALGO/USD",
       "ARB/USD",
-      "ASTER/USD",
       "AVAX/USD",
       "BCH/USD",
       "BLESS/USD",
@@ -314,6 +313,7 @@
       "PUMP/USD",
       "QNT/USD",
       "RENDER/USD",
+      "SHIB/USD",
       "SKY/USD",
       "SOFID/USD",
       "SOL/USD",
@@ -407,17 +407,6 @@
         "watch_only": true
       },
       "ARB/USD": {
-        "approved_by_consensus": false,
-        "decision": "HOLD",
-        "execution_mode": "PAPER_ONLY",
-        "live_orders_enabled": false,
-        "reason_codes": [
-          "WATCH_ONLY_NO_CLOSED_CANDLE_SIGNAL"
-        ],
-        "strategy_signal": "HOLD",
-        "watch_only": true
-      },
-      "ASTER/USD": {
         "approved_by_consensus": false,
         "decision": "HOLD",
         "execution_mode": "PAPER_ONLY",
@@ -802,6 +791,17 @@
         "watch_only": true
       },
       "RENDER/USD": {
+        "approved_by_consensus": false,
+        "decision": "HOLD",
+        "execution_mode": "PAPER_ONLY",
+        "live_orders_enabled": false,
+        "reason_codes": [
+          "WATCH_ONLY_NO_CLOSED_CANDLE_SIGNAL"
+        ],
+        "strategy_signal": "HOLD",
+        "watch_only": true
+      },
+      "SHIB/USD": {
         "approved_by_consensus": false,
         "decision": "HOLD",
         "execution_mode": "PAPER_ONLY",
