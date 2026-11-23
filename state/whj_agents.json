@@ -21,7 +21,6 @@
           "DRV/USD",
           "ENA/USD",
           "ETH/USD",
-          "EURCV/USDC",
           "EVAA/USD",
           "FET/USD",
           "HBAR/USD",
@@ -44,6 +43,7 @@
           "PIEVERSE/USD",
           "PUMP/USD",
           "QNT/USD",
+          "RENDER/USD",
           "SKY/USD",
           "SOFID/USD",
           "SOL/USD",
@@ -88,7 +88,6 @@
           "DRV/USD",
           "ENA/USD",
           "ETH/USD",
-          "EURCV/USDC",
           "EVAA/USD",
           "FET/USD",
           "HBAR/USD",
@@ -111,6 +110,7 @@
           "PIEVERSE/USD",
           "PUMP/USD",
           "QNT/USD",
+          "RENDER/USD",
           "SKY/USD",
           "SOFID/USD",
           "SOL/USD",
@@ -154,7 +154,6 @@
           "DRV/USD",
           "ENA/USD",
           "ETH/USD",
-          "EURCV/USDC",
           "EVAA/USD",
           "FET/USD",
           "HBAR/USD",
@@ -177,6 +176,7 @@
           "PIEVERSE/USD",
           "PUMP/USD",
           "QNT/USD",
+          "RENDER/USD",
           "SKY/USD",
           "SOFID/USD",
           "SOL/USD",
@@ -252,23 +252,23 @@
     {
       "detail": "Equity is read from the single shared paper wallet when available.",
       "metrics": {
-        "closed_trades": 59,
-        "equity_usd": 103.043,
+        "closed_trades": 61,
+        "equity_usd": 102.4558,
         "initial_equity_usd": 100.0,
-        "pnl_usd": 3.043,
-        "return_pct": 3.043,
+        "pnl_usd": 2.4558,
+        "return_pct": 2.4558,
         "shared_wallet": true
       },
       "name": "EQUITY",
       "status": "TRACKING"
     }
   ],
-  "generated_at_utc": "2026-11-23T14:03:56.012546+00:00",
+  "generated_at_utc": "2026-11-23T15:11:22.675079+00:00",
   "live_trading_enabled": false,
   "mode": "PAPER_ONLY",
   "portfolio_status": "PAPER_RUNNING",
   "schema_version": 2,
-  "source_updated_at": "2026-11-23T14:03:55.573786+00:00",
+  "source_updated_at": "2026-11-23T15:11:22.258028+00:00",
   "summary": {
     "agent_count": 6,
     "markets": [
@@ -290,7 +290,6 @@
       "DRV/USD",
       "ENA/USD",
       "ETH/USD",
-      "EURCV/USDC",
       "EVAA/USD",
       "FET/USD",
       "HBAR/USD",
@@ -313,6 +312,7 @@
       "PIEVERSE/USD",
       "PUMP/USD",
       "QNT/USD",
+      "RENDER/USD",
       "SKY/USD",
       "SOFID/USD",
       "SOL/USD",
@@ -538,17 +538,6 @@
         "watch_only": true
       },
       "ETH/USD": {
-        "approved_by_consensus": false,
-        "decision": "HOLD",
-        "execution_mode": "PAPER_ONLY",
-        "live_orders_enabled": false,
-        "reason_codes": [
-          "WATCH_ONLY_NO_CLOSED_CANDLE_SIGNAL"
-        ],
-        "strategy_signal": "HOLD",
-        "watch_only": true
-      },
-      "EURCV/USDC": {
         "approved_by_consensus": false,
         "decision": "HOLD",
         "execution_mode": "PAPER_ONLY",
@@ -791,6 +780,17 @@
         "watch_only": true
       },
       "QNT/USD": {
+        "approved_by_consensus": false,
+        "decision": "HOLD",
+        "execution_mode": "PAPER_ONLY",
+        "live_orders_enabled": false,
+        "reason_codes": [
+          "WATCH_ONLY_NO_CLOSED_CANDLE_SIGNAL"
+        ],
+        "strategy_signal": "HOLD",
+        "watch_only": true
+      },
+      "RENDER/USD": {
         "approved_by_consensus": false,
         "decision": "HOLD",
         "execution_mode": "PAPER_ONLY",
