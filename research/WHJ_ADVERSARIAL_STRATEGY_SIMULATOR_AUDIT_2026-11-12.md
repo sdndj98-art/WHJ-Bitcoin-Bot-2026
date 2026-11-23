@@ -1008,3 +1008,44 @@ Merging the PR unchanged would add a second hourly BTC paper engine at the same 
 **Required before any future merge review:** choose one authoritative paper-wallet architecture; remove or redesign the duplicate schedule, ledger persistence, snapshot writer, and Pages deployment; document migration without resetting or replacing existing state; then run a fresh full CI and inspect the exact deployment/workflow permissions. This review makes no such operational changes.
 
 This finding is documentation-only. No workflow was dispatched, no paper ledger was opened or modified, no balance or schedule was changed, and no Pages deployment was initiated. PR #122 remains draft and unmerged; no strategy is promoted.
+
+
+## F44 — Sortino risk metric and latest Coinbase/Bitstamp evidence (2026-11-24)
+
+### Risk-metric and report correction
+
+- The common BTC evaluator now reports downside deviation and an annualized Sortino ratio using a zero minimum-acceptable-return threshold: `sqrt(mean(min(return, 0)^2))` over all OOS bars, annualized with `sqrt(bars_per_year)`.
+- A positive-mean series with zero downside is serialized as `"infinite"`; a flat series reports `null`. This avoids non-standard JSON infinity values.
+- Fixed-candidate walk-forward scoring now averages the Sharpe, Sortino, and periodic profit-factor sub-scores in its risk-adjusted component. Positive Sortino is also a screening requirement. The method identifier is `FIXED_CANDIDATE_WALK_FORWARD_EVIDENCE_SCORE_V2_SORTINO`.
+- Coinbase and Bitstamp Markdown reports now expose Sortino in the 17-candidate OOS and fixed-candidate walk-forward tables. Regression tests cover mixed/positive/flat returns, ranking sensitivity, walk-forward propagation, and Bitstamp report rendering.
+
+### Coinbase 17-candidate refresh — run #62
+
+- [Isolated multi-strategy run #62](https://github.com/sdndj98-art/WHJ-Bitcoin-Bot-2026/actions/runs/45280464657) completed successfully on commit `a60685becdc5b7693fa461ee17b8bafea3e04f06`.
+- Artifact [14869271782](https://github.com/sdndj98-art/WHJ-Bitcoin-Bot-2026/actions/runs/45280464657/artifacts/14869271782), ZIP SHA-256 `721c71865c2e76f830db5867d4a4d62dc06ff1c7a70868ac0f1a7c9a5246760f`, independently matched GitHub's artifact digest.
+- Coinbase public BTC-USD hourly snapshot: 36,000 rows, 2022-10-15 22:00 UTC through 2026-11-23 21:00 UTC; 13 explicitly flagged/imputed hourly candles; 10,800 OOS candles and 10,799 open-to-open returns. Dataset SHA-256 `f3f4f857e54a402c98b03cf971f1a1aa00223c6912e0ea793bd6d31c30c554f9` matched the decompressed snapshot. Timestamps are strictly increasing at one-hour intervals.
+- All 17 candidates remain negative at 1x, 2x, and 3x. The least-negative OOS candidate is RSI14: -1.363% net, 1.411% DD, Sharpe -1.888, Sortino -2.069, PF 0.350, 11 closed trades; 2x -2.174%, 3x -2.979%. Matched 25% buy-and-hold is -11.501% at 1x. RSI14 is not eligible: its risk metrics are negative and its trade count is far below the 30-trade screen.
+- Three-fold expanding-window walk-forward: 19,800 initial training bars, three contiguous 3,600-bar tests, 10,800 aggregate OOS bars, and 5,399 trailing bars excluded from this selector (not an untouched holdout). Adaptive selected strategy: -23.584% at 1x versus -6.904% matched buy-and-hold; -35.092% at 2x and -44.870% at 3x; 25.387% DD, Sharpe -2.966, Sortino -3.984, 217 closed trades.
+- Fixed-candidate ranking evaluated all 17 and passed 0/17. CSCV/PBO is 0.085714 across 17 trials and 35 splits, using 10,792 of 10,799 observations and trimming seven newest observations to form equal partitions; it is a selection-bias diagnostic, not a future-profit probability. OOS regime counts: 4,828 bearish, 3,699 bullish, 2,272 sideways/transition.
+
+### Independent Bitstamp 17-candidate run #41
+
+- [Bitstamp run #41](https://github.com/sdndj98-art/WHJ-Bitcoin-Bot-2026/actions/runs/45280464513) completed successfully on the same source commit. Artifact [14867739214](https://github.com/sdndj98-art/WHJ-Bitcoin-Bot-2026/actions/runs/45280464513/artifacts/14867739214), ZIP SHA-256 `ab8169864827dd60ec0fefc5df1d84e195ba350577fb1b6f908bcf4bf480bf3b`, independently matched.
+- Bitstamp public BTCUSD hourly snapshot: 72,000 rows, 2018-09-06 22:00 UTC through 2026-11-23 21:00 UTC; zero duplicate timestamps, zero gaps (the loader rejects any gap), zero imputed candles; 21,599 full-history OOS open-to-open returns. Dataset SHA-256 `d3e10765c9a4fccd17a3d90520fe3262b58b159172e809ea7828112e4f378492` matched the decompressed snapshot.
+- All 17 candidates were negative at 1x/2x/3x on the full Bitstamp OOS split. RSI14 was least negative: -3.382%, 3.427% DD, Sharpe -1.895, Sortino -2.164, PF 0.452, 37 closed trades; 2x -6.028%, 3x -8.602%. Matched 25% buy-and-hold was +1.226% at 1x, so RSI14 underperformed by about 4.608 pp.
+- Bitstamp three-fold walk-forward adaptive result: -7.486% at 1x versus +52.525% matched buy-and-hold; -30.492% at 2x and -47.782% at 3x; 15.417% DD, Sharpe -0.323, Sortino -0.458, 381 trades. Fixed-candidate ranking passed 0/17.
+- The #41 exact-calendar overlap still referenced the earlier Coinbase #52 window. On that older matched window, the 17-candidate net-return ranks had Pearson 0.9970, Spearman 0.9853, and Kendall 0.9559 correlation. This is useful venue-series robustness evidence, but the overlap reference was subsequently advanced to the latest Coinbase #62 snapshot.
+
+### Current reference pin and CI state
+
+- The Bitstamp overlap contract is now pinned to Coinbase run #62, code commit `a60685becdc5b7693fa461ee17b8bafea3e04f06`, dataset hash `f3f4f857e54a402c98b03cf971f1a1aa00223c6912e0ea793bd6d31c30c554f9`, first OOS open `2025-08-30T22:00:00+00:00`, last candle `2026-11-23T21:00:00+00:00`, and 10,799 returns.
+- The first two reference-pin reruns (#45/#46) failed because one additional immutable-provenance test still expected Coinbase #52. Both stale test pins were updated to #62. The latest Bitstamp run #47 was still evaluating the full Bitstamp history when this section was written; its final report/artifact must be checked before treating the refreshed exact-calendar overlap as complete.
+- [Termux Repository Audit #2301](https://github.com/sdndj98-art/WHJ-Bitcoin-Bot-2026/actions/runs/45281368946) passed 599 tests in 8.116 seconds on Python 3.13.18; tracked Python `py_compile` and `git diff --check` passed.
+
+### Separate slow-momentum and gold status
+
+- [Slow Momentum #32](https://github.com/sdndj98-art/WHJ-Bitcoin-Bot-2026/actions/runs/45076926886) remains the latest completed slow-momentum report; artifact [14776180050](https://github.com/sdndj98-art/WHJ-Bitcoin-Bot-2026/actions/runs/45076926886/artifacts/14776180050) was verified previously. Its 56/84/112-day variants returned -2.0545%/-7.2307%/-11.0823% at 1x, with 15/7/13 trades and no candidate meeting the 30-trade gate. The workflow is manual/push-triggered, not scheduled.
+- [GC=F Gold Research #19](https://github.com/sdndj98-art/WHJ-Bitcoin-Bot-2026/actions/runs/44633217180) artifact [14581863835](https://github.com/sdndj98-art/WHJ-Bitcoin-Bot-2026/actions/runs/44633217180/artifacts/14581863835) was re-downloaded and verified. It contains 2,514 daily Yahoo GC=F futures-reference bars (2016-11-21 through 2026-11-18), not spot XAUUSD. The EMA50/EMA200 + prior-180-bar ATR90 filter returned +1.1960%, +3.3208%, and +0.0987% in the three 1x folds versus +1.8479%, +16.3894%, and +3.1376% matched buy-and-hold; 23 total trades is below the 30-trade gate. At 3x, fold 3 returned -0.6239%.
+- `xauusd_broker_data.py` and its tests provide a separate Bid/Ask, contract-size, session/DST, commission, slippage, and swap data contract. No real broker XAUUSD Bid/Ask history or verified broker cost schedule is present, so there is still no defensible XAUUSD spot backtest. Do not substitute GC=F or generic BTC cost assumptions for it.
+
+No strategy was promoted. No live order path, paper balance, ledger, risk limit, schedule, credential, Telegram channel, or deployment was accessed or changed during this evidence refresh.
