@@ -68,6 +68,12 @@ class BitstampStrategyFamilyResearchTests(unittest.TestCase):
         self.assertEqual(set(semantics["candidate_rules_v1"]), set(report["ranking_by_net_return"][i]["candidate"] for i in range(17)))
         markdown = render_markdown_report(report)
         self.assertIn("Candidate rules V1", markdown)
+        self.assertIn("Sortino", markdown)
+        self.assertIn("period_sortino", report["ranking_by_net_return"][0])
+        self.assertIn(
+            "period_sortino",
+            report["walk_forward_candidate_ranking"]["ranked_candidates"][0]["metrics"],
+        )
         self.assertIn("stochastic_reversal", markdown)
         self.assertGreater(markdown.index("## Candidate rules V1"), markdown.index("| 17 |"))
         self.assertEqual(report["source"], "Bitstamp public BTCUSD spot OHLC")
