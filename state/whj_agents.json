@@ -35,6 +35,7 @@
           "LIGHTER/USD",
           "LINK/USD",
           "LTC/USD",
+          "MON/USD",
           "NEAR/USD",
           "NIGHT/USD",
           "ONDO/USD",
@@ -44,7 +45,6 @@
           "PIEVERSE/USD",
           "PUMP/USD",
           "QNT/USD",
-          "RLUSD/USDT",
           "SOFID/USD",
           "SOL/USD",
           "SUI/USD",
@@ -102,6 +102,7 @@
           "LIGHTER/USD",
           "LINK/USD",
           "LTC/USD",
+          "MON/USD",
           "NEAR/USD",
           "NIGHT/USD",
           "ONDO/USD",
@@ -111,7 +112,6 @@
           "PIEVERSE/USD",
           "PUMP/USD",
           "QNT/USD",
-          "RLUSD/USDT",
           "SOFID/USD",
           "SOL/USD",
           "SUI/USD",
@@ -168,6 +168,7 @@
           "LIGHTER/USD",
           "LINK/USD",
           "LTC/USD",
+          "MON/USD",
           "NEAR/USD",
           "NIGHT/USD",
           "ONDO/USD",
@@ -177,7 +178,6 @@
           "PIEVERSE/USD",
           "PUMP/USD",
           "QNT/USD",
-          "RLUSD/USDT",
           "SOFID/USD",
           "SOL/USD",
           "SUI/USD",
@@ -252,23 +252,23 @@
     {
       "detail": "Equity is read from the single shared paper wallet when available.",
       "metrics": {
-        "closed_trades": 48,
-        "equity_usd": 100.9497,
+        "closed_trades": 50,
+        "equity_usd": 100.9126,
         "initial_equity_usd": 100.0,
-        "pnl_usd": 0.9497,
-        "return_pct": 0.9497,
+        "pnl_usd": 0.9126,
+        "return_pct": 0.9126,
         "shared_wallet": true
       },
       "name": "EQUITY",
       "status": "TRACKING"
     }
   ],
-  "generated_at_utc": "2026-11-23T09:57:39.479786+00:00",
+  "generated_at_utc": "2026-11-23T10:55:46.761925+00:00",
   "live_trading_enabled": false,
   "mode": "PAPER_ONLY",
   "portfolio_status": "PAPER_RUNNING",
   "schema_version": 2,
-  "source_updated_at": "2026-11-23T09:57:38.858284+00:00",
+  "source_updated_at": "2026-11-23T10:55:46.395758+00:00",
   "summary": {
     "agent_count": 6,
     "markets": [
@@ -304,6 +304,7 @@
       "LIGHTER/USD",
       "LINK/USD",
       "LTC/USD",
+      "MON/USD",
       "NEAR/USD",
       "NIGHT/USD",
       "ONDO/USD",
@@ -313,7 +314,6 @@
       "PIEVERSE/USD",
       "PUMP/USD",
       "QNT/USD",
-      "RLUSD/USDT",
       "SOFID/USD",
       "SOL/USD",
       "SUI/USD",
@@ -702,6 +702,17 @@
         "strategy_signal": "HOLD",
         "watch_only": true
       },
+      "MON/USD": {
+        "approved_by_consensus": false,
+        "decision": "HOLD",
+        "execution_mode": "PAPER_ONLY",
+        "live_orders_enabled": false,
+        "reason_codes": [
+          "WATCH_ONLY_NO_CLOSED_CANDLE_SIGNAL"
+        ],
+        "strategy_signal": "HOLD",
+        "watch_only": true
+      },
       "NEAR/USD": {
         "approved_by_consensus": false,
         "decision": "HOLD",
@@ -791,17 +802,6 @@
         "watch_only": true
       },
       "QNT/USD": {
-        "approved_by_consensus": false,
-        "decision": "HOLD",
-        "execution_mode": "PAPER_ONLY",
-        "live_orders_enabled": false,
-        "reason_codes": [
-          "WATCH_ONLY_NO_CLOSED_CANDLE_SIGNAL"
-        ],
-        "strategy_signal": "HOLD",
-        "watch_only": true
-      },
-      "RLUSD/USDT": {
         "approved_by_consensus": false,
         "decision": "HOLD",
         "execution_mode": "PAPER_ONLY",
