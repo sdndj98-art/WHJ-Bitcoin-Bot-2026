@@ -977,6 +977,6 @@ Read-only review of the latest main-branch paper workflow and the scheduled isol
 
 ### Branch/PR context
 
-- At this review, PR #122 is still open, draft, unmerged, and not mergeable. Its head is `8450760ef3364b4aec703cddfc711ff1e19b5f1a`; current main is `58429cc12d94655f6c29d0b560810fda191e3892`.
-- Current main-versus-research comparison is diverged: research is 344 commits ahead and 698 behind, with merge base `d1890f30b383bcae1ae07dbb5b09a1f46067c9fb`. Do not rebase, merge, or replace portfolio state as part of this audit.
+- After the F42 evidence refresh, PR #122 remains open, draft, unmerged, and not mergeable. Its current head is `a9d5afc979b74c18f75ae4e2d92d6a436b88a5a8`; current main is `58429cc12d94655f6c29d0b560810fda191e3892`.
+- Current main-versus-research comparison is diverged: research is 345 commits ahead and 698 behind, with merge base `d1890f30b383bcae1ae07dbb5b09a1f46067c9fb`. Do not rebase, merge, or replace portfolio state as part of this audit.
 - This section is a documentation-only evidence refresh. No ledger file was opened or modified; no paper balance, risk limit, schedule, credential, or order pathway was changed. No strategy is promoted.
