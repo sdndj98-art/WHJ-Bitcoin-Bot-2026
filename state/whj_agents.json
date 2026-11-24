@@ -10,6 +10,7 @@
           "AERO/USD",
           "AKE/USD",
           "ALGO/USD",
+          "ALIGN/USD",
           "ARB/USD",
           "AVAX/USD",
           "BCH/USD",
@@ -18,7 +19,6 @@
           "CAP/USD",
           "CC/USD",
           "CRV/USD",
-          "DASH/USD",
           "DRV/USD",
           "ENA/USD",
           "ETH/USD",
@@ -33,7 +33,6 @@
           "LINK/USD",
           "LTC/USD",
           "MON/USD",
-          "MORPHO/USD",
           "NEAR/USD",
           "NIGHT/USD",
           "ONDO/USD",
@@ -41,17 +40,18 @@
           "PEARL/USD",
           "PENGU/USD",
           "PEPE/USD",
+          "PIEVERSE/USD",
           "PUMP/USD",
           "QNT/USD",
+          "REKT/USD",
           "RENDER/USD",
           "RLUSD/USDT",
           "SHIB/USD",
           "SKY/USD",
-          "SOFID/USD",
+          "SOFID/USDT",
           "SOL/USD",
           "SUI/USD",
           "TAO/USD",
-          "TRUMP/USD",
           "TRX/USD",
           "UNI/USD",
           "USELESS/USD",
@@ -76,6 +76,7 @@
           "AERO/USD",
           "AKE/USD",
           "ALGO/USD",
+          "ALIGN/USD",
           "ARB/USD",
           "AVAX/USD",
           "BCH/USD",
@@ -84,7 +85,6 @@
           "CAP/USD",
           "CC/USD",
           "CRV/USD",
-          "DASH/USD",
           "DRV/USD",
           "ENA/USD",
           "ETH/USD",
@@ -99,7 +99,6 @@
           "LINK/USD",
           "LTC/USD",
           "MON/USD",
-          "MORPHO/USD",
           "NEAR/USD",
           "NIGHT/USD",
           "ONDO/USD",
@@ -107,17 +106,18 @@
           "PEARL/USD",
           "PENGU/USD",
           "PEPE/USD",
+          "PIEVERSE/USD",
           "PUMP/USD",
           "QNT/USD",
+          "REKT/USD",
           "RENDER/USD",
           "RLUSD/USDT",
           "SHIB/USD",
           "SKY/USD",
-          "SOFID/USD",
+          "SOFID/USDT",
           "SOL/USD",
           "SUI/USD",
           "TAO/USD",
-          "TRUMP/USD",
           "TRX/USD",
           "UNI/USD",
           "USELESS/USD",
@@ -141,6 +141,7 @@
           "AERO/USD",
           "AKE/USD",
           "ALGO/USD",
+          "ALIGN/USD",
           "ARB/USD",
           "AVAX/USD",
           "BCH/USD",
@@ -149,7 +150,6 @@
           "CAP/USD",
           "CC/USD",
           "CRV/USD",
-          "DASH/USD",
           "DRV/USD",
           "ENA/USD",
           "ETH/USD",
@@ -164,7 +164,6 @@
           "LINK/USD",
           "LTC/USD",
           "MON/USD",
-          "MORPHO/USD",
           "NEAR/USD",
           "NIGHT/USD",
           "ONDO/USD",
@@ -172,17 +171,18 @@
           "PEARL/USD",
           "PENGU/USD",
           "PEPE/USD",
+          "PIEVERSE/USD",
           "PUMP/USD",
           "QNT/USD",
+          "REKT/USD",
           "RENDER/USD",
           "RLUSD/USDT",
           "SHIB/USD",
           "SKY/USD",
-          "SOFID/USD",
+          "SOFID/USDT",
           "SOL/USD",
           "SUI/USD",
           "TAO/USD",
-          "TRUMP/USD",
           "TRX/USD",
           "UNI/USD",
           "USELESS/USD",
@@ -250,22 +250,22 @@
       "detail": "Equity is read from the single shared paper wallet when available.",
       "metrics": {
         "closed_trades": 113,
-        "equity_usd": 99.5785,
+        "equity_usd": 99.0886,
         "initial_equity_usd": 100.0,
-        "pnl_usd": -0.4215,
-        "return_pct": -0.4215,
+        "pnl_usd": -0.9114,
+        "return_pct": -0.9114,
         "shared_wallet": true
       },
       "name": "EQUITY",
       "status": "TRACKING"
     }
   ],
-  "generated_at_utc": "2026-11-24T13:45:17.367697+00:00",
+  "generated_at_utc": "2026-11-24T14:41:54.532558+00:00",
   "live_trading_enabled": false,
   "mode": "PAPER_ONLY",
   "portfolio_status": "PAPER_RUNNING",
   "schema_version": 2,
-  "source_updated_at": "2026-11-24T13:45:16.865458+00:00",
+  "source_updated_at": "2026-11-24T14:41:54.104941+00:00",
   "summary": {
     "agent_count": 6,
     "markets": [
@@ -276,6 +276,7 @@
       "AERO/USD",
       "AKE/USD",
       "ALGO/USD",
+      "ALIGN/USD",
       "ARB/USD",
       "AVAX/USD",
       "BCH/USD",
@@ -284,7 +285,6 @@
       "CAP/USD",
       "CC/USD",
       "CRV/USD",
-      "DASH/USD",
       "DRV/USD",
       "ENA/USD",
       "ETH/USD",
@@ -299,7 +299,6 @@
       "LINK/USD",
       "LTC/USD",
       "MON/USD",
-      "MORPHO/USD",
       "NEAR/USD",
       "NIGHT/USD",
       "ONDO/USD",
@@ -307,17 +306,18 @@
       "PEARL/USD",
       "PENGU/USD",
       "PEPE/USD",
+      "PIEVERSE/USD",
       "PUMP/USD",
       "QNT/USD",
+      "REKT/USD",
       "RENDER/USD",
       "RLUSD/USDT",
       "SHIB/USD",
       "SKY/USD",
-      "SOFID/USD",
+      "SOFID/USDT",
       "SOL/USD",
       "SUI/USD",
       "TAO/USD",
-      "TRUMP/USD",
       "TRX/USD",
       "UNI/USD",
       "USELESS/USD",
@@ -392,6 +392,17 @@
         "watch_only": true
       },
       "ALGO/USD": {
+        "approved_by_consensus": false,
+        "decision": "HOLD",
+        "execution_mode": "PAPER_ONLY",
+        "live_orders_enabled": false,
+        "reason_codes": [
+          "WATCH_ONLY_NO_CLOSED_CANDLE_SIGNAL"
+        ],
+        "strategy_signal": "HOLD",
+        "watch_only": true
+      },
+      "ALIGN/USD": {
         "approved_by_consensus": false,
         "decision": "HOLD",
         "execution_mode": "PAPER_ONLY",
@@ -501,17 +512,6 @@
         "watch_only": true
       },
       "CRV/USD": {
-        "approved_by_consensus": false,
-        "decision": "HOLD",
-        "execution_mode": "PAPER_ONLY",
-        "live_orders_enabled": false,
-        "reason_codes": [
-          "WATCH_ONLY_NO_CLOSED_CANDLE_SIGNAL"
-        ],
-        "strategy_signal": "HOLD",
-        "watch_only": true
-      },
-      "DASH/USD": {
         "approved_by_consensus": false,
         "decision": "HOLD",
         "execution_mode": "PAPER_ONLY",
@@ -676,17 +676,6 @@
         "strategy_signal": "HOLD",
         "watch_only": true
       },
-      "MORPHO/USD": {
-        "approved_by_consensus": false,
-        "decision": "HOLD",
-        "execution_mode": "PAPER_ONLY",
-        "live_orders_enabled": false,
-        "reason_codes": [
-          "WATCH_ONLY_NO_CLOSED_CANDLE_SIGNAL"
-        ],
-        "strategy_signal": "HOLD",
-        "watch_only": true
-      },
       "NEAR/USD": {
         "approved_by_consensus": false,
         "decision": "HOLD",
@@ -764,6 +753,17 @@
         "strategy_signal": "HOLD",
         "watch_only": true
       },
+      "PIEVERSE/USD": {
+        "approved_by_consensus": false,
+        "decision": "HOLD",
+        "execution_mode": "PAPER_ONLY",
+        "live_orders_enabled": false,
+        "reason_codes": [
+          "WATCH_ONLY_NO_CLOSED_CANDLE_SIGNAL"
+        ],
+        "strategy_signal": "HOLD",
+        "watch_only": true
+      },
       "PUMP/USD": {
         "approved_by_consensus": false,
         "decision": "HOLD",
@@ -776,6 +776,17 @@
         "watch_only": true
       },
       "QNT/USD": {
+        "approved_by_consensus": false,
+        "decision": "HOLD",
+        "execution_mode": "PAPER_ONLY",
+        "live_orders_enabled": false,
+        "reason_codes": [
+          "WATCH_ONLY_NO_CLOSED_CANDLE_SIGNAL"
+        ],
+        "strategy_signal": "HOLD",
+        "watch_only": true
+      },
+      "REKT/USD": {
         "approved_by_consensus": false,
         "decision": "HOLD",
         "execution_mode": "PAPER_ONLY",
@@ -830,7 +841,7 @@
         "strategy_signal": "HOLD",
         "watch_only": true
       },
-      "SOFID/USD": {
+      "SOFID/USDT": {
         "approved_by_consensus": false,
         "decision": "HOLD",
         "execution_mode": "PAPER_ONLY",
@@ -864,17 +875,6 @@
         "watch_only": true
       },
       "TAO/USD": {
-        "approved_by_consensus": false,
-        "decision": "HOLD",
-        "execution_mode": "PAPER_ONLY",
-        "live_orders_enabled": false,
-        "reason_codes": [
-          "WATCH_ONLY_NO_CLOSED_CANDLE_SIGNAL"
-        ],
-        "strategy_signal": "HOLD",
-        "watch_only": true
-      },
-      "TRUMP/USD": {
         "approved_by_consensus": false,
         "decision": "HOLD",
         "execution_mode": "PAPER_ONLY",
