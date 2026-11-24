@@ -42,6 +42,7 @@
           "PEARL/USD",
           "PENGU/USD",
           "PEPE/USD",
+          "PIEVERSE/USD",
           "PUMP/USD",
           "QNT/USD",
           "RENDER/USD",
@@ -57,13 +58,11 @@
           "VVV/USD",
           "WLD/USD",
           "XAGUSD",
-          "XAUT/USDT",
           "XAUUSD",
           "XDC/USD",
           "XDG/USD",
           "XLM/USD",
           "XMR/USD",
-          "XMR/USDT",
           "XPL/USD",
           "XRP/USD",
           "ZEC/USD",
@@ -109,6 +108,7 @@
           "PEARL/USD",
           "PENGU/USD",
           "PEPE/USD",
+          "PIEVERSE/USD",
           "PUMP/USD",
           "QNT/USD",
           "RENDER/USD",
@@ -124,12 +124,10 @@
           "VVV/USD",
           "WLD/USD",
           "XAGUSD",
-          "XAUT/USDT",
           "XDC/USD",
           "XDG/USD",
           "XLM/USD",
           "XMR/USD",
-          "XMR/USDT",
           "XPL/USD",
           "XRP/USD",
           "ZEC/USD",
@@ -175,6 +173,7 @@
           "PEARL/USD",
           "PENGU/USD",
           "PEPE/USD",
+          "PIEVERSE/USD",
           "PUMP/USD",
           "QNT/USD",
           "RENDER/USD",
@@ -190,12 +189,10 @@
           "VVV/USD",
           "WLD/USD",
           "XAGUSD",
-          "XAUT/USDT",
           "XDC/USD",
           "XDG/USD",
           "XLM/USD",
           "XMR/USD",
-          "XMR/USDT",
           "XPL/USD",
           "XRP/USD",
           "ZEC/USD",
@@ -252,23 +249,23 @@
     {
       "detail": "Equity is read from the single shared paper wallet when available.",
       "metrics": {
-        "closed_trades": 111,
-        "equity_usd": 99.8806,
+        "closed_trades": 112,
+        "equity_usd": 99.7026,
         "initial_equity_usd": 100.0,
-        "pnl_usd": -0.1194,
-        "return_pct": -0.1194,
+        "pnl_usd": -0.2974,
+        "return_pct": -0.2974,
         "shared_wallet": true
       },
       "name": "EQUITY",
       "status": "TRACKING"
     }
   ],
-  "generated_at_utc": "2026-11-24T08:03:13.342182+00:00",
+  "generated_at_utc": "2026-11-24T09:13:22.035028+00:00",
   "live_trading_enabled": false,
   "mode": "PAPER_ONLY",
   "portfolio_status": "PAPER_RUNNING",
   "schema_version": 2,
-  "source_updated_at": "2026-11-24T08:03:12.927669+00:00",
+  "source_updated_at": "2026-11-24T09:13:21.606618+00:00",
   "summary": {
     "agent_count": 6,
     "markets": [
@@ -311,6 +308,7 @@
       "PEARL/USD",
       "PENGU/USD",
       "PEPE/USD",
+      "PIEVERSE/USD",
       "PUMP/USD",
       "QNT/USD",
       "RENDER/USD",
@@ -326,12 +324,10 @@
       "VVV/USD",
       "WLD/USD",
       "XAGUSD",
-      "XAUT/USDT",
       "XDC/USD",
       "XDG/USD",
       "XLM/USD",
       "XMR/USD",
-      "XMR/USDT",
       "XPL/USD",
       "XRP/USD",
       "ZEC/USD",
@@ -779,6 +775,17 @@
         "strategy_signal": "HOLD",
         "watch_only": true
       },
+      "PIEVERSE/USD": {
+        "approved_by_consensus": false,
+        "decision": "HOLD",
+        "execution_mode": "PAPER_ONLY",
+        "live_orders_enabled": false,
+        "reason_codes": [
+          "WATCH_ONLY_NO_CLOSED_CANDLE_SIGNAL"
+        ],
+        "strategy_signal": "HOLD",
+        "watch_only": true
+      },
       "PUMP/USD": {
         "approved_by_consensus": false,
         "decision": "HOLD",
@@ -944,17 +951,6 @@
         "strategy_signal": "HOLD",
         "watch_only": true
       },
-      "XAUT/USDT": {
-        "approved_by_consensus": false,
-        "decision": "HOLD",
-        "execution_mode": "PAPER_ONLY",
-        "live_orders_enabled": false,
-        "reason_codes": [
-          "WATCH_ONLY_NO_CLOSED_CANDLE_SIGNAL"
-        ],
-        "strategy_signal": "HOLD",
-        "watch_only": true
-      },
       "XAUUSD": {
         "approved_by_consensus": false,
         "decision": "HOLD",
@@ -1001,17 +997,6 @@
         "watch_only": true
       },
       "XMR/USD": {
-        "approved_by_consensus": false,
-        "decision": "HOLD",
-        "execution_mode": "PAPER_ONLY",
-        "live_orders_enabled": false,
-        "reason_codes": [
-          "WATCH_ONLY_NO_CLOSED_CANDLE_SIGNAL"
-        ],
-        "strategy_signal": "HOLD",
-        "watch_only": true
-      },
-      "XMR/USDT": {
         "approved_by_consensus": false,
         "decision": "HOLD",
         "execution_mode": "PAPER_ONLY",
