@@ -6,7 +6,7 @@
   "compounding_enabled": true,
   "sizing_mode": "SHARED_100USD_EQUITY_FRACTION",
   "initial_capital_usd": 100.0,
-  "updated_at": "2026-11-24T12:24:34.062502+00:00",
+  "updated_at": "2026-11-24T13:45:16.865458+00:00",
   "shared_portfolio": {
     "mode": "PAPER_ONLY",
     "live_trading_enabled": false,
@@ -18,64 +18,64 @@
         "strategy": "sma_trend",
         "asset": "BTC/USD",
         "units": 0.00016559501542368532,
-        "mark_price": 60356.9,
-        "market_value_usd": 9.994801786425834
+        "mark_price": 60379.9,
+        "market_value_usd": 9.998610471780578
       },
       {
         "position_id": "btc-ema_trend",
         "strategy": "ema_trend",
         "asset": "BTC/USD",
         "units": 0.0001666636843148066,
-        "mark_price": 60356.9,
-        "market_value_usd": 10.05930332782035
+        "mark_price": 60379.9,
+        "market_value_usd": 10.06313659255959
       },
       {
         "position_id": "multi-VVV_USD-ema50_200_regime",
         "strategy": "ema50_200_regime",
         "asset": "VVV/USD",
         "units": 0.07901422391911309,
-        "mark_price": 25.965,
-        "market_value_usd": 2.0516043240597712
+        "mark_price": 25.923,
+        "market_value_usd": 2.0482857266551684
       },
       {
         "position_id": "multi-NIGHT_USD-ema50_200_regime",
         "strategy": "ema50_200_regime",
         "asset": "NIGHT/USD",
         "units": 41.04289235034125,
-        "mark_price": 0.04857,
-        "market_value_usd": 1.9934532814560746
+        "mark_price": 0.04903,
+        "market_value_usd": 2.012333011937231
       },
       {
         "position_id": "multi-DRV_USD-ema50_200_regime",
         "strategy": "ema50_200_regime",
         "asset": "DRV/USD",
         "units": 5.750799724747242,
-        "mark_price": 0.32975,
-        "market_value_usd": 1.8963262092354032
+        "mark_price": 0.32087,
+        "market_value_usd": 1.8452591076796476
       },
       {
         "position_id": "multi-QNT_USD-ema50_200_regime",
         "strategy": "ema50_200_regime",
         "asset": "QNT/USD",
         "units": 0.012967301318794729,
-        "mark_price": 149.24,
-        "market_value_usd": 1.9352400488169255
+        "mark_price": 149.28,
+        "market_value_usd": 1.9357587408696773
       },
       {
         "position_id": "multi-ALGO_USD-ema50_200_regime",
         "strategy": "ema50_200_regime",
         "asset": "ALGO/USD",
         "units": 24.7899620752851,
-        "mark_price": 0.08014,
-        "market_value_usd": 1.986667560713348
+        "mark_price": 0.0795,
+        "market_value_usd": 1.9708019849851655
       },
       {
         "position_id": "multi-LINK_USD-rsi14_mean_reversion",
         "strategy": "rsi14_mean_reversion",
         "asset": "LINK/USD",
         "units": 0.2212731930656128,
-        "mark_price": 9.01012,
-        "market_value_usd": 1.9936980223043392
+        "mark_price": 8.94515,
+        "market_value_usd": 1.9793219029508664
       },
       {
         "position_id": "multi-ENA_USD-rsi14_mean_reversion",
@@ -90,69 +90,69 @@
         "strategy": "ema50_200_regime",
         "asset": "PEARL/USD",
         "units": 0.8981554231004841,
-        "mark_price": 2.0507,
-        "market_value_usd": 1.8418473261521628
+        "mark_price": 2.101,
+        "market_value_usd": 1.8870245439341171
       },
       {
         "position_id": "multi-SUI_USD-rsi14_mean_reversion",
         "strategy": "rsi14_mean_reversion",
         "asset": "SUI/USD",
         "units": 2.9635915657885246,
-        "mark_price": 0.6606,
-        "market_value_usd": 1.9577485883598993
+        "mark_price": 0.6548,
+        "market_value_usd": 1.940559757278326
       },
       {
         "position_id": "multi-ADA_USD-rsi14_mean_reversion",
         "strategy": "rsi14_mean_reversion",
         "asset": "ADA/USD",
         "units": 13.4431855533947,
-        "mark_price": 0.147056,
-        "market_value_usd": 1.976901094740011
+        "mark_price": 0.145504,
+        "market_value_usd": 1.9560372707611424
       },
       {
         "position_id": "multi-XDG_USD-rsi14_mean_reversion",
         "strategy": "rsi14_mean_reversion",
         "asset": "XDG/USD",
         "units": 35.36934774451457,
-        "mark_price": 0.0558706,
-        "market_value_usd": 1.9761066800946758
+        "mark_price": 0.0555332,
+        "market_value_usd": 1.9641730621656766
       },
       {
         "position_id": "multi-XLM_USD-rsi14_mean_reversion",
         "strategy": "rsi14_mean_reversion",
         "asset": "XLM/USD",
         "units": 15.301569450810527,
-        "mark_price": 0.127003,
-        "market_value_usd": 1.9433452249612895
+        "mark_price": 0.12587,
+        "market_value_usd": 1.9260085467735213
       },
       {
         "position_id": "multi-INJ_USD-rsi14_mean_reversion",
         "strategy": "rsi14_mean_reversion",
         "asset": "INJ/USD",
         "units": 0.3176939690790419,
-        "mark_price": 6.088,
-        "market_value_usd": 1.9341208837532071
+        "mark_price": 6.018,
+        "market_value_usd": 1.9118823059176742
       },
       {
         "position_id": "multi-ETH_USD-rsi14_mean_reversion",
         "strategy": "rsi14_mean_reversion",
         "asset": "ETH/USD",
         "units": 0.0011790105292051956,
-        "mark_price": 1700.53,
-        "market_value_usd": 2.004942775229311
+        "mark_price": 1701.62,
+        "market_value_usd": 2.006227896706145
       },
       {
         "position_id": "multi-XMR_USD-sma_trend",
         "strategy": "sma_trend",
         "asset": "XMR/USD",
         "units": 0.003990992592491933,
-        "mark_price": 499.07,
-        "market_value_usd": 1.991784673134949
+        "mark_price": 499.04,
+        "market_value_usd": 1.9916649433571743
       }
     ],
-    "market_value_usd": 49.41688357,
-    "equity_usd": 99.67920245,
-    "pnl_usd": -0.32079755,
+    "market_value_usd": 49.31622878,
+    "equity_usd": 99.57854767,
+    "pnl_usd": -0.42145233,
     "fees_paid_usd": 0.5298353651,
     "closed_trades": 113,
     "strategies_supported": [
@@ -165,8 +165,8 @@
       "rsi14_mean_reversion",
       "compound_momentum"
     ],
-    "gross_market_value_usd": 49.49109546,
-    "estimated_exit_costs_usd": 0.0742119
+    "gross_market_value_usd": 49.39028952,
+    "estimated_exit_costs_usd": 0.07406074
   },
   "btc": {
     "asset": "BTC",
@@ -222,17 +222,17 @@
     "account_scope": "SHARED_100USD_PAPER",
     "independent_ledger_enabled": false,
     "paper_execution_enabled": true,
-    "last_price_usd": 3625.199951,
-    "quote_timestamp": "2026-11-24T12:24:14Z",
-    "quote_age_seconds": -12.9,
+    "last_price_usd": 3619.0,
+    "quote_timestamp": "2026-11-24T13:44:44Z",
+    "quote_age_seconds": -7.8,
     "history_interval": "1d",
     "source": "Gold-API spot + goldprice.dev daily bars",
     "bid_usd_oz": null,
     "ask_usd_oz": null,
     "execution_model": "Shared $100 paper wallet; daily candles; no live broker bid/ask or orders",
     "legacy_sleeve_active": false,
-    "shared_wallet_equity_usd": 99.67920245,
-    "shared_wallet_pnl_usd": -0.32079755,
+    "shared_wallet_equity_usd": 99.57854767,
+    "shared_wallet_pnl_usd": -0.42145233,
     "shared_wallet_open_positions": []
   },
   "strategies": [
@@ -534,10 +534,10 @@
         "paper_execution_enabled": true,
         "symbol": "XAUUSD",
         "provider": "Gold-API public spot (approximately 30-second refresh)",
-        "last_price_usd": 3625.199951,
+        "last_price_usd": 3619.0,
         "price_unit": "troy_ounce",
-        "quote_age_seconds": -12.9,
-        "quote_timestamp": "2026-11-24T12:24:14Z",
+        "quote_age_seconds": -7.8,
+        "quote_timestamp": "2026-11-24T13:44:44Z",
         "history_interval": "1d",
         "closed_daily_bars": 22,
         "latest_closed_candle": 1795392000,
@@ -549,10 +549,10 @@
         "paper_execution_enabled": true,
         "symbol": "XAGUSD",
         "provider": "Gold-API public spot (approximately 30-second refresh)",
-        "last_price_usd": 42.025002,
+        "last_price_usd": 41.945,
         "price_unit": "troy_ounce",
-        "quote_age_seconds": -11.9,
-        "quote_timestamp": "2026-11-24T12:24:13Z",
+        "quote_age_seconds": -36.8,
+        "quote_timestamp": "2026-11-24T13:45:13Z",
         "history_interval": "1d",
         "closed_daily_bars": 22,
         "latest_closed_candle": 1795392000,
@@ -564,10 +564,10 @@
         "paper_execution_enabled": false,
         "symbol": "XCUUSD",
         "provider": "Gold-API public spot (approximately 30-second refresh)",
-        "last_price_usd": 5.494289,
+        "last_price_usd": 5.457775,
         "price_unit": "pound",
-        "quote_age_seconds": 15.4,
-        "quote_timestamp": "2026-11-24T12:24:16Z",
+        "quote_age_seconds": 28.5,
+        "quote_timestamp": "2026-11-24T13:44:46Z",
         "history_interval": null,
         "closed_daily_bars": 0,
         "latest_closed_candle": null,
@@ -579,10 +579,10 @@
         "paper_execution_enabled": false,
         "symbol": "XPTUSD",
         "provider": "Gold-API public spot (approximately 30-second refresh)",
-        "last_price_usd": 1284.050049,
+        "last_price_usd": 1282.099976,
         "price_unit": "troy_ounce",
-        "quote_age_seconds": 14.4,
-        "quote_timestamp": "2026-11-24T12:24:17Z",
+        "quote_age_seconds": 27.5,
+        "quote_timestamp": "2026-11-24T13:44:47Z",
         "history_interval": null,
         "closed_daily_bars": 0,
         "latest_closed_candle": null,
@@ -594,10 +594,10 @@
         "paper_execution_enabled": false,
         "symbol": "XPDUSD",
         "provider": "Gold-API public spot (approximately 30-second refresh)",
-        "last_price_usd": 871.0,
+        "last_price_usd": 877.5,
         "price_unit": "troy_ounce",
-        "quote_age_seconds": 16.4,
-        "quote_timestamp": "2026-11-24T12:24:15Z",
+        "quote_age_seconds": 28.5,
+        "quote_timestamp": "2026-11-24T13:44:46Z",
         "history_interval": null,
         "closed_daily_bars": 0,
         "latest_closed_candle": null,
@@ -614,7 +614,6 @@
       "AERO/USD",
       "AKE/USD",
       "ALGO/USD",
-      "ALIGN/USD",
       "ARB/USD",
       "AVAX/USD",
       "BCH/USD",
@@ -650,6 +649,8 @@
       "PUMP/USD",
       "QNT/USD",
       "RENDER/USD",
+      "RLUSD/USDT",
+      "SHIB/USD",
       "SKY/USD",
       "SOFID/USD",
       "SOL/USD",
@@ -662,7 +663,6 @@
       "VVV/USD",
       "WLD/USD",
       "XAGUSD",
-      "XAUT/USDT",
       "XAUUSD",
       "XDC/USD",
       "XDG/USD",
@@ -675,93 +675,89 @@
     ],
     "markets_with_errors": {},
     "seeded_markets": [],
-    "processed_closed_candles": 1042,
+    "processed_closed_candles": 634,
     "events_this_run": [],
     "strategy_diagnostics": {
       "sma_trend": {
-        "candles_evaluated": 132,
-        "entry_signals": 46,
-        "exit_signals": 86,
+        "candles_evaluated": 81,
+        "entry_signals": 15,
+        "exit_signals": 66,
         "opened": 0,
-        "blocked": 45,
+        "blocked": 14,
         "block_reasons": {
-          "MIN_TRADE_OR_INSUFFICIENT_CASH": 45
+          "MIN_TRADE_OR_INSUFFICIENT_CASH": 14
         }
       },
       "ema_trend": {
-        "candles_evaluated": 130,
-        "entry_signals": 35,
-        "exit_signals": 95,
+        "candles_evaluated": 79,
+        "entry_signals": 11,
+        "exit_signals": 68,
         "opened": 0,
-        "blocked": 35,
+        "blocked": 11,
         "block_reasons": {
-          "MIN_TRADE_OR_INSUFFICIENT_CASH": 35
+          "MIN_TRADE_OR_INSUFFICIENT_CASH": 11
         }
       },
       "rsi_momentum": {
-        "candles_evaluated": 130,
-        "entry_signals": 50,
-        "exit_signals": 80,
+        "candles_evaluated": 79,
+        "entry_signals": 18,
+        "exit_signals": 61,
         "opened": 0,
-        "blocked": 50,
+        "blocked": 18,
         "block_reasons": {
-          "MIN_TRADE_OR_INSUFFICIENT_CASH": 50
+          "MIN_TRADE_OR_INSUFFICIENT_CASH": 18
         }
       },
       "sma200_regime": {
-        "candles_evaluated": 130,
-        "entry_signals": 20,
-        "exit_signals": 110,
+        "candles_evaluated": 79,
+        "entry_signals": 0,
+        "exit_signals": 79,
         "opened": 0,
-        "blocked": 20,
-        "block_reasons": {
-          "MIN_TRADE_OR_INSUFFICIENT_CASH": 20
-        }
+        "blocked": 0,
+        "block_reasons": {}
       },
       "ema50_200_regime": {
-        "candles_evaluated": 130,
-        "entry_signals": 40,
-        "exit_signals": 90,
+        "candles_evaluated": 79,
+        "entry_signals": 12,
+        "exit_signals": 67,
         "opened": 0,
-        "blocked": 34,
+        "blocked": 6,
         "block_reasons": {
-          "MIN_TRADE_OR_INSUFFICIENT_CASH": 34
+          "MIN_TRADE_OR_INSUFFICIENT_CASH": 6
         }
       },
       "bollinger_mean_reversion": {
-        "candles_evaluated": 130,
-        "entry_signals": 2,
+        "candles_evaluated": 79,
+        "entry_signals": 0,
         "exit_signals": 0,
         "opened": 0,
-        "blocked": 2,
-        "block_reasons": {
-          "MIN_TRADE_OR_INSUFFICIENT_CASH": 2
-        }
+        "blocked": 0,
+        "block_reasons": {}
       },
       "rsi14_mean_reversion": {
-        "candles_evaluated": 130,
-        "entry_signals": 20,
+        "candles_evaluated": 79,
+        "entry_signals": 8,
         "exit_signals": 0,
         "opened": 0,
-        "blocked": 20,
+        "blocked": 8,
         "block_reasons": {
-          "MIN_TRADE_OR_INSUFFICIENT_CASH": 20
+          "MIN_TRADE_OR_INSUFFICIENT_CASH": 8
         }
       },
       "compound_momentum": {
-        "candles_evaluated": 130,
-        "entry_signals": 28,
-        "exit_signals": 99,
+        "candles_evaluated": 79,
+        "entry_signals": 3,
+        "exit_signals": 72,
         "opened": 0,
-        "blocked": 28,
+        "blocked": 3,
         "block_reasons": {
-          "MIN_TRADE_OR_INSUFFICIENT_CASH": 28
+          "MIN_TRADE_OR_INSUFFICIENT_CASH": 3
         }
       }
     },
     "daily_loss_paused": false,
     "drawdown_paused": false,
-    "drawdown_pct": 3.2644,
+    "drawdown_pct": 3.3621,
     "max_open_positions": null,
     "trade_allocation_pct": 2.0,
     "live_orders_enabled": false,
