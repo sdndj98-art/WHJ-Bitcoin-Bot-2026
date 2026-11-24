@@ -10,6 +10,7 @@
           "AERO/USD",
           "AKE/USD",
           "ALGO/USD",
+          "ALIGN/USD",
           "ARB/USD",
           "AVAX/USD",
           "BCH/USD",
@@ -19,7 +20,6 @@
           "CC/USD",
           "CRV/USD",
           "DASH/USD",
-          "DOT/USD",
           "DRV/USD",
           "ENA/USD",
           "ETH/USD",
@@ -42,7 +42,6 @@
           "PEARL/USD",
           "PENGU/USD",
           "PEPE/USD",
-          "PIEVERSE/USD",
           "PUMP/USD",
           "QNT/USD",
           "RENDER/USD",
@@ -58,6 +57,7 @@
           "VVV/USD",
           "WLD/USD",
           "XAGUSD",
+          "XAUT/USDT",
           "XAUUSD",
           "XDC/USD",
           "XDG/USD",
@@ -76,6 +76,7 @@
           "AERO/USD",
           "AKE/USD",
           "ALGO/USD",
+          "ALIGN/USD",
           "ARB/USD",
           "AVAX/USD",
           "BCH/USD",
@@ -85,7 +86,6 @@
           "CC/USD",
           "CRV/USD",
           "DASH/USD",
-          "DOT/USD",
           "DRV/USD",
           "ENA/USD",
           "ETH/USD",
@@ -108,7 +108,6 @@
           "PEARL/USD",
           "PENGU/USD",
           "PEPE/USD",
-          "PIEVERSE/USD",
           "PUMP/USD",
           "QNT/USD",
           "RENDER/USD",
@@ -124,6 +123,7 @@
           "VVV/USD",
           "WLD/USD",
           "XAGUSD",
+          "XAUT/USDT",
           "XDC/USD",
           "XDG/USD",
           "XLM/USD",
@@ -141,6 +141,7 @@
           "AERO/USD",
           "AKE/USD",
           "ALGO/USD",
+          "ALIGN/USD",
           "ARB/USD",
           "AVAX/USD",
           "BCH/USD",
@@ -150,7 +151,6 @@
           "CC/USD",
           "CRV/USD",
           "DASH/USD",
-          "DOT/USD",
           "DRV/USD",
           "ENA/USD",
           "ETH/USD",
@@ -173,7 +173,6 @@
           "PEARL/USD",
           "PENGU/USD",
           "PEPE/USD",
-          "PIEVERSE/USD",
           "PUMP/USD",
           "QNT/USD",
           "RENDER/USD",
@@ -189,6 +188,7 @@
           "VVV/USD",
           "WLD/USD",
           "XAGUSD",
+          "XAUT/USDT",
           "XDC/USD",
           "XDG/USD",
           "XLM/USD",
@@ -250,22 +250,22 @@
       "detail": "Equity is read from the single shared paper wallet when available.",
       "metrics": {
         "closed_trades": 113,
-        "equity_usd": 99.2597,
+        "equity_usd": 99.6792,
         "initial_equity_usd": 100.0,
-        "pnl_usd": -0.7403,
-        "return_pct": -0.7403,
+        "pnl_usd": -0.3208,
+        "return_pct": -0.3208,
         "shared_wallet": true
       },
       "name": "EQUITY",
       "status": "TRACKING"
     }
   ],
-  "generated_at_utc": "2026-11-24T11:18:43.864854+00:00",
+  "generated_at_utc": "2026-11-24T12:24:34.391167+00:00",
   "live_trading_enabled": false,
   "mode": "PAPER_ONLY",
   "portfolio_status": "PAPER_RUNNING",
   "schema_version": 2,
-  "source_updated_at": "2026-11-24T11:18:43.544556+00:00",
+  "source_updated_at": "2026-11-24T12:24:34.062502+00:00",
   "summary": {
     "agent_count": 6,
     "markets": [
@@ -276,6 +276,7 @@
       "AERO/USD",
       "AKE/USD",
       "ALGO/USD",
+      "ALIGN/USD",
       "ARB/USD",
       "AVAX/USD",
       "BCH/USD",
@@ -285,7 +286,6 @@
       "CC/USD",
       "CRV/USD",
       "DASH/USD",
-      "DOT/USD",
       "DRV/USD",
       "ENA/USD",
       "ETH/USD",
@@ -308,7 +308,6 @@
       "PEARL/USD",
       "PENGU/USD",
       "PEPE/USD",
-      "PIEVERSE/USD",
       "PUMP/USD",
       "QNT/USD",
       "RENDER/USD",
@@ -324,6 +323,7 @@
       "VVV/USD",
       "WLD/USD",
       "XAGUSD",
+      "XAUT/USDT",
       "XDC/USD",
       "XDG/USD",
       "XLM/USD",
@@ -392,6 +392,17 @@
         "watch_only": true
       },
       "ALGO/USD": {
+        "approved_by_consensus": false,
+        "decision": "HOLD",
+        "execution_mode": "PAPER_ONLY",
+        "live_orders_enabled": false,
+        "reason_codes": [
+          "WATCH_ONLY_NO_CLOSED_CANDLE_SIGNAL"
+        ],
+        "strategy_signal": "HOLD",
+        "watch_only": true
+      },
+      "ALIGN/USD": {
         "approved_by_consensus": false,
         "decision": "HOLD",
         "execution_mode": "PAPER_ONLY",
@@ -512,17 +523,6 @@
         "watch_only": true
       },
       "DASH/USD": {
-        "approved_by_consensus": false,
-        "decision": "HOLD",
-        "execution_mode": "PAPER_ONLY",
-        "live_orders_enabled": false,
-        "reason_codes": [
-          "WATCH_ONLY_NO_CLOSED_CANDLE_SIGNAL"
-        ],
-        "strategy_signal": "HOLD",
-        "watch_only": true
-      },
-      "DOT/USD": {
         "approved_by_consensus": false,
         "decision": "HOLD",
         "execution_mode": "PAPER_ONLY",
@@ -775,17 +775,6 @@
         "strategy_signal": "HOLD",
         "watch_only": true
       },
-      "PIEVERSE/USD": {
-        "approved_by_consensus": false,
-        "decision": "HOLD",
-        "execution_mode": "PAPER_ONLY",
-        "live_orders_enabled": false,
-        "reason_codes": [
-          "WATCH_ONLY_NO_CLOSED_CANDLE_SIGNAL"
-        ],
-        "strategy_signal": "HOLD",
-        "watch_only": true
-      },
       "PUMP/USD": {
         "approved_by_consensus": false,
         "decision": "HOLD",
@@ -941,6 +930,17 @@
         "watch_only": true
       },
       "XAGUSD": {
+        "approved_by_consensus": false,
+        "decision": "HOLD",
+        "execution_mode": "PAPER_ONLY",
+        "live_orders_enabled": false,
+        "reason_codes": [
+          "WATCH_ONLY_NO_CLOSED_CANDLE_SIGNAL"
+        ],
+        "strategy_signal": "HOLD",
+        "watch_only": true
+      },
+      "XAUT/USDT": {
         "approved_by_consensus": false,
         "decision": "HOLD",
         "execution_mode": "PAPER_ONLY",
