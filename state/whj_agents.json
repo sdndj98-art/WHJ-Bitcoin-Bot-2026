@@ -15,9 +15,9 @@
           "BCH/USD",
           "BLESS/USD",
           "BNB/USD",
-          "CAP/USD",
           "CC/USD",
           "CRV/USD",
+          "DASH/USD",
           "DOT/USD",
           "DRV/USD",
           "ENA/USD",
@@ -82,9 +82,9 @@
           "BCH/USD",
           "BLESS/USD",
           "BNB/USD",
-          "CAP/USD",
           "CC/USD",
           "CRV/USD",
+          "DASH/USD",
           "DOT/USD",
           "DRV/USD",
           "ENA/USD",
@@ -148,9 +148,9 @@
           "BCH/USD",
           "BLESS/USD",
           "BNB/USD",
-          "CAP/USD",
           "CC/USD",
           "CRV/USD",
+          "DASH/USD",
           "DOT/USD",
           "DRV/USD",
           "ENA/USD",
@@ -252,23 +252,23 @@
     {
       "detail": "Equity is read from the single shared paper wallet when available.",
       "metrics": {
-        "closed_trades": 88,
-        "equity_usd": 100.5473,
+        "closed_trades": 90,
+        "equity_usd": 100.4332,
         "initial_equity_usd": 100.0,
-        "pnl_usd": 0.5473,
-        "return_pct": 0.5473,
+        "pnl_usd": 0.4332,
+        "return_pct": 0.4332,
         "shared_wallet": true
       },
       "name": "EQUITY",
       "status": "TRACKING"
     }
   ],
-  "generated_at_utc": "2026-11-24T01:45:46.385139+00:00",
+  "generated_at_utc": "2026-11-24T02:40:51.617687+00:00",
   "live_trading_enabled": false,
   "mode": "PAPER_ONLY",
   "portfolio_status": "PAPER_RUNNING",
   "schema_version": 2,
-  "source_updated_at": "2026-11-24T01:45:45.846752+00:00",
+  "source_updated_at": "2026-11-24T02:40:51.090894+00:00",
   "summary": {
     "agent_count": 6,
     "markets": [
@@ -284,9 +284,9 @@
       "BCH/USD",
       "BLESS/USD",
       "BNB/USD",
-      "CAP/USD",
       "CC/USD",
       "CRV/USD",
+      "DASH/USD",
       "DOT/USD",
       "DRV/USD",
       "ENA/USD",
@@ -482,17 +482,6 @@
         "strategy_signal": "HOLD",
         "watch_only": true
       },
-      "CAP/USD": {
-        "approved_by_consensus": false,
-        "decision": "HOLD",
-        "execution_mode": "PAPER_ONLY",
-        "live_orders_enabled": false,
-        "reason_codes": [
-          "WATCH_ONLY_NO_CLOSED_CANDLE_SIGNAL"
-        ],
-        "strategy_signal": "HOLD",
-        "watch_only": true
-      },
       "CC/USD": {
         "approved_by_consensus": false,
         "decision": "HOLD",
@@ -505,6 +494,17 @@
         "watch_only": true
       },
       "CRV/USD": {
+        "approved_by_consensus": false,
+        "decision": "HOLD",
+        "execution_mode": "PAPER_ONLY",
+        "live_orders_enabled": false,
+        "reason_codes": [
+          "WATCH_ONLY_NO_CLOSED_CANDLE_SIGNAL"
+        ],
+        "strategy_signal": "HOLD",
+        "watch_only": true
+      },
+      "DASH/USD": {
         "approved_by_consensus": false,
         "decision": "HOLD",
         "execution_mode": "PAPER_ONLY",
