@@ -18,6 +18,7 @@
           "CAP/USD",
           "CC/USD",
           "CRV/USD",
+          "DASH/USD",
           "DRV/USD",
           "ENA/USD",
           "ETH/USD",
@@ -27,7 +28,6 @@
           "HYPE/USD",
           "ICP/USD",
           "INJ/USD",
-          "JUP/USD",
           "KAS/USD",
           "LIGHTER/USD",
           "LINK/USD",
@@ -40,9 +40,9 @@
           "PEARL/USD",
           "PENGU/USD",
           "PEPE/USD",
-          "POL/USD",
           "PUMP/USD",
           "QNT/USD",
+          "REKT/USD",
           "RENDER/USD",
           "RLUSD/USDT",
           "SKY/USD",
@@ -84,6 +84,7 @@
           "CAP/USD",
           "CC/USD",
           "CRV/USD",
+          "DASH/USD",
           "DRV/USD",
           "ENA/USD",
           "ETH/USD",
@@ -93,7 +94,6 @@
           "HYPE/USD",
           "ICP/USD",
           "INJ/USD",
-          "JUP/USD",
           "KAS/USD",
           "LIGHTER/USD",
           "LINK/USD",
@@ -106,9 +106,9 @@
           "PEARL/USD",
           "PENGU/USD",
           "PEPE/USD",
-          "POL/USD",
           "PUMP/USD",
           "QNT/USD",
+          "REKT/USD",
           "RENDER/USD",
           "RLUSD/USDT",
           "SKY/USD",
@@ -149,6 +149,7 @@
           "CAP/USD",
           "CC/USD",
           "CRV/USD",
+          "DASH/USD",
           "DRV/USD",
           "ENA/USD",
           "ETH/USD",
@@ -158,7 +159,6 @@
           "HYPE/USD",
           "ICP/USD",
           "INJ/USD",
-          "JUP/USD",
           "KAS/USD",
           "LIGHTER/USD",
           "LINK/USD",
@@ -171,9 +171,9 @@
           "PEARL/USD",
           "PENGU/USD",
           "PEPE/USD",
-          "POL/USD",
           "PUMP/USD",
           "QNT/USD",
+          "REKT/USD",
           "RENDER/USD",
           "RLUSD/USDT",
           "SKY/USD",
@@ -249,23 +249,23 @@
     {
       "detail": "Equity is read from the single shared paper wallet when available.",
       "metrics": {
-        "closed_trades": 123,
-        "equity_usd": 98.4137,
+        "closed_trades": 125,
+        "equity_usd": 98.7933,
         "initial_equity_usd": 100.0,
-        "pnl_usd": -1.5863,
-        "return_pct": -1.5863,
+        "pnl_usd": -1.2067,
+        "return_pct": -1.2067,
         "shared_wallet": true
       },
       "name": "EQUITY",
       "status": "TRACKING"
     }
   ],
-  "generated_at_utc": "2026-11-24T17:33:31.529112+00:00",
+  "generated_at_utc": "2026-11-24T18:31:49.926406+00:00",
   "live_trading_enabled": false,
   "mode": "PAPER_ONLY",
   "portfolio_status": "PAPER_RUNNING",
   "schema_version": 2,
-  "source_updated_at": "2026-11-24T17:33:30.914654+00:00",
+  "source_updated_at": "2026-11-24T18:31:49.302397+00:00",
   "summary": {
     "agent_count": 6,
     "markets": [
@@ -284,6 +284,7 @@
       "CAP/USD",
       "CC/USD",
       "CRV/USD",
+      "DASH/USD",
       "DRV/USD",
       "ENA/USD",
       "ETH/USD",
@@ -293,7 +294,6 @@
       "HYPE/USD",
       "ICP/USD",
       "INJ/USD",
-      "JUP/USD",
       "KAS/USD",
       "LIGHTER/USD",
       "LINK/USD",
@@ -306,9 +306,9 @@
       "PEARL/USD",
       "PENGU/USD",
       "PEPE/USD",
-      "POL/USD",
       "PUMP/USD",
       "QNT/USD",
+      "REKT/USD",
       "RENDER/USD",
       "RLUSD/USDT",
       "SKY/USD",
@@ -511,6 +511,17 @@
         "strategy_signal": "HOLD",
         "watch_only": true
       },
+      "DASH/USD": {
+        "approved_by_consensus": false,
+        "decision": "HOLD",
+        "execution_mode": "PAPER_ONLY",
+        "live_orders_enabled": false,
+        "reason_codes": [
+          "WATCH_ONLY_NO_CLOSED_CANDLE_SIGNAL"
+        ],
+        "strategy_signal": "HOLD",
+        "watch_only": true
+      },
       "DRV/USD": {
         "approved_by_consensus": false,
         "decision": "HOLD",
@@ -600,17 +611,6 @@
         "watch_only": true
       },
       "INJ/USD": {
-        "approved_by_consensus": false,
-        "decision": "HOLD",
-        "execution_mode": "PAPER_ONLY",
-        "live_orders_enabled": false,
-        "reason_codes": [
-          "WATCH_ONLY_NO_CLOSED_CANDLE_SIGNAL"
-        ],
-        "strategy_signal": "HOLD",
-        "watch_only": true
-      },
-      "JUP/USD": {
         "approved_by_consensus": false,
         "decision": "HOLD",
         "execution_mode": "PAPER_ONLY",
@@ -753,17 +753,6 @@
         "strategy_signal": "HOLD",
         "watch_only": true
       },
-      "POL/USD": {
-        "approved_by_consensus": false,
-        "decision": "HOLD",
-        "execution_mode": "PAPER_ONLY",
-        "live_orders_enabled": false,
-        "reason_codes": [
-          "WATCH_ONLY_NO_CLOSED_CANDLE_SIGNAL"
-        ],
-        "strategy_signal": "HOLD",
-        "watch_only": true
-      },
       "PUMP/USD": {
         "approved_by_consensus": false,
         "decision": "HOLD",
@@ -776,6 +765,17 @@
         "watch_only": true
       },
       "QNT/USD": {
+        "approved_by_consensus": false,
+        "decision": "HOLD",
+        "execution_mode": "PAPER_ONLY",
+        "live_orders_enabled": false,
+        "reason_codes": [
+          "WATCH_ONLY_NO_CLOSED_CANDLE_SIGNAL"
+        ],
+        "strategy_signal": "HOLD",
+        "watch_only": true
+      },
+      "REKT/USD": {
         "approved_by_consensus": false,
         "decision": "HOLD",
         "execution_mode": "PAPER_ONLY",
