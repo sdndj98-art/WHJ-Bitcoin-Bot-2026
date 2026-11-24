@@ -5,7 +5,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
-from office.ai_code_agent import MAX_FILE_CHARS, choose_gemini_model, parse_requested_files
+from office.ai_code_agent import MAX_FILE_CHARS, choose_gemini_model, is_restricted_request, parse_requested_files
 
 
 class AICodeAgentAllowlistTests(unittest.TestCase):
@@ -74,6 +74,19 @@ class AICodeAgentAllowlistTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             parse_requested_files("Task\nFiles: whj_nonexistent_file.py")
 
+
+    def test_safety_prohibitions_do_not_trigger_restricted_request(self):
+        issue_body = (
+            "Never enable live trading, never alter secrets, and never patch workflow permissions.\n"
+            "Do not bypass risk limits or weaken paper-only safeguards."
+        )
+        self.assertFalse(is_restricted_request(issue_body))
+
+    def test_affirmative_live_execution_request_is_rejected(self):
+        self.assertTrue(is_restricted_request("Please enable live trading with real money."))
+
+    def test_affirmative_risk_bypass_request_is_rejected(self):
+        self.assertTrue(is_restricted_request("Bypass risk limits."))
 
 if __name__ == "__main__":
     unittest.main()

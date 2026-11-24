@@ -130,6 +130,25 @@ def gemini_generate(prompt: str, key: str, model: str) -> str:
     return text
 
 
+def is_restricted_request(body: str) -> bool:
+    """Detect affirmative unsafe instructions without flagging safety prohibitions."""
+    unsafe_action = re.compile(
+        r"\b(?:enable|activate|turn on|start|place|submit|execute|bypass|disable|remove|ignore|weaken)\b"
+        r"[^.!?;\n]{0,100}\b(?:live trading|real money|live orders|risk limits?|paper safeguards?|safety guards?)\b",
+        re.IGNORECASE,
+    )
+    negation = re.compile(
+        r"^\s*(?:never|no|not|do not|don't|must not|should not|cannot|can't)\b",
+        re.IGNORECASE,
+    )
+    for clause in re.split(r"[.!?;\n]+", body):
+        if negation.search(clause):
+            continue
+        if unsafe_action.search(clause):
+            return True
+    return False
+
+
 def main() -> int:
     token = os.environ.get("GITHUB_TOKEN", "")
     key = os.environ.get("GEMINI_API_KEY", "")
@@ -142,9 +161,8 @@ def main() -> int:
     if "ai-office-task" not in labels:
         raise SystemExit("Issue must have the ai-office-task label.")
     body = issue.get("body") or ""
-    forbidden = re.compile(r"(?i)\b(live trading|real money|bypass risk|remove risk limits|guaranteed profit)\b")
-    if forbidden.search(body):
-        raise SystemExit("Issue contains a restricted request; no code was generated.")
+    if is_restricted_request(body):
+        raise SystemExit("Issue requests an unsafe action; no code was generated.")
     paths = parse_requested_files(body)
     files = {}
     total = 0
