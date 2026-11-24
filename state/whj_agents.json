@@ -42,12 +42,12 @@
           "PEARL/USD",
           "PENGU/USD",
           "PEPE/USD",
-          "PIEVERSE/USD",
           "PUMP/USD",
           "QNT/USD",
           "RENDER/USD",
           "RLUSD/USDT",
           "SKY/USD",
+          "SOFID/USD",
           "SOL/USD",
           "SUI/USD",
           "TAO/USD",
@@ -109,12 +109,12 @@
           "PEARL/USD",
           "PENGU/USD",
           "PEPE/USD",
-          "PIEVERSE/USD",
           "PUMP/USD",
           "QNT/USD",
           "RENDER/USD",
           "RLUSD/USDT",
           "SKY/USD",
+          "SOFID/USD",
           "SOL/USD",
           "SUI/USD",
           "TAO/USD",
@@ -175,12 +175,12 @@
           "PEARL/USD",
           "PENGU/USD",
           "PEPE/USD",
-          "PIEVERSE/USD",
           "PUMP/USD",
           "QNT/USD",
           "RENDER/USD",
           "RLUSD/USDT",
           "SKY/USD",
+          "SOFID/USD",
           "SOL/USD",
           "SUI/USD",
           "TAO/USD",
@@ -252,23 +252,23 @@
     {
       "detail": "Equity is read from the single shared paper wallet when available.",
       "metrics": {
-        "closed_trades": 105,
-        "equity_usd": 100.4117,
+        "closed_trades": 111,
+        "equity_usd": 99.8806,
         "initial_equity_usd": 100.0,
-        "pnl_usd": 0.4117,
-        "return_pct": 0.4117,
+        "pnl_usd": -0.1194,
+        "return_pct": -0.1194,
         "shared_wallet": true
       },
       "name": "EQUITY",
       "status": "TRACKING"
     }
   ],
-  "generated_at_utc": "2026-11-24T06:35:46.857997+00:00",
+  "generated_at_utc": "2026-11-24T08:03:13.342182+00:00",
   "live_trading_enabled": false,
   "mode": "PAPER_ONLY",
   "portfolio_status": "PAPER_RUNNING",
   "schema_version": 2,
-  "source_updated_at": "2026-11-24T06:35:46.422879+00:00",
+  "source_updated_at": "2026-11-24T08:03:12.927669+00:00",
   "summary": {
     "agent_count": 6,
     "markets": [
@@ -311,12 +311,12 @@
       "PEARL/USD",
       "PENGU/USD",
       "PEPE/USD",
-      "PIEVERSE/USD",
       "PUMP/USD",
       "QNT/USD",
       "RENDER/USD",
       "RLUSD/USDT",
       "SKY/USD",
+      "SOFID/USD",
       "SOL/USD",
       "SUI/USD",
       "TAO/USD",
@@ -779,17 +779,6 @@
         "strategy_signal": "HOLD",
         "watch_only": true
       },
-      "PIEVERSE/USD": {
-        "approved_by_consensus": false,
-        "decision": "HOLD",
-        "execution_mode": "PAPER_ONLY",
-        "live_orders_enabled": false,
-        "reason_codes": [
-          "WATCH_ONLY_NO_CLOSED_CANDLE_SIGNAL"
-        ],
-        "strategy_signal": "HOLD",
-        "watch_only": true
-      },
       "PUMP/USD": {
         "approved_by_consensus": false,
         "decision": "HOLD",
@@ -835,6 +824,17 @@
         "watch_only": true
       },
       "SKY/USD": {
+        "approved_by_consensus": false,
+        "decision": "HOLD",
+        "execution_mode": "PAPER_ONLY",
+        "live_orders_enabled": false,
+        "reason_codes": [
+          "WATCH_ONLY_NO_CLOSED_CANDLE_SIGNAL"
+        ],
+        "strategy_signal": "HOLD",
+        "watch_only": true
+      },
+      "SOFID/USD": {
         "approved_by_consensus": false,
         "decision": "HOLD",
         "execution_mode": "PAPER_ONLY",
