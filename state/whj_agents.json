@@ -25,7 +25,6 @@
           "GRASS/USD",
           "HBAR/USD",
           "HYPE/USD",
-          "ICNT/USD",
           "ICP/USD",
           "INJ/USD",
           "JUP/USD",
@@ -41,6 +40,7 @@
           "PEARL/USD",
           "PENGU/USD",
           "PEPE/USD",
+          "POL/USD",
           "PUMP/USD",
           "QNT/USD",
           "RENDER/USD",
@@ -91,7 +91,6 @@
           "GRASS/USD",
           "HBAR/USD",
           "HYPE/USD",
-          "ICNT/USD",
           "ICP/USD",
           "INJ/USD",
           "JUP/USD",
@@ -107,6 +106,7 @@
           "PEARL/USD",
           "PENGU/USD",
           "PEPE/USD",
+          "POL/USD",
           "PUMP/USD",
           "QNT/USD",
           "RENDER/USD",
@@ -156,7 +156,6 @@
           "GRASS/USD",
           "HBAR/USD",
           "HYPE/USD",
-          "ICNT/USD",
           "ICP/USD",
           "INJ/USD",
           "JUP/USD",
@@ -172,6 +171,7 @@
           "PEARL/USD",
           "PENGU/USD",
           "PEPE/USD",
+          "POL/USD",
           "PUMP/USD",
           "QNT/USD",
           "RENDER/USD",
@@ -249,23 +249,23 @@
     {
       "detail": "Equity is read from the single shared paper wallet when available.",
       "metrics": {
-        "closed_trades": 116,
-        "equity_usd": 98.6447,
+        "closed_trades": 123,
+        "equity_usd": 98.4137,
         "initial_equity_usd": 100.0,
-        "pnl_usd": -1.3553,
-        "return_pct": -1.3553,
+        "pnl_usd": -1.5863,
+        "return_pct": -1.5863,
         "shared_wallet": true
       },
       "name": "EQUITY",
       "status": "TRACKING"
     }
   ],
-  "generated_at_utc": "2026-11-24T16:44:12.861311+00:00",
+  "generated_at_utc": "2026-11-24T17:33:31.529112+00:00",
   "live_trading_enabled": false,
   "mode": "PAPER_ONLY",
   "portfolio_status": "PAPER_RUNNING",
   "schema_version": 2,
-  "source_updated_at": "2026-11-24T16:44:12.436706+00:00",
+  "source_updated_at": "2026-11-24T17:33:30.914654+00:00",
   "summary": {
     "agent_count": 6,
     "markets": [
@@ -291,7 +291,6 @@
       "GRASS/USD",
       "HBAR/USD",
       "HYPE/USD",
-      "ICNT/USD",
       "ICP/USD",
       "INJ/USD",
       "JUP/USD",
@@ -307,6 +306,7 @@
       "PEARL/USD",
       "PENGU/USD",
       "PEPE/USD",
+      "POL/USD",
       "PUMP/USD",
       "QNT/USD",
       "RENDER/USD",
@@ -588,17 +588,6 @@
         "strategy_signal": "HOLD",
         "watch_only": true
       },
-      "ICNT/USD": {
-        "approved_by_consensus": false,
-        "decision": "HOLD",
-        "execution_mode": "PAPER_ONLY",
-        "live_orders_enabled": false,
-        "reason_codes": [
-          "WATCH_ONLY_NO_CLOSED_CANDLE_SIGNAL"
-        ],
-        "strategy_signal": "HOLD",
-        "watch_only": true
-      },
       "ICP/USD": {
         "approved_by_consensus": false,
         "decision": "HOLD",
@@ -754,6 +743,17 @@
         "watch_only": true
       },
       "PEPE/USD": {
+        "approved_by_consensus": false,
+        "decision": "HOLD",
+        "execution_mode": "PAPER_ONLY",
+        "live_orders_enabled": false,
+        "reason_codes": [
+          "WATCH_ONLY_NO_CLOSED_CANDLE_SIGNAL"
+        ],
+        "strategy_signal": "HOLD",
+        "watch_only": true
+      },
+      "POL/USD": {
         "approved_by_consensus": false,
         "decision": "HOLD",
         "execution_mode": "PAPER_ONLY",
