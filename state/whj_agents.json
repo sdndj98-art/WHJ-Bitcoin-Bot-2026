@@ -14,7 +14,6 @@
           "BCH/USD",
           "BLESS/USD",
           "BNB/USD",
-          "CAP/USD",
           "CC/USD",
           "CRV/USD",
           "DASH/USD",
@@ -40,6 +39,7 @@
           "PEARL/USD",
           "PENGU/USD",
           "PEPE/USD",
+          "POL/USD",
           "PUMP/USD",
           "QNT/USD",
           "REKT/USD",
@@ -80,7 +80,6 @@
           "BCH/USD",
           "BLESS/USD",
           "BNB/USD",
-          "CAP/USD",
           "CC/USD",
           "CRV/USD",
           "DASH/USD",
@@ -106,6 +105,7 @@
           "PEARL/USD",
           "PENGU/USD",
           "PEPE/USD",
+          "POL/USD",
           "PUMP/USD",
           "QNT/USD",
           "REKT/USD",
@@ -145,7 +145,6 @@
           "BCH/USD",
           "BLESS/USD",
           "BNB/USD",
-          "CAP/USD",
           "CC/USD",
           "CRV/USD",
           "DASH/USD",
@@ -171,6 +170,7 @@
           "PEARL/USD",
           "PENGU/USD",
           "PEPE/USD",
+          "POL/USD",
           "PUMP/USD",
           "QNT/USD",
           "REKT/USD",
@@ -250,22 +250,22 @@
       "detail": "Equity is read from the single shared paper wallet when available.",
       "metrics": {
         "closed_trades": 127,
-        "equity_usd": 98.3815,
+        "equity_usd": 98.4601,
         "initial_equity_usd": 100.0,
-        "pnl_usd": -1.6185,
-        "return_pct": -1.6185,
+        "pnl_usd": -1.5399,
+        "return_pct": -1.5399,
         "shared_wallet": true
       },
       "name": "EQUITY",
       "status": "TRACKING"
     }
   ],
-  "generated_at_utc": "2026-11-24T20:30:48.590052+00:00",
+  "generated_at_utc": "2026-11-24T21:26:06.382417+00:00",
   "live_trading_enabled": false,
   "mode": "PAPER_ONLY",
   "portfolio_status": "PAPER_RUNNING",
   "schema_version": 2,
-  "source_updated_at": "2026-11-24T20:30:47.988339+00:00",
+  "source_updated_at": "2026-11-24T21:26:05.965206+00:00",
   "summary": {
     "agent_count": 6,
     "markets": [
@@ -280,7 +280,6 @@
       "BCH/USD",
       "BLESS/USD",
       "BNB/USD",
-      "CAP/USD",
       "CC/USD",
       "CRV/USD",
       "DASH/USD",
@@ -306,6 +305,7 @@
       "PEARL/USD",
       "PENGU/USD",
       "PEPE/USD",
+      "POL/USD",
       "PUMP/USD",
       "QNT/USD",
       "REKT/USD",
@@ -457,17 +457,6 @@
         "strategy_signal": "HOLD"
       },
       "BTC/USD": {
-        "approved_by_consensus": false,
-        "decision": "HOLD",
-        "execution_mode": "PAPER_ONLY",
-        "live_orders_enabled": false,
-        "reason_codes": [
-          "WATCH_ONLY_NO_CLOSED_CANDLE_SIGNAL"
-        ],
-        "strategy_signal": "HOLD",
-        "watch_only": true
-      },
-      "CAP/USD": {
         "approved_by_consensus": false,
         "decision": "HOLD",
         "execution_mode": "PAPER_ONLY",
@@ -743,6 +732,17 @@
         "watch_only": true
       },
       "PEPE/USD": {
+        "approved_by_consensus": false,
+        "decision": "HOLD",
+        "execution_mode": "PAPER_ONLY",
+        "live_orders_enabled": false,
+        "reason_codes": [
+          "WATCH_ONLY_NO_CLOSED_CANDLE_SIGNAL"
+        ],
+        "strategy_signal": "HOLD",
+        "watch_only": true
+      },
+      "POL/USD": {
         "approved_by_consensus": false,
         "decision": "HOLD",
         "execution_mode": "PAPER_ONLY",
