@@ -21,12 +21,12 @@
           "DRV/USD",
           "ENA/USD",
           "ETH/USD",
+          "FIDD/USD",
           "HBAR/USD",
           "HONEY/USD",
           "HYPE/USD",
           "ICP/USD",
           "INJ/USD",
-          "KAS/USD",
           "LIGHTER/USD",
           "LINK/USD",
           "LTC/USD",
@@ -39,7 +39,6 @@
           "PEARL/USD",
           "PENGU/USD",
           "PEPE/USD",
-          "PIEVERSE/USD",
           "PUMP/USD",
           "QNT/USD",
           "RENDER/USD",
@@ -50,6 +49,7 @@
           "SUI/USD",
           "TAO/USD",
           "TON/USD",
+          "TRUMP/USD",
           "TRX/USD",
           "UNI/USD",
           "USELESS/USD",
@@ -88,12 +88,12 @@
           "DRV/USD",
           "ENA/USD",
           "ETH/USD",
+          "FIDD/USD",
           "HBAR/USD",
           "HONEY/USD",
           "HYPE/USD",
           "ICP/USD",
           "INJ/USD",
-          "KAS/USD",
           "LIGHTER/USD",
           "LINK/USD",
           "LTC/USD",
@@ -106,7 +106,6 @@
           "PEARL/USD",
           "PENGU/USD",
           "PEPE/USD",
-          "PIEVERSE/USD",
           "PUMP/USD",
           "QNT/USD",
           "RENDER/USD",
@@ -117,6 +116,7 @@
           "SUI/USD",
           "TAO/USD",
           "TON/USD",
+          "TRUMP/USD",
           "TRX/USD",
           "UNI/USD",
           "USELESS/USD",
@@ -154,12 +154,12 @@
           "DRV/USD",
           "ENA/USD",
           "ETH/USD",
+          "FIDD/USD",
           "HBAR/USD",
           "HONEY/USD",
           "HYPE/USD",
           "ICP/USD",
           "INJ/USD",
-          "KAS/USD",
           "LIGHTER/USD",
           "LINK/USD",
           "LTC/USD",
@@ -172,7 +172,6 @@
           "PEARL/USD",
           "PENGU/USD",
           "PEPE/USD",
-          "PIEVERSE/USD",
           "PUMP/USD",
           "QNT/USD",
           "RENDER/USD",
@@ -183,6 +182,7 @@
           "SUI/USD",
           "TAO/USD",
           "TON/USD",
+          "TRUMP/USD",
           "TRX/USD",
           "UNI/USD",
           "USELESS/USD",
@@ -253,22 +253,22 @@
       "detail": "Equity is read from the single shared paper wallet when available.",
       "metrics": {
         "closed_trades": 171,
-        "equity_usd": 99.0996,
+        "equity_usd": 98.8576,
         "initial_equity_usd": 100.0,
-        "pnl_usd": -0.9004,
-        "return_pct": -0.9004,
+        "pnl_usd": -1.1424,
+        "return_pct": -1.1424,
         "shared_wallet": true
       },
       "name": "EQUITY",
       "status": "TRACKING"
     }
   ],
-  "generated_at_utc": "2026-11-25T22:22:35.217038+00:00",
+  "generated_at_utc": "2026-11-25T23:18:10.547229+00:00",
   "live_trading_enabled": false,
   "mode": "PAPER_ONLY",
   "portfolio_status": "PAPER_RUNNING",
   "schema_version": 2,
-  "source_updated_at": "2026-11-25T22:22:34.788371+00:00",
+  "source_updated_at": "2026-11-25T23:18:10.208367+00:00",
   "summary": {
     "agent_count": 6,
     "markets": [
@@ -290,12 +290,12 @@
       "DRV/USD",
       "ENA/USD",
       "ETH/USD",
+      "FIDD/USD",
       "HBAR/USD",
       "HONEY/USD",
       "HYPE/USD",
       "ICP/USD",
       "INJ/USD",
-      "KAS/USD",
       "LIGHTER/USD",
       "LINK/USD",
       "LTC/USD",
@@ -308,7 +308,6 @@
       "PEARL/USD",
       "PENGU/USD",
       "PEPE/USD",
-      "PIEVERSE/USD",
       "PUMP/USD",
       "QNT/USD",
       "RENDER/USD",
@@ -319,6 +318,7 @@
       "SUI/USD",
       "TAO/USD",
       "TON/USD",
+      "TRUMP/USD",
       "TRX/USD",
       "UNI/USD",
       "USELESS/USD",
@@ -548,6 +548,17 @@
         "strategy_signal": "HOLD",
         "watch_only": true
       },
+      "FIDD/USD": {
+        "approved_by_consensus": false,
+        "decision": "HOLD",
+        "execution_mode": "PAPER_ONLY",
+        "live_orders_enabled": false,
+        "reason_codes": [
+          "WATCH_ONLY_NO_CLOSED_CANDLE_SIGNAL"
+        ],
+        "strategy_signal": "HOLD",
+        "watch_only": true
+      },
       "HBAR/USD": {
         "approved_by_consensus": false,
         "decision": "HOLD",
@@ -593,17 +604,6 @@
         "watch_only": true
       },
       "INJ/USD": {
-        "approved_by_consensus": false,
-        "decision": "HOLD",
-        "execution_mode": "PAPER_ONLY",
-        "live_orders_enabled": false,
-        "reason_codes": [
-          "WATCH_ONLY_NO_CLOSED_CANDLE_SIGNAL"
-        ],
-        "strategy_signal": "HOLD",
-        "watch_only": true
-      },
-      "KAS/USD": {
         "approved_by_consensus": false,
         "decision": "HOLD",
         "execution_mode": "PAPER_ONLY",
@@ -746,17 +746,6 @@
         "strategy_signal": "HOLD",
         "watch_only": true
       },
-      "PIEVERSE/USD": {
-        "approved_by_consensus": false,
-        "decision": "HOLD",
-        "execution_mode": "PAPER_ONLY",
-        "live_orders_enabled": false,
-        "reason_codes": [
-          "WATCH_ONLY_NO_CLOSED_CANDLE_SIGNAL"
-        ],
-        "strategy_signal": "HOLD",
-        "watch_only": true
-      },
       "PUMP/USD": {
         "approved_by_consensus": false,
         "decision": "HOLD",
@@ -857,6 +846,17 @@
         "watch_only": true
       },
       "TON/USD": {
+        "approved_by_consensus": false,
+        "decision": "HOLD",
+        "execution_mode": "PAPER_ONLY",
+        "live_orders_enabled": false,
+        "reason_codes": [
+          "WATCH_ONLY_NO_CLOSED_CANDLE_SIGNAL"
+        ],
+        "strategy_signal": "HOLD",
+        "watch_only": true
+      },
+      "TRUMP/USD": {
         "approved_by_consensus": false,
         "decision": "HOLD",
         "execution_mode": "PAPER_ONLY",
