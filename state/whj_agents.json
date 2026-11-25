@@ -7,6 +7,7 @@
           "BTC/USD",
           "AAVE/USD",
           "ADA/USD",
+          "AERO/USD",
           "AKE/USD",
           "ALGO/USD",
           "ARB/USD",
@@ -23,7 +24,6 @@
           "FET/USD",
           "HBAR/USD",
           "HYPE/USD",
-          "ICNT/USD",
           "ICP/USD",
           "INJ/USD",
           "JUP/USD",
@@ -74,6 +74,7 @@
           "XAUUSD",
           "AAVE/USD",
           "ADA/USD",
+          "AERO/USD",
           "AKE/USD",
           "ALGO/USD",
           "ARB/USD",
@@ -90,7 +91,6 @@
           "FET/USD",
           "HBAR/USD",
           "HYPE/USD",
-          "ICNT/USD",
           "ICP/USD",
           "INJ/USD",
           "JUP/USD",
@@ -140,6 +140,7 @@
           "XAUUSD",
           "AAVE/USD",
           "ADA/USD",
+          "AERO/USD",
           "AKE/USD",
           "ALGO/USD",
           "ARB/USD",
@@ -156,7 +157,6 @@
           "FET/USD",
           "HBAR/USD",
           "HYPE/USD",
-          "ICNT/USD",
           "ICP/USD",
           "INJ/USD",
           "JUP/USD",
@@ -252,23 +252,23 @@
     {
       "detail": "Equity is read from the single shared paper wallet when available.",
       "metrics": {
-        "closed_trades": 137,
-        "equity_usd": 98.3937,
+        "closed_trades": 139,
+        "equity_usd": 98.235,
         "initial_equity_usd": 100.0,
-        "pnl_usd": -1.6063,
-        "return_pct": -1.6063,
+        "pnl_usd": -1.765,
+        "return_pct": -1.765,
         "shared_wallet": true
       },
       "name": "EQUITY",
       "status": "TRACKING"
     }
   ],
-  "generated_at_utc": "2026-11-25T04:45:51.718100+00:00",
+  "generated_at_utc": "2026-11-25T05:41:07.684399+00:00",
   "live_trading_enabled": false,
   "mode": "PAPER_ONLY",
   "portfolio_status": "PAPER_RUNNING",
   "schema_version": 2,
-  "source_updated_at": "2026-11-25T04:45:51.314421+00:00",
+  "source_updated_at": "2026-11-25T05:41:07.238649+00:00",
   "summary": {
     "agent_count": 6,
     "markets": [
@@ -276,6 +276,7 @@
       "XAUUSD",
       "AAVE/USD",
       "ADA/USD",
+      "AERO/USD",
       "AKE/USD",
       "ALGO/USD",
       "ARB/USD",
@@ -292,7 +293,6 @@
       "FET/USD",
       "HBAR/USD",
       "HYPE/USD",
-      "ICNT/USD",
       "ICP/USD",
       "INJ/USD",
       "JUP/USD",
@@ -363,6 +363,17 @@
         "watch_only": true
       },
       "ADA/USD": {
+        "approved_by_consensus": false,
+        "decision": "HOLD",
+        "execution_mode": "PAPER_ONLY",
+        "live_orders_enabled": false,
+        "reason_codes": [
+          "WATCH_ONLY_NO_CLOSED_CANDLE_SIGNAL"
+        ],
+        "strategy_signal": "HOLD",
+        "watch_only": true
+      },
+      "AERO/USD": {
         "approved_by_consensus": false,
         "decision": "HOLD",
         "execution_mode": "PAPER_ONLY",
@@ -560,17 +571,6 @@
         "watch_only": true
       },
       "HYPE/USD": {
-        "approved_by_consensus": false,
-        "decision": "HOLD",
-        "execution_mode": "PAPER_ONLY",
-        "live_orders_enabled": false,
-        "reason_codes": [
-          "WATCH_ONLY_NO_CLOSED_CANDLE_SIGNAL"
-        ],
-        "strategy_signal": "HOLD",
-        "watch_only": true
-      },
-      "ICNT/USD": {
         "approved_by_consensus": false,
         "decision": "HOLD",
         "execution_mode": "PAPER_ONLY",
