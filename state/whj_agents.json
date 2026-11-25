@@ -26,11 +26,11 @@
           "HYPE/USD",
           "ICP/USD",
           "INJ/USD",
-          "JUP/USD",
           "KAS/USD",
           "LINK/USD",
           "LTC/USD",
           "MON/USD",
+          "MOODENG/USD",
           "NEAR/USD",
           "NIGHT/USD",
           "ONDO/USD",
@@ -46,9 +46,9 @@
           "SKY/USD",
           "SOFID/USDT",
           "SOL/USD",
-          "SPX/USD",
           "SUI/USD",
           "TAO/USD",
+          "TON/USD",
           "TRX/USD",
           "UNI/USD",
           "USELESS/USD",
@@ -58,7 +58,6 @@
           "XAUT/USD",
           "XAUUSD",
           "XCN/USD",
-          "XDC/USD",
           "XDG/USD",
           "XLM/USD",
           "XMR/USD",
@@ -67,6 +66,7 @@
           "XRP/USD",
           "ZCHF/USD",
           "ZEC/USD",
+          "ZEUS/USD",
           "ZRO/USD"
         ],
         "markets": [
@@ -93,11 +93,11 @@
           "HYPE/USD",
           "ICP/USD",
           "INJ/USD",
-          "JUP/USD",
           "KAS/USD",
           "LINK/USD",
           "LTC/USD",
           "MON/USD",
+          "MOODENG/USD",
           "NEAR/USD",
           "NIGHT/USD",
           "ONDO/USD",
@@ -113,9 +113,9 @@
           "SKY/USD",
           "SOFID/USDT",
           "SOL/USD",
-          "SPX/USD",
           "SUI/USD",
           "TAO/USD",
+          "TON/USD",
           "TRX/USD",
           "UNI/USD",
           "USELESS/USD",
@@ -124,7 +124,6 @@
           "XAGUSD",
           "XAUT/USD",
           "XCN/USD",
-          "XDC/USD",
           "XDG/USD",
           "XLM/USD",
           "XMR/USD",
@@ -133,6 +132,7 @@
           "XRP/USD",
           "ZCHF/USD",
           "ZEC/USD",
+          "ZEUS/USD",
           "ZRO/USD"
         ],
         "markets_scanned": [
@@ -159,11 +159,11 @@
           "HYPE/USD",
           "ICP/USD",
           "INJ/USD",
-          "JUP/USD",
           "KAS/USD",
           "LINK/USD",
           "LTC/USD",
           "MON/USD",
+          "MOODENG/USD",
           "NEAR/USD",
           "NIGHT/USD",
           "ONDO/USD",
@@ -179,9 +179,9 @@
           "SKY/USD",
           "SOFID/USDT",
           "SOL/USD",
-          "SPX/USD",
           "SUI/USD",
           "TAO/USD",
+          "TON/USD",
           "TRX/USD",
           "UNI/USD",
           "USELESS/USD",
@@ -190,7 +190,6 @@
           "XAGUSD",
           "XAUT/USD",
           "XCN/USD",
-          "XDC/USD",
           "XDG/USD",
           "XLM/USD",
           "XMR/USD",
@@ -199,6 +198,7 @@
           "XRP/USD",
           "ZCHF/USD",
           "ZEC/USD",
+          "ZEUS/USD",
           "ZRO/USD"
         ],
         "shared_wallet": true
@@ -252,23 +252,23 @@
     {
       "detail": "Equity is read from the single shared paper wallet when available.",
       "metrics": {
-        "closed_trades": 153,
-        "equity_usd": 97.7579,
+        "closed_trades": 154,
+        "equity_usd": 97.6161,
         "initial_equity_usd": 100.0,
-        "pnl_usd": -2.2421,
-        "return_pct": -2.2421,
+        "pnl_usd": -2.3839,
+        "return_pct": -2.3839,
         "shared_wallet": true
       },
       "name": "EQUITY",
       "status": "TRACKING"
     }
   ],
-  "generated_at_utc": "2026-11-25T12:31:03.791805+00:00",
+  "generated_at_utc": "2026-11-25T13:52:06.470259+00:00",
   "live_trading_enabled": false,
   "mode": "PAPER_ONLY",
   "portfolio_status": "PAPER_RUNNING",
   "schema_version": 2,
-  "source_updated_at": "2026-11-25T12:31:03.378383+00:00",
+  "source_updated_at": "2026-11-25T13:52:05.901578+00:00",
   "summary": {
     "agent_count": 6,
     "markets": [
@@ -295,11 +295,11 @@
       "HYPE/USD",
       "ICP/USD",
       "INJ/USD",
-      "JUP/USD",
       "KAS/USD",
       "LINK/USD",
       "LTC/USD",
       "MON/USD",
+      "MOODENG/USD",
       "NEAR/USD",
       "NIGHT/USD",
       "ONDO/USD",
@@ -315,9 +315,9 @@
       "SKY/USD",
       "SOFID/USDT",
       "SOL/USD",
-      "SPX/USD",
       "SUI/USD",
       "TAO/USD",
+      "TON/USD",
       "TRX/USD",
       "UNI/USD",
       "USELESS/USD",
@@ -326,7 +326,6 @@
       "XAGUSD",
       "XAUT/USD",
       "XCN/USD",
-      "XDC/USD",
       "XDG/USD",
       "XLM/USD",
       "XMR/USD",
@@ -335,6 +334,7 @@
       "XRP/USD",
       "ZCHF/USD",
       "ZEC/USD",
+      "ZEUS/USD",
       "ZRO/USD"
     ],
     "paper_only": true,
@@ -603,17 +603,6 @@
         "strategy_signal": "HOLD",
         "watch_only": true
       },
-      "JUP/USD": {
-        "approved_by_consensus": false,
-        "decision": "HOLD",
-        "execution_mode": "PAPER_ONLY",
-        "live_orders_enabled": false,
-        "reason_codes": [
-          "WATCH_ONLY_NO_CLOSED_CANDLE_SIGNAL"
-        ],
-        "strategy_signal": "HOLD",
-        "watch_only": true
-      },
       "KAS/USD": {
         "approved_by_consensus": false,
         "decision": "HOLD",
@@ -648,6 +637,17 @@
         "watch_only": true
       },
       "MON/USD": {
+        "approved_by_consensus": false,
+        "decision": "HOLD",
+        "execution_mode": "PAPER_ONLY",
+        "live_orders_enabled": false,
+        "reason_codes": [
+          "WATCH_ONLY_NO_CLOSED_CANDLE_SIGNAL"
+        ],
+        "strategy_signal": "HOLD",
+        "watch_only": true
+      },
+      "MOODENG/USD": {
         "approved_by_consensus": false,
         "decision": "HOLD",
         "execution_mode": "PAPER_ONLY",
@@ -823,17 +823,6 @@
         "strategy_signal": "HOLD",
         "watch_only": true
       },
-      "SPX/USD": {
-        "approved_by_consensus": false,
-        "decision": "HOLD",
-        "execution_mode": "PAPER_ONLY",
-        "live_orders_enabled": false,
-        "reason_codes": [
-          "WATCH_ONLY_NO_CLOSED_CANDLE_SIGNAL"
-        ],
-        "strategy_signal": "HOLD",
-        "watch_only": true
-      },
       "SUI/USD": {
         "approved_by_consensus": false,
         "decision": "HOLD",
@@ -846,6 +835,17 @@
         "watch_only": true
       },
       "TAO/USD": {
+        "approved_by_consensus": false,
+        "decision": "HOLD",
+        "execution_mode": "PAPER_ONLY",
+        "live_orders_enabled": false,
+        "reason_codes": [
+          "WATCH_ONLY_NO_CLOSED_CANDLE_SIGNAL"
+        ],
+        "strategy_signal": "HOLD",
+        "watch_only": true
+      },
+      "TON/USD": {
         "approved_by_consensus": false,
         "decision": "HOLD",
         "execution_mode": "PAPER_ONLY",
@@ -956,17 +956,6 @@
         "strategy_signal": "HOLD",
         "watch_only": true
       },
-      "XDC/USD": {
-        "approved_by_consensus": false,
-        "decision": "HOLD",
-        "execution_mode": "PAPER_ONLY",
-        "live_orders_enabled": false,
-        "reason_codes": [
-          "WATCH_ONLY_NO_CLOSED_CANDLE_SIGNAL"
-        ],
-        "strategy_signal": "HOLD",
-        "watch_only": true
-      },
       "XDG/USD": {
         "approved_by_consensus": false,
         "decision": "HOLD",
@@ -1045,6 +1034,17 @@
         "watch_only": true
       },
       "ZEC/USD": {
+        "approved_by_consensus": false,
+        "decision": "HOLD",
+        "execution_mode": "PAPER_ONLY",
+        "live_orders_enabled": false,
+        "reason_codes": [
+          "WATCH_ONLY_NO_CLOSED_CANDLE_SIGNAL"
+        ],
+        "strategy_signal": "HOLD",
+        "watch_only": true
+      },
+      "ZEUS/USD": {
         "approved_by_consensus": false,
         "decision": "HOLD",
         "execution_mode": "PAPER_ONLY",
