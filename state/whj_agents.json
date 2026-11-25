@@ -7,10 +7,10 @@
           "BTC/USD",
           "AAVE/USD",
           "ADA/USD",
-          "AERO/USD",
           "AKE/USD",
           "ALGO/USD",
           "ARB/USD",
+          "ATOM/USD",
           "AVAX/USD",
           "BCH/USD",
           "BLESS/USD",
@@ -37,11 +37,11 @@
           "PEARL/USD",
           "PENGU/USD",
           "PEPE/USD",
+          "POL/USD",
           "PUMP/USD",
           "QNT/USD",
           "REKT/USD",
           "RENDER/USD",
-          "RLUSD/USDT",
           "SKY/USD",
           "SOFID/USD",
           "SOFID/USDT",
@@ -75,10 +75,10 @@
           "XAUUSD",
           "AAVE/USD",
           "ADA/USD",
-          "AERO/USD",
           "AKE/USD",
           "ALGO/USD",
           "ARB/USD",
+          "ATOM/USD",
           "AVAX/USD",
           "BCH/USD",
           "BLESS/USD",
@@ -105,11 +105,11 @@
           "PEARL/USD",
           "PENGU/USD",
           "PEPE/USD",
+          "POL/USD",
           "PUMP/USD",
           "QNT/USD",
           "REKT/USD",
           "RENDER/USD",
-          "RLUSD/USDT",
           "SKY/USD",
           "SOFID/USD",
           "SOFID/USDT",
@@ -142,10 +142,10 @@
           "XAUUSD",
           "AAVE/USD",
           "ADA/USD",
-          "AERO/USD",
           "AKE/USD",
           "ALGO/USD",
           "ARB/USD",
+          "ATOM/USD",
           "AVAX/USD",
           "BCH/USD",
           "BLESS/USD",
@@ -172,11 +172,11 @@
           "PEARL/USD",
           "PENGU/USD",
           "PEPE/USD",
+          "POL/USD",
           "PUMP/USD",
           "QNT/USD",
           "REKT/USD",
           "RENDER/USD",
-          "RLUSD/USDT",
           "SKY/USD",
           "SOFID/USD",
           "SOFID/USDT",
@@ -256,22 +256,22 @@
       "detail": "Equity is read from the single shared paper wallet when available.",
       "metrics": {
         "closed_trades": 163,
-        "equity_usd": 97.2392,
+        "equity_usd": 97.1225,
         "initial_equity_usd": 100.0,
-        "pnl_usd": -2.7608,
-        "return_pct": -2.7608,
+        "pnl_usd": -2.8775,
+        "return_pct": -2.8775,
         "shared_wallet": true
       },
       "name": "EQUITY",
       "status": "TRACKING"
     }
   ],
-  "generated_at_utc": "2026-11-25T15:51:20.729642+00:00",
+  "generated_at_utc": "2026-11-25T16:55:01.762148+00:00",
   "live_trading_enabled": false,
   "mode": "PAPER_ONLY",
   "portfolio_status": "PAPER_RUNNING",
   "schema_version": 2,
-  "source_updated_at": "2026-11-25T15:51:20.252808+00:00",
+  "source_updated_at": "2026-11-25T16:55:01.155541+00:00",
   "summary": {
     "agent_count": 6,
     "markets": [
@@ -279,10 +279,10 @@
       "XAUUSD",
       "AAVE/USD",
       "ADA/USD",
-      "AERO/USD",
       "AKE/USD",
       "ALGO/USD",
       "ARB/USD",
+      "ATOM/USD",
       "AVAX/USD",
       "BCH/USD",
       "BLESS/USD",
@@ -309,11 +309,11 @@
       "PEARL/USD",
       "PENGU/USD",
       "PEPE/USD",
+      "POL/USD",
       "PUMP/USD",
       "QNT/USD",
       "REKT/USD",
       "RENDER/USD",
-      "RLUSD/USDT",
       "SKY/USD",
       "SOFID/USD",
       "SOFID/USDT",
@@ -377,17 +377,6 @@
         "strategy_signal": "HOLD",
         "watch_only": true
       },
-      "AERO/USD": {
-        "approved_by_consensus": false,
-        "decision": "HOLD",
-        "execution_mode": "PAPER_ONLY",
-        "live_orders_enabled": false,
-        "reason_codes": [
-          "WATCH_ONLY_NO_CLOSED_CANDLE_SIGNAL"
-        ],
-        "strategy_signal": "HOLD",
-        "watch_only": true
-      },
       "AKE/USD": {
         "approved_by_consensus": false,
         "decision": "HOLD",
@@ -411,6 +400,17 @@
         "watch_only": true
       },
       "ARB/USD": {
+        "approved_by_consensus": false,
+        "decision": "HOLD",
+        "execution_mode": "PAPER_ONLY",
+        "live_orders_enabled": false,
+        "reason_codes": [
+          "WATCH_ONLY_NO_CLOSED_CANDLE_SIGNAL"
+        ],
+        "strategy_signal": "HOLD",
+        "watch_only": true
+      },
+      "ATOM/USD": {
         "approved_by_consensus": false,
         "decision": "HOLD",
         "execution_mode": "PAPER_ONLY",
@@ -728,6 +728,17 @@
         "strategy_signal": "HOLD",
         "watch_only": true
       },
+      "POL/USD": {
+        "approved_by_consensus": false,
+        "decision": "HOLD",
+        "execution_mode": "PAPER_ONLY",
+        "live_orders_enabled": false,
+        "reason_codes": [
+          "WATCH_ONLY_NO_CLOSED_CANDLE_SIGNAL"
+        ],
+        "strategy_signal": "HOLD",
+        "watch_only": true
+      },
       "PUMP/USD": {
         "approved_by_consensus": false,
         "decision": "HOLD",
@@ -762,17 +773,6 @@
         "watch_only": true
       },
       "RENDER/USD": {
-        "approved_by_consensus": false,
-        "decision": "HOLD",
-        "execution_mode": "PAPER_ONLY",
-        "live_orders_enabled": false,
-        "reason_codes": [
-          "WATCH_ONLY_NO_CLOSED_CANDLE_SIGNAL"
-        ],
-        "strategy_signal": "HOLD",
-        "watch_only": true
-      },
-      "RLUSD/USDT": {
         "approved_by_consensus": false,
         "decision": "HOLD",
         "execution_mode": "PAPER_ONLY",
