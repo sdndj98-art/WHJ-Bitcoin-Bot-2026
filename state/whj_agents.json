@@ -21,7 +21,9 @@
           "DRV/USD",
           "ENA/USD",
           "ETH/USD",
+          "FIDD/USD",
           "HBAR/USD",
+          "HONEY/USD",
           "HYPE/USD",
           "ICP/USD",
           "INJ/USD",
@@ -37,7 +39,6 @@
           "PEARL/USD",
           "PENGU/USD",
           "PEPE/USD",
-          "POL/USD",
           "PUMP/USD",
           "QNT/USD",
           "REKT/USD",
@@ -46,7 +47,6 @@
           "SOFID/USD",
           "SOFID/USDT",
           "SOL/USD",
-          "SPX/USD",
           "STX/USD",
           "SUI/USD",
           "TAO/USD",
@@ -89,7 +89,9 @@
           "DRV/USD",
           "ENA/USD",
           "ETH/USD",
+          "FIDD/USD",
           "HBAR/USD",
+          "HONEY/USD",
           "HYPE/USD",
           "ICP/USD",
           "INJ/USD",
@@ -105,7 +107,6 @@
           "PEARL/USD",
           "PENGU/USD",
           "PEPE/USD",
-          "POL/USD",
           "PUMP/USD",
           "QNT/USD",
           "REKT/USD",
@@ -114,7 +115,6 @@
           "SOFID/USD",
           "SOFID/USDT",
           "SOL/USD",
-          "SPX/USD",
           "STX/USD",
           "SUI/USD",
           "TAO/USD",
@@ -156,7 +156,9 @@
           "DRV/USD",
           "ENA/USD",
           "ETH/USD",
+          "FIDD/USD",
           "HBAR/USD",
+          "HONEY/USD",
           "HYPE/USD",
           "ICP/USD",
           "INJ/USD",
@@ -172,7 +174,6 @@
           "PEARL/USD",
           "PENGU/USD",
           "PEPE/USD",
-          "POL/USD",
           "PUMP/USD",
           "QNT/USD",
           "REKT/USD",
@@ -181,7 +182,6 @@
           "SOFID/USD",
           "SOFID/USDT",
           "SOL/USD",
-          "SPX/USD",
           "STX/USD",
           "SUI/USD",
           "TAO/USD",
@@ -256,22 +256,22 @@
       "detail": "Equity is read from the single shared paper wallet when available.",
       "metrics": {
         "closed_trades": 163,
-        "equity_usd": 97.1225,
+        "equity_usd": 97.3176,
         "initial_equity_usd": 100.0,
-        "pnl_usd": -2.8775,
-        "return_pct": -2.8775,
+        "pnl_usd": -2.6824,
+        "return_pct": -2.6824,
         "shared_wallet": true
       },
       "name": "EQUITY",
       "status": "TRACKING"
     }
   ],
-  "generated_at_utc": "2026-11-25T16:55:01.762148+00:00",
+  "generated_at_utc": "2026-11-25T17:40:14.866798+00:00",
   "live_trading_enabled": false,
   "mode": "PAPER_ONLY",
   "portfolio_status": "PAPER_RUNNING",
   "schema_version": 2,
-  "source_updated_at": "2026-11-25T16:55:01.155541+00:00",
+  "source_updated_at": "2026-11-25T17:40:14.502344+00:00",
   "summary": {
     "agent_count": 6,
     "markets": [
@@ -293,7 +293,9 @@
       "DRV/USD",
       "ENA/USD",
       "ETH/USD",
+      "FIDD/USD",
       "HBAR/USD",
+      "HONEY/USD",
       "HYPE/USD",
       "ICP/USD",
       "INJ/USD",
@@ -309,7 +311,6 @@
       "PEARL/USD",
       "PENGU/USD",
       "PEPE/USD",
-      "POL/USD",
       "PUMP/USD",
       "QNT/USD",
       "REKT/USD",
@@ -318,7 +319,6 @@
       "SOFID/USD",
       "SOFID/USDT",
       "SOL/USD",
-      "SPX/USD",
       "STX/USD",
       "SUI/USD",
       "TAO/USD",
@@ -552,7 +552,29 @@
         "strategy_signal": "HOLD",
         "watch_only": true
       },
+      "FIDD/USD": {
+        "approved_by_consensus": false,
+        "decision": "HOLD",
+        "execution_mode": "PAPER_ONLY",
+        "live_orders_enabled": false,
+        "reason_codes": [
+          "WATCH_ONLY_NO_CLOSED_CANDLE_SIGNAL"
+        ],
+        "strategy_signal": "HOLD",
+        "watch_only": true
+      },
       "HBAR/USD": {
+        "approved_by_consensus": false,
+        "decision": "HOLD",
+        "execution_mode": "PAPER_ONLY",
+        "live_orders_enabled": false,
+        "reason_codes": [
+          "WATCH_ONLY_NO_CLOSED_CANDLE_SIGNAL"
+        ],
+        "strategy_signal": "HOLD",
+        "watch_only": true
+      },
+      "HONEY/USD": {
         "approved_by_consensus": false,
         "decision": "HOLD",
         "execution_mode": "PAPER_ONLY",
@@ -728,17 +750,6 @@
         "strategy_signal": "HOLD",
         "watch_only": true
       },
-      "POL/USD": {
-        "approved_by_consensus": false,
-        "decision": "HOLD",
-        "execution_mode": "PAPER_ONLY",
-        "live_orders_enabled": false,
-        "reason_codes": [
-          "WATCH_ONLY_NO_CLOSED_CANDLE_SIGNAL"
-        ],
-        "strategy_signal": "HOLD",
-        "watch_only": true
-      },
       "PUMP/USD": {
         "approved_by_consensus": false,
         "decision": "HOLD",
@@ -817,17 +828,6 @@
         "watch_only": true
       },
       "SOL/USD": {
-        "approved_by_consensus": false,
-        "decision": "HOLD",
-        "execution_mode": "PAPER_ONLY",
-        "live_orders_enabled": false,
-        "reason_codes": [
-          "WATCH_ONLY_NO_CLOSED_CANDLE_SIGNAL"
-        ],
-        "strategy_signal": "HOLD",
-        "watch_only": true
-      },
-      "SPX/USD": {
         "approved_by_consensus": false,
         "decision": "HOLD",
         "execution_mode": "PAPER_ONLY",
