@@ -45,6 +45,22 @@ class MetalPriceSourceTests(unittest.TestCase):
                 sources.fetch_spot("XPTUSD", now)
 
 
+    def test_gold_api_clamps_small_future_clock_skew_and_rejects_large_future_timestamp(self):
+        now = datetime(2026, 11, 21, 12, 0, tzinfo=timezone.utc).timestamp()
+        payload = {
+            "symbol": "XAU", "currency": "USD", "unit": "oz", "price": 4021.5,
+            "updatedAt": datetime.fromtimestamp(now + 20, timezone.utc).isoformat(),
+        }
+        with patch.object(sources, "_get_json", return_value=payload):
+            quote = sources.fetch_spot("XAUUSD", now)
+        self.assertEqual(quote["quote_age_seconds"], 0.0)
+        self.assertEqual(quote["clock_skew_seconds"], 20.0)
+
+        payload["updatedAt"] = datetime.fromtimestamp(now + 61, timezone.utc).isoformat()
+        with patch.object(sources, "_get_json", return_value=payload):
+            with self.assertRaisesRegex(ValueError, "future-dated"):
+                sources.fetch_spot("XAUUSD", now)
+
     def test_daily_bars_use_free_tier_and_validate_closed_ohlc(self):
         now = datetime(2026, 11, 21, 12, 0, tzinfo=timezone.utc).timestamp()
         bars = []
