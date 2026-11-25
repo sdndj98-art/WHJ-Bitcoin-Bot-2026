@@ -28,7 +28,6 @@
           "INJ/USD",
           "JUP/USD",
           "KAS/USD",
-          "LIGHTER/USD",
           "LINK/USD",
           "LTC/USD",
           "MON/USD",
@@ -59,6 +58,7 @@
           "XAGUSD",
           "XAUT/USDT",
           "XAUUSD",
+          "XCN/USD",
           "XDC/USD",
           "XDG/USD",
           "XLM/USD",
@@ -95,7 +95,6 @@
           "INJ/USD",
           "JUP/USD",
           "KAS/USD",
-          "LIGHTER/USD",
           "LINK/USD",
           "LTC/USD",
           "MON/USD",
@@ -125,6 +124,7 @@
           "WLD/USD",
           "XAGUSD",
           "XAUT/USDT",
+          "XCN/USD",
           "XDC/USD",
           "XDG/USD",
           "XLM/USD",
@@ -161,7 +161,6 @@
           "INJ/USD",
           "JUP/USD",
           "KAS/USD",
-          "LIGHTER/USD",
           "LINK/USD",
           "LTC/USD",
           "MON/USD",
@@ -191,6 +190,7 @@
           "WLD/USD",
           "XAGUSD",
           "XAUT/USDT",
+          "XCN/USD",
           "XDC/USD",
           "XDG/USD",
           "XLM/USD",
@@ -252,23 +252,23 @@
     {
       "detail": "Equity is read from the single shared paper wallet when available.",
       "metrics": {
-        "closed_trades": 140,
-        "equity_usd": 98.2082,
+        "closed_trades": 144,
+        "equity_usd": 97.8004,
         "initial_equity_usd": 100.0,
-        "pnl_usd": -1.7918,
-        "return_pct": -1.7918,
+        "pnl_usd": -2.1996,
+        "return_pct": -2.1996,
         "shared_wallet": true
       },
       "name": "EQUITY",
       "status": "TRACKING"
     }
   ],
-  "generated_at_utc": "2026-11-25T06:36:19.508962+00:00",
+  "generated_at_utc": "2026-11-25T08:07:28.515447+00:00",
   "live_trading_enabled": false,
   "mode": "PAPER_ONLY",
   "portfolio_status": "PAPER_RUNNING",
   "schema_version": 2,
-  "source_updated_at": "2026-11-25T06:36:18.988901+00:00",
+  "source_updated_at": "2026-11-25T08:07:27.983679+00:00",
   "summary": {
     "agent_count": 6,
     "markets": [
@@ -297,7 +297,6 @@
       "INJ/USD",
       "JUP/USD",
       "KAS/USD",
-      "LIGHTER/USD",
       "LINK/USD",
       "LTC/USD",
       "MON/USD",
@@ -327,6 +326,7 @@
       "WLD/USD",
       "XAGUSD",
       "XAUT/USDT",
+      "XCN/USD",
       "XDC/USD",
       "XDG/USD",
       "XLM/USD",
@@ -615,17 +615,6 @@
         "watch_only": true
       },
       "KAS/USD": {
-        "approved_by_consensus": false,
-        "decision": "HOLD",
-        "execution_mode": "PAPER_ONLY",
-        "live_orders_enabled": false,
-        "reason_codes": [
-          "WATCH_ONLY_NO_CLOSED_CANDLE_SIGNAL"
-        ],
-        "strategy_signal": "HOLD",
-        "watch_only": true
-      },
-      "LIGHTER/USD": {
         "approved_by_consensus": false,
         "decision": "HOLD",
         "execution_mode": "PAPER_ONLY",
@@ -966,6 +955,17 @@
           "POSITION_SIZE_INVALID"
         ],
         "strategy_signal": "HOLD"
+      },
+      "XCN/USD": {
+        "approved_by_consensus": false,
+        "decision": "HOLD",
+        "execution_mode": "PAPER_ONLY",
+        "live_orders_enabled": false,
+        "reason_codes": [
+          "WATCH_ONLY_NO_CLOSED_CANDLE_SIGNAL"
+        ],
+        "strategy_signal": "HOLD",
+        "watch_only": true
       },
       "XDC/USD": {
         "approved_by_consensus": false,
