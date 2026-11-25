@@ -18,6 +18,7 @@
           "CC/USD",
           "CRV/USD",
           "DASH/USD",
+          "DOS/USD",
           "DRV/USD",
           "ENA/USD",
           "ETH/USD",
@@ -26,7 +27,6 @@
           "HYPE/USD",
           "ICP/USD",
           "INJ/USD",
-          "JUP/USD",
           "KAS/USD",
           "LINK/USD",
           "LTC/USD",
@@ -59,13 +59,13 @@
           "XAUT/USDT",
           "XAUUSD",
           "XCN/USD",
-          "XDC/USD",
           "XDG/USD",
           "XLM/USD",
           "XMR/USD",
           "XMR/USDT",
           "XPL/USD",
           "XRP/USD",
+          "ZCHF/USD",
           "ZEC/USD",
           "ZRO/USD"
         ],
@@ -85,6 +85,7 @@
           "CC/USD",
           "CRV/USD",
           "DASH/USD",
+          "DOS/USD",
           "DRV/USD",
           "ENA/USD",
           "ETH/USD",
@@ -93,7 +94,6 @@
           "HYPE/USD",
           "ICP/USD",
           "INJ/USD",
-          "JUP/USD",
           "KAS/USD",
           "LINK/USD",
           "LTC/USD",
@@ -125,13 +125,13 @@
           "XAGUSD",
           "XAUT/USDT",
           "XCN/USD",
-          "XDC/USD",
           "XDG/USD",
           "XLM/USD",
           "XMR/USD",
           "XMR/USDT",
           "XPL/USD",
           "XRP/USD",
+          "ZCHF/USD",
           "ZEC/USD",
           "ZRO/USD"
         ],
@@ -151,6 +151,7 @@
           "CC/USD",
           "CRV/USD",
           "DASH/USD",
+          "DOS/USD",
           "DRV/USD",
           "ENA/USD",
           "ETH/USD",
@@ -159,7 +160,6 @@
           "HYPE/USD",
           "ICP/USD",
           "INJ/USD",
-          "JUP/USD",
           "KAS/USD",
           "LINK/USD",
           "LTC/USD",
@@ -191,13 +191,13 @@
           "XAGUSD",
           "XAUT/USDT",
           "XCN/USD",
-          "XDC/USD",
           "XDG/USD",
           "XLM/USD",
           "XMR/USD",
           "XMR/USDT",
           "XPL/USD",
           "XRP/USD",
+          "ZCHF/USD",
           "ZEC/USD",
           "ZRO/USD"
         ],
@@ -252,23 +252,23 @@
     {
       "detail": "Equity is read from the single shared paper wallet when available.",
       "metrics": {
-        "closed_trades": 144,
-        "equity_usd": 97.8004,
+        "closed_trades": 147,
+        "equity_usd": 98.1568,
         "initial_equity_usd": 100.0,
-        "pnl_usd": -2.1996,
-        "return_pct": -2.1996,
+        "pnl_usd": -1.8432,
+        "return_pct": -1.8432,
         "shared_wallet": true
       },
       "name": "EQUITY",
       "status": "TRACKING"
     }
   ],
-  "generated_at_utc": "2026-11-25T08:07:28.515447+00:00",
+  "generated_at_utc": "2026-11-25T09:17:41.699655+00:00",
   "live_trading_enabled": false,
   "mode": "PAPER_ONLY",
   "portfolio_status": "PAPER_RUNNING",
   "schema_version": 2,
-  "source_updated_at": "2026-11-25T08:07:27.983679+00:00",
+  "source_updated_at": "2026-11-25T09:17:41.130112+00:00",
   "summary": {
     "agent_count": 6,
     "markets": [
@@ -287,6 +287,7 @@
       "CC/USD",
       "CRV/USD",
       "DASH/USD",
+      "DOS/USD",
       "DRV/USD",
       "ENA/USD",
       "ETH/USD",
@@ -295,7 +296,6 @@
       "HYPE/USD",
       "ICP/USD",
       "INJ/USD",
-      "JUP/USD",
       "KAS/USD",
       "LINK/USD",
       "LTC/USD",
@@ -327,13 +327,13 @@
       "XAGUSD",
       "XAUT/USDT",
       "XCN/USD",
-      "XDC/USD",
       "XDG/USD",
       "XLM/USD",
       "XMR/USD",
       "XMR/USDT",
       "XPL/USD",
       "XRP/USD",
+      "ZCHF/USD",
       "ZEC/USD",
       "ZRO/USD"
     ],
@@ -515,6 +515,17 @@
         "strategy_signal": "HOLD",
         "watch_only": true
       },
+      "DOS/USD": {
+        "approved_by_consensus": false,
+        "decision": "HOLD",
+        "execution_mode": "PAPER_ONLY",
+        "live_orders_enabled": false,
+        "reason_codes": [
+          "WATCH_ONLY_NO_CLOSED_CANDLE_SIGNAL"
+        ],
+        "strategy_signal": "HOLD",
+        "watch_only": true
+      },
       "DRV/USD": {
         "approved_by_consensus": false,
         "decision": "HOLD",
@@ -593,17 +604,6 @@
         "watch_only": true
       },
       "INJ/USD": {
-        "approved_by_consensus": false,
-        "decision": "HOLD",
-        "execution_mode": "PAPER_ONLY",
-        "live_orders_enabled": false,
-        "reason_codes": [
-          "WATCH_ONLY_NO_CLOSED_CANDLE_SIGNAL"
-        ],
-        "strategy_signal": "HOLD",
-        "watch_only": true
-      },
-      "JUP/USD": {
         "approved_by_consensus": false,
         "decision": "HOLD",
         "execution_mode": "PAPER_ONLY",
@@ -967,17 +967,6 @@
         "strategy_signal": "HOLD",
         "watch_only": true
       },
-      "XDC/USD": {
-        "approved_by_consensus": false,
-        "decision": "HOLD",
-        "execution_mode": "PAPER_ONLY",
-        "live_orders_enabled": false,
-        "reason_codes": [
-          "WATCH_ONLY_NO_CLOSED_CANDLE_SIGNAL"
-        ],
-        "strategy_signal": "HOLD",
-        "watch_only": true
-      },
       "XDG/USD": {
         "approved_by_consensus": false,
         "decision": "HOLD",
@@ -1034,6 +1023,17 @@
         "watch_only": true
       },
       "XRP/USD": {
+        "approved_by_consensus": false,
+        "decision": "HOLD",
+        "execution_mode": "PAPER_ONLY",
+        "live_orders_enabled": false,
+        "reason_codes": [
+          "WATCH_ONLY_NO_CLOSED_CANDLE_SIGNAL"
+        ],
+        "strategy_signal": "HOLD",
+        "watch_only": true
+      },
+      "ZCHF/USD": {
         "approved_by_consensus": false,
         "decision": "HOLD",
         "execution_mode": "PAPER_ONLY",
