@@ -10,7 +10,6 @@
           "AKE/USD",
           "ALGO/USD",
           "ARB/USD",
-          "ATOM/USD",
           "AVAX/USD",
           "BCH/USD",
           "BLESS/USD",
@@ -27,7 +26,9 @@
           "HYPE/USD",
           "ICP/USD",
           "INJ/USD",
+          "JUP/USD",
           "KAS/USD",
+          "LIGHTER/USD",
           "LINK/USD",
           "LTC/USD",
           "MON/USD",
@@ -47,7 +48,6 @@
           "SOFID/USD",
           "SOFID/USDT",
           "SOL/USD",
-          "STX/USD",
           "SUI/USD",
           "TAO/USD",
           "TON/USD",
@@ -78,7 +78,6 @@
           "AKE/USD",
           "ALGO/USD",
           "ARB/USD",
-          "ATOM/USD",
           "AVAX/USD",
           "BCH/USD",
           "BLESS/USD",
@@ -95,7 +94,9 @@
           "HYPE/USD",
           "ICP/USD",
           "INJ/USD",
+          "JUP/USD",
           "KAS/USD",
+          "LIGHTER/USD",
           "LINK/USD",
           "LTC/USD",
           "MON/USD",
@@ -115,7 +116,6 @@
           "SOFID/USD",
           "SOFID/USDT",
           "SOL/USD",
-          "STX/USD",
           "SUI/USD",
           "TAO/USD",
           "TON/USD",
@@ -145,7 +145,6 @@
           "AKE/USD",
           "ALGO/USD",
           "ARB/USD",
-          "ATOM/USD",
           "AVAX/USD",
           "BCH/USD",
           "BLESS/USD",
@@ -162,7 +161,9 @@
           "HYPE/USD",
           "ICP/USD",
           "INJ/USD",
+          "JUP/USD",
           "KAS/USD",
+          "LIGHTER/USD",
           "LINK/USD",
           "LTC/USD",
           "MON/USD",
@@ -182,7 +183,6 @@
           "SOFID/USD",
           "SOFID/USDT",
           "SOL/USD",
-          "STX/USD",
           "SUI/USD",
           "TAO/USD",
           "TON/USD",
@@ -256,22 +256,22 @@
       "detail": "Equity is read from the single shared paper wallet when available.",
       "metrics": {
         "closed_trades": 163,
-        "equity_usd": 97.3176,
+        "equity_usd": 98.2701,
         "initial_equity_usd": 100.0,
-        "pnl_usd": -2.6824,
-        "return_pct": -2.6824,
+        "pnl_usd": -1.7299,
+        "return_pct": -1.7299,
         "shared_wallet": true
       },
       "name": "EQUITY",
       "status": "TRACKING"
     }
   ],
-  "generated_at_utc": "2026-11-25T17:40:14.866798+00:00",
+  "generated_at_utc": "2026-11-25T18:27:42.780872+00:00",
   "live_trading_enabled": false,
   "mode": "PAPER_ONLY",
   "portfolio_status": "PAPER_RUNNING",
   "schema_version": 2,
-  "source_updated_at": "2026-11-25T17:40:14.502344+00:00",
+  "source_updated_at": "2026-11-25T18:27:42.352121+00:00",
   "summary": {
     "agent_count": 6,
     "markets": [
@@ -282,7 +282,6 @@
       "AKE/USD",
       "ALGO/USD",
       "ARB/USD",
-      "ATOM/USD",
       "AVAX/USD",
       "BCH/USD",
       "BLESS/USD",
@@ -299,7 +298,9 @@
       "HYPE/USD",
       "ICP/USD",
       "INJ/USD",
+      "JUP/USD",
       "KAS/USD",
+      "LIGHTER/USD",
       "LINK/USD",
       "LTC/USD",
       "MON/USD",
@@ -319,7 +320,6 @@
       "SOFID/USD",
       "SOFID/USDT",
       "SOL/USD",
-      "STX/USD",
       "SUI/USD",
       "TAO/USD",
       "TON/USD",
@@ -400,17 +400,6 @@
         "watch_only": true
       },
       "ARB/USD": {
-        "approved_by_consensus": false,
-        "decision": "HOLD",
-        "execution_mode": "PAPER_ONLY",
-        "live_orders_enabled": false,
-        "reason_codes": [
-          "WATCH_ONLY_NO_CLOSED_CANDLE_SIGNAL"
-        ],
-        "strategy_signal": "HOLD",
-        "watch_only": true
-      },
-      "ATOM/USD": {
         "approved_by_consensus": false,
         "decision": "HOLD",
         "execution_mode": "PAPER_ONLY",
@@ -618,7 +607,29 @@
         "strategy_signal": "HOLD",
         "watch_only": true
       },
+      "JUP/USD": {
+        "approved_by_consensus": false,
+        "decision": "HOLD",
+        "execution_mode": "PAPER_ONLY",
+        "live_orders_enabled": false,
+        "reason_codes": [
+          "WATCH_ONLY_NO_CLOSED_CANDLE_SIGNAL"
+        ],
+        "strategy_signal": "HOLD",
+        "watch_only": true
+      },
       "KAS/USD": {
+        "approved_by_consensus": false,
+        "decision": "HOLD",
+        "execution_mode": "PAPER_ONLY",
+        "live_orders_enabled": false,
+        "reason_codes": [
+          "WATCH_ONLY_NO_CLOSED_CANDLE_SIGNAL"
+        ],
+        "strategy_signal": "HOLD",
+        "watch_only": true
+      },
+      "LIGHTER/USD": {
         "approved_by_consensus": false,
         "decision": "HOLD",
         "execution_mode": "PAPER_ONLY",
@@ -828,17 +839,6 @@
         "watch_only": true
       },
       "SOL/USD": {
-        "approved_by_consensus": false,
-        "decision": "HOLD",
-        "execution_mode": "PAPER_ONLY",
-        "live_orders_enabled": false,
-        "reason_codes": [
-          "WATCH_ONLY_NO_CLOSED_CANDLE_SIGNAL"
-        ],
-        "strategy_signal": "HOLD",
-        "watch_only": true
-      },
-      "STX/USD": {
         "approved_by_consensus": false,
         "decision": "HOLD",
         "execution_mode": "PAPER_ONLY",
