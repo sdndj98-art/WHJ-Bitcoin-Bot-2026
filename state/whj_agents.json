@@ -23,6 +23,7 @@
           "DASH/USD",
           "DRV/USD",
           "ENA/USD",
+          "ETC/USD",
           "ETH/USD",
           "FET/USD",
           "HBAR/USD",
@@ -92,6 +93,7 @@
           "DASH/USD",
           "DRV/USD",
           "ENA/USD",
+          "ETC/USD",
           "ETH/USD",
           "FET/USD",
           "HBAR/USD",
@@ -160,6 +162,7 @@
           "DASH/USD",
           "DRV/USD",
           "ENA/USD",
+          "ETC/USD",
           "ETH/USD",
           "FET/USD",
           "HBAR/USD",
@@ -259,22 +262,22 @@
       "detail": "Equity is read from the single shared paper wallet when available.",
       "metrics": {
         "closed_trades": 191,
-        "equity_usd": 98.4056,
+        "equity_usd": 98.6185,
         "initial_equity_usd": 100.0,
-        "pnl_usd": -1.5944,
-        "return_pct": -1.5944,
+        "pnl_usd": -1.3815,
+        "return_pct": -1.3815,
         "shared_wallet": true
       },
       "name": "EQUITY",
       "status": "TRACKING"
     }
   ],
-  "generated_at_utc": "2026-11-26T20:34:29.265570+00:00",
+  "generated_at_utc": "2026-11-26T21:30:52.103052+00:00",
   "live_trading_enabled": false,
   "mode": "PAPER_ONLY",
   "portfolio_status": "PAPER_RUNNING",
   "schema_version": 2,
-  "source_updated_at": "2026-11-26T20:34:28.755463+00:00",
+  "source_updated_at": "2026-11-26T21:30:51.568782+00:00",
   "summary": {
     "agent_count": 6,
     "markets": [
@@ -298,6 +301,7 @@
       "DASH/USD",
       "DRV/USD",
       "ENA/USD",
+      "ETC/USD",
       "ETH/USD",
       "FET/USD",
       "HBAR/USD",
@@ -568,6 +572,17 @@
         "watch_only": true
       },
       "ENA/USD": {
+        "approved_by_consensus": false,
+        "decision": "HOLD",
+        "execution_mode": "PAPER_ONLY",
+        "live_orders_enabled": false,
+        "reason_codes": [
+          "WATCH_ONLY_NO_CLOSED_CANDLE_SIGNAL"
+        ],
+        "strategy_signal": "HOLD",
+        "watch_only": true
+      },
+      "ETC/USD": {
         "approved_by_consensus": false,
         "decision": "HOLD",
         "execution_mode": "PAPER_ONLY",
