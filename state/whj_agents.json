@@ -8,9 +8,11 @@
           "AAVE/USD",
           "ADA/USD",
           "AKE/USD",
+          "AKT/USD",
           "ALGO/USD",
           "APT/USD",
           "ARB/USD",
+          "ASTER/USD",
           "ATOM/USD",
           "AVAX/USD",
           "BCH/USD",
@@ -44,13 +46,13 @@
           "PUMP/USD",
           "QNT/USD",
           "REKT/USD",
-          "RENDER/USD",
           "RUNE/USD",
           "SEI/USD",
           "SKY/USD",
           "SOL/USD",
           "SUI/USD",
           "TAO/USD",
+          "TEL/USD",
           "TRUMP/USD",
           "TRX/USD",
           "UNI/USD",
@@ -76,9 +78,11 @@
           "AAVE/USD",
           "ADA/USD",
           "AKE/USD",
+          "AKT/USD",
           "ALGO/USD",
           "APT/USD",
           "ARB/USD",
+          "ASTER/USD",
           "ATOM/USD",
           "AVAX/USD",
           "BCH/USD",
@@ -112,13 +116,13 @@
           "PUMP/USD",
           "QNT/USD",
           "REKT/USD",
-          "RENDER/USD",
           "RUNE/USD",
           "SEI/USD",
           "SKY/USD",
           "SOL/USD",
           "SUI/USD",
           "TAO/USD",
+          "TEL/USD",
           "TRUMP/USD",
           "TRX/USD",
           "UNI/USD",
@@ -143,9 +147,11 @@
           "AAVE/USD",
           "ADA/USD",
           "AKE/USD",
+          "AKT/USD",
           "ALGO/USD",
           "APT/USD",
           "ARB/USD",
+          "ASTER/USD",
           "ATOM/USD",
           "AVAX/USD",
           "BCH/USD",
@@ -179,13 +185,13 @@
           "PUMP/USD",
           "QNT/USD",
           "REKT/USD",
-          "RENDER/USD",
           "RUNE/USD",
           "SEI/USD",
           "SKY/USD",
           "SOL/USD",
           "SUI/USD",
           "TAO/USD",
+          "TEL/USD",
           "TRUMP/USD",
           "TRX/USD",
           "UNI/USD",
@@ -255,23 +261,23 @@
     {
       "detail": "Equity is read from the single shared paper wallet when available.",
       "metrics": {
-        "closed_trades": 189,
-        "equity_usd": 98.4203,
+        "closed_trades": 191,
+        "equity_usd": 98.5182,
         "initial_equity_usd": 100.0,
-        "pnl_usd": -1.5797,
-        "return_pct": -1.5797,
+        "pnl_usd": -1.4818,
+        "return_pct": -1.4818,
         "shared_wallet": true
       },
       "name": "EQUITY",
       "status": "TRACKING"
     }
   ],
-  "generated_at_utc": "2026-11-26T17:44:43.781354+00:00",
+  "generated_at_utc": "2026-11-26T19:44:48.677336+00:00",
   "live_trading_enabled": false,
   "mode": "PAPER_ONLY",
   "portfolio_status": "PAPER_RUNNING",
   "schema_version": 2,
-  "source_updated_at": "2026-11-26T17:44:43.321281+00:00",
+  "source_updated_at": "2026-11-26T19:44:48.082591+00:00",
   "summary": {
     "agent_count": 6,
     "markets": [
@@ -280,9 +286,11 @@
       "AAVE/USD",
       "ADA/USD",
       "AKE/USD",
+      "AKT/USD",
       "ALGO/USD",
       "APT/USD",
       "ARB/USD",
+      "ASTER/USD",
       "ATOM/USD",
       "AVAX/USD",
       "BCH/USD",
@@ -316,13 +324,13 @@
       "PUMP/USD",
       "QNT/USD",
       "REKT/USD",
-      "RENDER/USD",
       "RUNE/USD",
       "SEI/USD",
       "SKY/USD",
       "SOL/USD",
       "SUI/USD",
       "TAO/USD",
+      "TEL/USD",
       "TRUMP/USD",
       "TRX/USD",
       "UNI/USD",
@@ -388,6 +396,17 @@
         "strategy_signal": "HOLD",
         "watch_only": true
       },
+      "AKT/USD": {
+        "approved_by_consensus": false,
+        "decision": "HOLD",
+        "execution_mode": "PAPER_ONLY",
+        "live_orders_enabled": false,
+        "reason_codes": [
+          "WATCH_ONLY_NO_CLOSED_CANDLE_SIGNAL"
+        ],
+        "strategy_signal": "HOLD",
+        "watch_only": true
+      },
       "ALGO/USD": {
         "approved_by_consensus": false,
         "decision": "HOLD",
@@ -411,6 +430,17 @@
         "watch_only": true
       },
       "ARB/USD": {
+        "approved_by_consensus": false,
+        "decision": "HOLD",
+        "execution_mode": "PAPER_ONLY",
+        "live_orders_enabled": false,
+        "reason_codes": [
+          "WATCH_ONLY_NO_CLOSED_CANDLE_SIGNAL"
+        ],
+        "strategy_signal": "HOLD",
+        "watch_only": true
+      },
+      "ASTER/USD": {
         "approved_by_consensus": false,
         "decision": "HOLD",
         "execution_mode": "PAPER_ONLY",
@@ -805,17 +835,6 @@
         "strategy_signal": "HOLD",
         "watch_only": true
       },
-      "RENDER/USD": {
-        "approved_by_consensus": false,
-        "decision": "HOLD",
-        "execution_mode": "PAPER_ONLY",
-        "live_orders_enabled": false,
-        "reason_codes": [
-          "WATCH_ONLY_NO_CLOSED_CANDLE_SIGNAL"
-        ],
-        "strategy_signal": "HOLD",
-        "watch_only": true
-      },
       "RUNE/USD": {
         "approved_by_consensus": false,
         "decision": "HOLD",
@@ -872,6 +891,17 @@
         "watch_only": true
       },
       "TAO/USD": {
+        "approved_by_consensus": false,
+        "decision": "HOLD",
+        "execution_mode": "PAPER_ONLY",
+        "live_orders_enabled": false,
+        "reason_codes": [
+          "WATCH_ONLY_NO_CLOSED_CANDLE_SIGNAL"
+        ],
+        "strategy_signal": "HOLD",
+        "watch_only": true
+      },
+      "TEL/USD": {
         "approved_by_consensus": false,
         "decision": "HOLD",
         "execution_mode": "PAPER_ONLY",
