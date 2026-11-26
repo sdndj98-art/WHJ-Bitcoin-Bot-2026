@@ -43,7 +43,6 @@
           "PIEVERSE/USD",
           "PUMP/USD",
           "QNT/USD",
-          "RENDER/USD",
           "RUNE/USD",
           "SKY/USD",
           "SOFID/USD",
@@ -60,6 +59,7 @@
           "XAGUSD",
           "XAUT/USD",
           "XAUUSD",
+          "XCN/USD",
           "XDC/USD",
           "XDG/USD",
           "XLM/USD",
@@ -111,7 +111,6 @@
           "PIEVERSE/USD",
           "PUMP/USD",
           "QNT/USD",
-          "RENDER/USD",
           "RUNE/USD",
           "SKY/USD",
           "SOFID/USD",
@@ -127,6 +126,7 @@
           "WLD/USD",
           "XAGUSD",
           "XAUT/USD",
+          "XCN/USD",
           "XDC/USD",
           "XDG/USD",
           "XLM/USD",
@@ -178,7 +178,6 @@
           "PIEVERSE/USD",
           "PUMP/USD",
           "QNT/USD",
-          "RENDER/USD",
           "RUNE/USD",
           "SKY/USD",
           "SOFID/USD",
@@ -194,6 +193,7 @@
           "WLD/USD",
           "XAGUSD",
           "XAUT/USD",
+          "XCN/USD",
           "XDC/USD",
           "XDG/USD",
           "XLM/USD",
@@ -255,23 +255,23 @@
     {
       "detail": "Equity is read from the single shared paper wallet when available.",
       "metrics": {
-        "closed_trades": 176,
-        "equity_usd": 99.2087,
+        "closed_trades": 177,
+        "equity_usd": 99.4362,
         "initial_equity_usd": 100.0,
-        "pnl_usd": -0.7913,
-        "return_pct": -0.7913,
+        "pnl_usd": -0.5638,
+        "return_pct": -0.5638,
         "shared_wallet": true
       },
       "name": "EQUITY",
       "status": "TRACKING"
     }
   ],
-  "generated_at_utc": "2026-11-26T08:05:21.447061+00:00",
+  "generated_at_utc": "2026-11-26T09:15:09.656983+00:00",
   "live_trading_enabled": false,
   "mode": "PAPER_ONLY",
   "portfolio_status": "PAPER_RUNNING",
   "schema_version": 2,
-  "source_updated_at": "2026-11-26T08:05:20.943751+00:00",
+  "source_updated_at": "2026-11-26T09:15:09.171274+00:00",
   "summary": {
     "agent_count": 6,
     "markets": [
@@ -315,7 +315,6 @@
       "PIEVERSE/USD",
       "PUMP/USD",
       "QNT/USD",
-      "RENDER/USD",
       "RUNE/USD",
       "SKY/USD",
       "SOFID/USD",
@@ -331,6 +330,7 @@
       "WLD/USD",
       "XAGUSD",
       "XAUT/USD",
+      "XCN/USD",
       "XDC/USD",
       "XDG/USD",
       "XLM/USD",
@@ -794,17 +794,6 @@
         "strategy_signal": "HOLD",
         "watch_only": true
       },
-      "RENDER/USD": {
-        "approved_by_consensus": false,
-        "decision": "HOLD",
-        "execution_mode": "PAPER_ONLY",
-        "live_orders_enabled": false,
-        "reason_codes": [
-          "WATCH_ONLY_NO_CLOSED_CANDLE_SIGNAL"
-        ],
-        "strategy_signal": "HOLD",
-        "watch_only": true
-      },
       "RUNE/USD": {
         "approved_by_consensus": false,
         "decision": "HOLD",
@@ -981,6 +970,17 @@
           "POSITION_SIZE_INVALID"
         ],
         "strategy_signal": "HOLD"
+      },
+      "XCN/USD": {
+        "approved_by_consensus": false,
+        "decision": "HOLD",
+        "execution_mode": "PAPER_ONLY",
+        "live_orders_enabled": false,
+        "reason_codes": [
+          "WATCH_ONLY_NO_CLOSED_CANDLE_SIGNAL"
+        ],
+        "strategy_signal": "HOLD",
+        "watch_only": true
       },
       "XDC/USD": {
         "approved_by_consensus": false,
