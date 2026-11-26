@@ -1,28 +1,7 @@
 {
-  "cycle": 58,
-  "last_role_index": 1,
+  "cycle": 59,
+  "last_role_index": 2,
   "history": [
-    {
-      "cycle": 9,
-      "timestamp_utc": "2026-11-22T15:05:33+00:00",
-      "current_owner": "Market-data QA",
-      "current_task": "check source freshness and candle integrity",
-      "handoff_to": "Strategy QA",
-      "handoff_task": "review paper strategy gates and signal sanity",
-      "paper_engine_bridge": {
-        "status": "CONNECTED",
-        "generated_at_utc": "2026-11-22T14:17:15+00:00",
-        "paper_status": "PAPER_RUNNING",
-        "agent_count": 6,
-        "markets_scanned": 64,
-        "open_positions": 17,
-        "closed_trades": 33,
-        "equity_usd": 100.4481,
-        "live_trading_enabled": false,
-        "orders_submitted": false
-      },
-      "reminder": "Cycle 9: Market-data QA must hand off to Strategy QA before the next scheduled cycle."
-    },
     {
       "cycle": 10,
       "timestamp_utc": "2026-11-22T17:04:43+00:00",
@@ -1051,29 +1030,50 @@
         "orders_submitted": false
       },
       "reminder": "Cycle 58: Market-data QA must hand off to Strategy QA before the next scheduled cycle."
+    },
+    {
+      "cycle": 59,
+      "timestamp_utc": "2026-11-26T19:25:14+00:00",
+      "current_owner": "Strategy QA",
+      "current_task": "review paper strategy gates and signal sanity",
+      "handoff_to": "Paper-engine QA",
+      "handoff_task": "verify simulated entry/exit and ledger consistency",
+      "paper_engine_bridge": {
+        "status": "CONNECTED",
+        "generated_at_utc": "2026-11-26T17:44:43+00:00",
+        "paper_status": "PAPER_RUNNING",
+        "agent_count": 6,
+        "markets_scanned": 65,
+        "open_positions": 17,
+        "closed_trades": 189,
+        "equity_usd": 98.4203,
+        "live_trading_enabled": false,
+        "orders_submitted": false
+      },
+      "reminder": "Cycle 59: Strategy QA must hand off to Paper-engine QA before the next scheduled cycle."
     }
   ],
-  "updated_at_utc": "2026-11-26T17:25:11+00:00",
+  "updated_at_utc": "2026-11-26T19:25:14+00:00",
   "current_handoff": {
-    "cycle": 58,
-    "timestamp_utc": "2026-11-26T17:25:11+00:00",
-    "current_owner": "Market-data QA",
-    "current_task": "check source freshness and candle integrity",
-    "handoff_to": "Strategy QA",
-    "handoff_task": "review paper strategy gates and signal sanity",
+    "cycle": 59,
+    "timestamp_utc": "2026-11-26T19:25:14+00:00",
+    "current_owner": "Strategy QA",
+    "current_task": "review paper strategy gates and signal sanity",
+    "handoff_to": "Paper-engine QA",
+    "handoff_task": "verify simulated entry/exit and ledger consistency",
     "paper_engine_bridge": {
       "status": "CONNECTED",
-      "generated_at_utc": "2026-11-26T16:55:20+00:00",
+      "generated_at_utc": "2026-11-26T17:44:43+00:00",
       "paper_status": "PAPER_RUNNING",
       "agent_count": 6,
       "markets_scanned": 65,
       "open_positions": 17,
-      "closed_trades": 187,
-      "equity_usd": 98.4245,
+      "closed_trades": 189,
+      "equity_usd": 98.4203,
       "live_trading_enabled": false,
       "orders_submitted": false
     },
-    "reminder": "Cycle 58: Market-data QA must hand off to Strategy QA before the next scheduled cycle."
+    "reminder": "Cycle 59: Strategy QA must hand off to Paper-engine QA before the next scheduled cycle."
   },
   "mode": "coordination_only_paper_trading",
   "live_orders_enabled": false
