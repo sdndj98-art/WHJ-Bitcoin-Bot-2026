@@ -20,9 +20,9 @@
           "BNB/USD",
           "CC/USD",
           "CRV/USD",
+          "DASH/USD",
           "DRV/USD",
           "ENA/USD",
-          "ETC/USD",
           "ETH/USD",
           "FET/USD",
           "HBAR/USD",
@@ -37,7 +37,6 @@
           "MON/USD",
           "NEAR/USD",
           "NIGHT/USD",
-          "ONDO/USD",
           "PAXG/USD",
           "PEARL/USD",
           "PENGU/USD",
@@ -46,7 +45,7 @@
           "PUMP/USD",
           "QNT/USD",
           "REKT/USD",
-          "RUNE/USD",
+          "RENDER/USD",
           "SEI/USD",
           "SKY/USD",
           "SOL/USD",
@@ -90,9 +89,9 @@
           "BNB/USD",
           "CC/USD",
           "CRV/USD",
+          "DASH/USD",
           "DRV/USD",
           "ENA/USD",
-          "ETC/USD",
           "ETH/USD",
           "FET/USD",
           "HBAR/USD",
@@ -107,7 +106,6 @@
           "MON/USD",
           "NEAR/USD",
           "NIGHT/USD",
-          "ONDO/USD",
           "PAXG/USD",
           "PEARL/USD",
           "PENGU/USD",
@@ -116,7 +114,7 @@
           "PUMP/USD",
           "QNT/USD",
           "REKT/USD",
-          "RUNE/USD",
+          "RENDER/USD",
           "SEI/USD",
           "SKY/USD",
           "SOL/USD",
@@ -159,9 +157,9 @@
           "BNB/USD",
           "CC/USD",
           "CRV/USD",
+          "DASH/USD",
           "DRV/USD",
           "ENA/USD",
-          "ETC/USD",
           "ETH/USD",
           "FET/USD",
           "HBAR/USD",
@@ -176,7 +174,6 @@
           "MON/USD",
           "NEAR/USD",
           "NIGHT/USD",
-          "ONDO/USD",
           "PAXG/USD",
           "PEARL/USD",
           "PENGU/USD",
@@ -185,7 +182,7 @@
           "PUMP/USD",
           "QNT/USD",
           "REKT/USD",
-          "RUNE/USD",
+          "RENDER/USD",
           "SEI/USD",
           "SKY/USD",
           "SOL/USD",
@@ -262,22 +259,22 @@
       "detail": "Equity is read from the single shared paper wallet when available.",
       "metrics": {
         "closed_trades": 191,
-        "equity_usd": 98.5182,
+        "equity_usd": 98.4056,
         "initial_equity_usd": 100.0,
-        "pnl_usd": -1.4818,
-        "return_pct": -1.4818,
+        "pnl_usd": -1.5944,
+        "return_pct": -1.5944,
         "shared_wallet": true
       },
       "name": "EQUITY",
       "status": "TRACKING"
     }
   ],
-  "generated_at_utc": "2026-11-26T19:44:48.677336+00:00",
+  "generated_at_utc": "2026-11-26T20:34:29.265570+00:00",
   "live_trading_enabled": false,
   "mode": "PAPER_ONLY",
   "portfolio_status": "PAPER_RUNNING",
   "schema_version": 2,
-  "source_updated_at": "2026-11-26T19:44:48.082591+00:00",
+  "source_updated_at": "2026-11-26T20:34:28.755463+00:00",
   "summary": {
     "agent_count": 6,
     "markets": [
@@ -298,9 +295,9 @@
       "BNB/USD",
       "CC/USD",
       "CRV/USD",
+      "DASH/USD",
       "DRV/USD",
       "ENA/USD",
-      "ETC/USD",
       "ETH/USD",
       "FET/USD",
       "HBAR/USD",
@@ -315,7 +312,6 @@
       "MON/USD",
       "NEAR/USD",
       "NIGHT/USD",
-      "ONDO/USD",
       "PAXG/USD",
       "PEARL/USD",
       "PENGU/USD",
@@ -324,7 +320,7 @@
       "PUMP/USD",
       "QNT/USD",
       "REKT/USD",
-      "RUNE/USD",
+      "RENDER/USD",
       "SEI/USD",
       "SKY/USD",
       "SOL/USD",
@@ -549,6 +545,17 @@
         "strategy_signal": "HOLD",
         "watch_only": true
       },
+      "DASH/USD": {
+        "approved_by_consensus": false,
+        "decision": "HOLD",
+        "execution_mode": "PAPER_ONLY",
+        "live_orders_enabled": false,
+        "reason_codes": [
+          "WATCH_ONLY_NO_CLOSED_CANDLE_SIGNAL"
+        ],
+        "strategy_signal": "HOLD",
+        "watch_only": true
+      },
       "DRV/USD": {
         "approved_by_consensus": false,
         "decision": "HOLD",
@@ -561,17 +568,6 @@
         "watch_only": true
       },
       "ENA/USD": {
-        "approved_by_consensus": false,
-        "decision": "HOLD",
-        "execution_mode": "PAPER_ONLY",
-        "live_orders_enabled": false,
-        "reason_codes": [
-          "WATCH_ONLY_NO_CLOSED_CANDLE_SIGNAL"
-        ],
-        "strategy_signal": "HOLD",
-        "watch_only": true
-      },
-      "ETC/USD": {
         "approved_by_consensus": false,
         "decision": "HOLD",
         "execution_mode": "PAPER_ONLY",
@@ -736,17 +732,6 @@
         "strategy_signal": "HOLD",
         "watch_only": true
       },
-      "ONDO/USD": {
-        "approved_by_consensus": false,
-        "decision": "HOLD",
-        "execution_mode": "PAPER_ONLY",
-        "live_orders_enabled": false,
-        "reason_codes": [
-          "WATCH_ONLY_NO_CLOSED_CANDLE_SIGNAL"
-        ],
-        "strategy_signal": "HOLD",
-        "watch_only": true
-      },
       "PAXG/USD": {
         "approved_by_consensus": false,
         "decision": "HOLD",
@@ -835,7 +820,7 @@
         "strategy_signal": "HOLD",
         "watch_only": true
       },
-      "RUNE/USD": {
+      "RENDER/USD": {
         "approved_by_consensus": false,
         "decision": "HOLD",
         "execution_mode": "PAPER_ONLY",
