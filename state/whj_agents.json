@@ -26,6 +26,7 @@
           "HYPE/USD",
           "ICP/USD",
           "INJ/USD",
+          "JUP/USD",
           "LIGHTER/USD",
           "LINK/USD",
           "LTC/USD",
@@ -93,6 +94,7 @@
           "HYPE/USD",
           "ICP/USD",
           "INJ/USD",
+          "JUP/USD",
           "LIGHTER/USD",
           "LINK/USD",
           "LTC/USD",
@@ -159,6 +161,7 @@
           "HYPE/USD",
           "ICP/USD",
           "INJ/USD",
+          "JUP/USD",
           "LIGHTER/USD",
           "LINK/USD",
           "LTC/USD",
@@ -253,22 +256,22 @@
       "detail": "Equity is read from the single shared paper wallet when available.",
       "metrics": {
         "closed_trades": 173,
-        "equity_usd": 99.4793,
+        "equity_usd": 99.2356,
         "initial_equity_usd": 100.0,
-        "pnl_usd": -0.5207,
-        "return_pct": -0.5207,
+        "pnl_usd": -0.7644,
+        "return_pct": -0.7644,
         "shared_wallet": true
       },
       "name": "EQUITY",
       "status": "TRACKING"
     }
   ],
-  "generated_at_utc": "2026-11-26T02:33:33.690106+00:00",
+  "generated_at_utc": "2026-11-26T03:39:09.837143+00:00",
   "live_trading_enabled": false,
   "mode": "PAPER_ONLY",
   "portfolio_status": "PAPER_RUNNING",
   "schema_version": 2,
-  "source_updated_at": "2026-11-26T02:33:33.367119+00:00",
+  "source_updated_at": "2026-11-26T03:39:08.960749+00:00",
   "summary": {
     "agent_count": 6,
     "markets": [
@@ -295,6 +298,7 @@
       "HYPE/USD",
       "ICP/USD",
       "INJ/USD",
+      "JUP/USD",
       "LIGHTER/USD",
       "LINK/USD",
       "LTC/USD",
@@ -593,6 +597,17 @@
         "watch_only": true
       },
       "INJ/USD": {
+        "approved_by_consensus": false,
+        "decision": "HOLD",
+        "execution_mode": "PAPER_ONLY",
+        "live_orders_enabled": false,
+        "reason_codes": [
+          "WATCH_ONLY_NO_CLOSED_CANDLE_SIGNAL"
+        ],
+        "strategy_signal": "HOLD",
+        "watch_only": true
+      },
+      "JUP/USD": {
         "approved_by_consensus": false,
         "decision": "HOLD",
         "execution_mode": "PAPER_ONLY",
