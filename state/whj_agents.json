@@ -44,7 +44,6 @@
           "QNT/USD",
           "RENDER/USD",
           "RUNE/USD",
-          "SKY/USD",
           "SOFID/USD",
           "SOL/USD",
           "SUI/USD",
@@ -112,7 +111,6 @@
           "QNT/USD",
           "RENDER/USD",
           "RUNE/USD",
-          "SKY/USD",
           "SOFID/USD",
           "SOL/USD",
           "SUI/USD",
@@ -179,7 +177,6 @@
           "QNT/USD",
           "RENDER/USD",
           "RUNE/USD",
-          "SKY/USD",
           "SOFID/USD",
           "SOL/USD",
           "SUI/USD",
@@ -256,22 +253,22 @@
       "detail": "Equity is read from the single shared paper wallet when available.",
       "metrics": {
         "closed_trades": 173,
-        "equity_usd": 99.2356,
+        "equity_usd": 99.3282,
         "initial_equity_usd": 100.0,
-        "pnl_usd": -0.7644,
-        "return_pct": -0.7644,
+        "pnl_usd": -0.6718,
+        "return_pct": -0.6718,
         "shared_wallet": true
       },
       "name": "EQUITY",
       "status": "TRACKING"
     }
   ],
-  "generated_at_utc": "2026-11-26T03:39:09.837143+00:00",
+  "generated_at_utc": "2026-11-26T04:44:35.507489+00:00",
   "live_trading_enabled": false,
   "mode": "PAPER_ONLY",
   "portfolio_status": "PAPER_RUNNING",
   "schema_version": 2,
-  "source_updated_at": "2026-11-26T03:39:08.960749+00:00",
+  "source_updated_at": "2026-11-26T04:44:35.147771+00:00",
   "summary": {
     "agent_count": 6,
     "markets": [
@@ -316,7 +313,6 @@
       "QNT/USD",
       "RENDER/USD",
       "RUNE/USD",
-      "SKY/USD",
       "SOFID/USD",
       "SOL/USD",
       "SUI/USD",
@@ -795,17 +791,6 @@
         "watch_only": true
       },
       "RUNE/USD": {
-        "approved_by_consensus": false,
-        "decision": "HOLD",
-        "execution_mode": "PAPER_ONLY",
-        "live_orders_enabled": false,
-        "reason_codes": [
-          "WATCH_ONLY_NO_CLOSED_CANDLE_SIGNAL"
-        ],
-        "strategy_signal": "HOLD",
-        "watch_only": true
-      },
-      "SKY/USD": {
         "approved_by_consensus": false,
         "decision": "HOLD",
         "execution_mode": "PAPER_ONLY",
