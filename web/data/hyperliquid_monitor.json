@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "generated_at_utc": "2026-11-26T18:34:44.144191+00:00",
+  "generated_at_utc": "2026-11-26T19:43:44.586467+00:00",
   "source": "Hyperliquid public Info API",
   "mode": "READ_ONLY_PAPER_ONLY",
   "status": "healthy",
@@ -11,25 +11,25 @@
   "wallet_ranking": "NOT_AVAILABLE_FROM_THIS_PUBLIC_INFO_QUERY",
   "markets": {
     "BTC": {
-      "mark_price": 60603.0,
-      "oracle_price": 60633.8,
-      "funding": 2.0624e-06,
-      "open_interest": 35466.0930599999,
-      "volume_24h": 2401923492.31363
+      "mark_price": 60658.0,
+      "oracle_price": 60690.0,
+      "funding": -9.576e-07,
+      "open_interest": 35181.84958,
+      "volume_24h": 2223607236.290466
     },
     "ETH": {
-      "mark_price": 1699.0,
-      "oracle_price": 1699.89,
-      "funding": -3.6089e-06,
-      "open_interest": 664525.2919999999,
-      "volume_24h": 503895081.44666994
+      "mark_price": 1705.2,
+      "oracle_price": 1706.0,
+      "funding": 2.1503e-06,
+      "open_interest": 663188.5086000005,
+      "volume_24h": 465881554.4277596
     },
     "ATOM": {
-      "mark_price": 1.2072,
-      "oracle_price": 1.209,
-      "funding": -2.16695e-05,
-      "open_interest": 2743673.6599999997,
-      "volume_24h": 542103.0988159998
+      "mark_price": 1.2145,
+      "oracle_price": 1.216,
+      "funding": -1.72019e-05,
+      "open_interest": 2741680.62,
+      "volume_24h": 535163.7278909999
     },
     "MATIC": {
       "mark_price": 0.37621,
@@ -39,116 +39,116 @@
       "volume_24h": 0.0
     },
     "DYDX": {
-      "mark_price": 0.07058,
-      "oracle_price": 0.07065,
+      "mark_price": 0.07109,
+      "oracle_price": 0.07115,
       "funding": 1.25e-05,
-      "open_interest": 15120569.4,
-      "volume_24h": 77088.257323
+      "open_interest": 15124982.799999999,
+      "volume_24h": 70426.842803
     },
     "SOL": {
-      "mark_price": 71.25,
-      "oracle_price": 71.285,
-      "funding": -1.125e-07,
-      "open_interest": 4095011.800000001,
-      "volume_24h": 131368935.64420006
+      "mark_price": 71.371,
+      "oracle_price": 71.405,
+      "funding": 1.17358e-05,
+      "open_interest": 4087607.3199999984,
+      "volume_24h": 118121968.38024999
     },
     "AVAX": {
-      "mark_price": 6.642,
-      "oracle_price": 6.646,
-      "funding": -2.1468e-06,
-      "open_interest": 1708866.4,
-      "volume_24h": 1475294.3571810003
+      "mark_price": 6.664,
+      "oracle_price": 6.669,
+      "funding": 4.4972e-06,
+      "open_interest": 1704903.6,
+      "volume_24h": 1309916.4912290007
     },
     "BNB": {
-      "mark_price": 553.42,
-      "oracle_price": 553.701,
-      "funding": 5.6984e-06,
-      "open_interest": 36666.532,
-      "volume_24h": 4924027.908659998
+      "mark_price": 554.55,
+      "oracle_price": 554.79,
+      "funding": 1.25e-05,
+      "open_interest": 36713.836,
+      "volume_24h": 4818834.517830001
     },
     "APE": {
-      "mark_price": 0.07298,
-      "oracle_price": 0.07305,
+      "mark_price": 0.07309,
+      "oracle_price": 0.07316,
       "funding": 1.25e-05,
-      "open_interest": 7519708.0,
-      "volume_24h": 111264.050472
+      "open_interest": 7507228.6,
+      "volume_24h": 106203.16565
     },
     "OP": {
-      "mark_price": 0.0699,
-      "oracle_price": 0.06995,
-      "funding": 2.8874e-06,
-      "open_interest": 18417611.200000003,
-      "volume_24h": 230065.183596
+      "mark_price": 0.07035,
+      "oracle_price": 0.07042,
+      "funding": -2.32105e-05,
+      "open_interest": 18446358.599999998,
+      "volume_24h": 225109.2756540001
     },
     "LTC": {
-      "mark_price": 43.405,
-      "oracle_price": 43.4288,
-      "funding": 8.9577e-06,
-      "open_interest": 332295.1799999999,
-      "volume_24h": 3906248.659160001
+      "mark_price": 43.514,
+      "oracle_price": 43.545,
+      "funding": -1.626e-07,
+      "open_interest": 335820.8799999999,
+      "volume_24h": 3771199.2069900013
     },
     "ARB": {
-      "mark_price": 0.11369,
-      "oracle_price": 0.11375,
-      "funding": -3.00158e-05,
-      "open_interest": 68947233.8,
-      "volume_24h": 1978790.7109100006
+      "mark_price": 0.11406,
+      "oracle_price": 0.11415,
+      "funding": -2.01466e-05,
+      "open_interest": 68933566.4,
+      "volume_24h": 1913751.1634439998
     },
     "DOGE": {
-      "mark_price": 0.057055,
-      "oracle_price": 0.057085,
-      "funding": 3.6961e-06,
-      "open_interest": 408485914.0,
-      "volume_24h": 3744781.6737380004
+      "mark_price": 0.05708,
+      "oracle_price": 0.05711,
+      "funding": 1.14115e-05,
+      "open_interest": 408633870.0,
+      "volume_24h": 3497315.194465
     },
     "INJ": {
-      "mark_price": 6.179,
-      "oracle_price": 6.184,
-      "funding": -8.9035e-06,
-      "open_interest": 725482.2,
-      "volume_24h": 2162843.09569
+      "mark_price": 6.28,
+      "oracle_price": 6.284,
+      "funding": 1.25e-05,
+      "open_interest": 719917.6000000001,
+      "volume_24h": 2086590.15828
     },
     "SUI": {
-      "mark_price": 0.66955,
-      "oracle_price": 0.66995,
-      "funding": 1.06184e-05,
-      "open_interest": 24563483.999999996,
-      "volume_24h": 3752282.5018120008
+      "mark_price": 0.6742,
+      "oracle_price": 0.67455,
+      "funding": 5.046e-06,
+      "open_interest": 24307050.599999998,
+      "volume_24h": 3611570.0504310005
     },
     "kPEPE": {
-      "mark_price": 0.003523,
-      "oracle_price": 0.003525,
+      "mark_price": 0.003533,
+      "oracle_price": 0.003535,
       "funding": 1.25e-05,
-      "open_interest": 4230878664.0,
-      "volume_24h": 9075234.566447
+      "open_interest": 4111343260.0,
+      "volume_24h": 8757500.699659
     },
     "CRV": {
-      "mark_price": 0.17907,
-      "oracle_price": 0.17926,
-      "funding": -3.97428e-05,
-      "open_interest": 30638162.4,
-      "volume_24h": 2618392.576647001
+      "mark_price": 0.17856,
+      "oracle_price": 0.1788,
+      "funding": -3.31068e-05,
+      "open_interest": 30432721.6,
+      "volume_24h": 2520280.235383001
     },
     "LDO": {
-      "mark_price": 0.23738,
-      "oracle_price": 0.23765,
-      "funding": 6.4709e-06,
-      "open_interest": 21943183.0,
-      "volume_24h": 255554.863694
+      "mark_price": 0.23716,
+      "oracle_price": 0.2374,
+      "funding": -8.251e-06,
+      "open_interest": 21936408.000000004,
+      "volume_24h": 226767.242327
     },
     "LINK": {
-      "mark_price": 9.2604,
-      "oracle_price": 9.2661,
-      "funding": 2.2952e-06,
-      "open_interest": 3372890.0000000005,
-      "volume_24h": 5087680.794379999
+      "mark_price": 9.2737,
+      "oracle_price": 9.27802,
+      "funding": 1.25e-05,
+      "open_interest": 3372419.7999999993,
+      "volume_24h": 3770911.582489999
     },
     "STX": {
-      "mark_price": 0.26133,
-      "oracle_price": 0.26155,
+      "mark_price": 0.26049,
+      "oracle_price": 0.2607,
       "funding": 1.25e-05,
-      "open_interest": 4218839.0,
-      "volume_24h": 316519.5609100002
+      "open_interest": 4215347.399999999,
+      "volume_24h": 309469.0900240002
     },
     "RNDR": {
       "mark_price": 6.8952,
@@ -158,11 +158,11 @@
       "volume_24h": 0.0
     },
     "CFX": {
-      "mark_price": 0.034023,
-      "oracle_price": 0.034055,
+      "mark_price": 0.033775,
+      "oracle_price": 0.03379,
       "funding": 1.25e-05,
-      "open_interest": 37009460.0,
-      "volume_24h": 113481.7439419999
+      "open_interest": 37313412.0,
+      "volume_24h": 117246.884255
     },
     "FTM": {
       "mark_price": 0.71688,
@@ -172,53 +172,53 @@
       "volume_24h": 0.0
     },
     "GMX": {
-      "mark_price": 8.058,
-      "oracle_price": 8.0685,
+      "mark_price": 8.0636,
+      "oracle_price": 8.0735,
       "funding": 1.25e-05,
-      "open_interest": 90615.62,
-      "volume_24h": 116350.9032129999
+      "open_interest": 90589.88,
+      "volume_24h": 111284.2162289999
     },
     "SNX": {
-      "mark_price": 0.14526,
-      "oracle_price": 0.14545,
+      "mark_price": 0.14581,
+      "oracle_price": 0.1459,
       "funding": 1.25e-05,
-      "open_interest": 3017586.1999999997,
-      "volume_24h": 76083.803592
+      "open_interest": 3015647.0,
+      "volume_24h": 75900.95073
     },
     "XRP": {
-      "mark_price": 0.9548,
-      "oracle_price": 0.95525,
-      "funding": 6.564e-06,
-      "open_interest": 67053778.0,
-      "volume_24h": 37235945.905970015
+      "mark_price": 0.95362,
+      "oracle_price": 0.95406,
+      "funding": 1.25e-05,
+      "open_interest": 66834244.0,
+      "volume_24h": 31265480.87566
     },
     "BCH": {
-      "mark_price": 209.15,
-      "oracle_price": 209.29,
-      "funding": 2.1359e-06,
-      "open_interest": 17470.59,
-      "volume_24h": 776171.45563
+      "mark_price": 209.16,
+      "oracle_price": 209.283,
+      "funding": 2.7298e-06,
+      "open_interest": 17303.826,
+      "volume_24h": 671349.7021099996
     },
     "APT": {
-      "mark_price": 0.389,
-      "oracle_price": 0.3893,
-      "funding": 6.8348e-06,
-      "open_interest": 5706222.079999999,
-      "volume_24h": 771376.6945340001
+      "mark_price": 0.3887,
+      "oracle_price": 0.389,
+      "funding": 1.25e-05,
+      "open_interest": 5629158.12,
+      "volume_24h": 807881.58095
     },
     "AAVE": {
-      "mark_price": 93.678,
-      "oracle_price": 93.755,
-      "funding": -2.50094e-05,
-      "open_interest": 397216.86,
-      "volume_24h": 9431780.686599998
+      "mark_price": 94.78,
+      "oracle_price": 94.82,
+      "funding": 1.25e-05,
+      "open_interest": 381418.92,
+      "volume_24h": 11656841.948620003
     },
     "COMP": {
-      "mark_price": 17.935,
-      "oracle_price": 17.965,
-      "funding": 1.25e-05,
-      "open_interest": 29907.5,
-      "volume_24h": 89162.4877299999
+      "mark_price": 17.941,
+      "oracle_price": 17.985,
+      "funding": 1.01673e-05,
+      "open_interest": 29906.9,
+      "volume_24h": 86141.4884
     },
     "MKR": {
       "mark_price": 1831.5,
@@ -228,11 +228,11 @@
       "volume_24h": 0.0
     },
     "WLD": {
-      "mark_price": 0.24403,
-      "oracle_price": 0.24423,
-      "funding": -8.3359e-06,
-      "open_interest": 78345708.19999997,
-      "volume_24h": 3128870.9269989994
+      "mark_price": 0.24367,
+      "oracle_price": 0.24385,
+      "funding": -1.29185e-05,
+      "open_interest": 78328100.0,
+      "volume_24h": 3108678.8006330007
     },
     "FXS": {
       "mark_price": 0.65538,
@@ -263,46 +263,46 @@
       "volume_24h": 0.0
     },
     "YGG": {
-      "mark_price": 0.020311,
-      "oracle_price": 0.020325,
+      "mark_price": 0.020299,
+      "oracle_price": 0.02031,
       "funding": 1.25e-05,
-      "open_interest": 15774570.0,
-      "volume_24h": 76754.178206
+      "open_interest": 15711048.0,
+      "volume_24h": 75370.834551
     },
     "TRX": {
-      "mark_price": 0.30312,
-      "oracle_price": 0.30345,
-      "funding": -5.14328e-05,
-      "open_interest": 29795604.0,
-      "volume_24h": 2224645.5834399993
+      "mark_price": 0.30325,
+      "oracle_price": 0.30351,
+      "funding": -3.66466e-05,
+      "open_interest": 29803934.0,
+      "volume_24h": 2147581.8310299995
     },
     "kSHIB": {
-      "mark_price": 0.003661,
-      "oracle_price": 0.003663,
+      "mark_price": 0.003659,
+      "oracle_price": 0.00366,
       "funding": 1.25e-05,
-      "open_interest": 770090404.0,
-      "volume_24h": 1762822.3598089996
+      "open_interest": 758656140.0,
+      "volume_24h": 1727553.0062199996
     },
     "UNI": {
-      "mark_price": 4.643,
-      "oracle_price": 4.646,
-      "funding": 3.055e-07,
-      "open_interest": 4758288.199999999,
-      "volume_24h": 5773882.096189997
+      "mark_price": 4.6824,
+      "oracle_price": 4.68561,
+      "funding": -9.2055e-06,
+      "open_interest": 4739112.400000001,
+      "volume_24h": 5645275.851059999
     },
     "SEI": {
-      "mark_price": 0.040672,
-      "oracle_price": 0.040757,
-      "funding": -0.0001039306,
-      "open_interest": 47646790.0,
-      "volume_24h": 1197843.397647001
+      "mark_price": 0.040209,
+      "oracle_price": 0.040255,
+      "funding": -6.60776e-05,
+      "open_interest": 51072742.0,
+      "volume_24h": 1481383.7269719997
     },
     "RUNE": {
-      "mark_price": 0.56165,
-      "oracle_price": 0.56372,
-      "funding": -6.42463e-05,
-      "open_interest": 4081830.5999999996,
-      "volume_24h": 856725.9490749999
+      "mark_price": 0.5563,
+      "oracle_price": 0.5578,
+      "funding": -0.0001198935,
+      "open_interest": 4082121.4,
+      "volume_24h": 858136.5293500002
     },
     "OX": {
       "mark_price": 0.007459,
@@ -333,11 +333,11 @@
       "volume_24h": 0.0
     },
     "ZRO": {
-      "mark_price": 1.087,
-      "oracle_price": 1.08755,
+      "mark_price": 1.1137,
+      "oracle_price": 1.114,
       "funding": 1.25e-05,
-      "open_interest": 33513199.200000018,
-      "volume_24h": 8460354.705184994
+      "open_interest": 34174553.0,
+      "volume_24h": 8467380.16786
     },
     "BLZ": {
       "mark_price": 0.070043,
@@ -347,25 +347,25 @@
       "volume_24h": 0.0
     },
     "DOT": {
-      "mark_price": 0.67551,
-      "oracle_price": 0.67612,
-      "funding": -1.90094e-05,
-      "open_interest": 9850911.799999997,
-      "volume_24h": 1833441.9494480002
+      "mark_price": 0.67575,
+      "oracle_price": 0.67635,
+      "funding": -1.98089e-05,
+      "open_interest": 9850254.399999999,
+      "volume_24h": 1724852.4273919994
     },
     "BANANA": {
-      "mark_price": 2.499,
-      "oracle_price": 2.5045,
+      "mark_price": 2.4967,
+      "oracle_price": 2.5,
       "funding": 1.25e-05,
-      "open_interest": 36435.2,
-      "volume_24h": 49953.79945
+      "open_interest": 36185.4,
+      "volume_24h": 49928.80603
     },
     "TRB": {
-      "mark_price": 13.215,
-      "oracle_price": 13.225,
+      "mark_price": 13.2785,
+      "oracle_price": 13.295,
       "funding": 1.25e-05,
-      "open_interest": 24797.56,
-      "volume_24h": 66687.3812
+      "open_interest": 24969.02,
+      "volume_24h": 67549.14086
     },
     "FTT": {
       "mark_price": 0.32243,
@@ -424,18 +424,18 @@
       "volume_24h": 0.0
     },
     "BIGTIME": {
-      "mark_price": 0.005612,
-      "oracle_price": 0.005666,
-      "funding": -0.0010159627,
-      "open_interest": 140057692.0,
-      "volume_24h": 3020538.188868999
+      "mark_price": 0.005627,
+      "oracle_price": 0.00569,
+      "funding": -0.0010560428,
+      "open_interest": 132861576.0,
+      "volume_24h": 2817265.867112
     },
     "KAS": {
-      "mark_price": 0.026643,
-      "oracle_price": 0.026658,
+      "mark_price": 0.02665,
+      "oracle_price": 0.026668,
       "funding": 1.25e-05,
-      "open_interest": 33020896.0,
-      "volume_24h": 236698.5908840001
+      "open_interest": 33046886.0,
+      "volume_24h": 213245.5511220001
     },
     "ORBS": {
       "mark_price": 0.01939,
@@ -445,32 +445,32 @@
       "volume_24h": 0.0
     },
     "BLUR": {
-      "mark_price": 0.009793,
-      "oracle_price": 0.009813,
-      "funding": -2.92219e-05,
-      "open_interest": 202395944.0,
-      "volume_24h": 1382828.3585159997
+      "mark_price": 0.009897,
+      "oracle_price": 0.009913,
+      "funding": -2.8821e-06,
+      "open_interest": 202010498.0,
+      "volume_24h": 1216187.0819480007
     },
     "TIA": {
-      "mark_price": 0.34455,
-      "oracle_price": 0.34494,
+      "mark_price": 0.34336,
+      "oracle_price": 0.3437,
       "funding": 1.25e-05,
-      "open_interest": 11462661.2,
-      "volume_24h": 530145.5251419999
+      "open_interest": 11464209.0,
+      "volume_24h": 510445.1783020001
     },
     "BSV": {
-      "mark_price": 14.343,
-      "oracle_price": 14.365,
+      "mark_price": 14.354,
+      "oracle_price": 14.355,
       "funding": 1.25e-05,
-      "open_interest": 34905.88,
-      "volume_24h": 67005.79637
+      "open_interest": 34898.56,
+      "volume_24h": 65952.43053
     },
     "ADA": {
-      "mark_price": 0.15008,
-      "oracle_price": 0.1502,
-      "funding": -2.8943e-06,
-      "open_interest": 158160960.0,
-      "volume_24h": 5689817.612150003
+      "mark_price": 0.15061,
+      "oracle_price": 0.15075,
+      "funding": -1.50023e-05,
+      "open_interest": 158364428.0,
+      "volume_24h": 5259985.858350001
     },
     "TON": {
       "mark_price": 1.8014,
@@ -480,32 +480,32 @@
       "volume_24h": 0.0
     },
     "MINA": {
-      "mark_price": 0.042669,
-      "oracle_price": 0.04275,
+      "mark_price": 0.042731,
+      "oracle_price": 0.04285,
       "funding": 1.25e-05,
-      "open_interest": 22591038.0,
-      "volume_24h": 196252.956047
+      "open_interest": 22550676.0,
+      "volume_24h": 171545.126381
     },
     "POLYX": {
-      "mark_price": 0.026091,
-      "oracle_price": 0.026155,
-      "funding": -2.81446e-05,
-      "open_interest": 1050104.0,
-      "volume_24h": 91168.977282
+      "mark_price": 0.02617,
+      "oracle_price": 0.026233,
+      "funding": -2.6949e-05,
+      "open_interest": 1022862.0,
+      "volume_24h": 90319.533901
     },
     "GAS": {
-      "mark_price": 0.94554,
-      "oracle_price": 0.94683,
+      "mark_price": 0.94312,
+      "oracle_price": 0.94465,
       "funding": 1.25e-05,
-      "open_interest": 106960.8,
-      "volume_24h": 76434.778191
+      "open_interest": 106818.0,
+      "volume_24h": 74808.843322
     },
     "PENDLE": {
-      "mark_price": 1.2233,
-      "oracle_price": 1.2245,
+      "mark_price": 1.2223,
+      "oracle_price": 1.223189,
       "funding": 1.25e-05,
-      "open_interest": 4236472.0,
-      "volume_24h": 426497.2535999999
+      "open_interest": 4234560.0,
+      "volume_24h": 404316.2871
     },
     "STG": {
       "mark_price": 0.15387,
@@ -515,11 +515,11 @@
       "volume_24h": 0.0
     },
     "FET": {
-      "mark_price": 0.11898,
-      "oracle_price": 0.1189,
+      "mark_price": 0.12116,
+      "oracle_price": 0.1211,
       "funding": 1.25e-05,
-      "open_interest": 21181922.0,
-      "volume_24h": 1528223.4752600011
+      "open_interest": 21345074.0,
+      "volume_24h": 1733862.2279800007
     },
     "STRAX": {
       "mark_price": 1.5829,
@@ -529,25 +529,25 @@
       "volume_24h": 0.0
     },
     "NEAR": {
-      "mark_price": 3.0937,
-      "oracle_price": 3.0945,
+      "mark_price": 3.0796,
+      "oracle_price": 3.081,
       "funding": 1.25e-05,
-      "open_interest": 35139429.99999999,
-      "volume_24h": 54968238.24666
+      "open_interest": 35103558.8,
+      "volume_24h": 50733501.39130999
     },
     "MEME": {
       "mark_price": 0.000293,
-      "oracle_price": 0.000293,
+      "oracle_price": 0.000294,
       "funding": 1.25e-05,
-      "open_interest": 923395776.0,
-      "volume_24h": 87961.604267
+      "open_interest": 923483440.0,
+      "volume_24h": 81650.695258
     },
     "ORDI": {
-      "mark_price": 2.6467,
-      "oracle_price": 2.6502,
-      "funding": -5.574e-06,
-      "open_interest": 89096.64,
-      "volume_24h": 56678.550016
+      "mark_price": 2.6555,
+      "oracle_price": 2.6593,
+      "funding": 4.4345e-06,
+      "open_interest": 89727.5,
+      "volume_24h": 57017.520608
     },
     "BADGER": {
       "mark_price": 0.88823,
@@ -557,39 +557,39 @@
       "volume_24h": 0.0
     },
     "NEO": {
-      "mark_price": 1.5652,
-      "oracle_price": 1.5665,
+      "mark_price": 1.5671,
+      "oracle_price": 1.568,
       "funding": 1.25e-05,
-      "open_interest": 207281.4,
-      "volume_24h": 72140.407808
+      "open_interest": 207205.38,
+      "volume_24h": 71935.100945
     },
     "ZEN": {
-      "mark_price": 3.7649,
-      "oracle_price": 3.768,
+      "mark_price": 3.7823,
+      "oracle_price": 3.7849,
       "funding": 1.25e-05,
-      "open_interest": 64013.82,
-      "volume_24h": 66263.457562
+      "open_interest": 64179.76,
+      "volume_24h": 66061.668811
     },
     "FIL": {
-      "mark_price": 0.54974,
-      "oracle_price": 0.55,
+      "mark_price": 0.55013,
+      "oracle_price": 0.5505,
       "funding": 1.25e-05,
-      "open_interest": 4737935.0,
-      "volume_24h": 548730.50283
+      "open_interest": 4733398.8,
+      "volume_24h": 514190.862577
     },
     "PYTH": {
-      "mark_price": 0.048153,
-      "oracle_price": 0.048205,
+      "mark_price": 0.048182,
+      "oracle_price": 0.04823,
       "funding": 1.25e-05,
-      "open_interest": 33825968.0,
-      "volume_24h": 140378.805031
+      "open_interest": 33838396.0,
+      "volume_24h": 127781.345079
     },
     "SUSHI": {
-      "mark_price": 0.15355,
-      "oracle_price": 0.15375,
+      "mark_price": 0.15388,
+      "oracle_price": 0.15405,
       "funding": 1.25e-05,
-      "open_interest": 1332334.8,
-      "volume_24h": 95262.406037
+      "open_interest": 1318917.4,
+      "volume_24h": 88610.210017
     },
     "ILV": {
       "mark_price": 12.118,
@@ -599,32 +599,32 @@
       "volume_24h": 0.0
     },
     "IMX": {
-      "mark_price": 0.09292,
-      "oracle_price": 0.09312,
+      "mark_price": 0.09325,
+      "oracle_price": 0.09342,
       "funding": 1.25e-05,
-      "open_interest": 7278522.800000001,
-      "volume_24h": 63369.584761
+      "open_interest": 7285757.6,
+      "volume_24h": 64032.827335
     },
     "kBONK": {
-      "mark_price": 0.00222,
-      "oracle_price": 0.002221,
+      "mark_price": 0.002206,
+      "oracle_price": 0.002207,
       "funding": 1.25e-05,
-      "open_interest": 1317656196.0,
-      "volume_24h": 393019.5034959998
+      "open_interest": 1322745398.0,
+      "volume_24h": 392082.9368590001
     },
     "GMT": {
-      "mark_price": 0.005203,
-      "oracle_price": 0.005214,
-      "funding": 8.2652e-06,
-      "open_interest": 26629268.0,
-      "volume_24h": 56263.834929
+      "mark_price": 0.005191,
+      "oracle_price": 0.005204,
+      "funding": 1.25e-05,
+      "open_interest": 26532102.0,
+      "volume_24h": 55472.798696
     },
     "SUPER": {
-      "mark_price": 0.117167,
-      "oracle_price": 0.117275,
+      "mark_price": 0.11718,
+      "oracle_price": 0.11733,
       "funding": 1.25e-05,
-      "open_interest": 3311624.0,
-      "volume_24h": 175051.30802
+      "open_interest": 3312632.0,
+      "volume_24h": 170072.3592
     },
     "USTC": {
       "mark_price": 0.007534,
@@ -641,39 +641,39 @@
       "volume_24h": 0.0
     },
     "JUP": {
-      "mark_price": 0.23784,
-      "oracle_price": 0.2381,
-      "funding": -3.30724e-05,
-      "open_interest": 27365356.0,
-      "volume_24h": 2341980.9779200014
+      "mark_price": 0.23952,
+      "oracle_price": 0.239791,
+      "funding": -1.77321e-05,
+      "open_interest": 27319966.0,
+      "volume_24h": 2058537.84881
     },
     "kLUNC": {
-      "mark_price": 0.045493,
-      "oracle_price": 0.045553,
+      "mark_price": 0.045516,
+      "oracle_price": 0.045593,
       "funding": 1.25e-05,
-      "open_interest": 24351430.0,
-      "volume_24h": 569324.8409779998
+      "open_interest": 24565340.0,
+      "volume_24h": 576133.4288570002
     },
     "RSR": {
-      "mark_price": 0.001281,
-      "oracle_price": 0.001282,
+      "mark_price": 0.001276,
+      "oracle_price": 0.001277,
       "funding": 1.25e-05,
-      "open_interest": 232964286.0,
-      "volume_24h": 169532.6681300001
+      "open_interest": 234674670.0,
+      "volume_24h": 149716.501423
     },
     "GALA": {
-      "mark_price": 0.001361,
-      "oracle_price": 0.001364,
-      "funding": -3.31768e-05,
-      "open_interest": 221124802.0,
-      "volume_24h": 188339.5899920001
+      "mark_price": 0.001351,
+      "oracle_price": 0.001352,
+      "funding": 9.6563e-06,
+      "open_interest": 219735178.0,
+      "volume_24h": 182589.503682
     },
     "JTO": {
-      "mark_price": 0.234881,
-      "oracle_price": 0.235,
+      "mark_price": 0.234754,
+      "oracle_price": 0.23495,
       "funding": 1.25e-05,
-      "open_interest": 5062772.0,
-      "volume_24h": 307851.13991
+      "open_interest": 5065178.0,
+      "volume_24h": 280375.20197
     },
     "NTRN": {
       "mark_price": 0.1238,
@@ -683,11 +683,11 @@
       "volume_24h": 0.0
     },
     "ACE": {
-      "mark_price": 0.0711,
-      "oracle_price": 0.073,
-      "funding": -2.86286e-05,
-      "open_interest": 5403074.44,
-      "volume_24h": 33211.33831
+      "mark_price": 0.0715,
+      "oracle_price": 0.0733,
+      "funding": -0.000398408,
+      "open_interest": 5401615.84,
+      "volume_24h": 25972.123988
     },
     "MAV": {
       "mark_price": 0.015456,
@@ -697,88 +697,88 @@
       "volume_24h": 0.0
     },
     "WIF": {
-      "mark_price": 0.14015,
-      "oracle_price": 0.14035,
-      "funding": -2.22456e-05,
-      "open_interest": 15157986.0,
-      "volume_24h": 999481.99847
+      "mark_price": 0.140954,
+      "oracle_price": 0.14105,
+      "funding": 1.25e-05,
+      "open_interest": 14935064.0,
+      "volume_24h": 1137065.25024
     },
     "CAKE": {
-      "mark_price": 1.5705,
-      "oracle_price": 1.5715,
+      "mark_price": 1.5738,
+      "oracle_price": 1.57439,
       "funding": 1.25e-05,
-      "open_interest": 641158.8,
-      "volume_24h": 403820.01463
+      "open_interest": 641432.2000000001,
+      "volume_24h": 391533.93785
     },
     "PEOPLE": {
-      "mark_price": 0.004927,
-      "oracle_price": 0.00493,
+      "mark_price": 0.004912,
+      "oracle_price": 0.004915,
       "funding": 1.25e-05,
-      "open_interest": 24793492.0,
-      "volume_24h": 57318.020226
+      "open_interest": 24772340.0,
+      "volume_24h": 57054.873895
     },
     "ENS": {
-      "mark_price": 3.5333,
-      "oracle_price": 3.5409,
-      "funding": -6.71748e-05,
-      "open_interest": 163768.16,
-      "volume_24h": 102020.174378
+      "mark_price": 3.5388,
+      "oracle_price": 3.547,
+      "funding": -2.5021e-05,
+      "open_interest": 163761.46,
+      "volume_24h": 92176.965495
     },
     "ETC": {
-      "mark_price": 5.966,
-      "oracle_price": 5.968,
+      "mark_price": 5.9516,
+      "oracle_price": 5.954,
       "funding": 1.25e-05,
-      "open_interest": 256642.04,
-      "volume_24h": 198584.847143
+      "open_interest": 256991.66,
+      "volume_24h": 186934.161309
     },
     "XAI": {
-      "mark_price": 0.00534,
-      "oracle_price": 0.00536,
-      "funding": -1.74515e-05,
-      "open_interest": 30934567.0,
-      "volume_24h": 24412.727596
+      "mark_price": 0.00536,
+      "oracle_price": 0.00537,
+      "funding": -5.10625e-05,
+      "open_interest": 31008469.8,
+      "volume_24h": 25548.807785
     },
     "MANTA": {
-      "mark_price": 0.0363,
-      "oracle_price": 0.03633,
+      "mark_price": 0.03624,
+      "oracle_price": 0.03626,
       "funding": 1.25e-05,
-      "open_interest": 5450039.199999999,
-      "volume_24h": 70774.566213
+      "open_interest": 5453400.4,
+      "volume_24h": 70933.402098
     },
     "UMA": {
-      "mark_price": 0.23943,
-      "oracle_price": 0.23975,
+      "mark_price": 0.2397,
+      "oracle_price": 0.23995,
       "funding": 1.25e-05,
-      "open_interest": 409878.6,
-      "volume_24h": 42070.725681
+      "open_interest": 413835.6,
+      "volume_24h": 42864.284781
     },
     "ONDO": {
-      "mark_price": 0.28763,
-      "oracle_price": 0.28785,
-      "funding": 5.7105e-06,
-      "open_interest": 29127868.0,
-      "volume_24h": 1674424.7598200007
+      "mark_price": 0.28869,
+      "oracle_price": 0.28895,
+      "funding": -2.732e-07,
+      "open_interest": 29075070.0,
+      "volume_24h": 1567783.646570001
     },
     "ALT": {
-      "mark_price": 0.004408,
-      "oracle_price": 0.004414,
+      "mark_price": 0.004413,
+      "oracle_price": 0.004421,
       "funding": 1.25e-05,
-      "open_interest": 116828134.0,
-      "volume_24h": 86748.444243
+      "open_interest": 116756454.0,
+      "volume_24h": 83640.88585
     },
     "ZETA": {
-      "mark_price": 0.02857,
-      "oracle_price": 0.02861,
+      "mark_price": 0.02879,
+      "oracle_price": 0.02885,
       "funding": 1.25e-05,
-      "open_interest": 18442535.8,
-      "volume_24h": 190305.5126359999
+      "open_interest": 18492825.2,
+      "volume_24h": 190898.546135
     },
     "DYM": {
       "mark_price": 0.0115,
       "oracle_price": 0.01153,
       "funding": 1.25e-05,
-      "open_interest": 16643926.4,
-      "volume_24h": 92333.617213
+      "open_interest": 16683860.200000001,
+      "volume_24h": 91923.345318
     },
     "MAVIA": {
       "mark_price": 0.03725,
@@ -788,11 +788,11 @@
       "volume_24h": 0.0
     },
     "W": {
-      "mark_price": 0.00879,
-      "oracle_price": 0.00881,
-      "funding": -7.07297e-05,
-      "open_interest": 140965726.2,
-      "volume_24h": 341771.0995879998
+      "mark_price": 0.00881,
+      "oracle_price": 0.00882,
+      "funding": -6.76501e-05,
+      "open_interest": 141030427.4,
+      "volume_24h": 324075.5569559997
     },
     "PANDORA": {
       "mark_price": 3026.3,
@@ -802,11 +802,11 @@
       "volume_24h": 0.0
     },
     "STRK": {
-      "mark_price": 0.0307,
-      "oracle_price": 0.03072,
+      "mark_price": 0.0309,
+      "oracle_price": 0.03091,
       "funding": 1.25e-05,
-      "open_interest": 622316815.4000001,
-      "volume_24h": 815484.0410830001
+      "open_interest": 624562054.1999999,
+      "volume_24h": 716939.30668
     },
     "PIXEL": {
       "mark_price": 0.024027,
@@ -823,18 +823,18 @@
       "volume_24h": 0.0
     },
     "TAO": {
-      "mark_price": 183.34,
-      "oracle_price": 183.485,
-      "funding": 1.25e-05,
-      "open_interest": 96245.624,
-      "volume_24h": 2302715.097259999
+      "mark_price": 184.21,
+      "oracle_price": 184.375,
+      "funding": 3.9673e-06,
+      "open_interest": 96683.004,
+      "volume_24h": 2761111.0529200006
     },
     "AR": {
-      "mark_price": 2.2991,
-      "oracle_price": 2.3015,
+      "mark_price": 2.3068,
+      "oracle_price": 2.3085,
       "funding": 1.25e-05,
-      "open_interest": 207934.72,
-      "volume_24h": 130125.642157
+      "open_interest": 209458.52,
+      "volume_24h": 128488.7479190001
     },
     "MYRO": {
       "mark_price": 0.015813,
@@ -844,74 +844,74 @@
       "volume_24h": 0.0
     },
     "kFLOKI": {
-      "mark_price": 0.016741,
-      "oracle_price": 0.016755,
+      "mark_price": 0.016752,
+      "oracle_price": 0.016765,
       "funding": 1.25e-05,
-      "open_interest": 19463170.0,
-      "volume_24h": 53199.800591
+      "open_interest": 19532988.0,
+      "volume_24h": 54000.389582
     },
     "BOME": {
-      "mark_price": 0.000471,
-      "oracle_price": 0.000471,
+      "mark_price": 0.000472,
+      "oracle_price": 0.000473,
       "funding": 1.25e-05,
-      "open_interest": 425062686.0,
-      "volume_24h": 31829.397079
+      "open_interest": 425551950.0,
+      "volume_24h": 33072.822905
     },
     "ETHFI": {
-      "mark_price": 0.44459,
-      "oracle_price": 0.4449,
+      "mark_price": 0.44306,
+      "oracle_price": 0.44335,
       "funding": 1.25e-05,
-      "open_interest": 19547030.19999999,
-      "volume_24h": 1115414.5038279998
+      "open_interest": 19518038.200000014,
+      "volume_24h": 1092606.038151
     },
     "ENA": {
-      "mark_price": 0.1006,
-      "oracle_price": 0.100651,
+      "mark_price": 0.10172,
+      "oracle_price": 0.10174,
       "funding": 1.25e-05,
-      "open_interest": 310809678.0,
-      "volume_24h": 16209067.072598003
+      "open_interest": 309510210.0,
+      "volume_24h": 12741021.089648
     },
     "MNT": {
-      "mark_price": 0.38005,
-      "oracle_price": 0.38034,
+      "mark_price": 0.38075,
+      "oracle_price": 0.38107,
       "funding": 1.25e-05,
-      "open_interest": 3979560.4,
-      "volume_24h": 332531.6886869998
+      "open_interest": 3982147.0,
+      "volume_24h": 314318.565001
     },
     "TNSR": {
       "mark_price": 0.01928,
       "oracle_price": 0.01931,
       "funding": 1.25e-05,
-      "open_interest": 2528611.4,
-      "volume_24h": 11997.05648
+      "open_interest": 2592746.4,
+      "volume_24h": 11762.736466
     },
     "SAGA": {
-      "mark_price": 0.01481,
-      "oracle_price": 0.01482,
+      "mark_price": 0.01478,
+      "oracle_price": 0.01476,
       "funding": 1.25e-05,
-      "open_interest": 113025497.4,
-      "volume_24h": 600301.2423940004
+      "open_interest": 108725763.2,
+      "volume_24h": 778072.2239050001
     },
     "MERL": {
-      "mark_price": 0.026446,
-      "oracle_price": 0.026508,
-      "funding": -8.77323e-05,
-      "open_interest": 21124554.0,
-      "volume_24h": 119919.095839
+      "mark_price": 0.026717,
+      "oracle_price": 0.02677,
+      "funding": -5.25663e-05,
+      "open_interest": 21529752.0,
+      "volume_24h": 153991.78125
     },
     "HBAR": {
-      "mark_price": 0.054644,
-      "oracle_price": 0.054665,
+      "mark_price": 0.054674,
+      "oracle_price": 0.05469,
       "funding": 1.25e-05,
-      "open_interest": 93737892.0,
-      "volume_24h": 996479.1049929995
+      "open_interest": 94287492.0,
+      "volume_24h": 986834.2007659994
     },
     "POPCAT": {
-      "mark_price": 0.027547,
-      "oracle_price": 0.02754,
+      "mark_price": 0.027537,
+      "oracle_price": 0.02753,
       "funding": 1.25e-05,
-      "open_interest": 30572058.0,
-      "volume_24h": 390394.468209
+      "open_interest": 31602794.0,
+      "volume_24h": 413207.6691009999
     },
     "OMNI": {
       "mark_price": 4.1915,
@@ -921,53 +921,53 @@
       "volume_24h": 0.0
     },
     "EIGEN": {
-      "mark_price": 0.1112,
-      "oracle_price": 0.1114,
-      "funding": 1.25e-05,
-      "open_interest": 12167833.479999999,
-      "volume_24h": 165267.42397
+      "mark_price": 0.1122,
+      "oracle_price": 0.1123,
+      "funding": 5.179e-07,
+      "open_interest": 12136337.84,
+      "volume_24h": 150583.9684
     },
     "REZ": {
-      "mark_price": 0.002224,
-      "oracle_price": 0.002226,
+      "mark_price": 0.002225,
+      "oracle_price": 0.002227,
       "funding": 1.25e-05,
-      "open_interest": 144341958.0,
-      "volume_24h": 132863.6022629999
+      "open_interest": 144361990.0,
+      "volume_24h": 136714.724752
     },
     "NOT": {
-      "mark_price": 0.000293,
-      "oracle_price": 0.000294,
+      "mark_price": 0.000294,
+      "oracle_price": 0.000295,
       "funding": 1.25e-05,
-      "open_interest": 673526722.0,
-      "volume_24h": 46367.188553
+      "open_interest": 672416238.0,
+      "volume_24h": 43544.76853
     },
     "TURBO": {
       "mark_price": 0.000587,
       "oracle_price": 0.000589,
       "funding": 1.25e-05,
-      "open_interest": 223017262.0,
-      "volume_24h": 27888.272324
+      "open_interest": 222885342.0,
+      "volume_24h": 27487.526079
     },
     "BRETT": {
-      "mark_price": 0.003156,
-      "oracle_price": 0.003161,
+      "mark_price": 0.003152,
+      "oracle_price": 0.003156,
       "funding": 1.25e-05,
-      "open_interest": 70491362.0,
-      "volume_24h": 120768.739244
+      "open_interest": 70672552.0,
+      "volume_24h": 119129.079195
     },
     "IO": {
-      "mark_price": 0.10204,
-      "oracle_price": 0.1022,
-      "funding": -1.37847e-05,
-      "open_interest": 4014316.5999999996,
-      "volume_24h": 123809.077056
+      "mark_price": 0.10208,
+      "oracle_price": 0.10224,
+      "funding": -2.11169e-05,
+      "open_interest": 4009477.6,
+      "volume_24h": 127293.20422
     },
     "ZK": {
-      "mark_price": 0.006446,
-      "oracle_price": 0.00645,
+      "mark_price": 0.006505,
+      "oracle_price": 0.00651,
       "funding": 1.25e-05,
-      "open_interest": 106022166.0,
-      "volume_24h": 103208.229498
+      "open_interest": 105049980.0,
+      "volume_24h": 112773.726764
     },
     "BLAST": {
       "mark_price": 0.000456,
@@ -991,11 +991,11 @@
       "volume_24h": 0.0
     },
     "RENDER": {
-      "mark_price": 1.3319,
-      "oracle_price": 1.333,
-      "funding": 1.00178e-05,
-      "open_interest": 1290063.9999999998,
-      "volume_24h": 886595.4691100002
+      "mark_price": 1.3333,
+      "oracle_price": 1.335,
+      "funding": -5.6176e-06,
+      "open_interest": 1292733.5999999999,
+      "volume_24h": 881117.5403399998
     },
     "kDOGS": {
       "mark_price": 0.13659,
@@ -1006,10 +1006,10 @@
     },
     "POL": {
       "mark_price": 0.077581,
-      "oracle_price": 0.07767,
-      "funding": 1.3996e-06,
-      "open_interest": 42276804.0,
-      "volume_24h": 250467.155589
+      "oracle_price": 0.077665,
+      "funding": 1.25e-05,
+      "open_interest": 42238480.0,
+      "volume_24h": 213150.143061
     },
     "CATI": {
       "mark_price": 0.082821,
@@ -1019,18 +1019,18 @@
       "volume_24h": 0.0
     },
     "CELO": {
-      "mark_price": 0.057734,
-      "oracle_price": 0.057815,
+      "mark_price": 0.058165,
+      "oracle_price": 0.058305,
       "funding": 1.25e-05,
-      "open_interest": 8357730.0,
-      "volume_24h": 36173.171125
+      "open_interest": 8350036.0,
+      "volume_24h": 36801.255821
     },
     "HMSTR": {
-      "mark_price": 0.000123,
-      "oracle_price": 0.000123,
+      "mark_price": 0.000122,
+      "oracle_price": 0.000122,
       "funding": 1.25e-05,
-      "open_interest": 12297718068.0,
-      "volume_24h": 118533.101762
+      "open_interest": 12297001530.0,
+      "volume_24h": 93558.537308
     },
     "SCR": {
       "mark_price": 0.04737,
@@ -1047,53 +1047,53 @@
       "volume_24h": 0.0
     },
     "kNEIRO": {
-      "mark_price": 0.04699,
-      "oracle_price": 0.04706,
+      "mark_price": 0.04716,
+      "oracle_price": 0.04722,
       "funding": 1.25e-05,
-      "open_interest": 1232717.4,
-      "volume_24h": 54174.223003
+      "open_interest": 1233436.9999999998,
+      "volume_24h": 54320.390448
     },
     "GOAT": {
-      "mark_price": 0.01116,
-      "oracle_price": 0.011147,
+      "mark_price": 0.011161,
+      "oracle_price": 0.01114,
       "funding": 1.25e-05,
-      "open_interest": 89824830.0,
-      "volume_24h": 171374.486766
+      "open_interest": 89732842.0,
+      "volume_24h": 152874.9744989999
     },
     "MOODENG": {
-      "mark_price": 0.029103,
-      "oracle_price": 0.029155,
-      "funding": 2.0126e-06,
-      "open_interest": 16996588.0,
-      "volume_24h": 693450.532302
+      "mark_price": 0.029145,
+      "oracle_price": 0.02919,
+      "funding": -1.55063e-05,
+      "open_interest": 16966310.0,
+      "volume_24h": 660560.8228479997
     },
     "GRASS": {
-      "mark_price": 0.3776,
-      "oracle_price": 0.3779,
+      "mark_price": 0.38529,
+      "oracle_price": 0.38536,
       "funding": 1.25e-05,
-      "open_interest": 29623628.399999995,
-      "volume_24h": 513843.2883959999
+      "open_interest": 29652637.4,
+      "volume_24h": 515051.7949530001
     },
     "PURR": {
-      "mark_price": 0.073464,
-      "oracle_price": 0.07303,
+      "mark_price": 0.073708,
+      "oracle_price": 0.073169,
       "funding": 1.25e-05,
-      "open_interest": 106552318.0,
-      "volume_24h": 1037072.4199270002
+      "open_interest": 106762504.0,
+      "volume_24h": 950631.7324449996
     },
     "PNUT": {
-      "mark_price": 0.02734,
-      "oracle_price": 0.02737,
+      "mark_price": 0.02729,
+      "oracle_price": 0.02733,
       "funding": 1.25e-05,
-      "open_interest": 11568726.999999998,
-      "volume_24h": 169492.382259
+      "open_interest": 11496727.399999999,
+      "volume_24h": 169974.7102210001
     },
     "XLM": {
-      "mark_price": 0.12765,
-      "oracle_price": 0.127774,
-      "funding": -2.71134e-05,
-      "open_interest": 41058914.0,
-      "volume_24h": 528429.09628
+      "mark_price": 0.127546,
+      "oracle_price": 0.12765,
+      "funding": -1.21727e-05,
+      "open_interest": 41061904.0,
+      "volume_24h": 498316.01059
     },
     "CHILLGUY": {
       "mark_price": 0.012699,
@@ -1103,74 +1103,74 @@
       "volume_24h": 0.0
     },
     "SAND": {
-      "mark_price": 0.034264,
-      "oracle_price": 0.034349,
-      "funding": -4.29871e-05,
-      "open_interest": 11641066.0,
-      "volume_24h": 119545.197154
+      "mark_price": 0.034767,
+      "oracle_price": 0.03486,
+      "funding": -7.8599e-05,
+      "open_interest": 11682162.0,
+      "volume_24h": 120644.186292
     },
     "IOTA": {
-      "mark_price": 0.031867,
-      "oracle_price": 0.03195,
-      "funding": 5.412e-07,
-      "open_interest": 21086002.0,
-      "volume_24h": 104133.014409
+      "mark_price": 0.031837,
+      "oracle_price": 0.031943,
+      "funding": 1.25e-05,
+      "open_interest": 21128158.0,
+      "volume_24h": 98524.552744
     },
     "ALGO": {
-      "mark_price": 0.080264,
-      "oracle_price": 0.08035,
+      "mark_price": 0.080489,
+      "oracle_price": 0.080573,
       "funding": 1.25e-05,
-      "open_interest": 20652990.0,
-      "volume_24h": 308764.2959929999
+      "open_interest": 20643050.0,
+      "volume_24h": 266592.922442
     },
     "HYPE": {
-      "mark_price": 60.86,
-      "oracle_price": 60.8925,
-      "funding": 7.7e-07,
-      "open_interest": 18028262.57999995,
-      "volume_24h": 334848409.9574212
+      "mark_price": 61.989,
+      "oracle_price": 61.981,
+      "funding": 1.25e-05,
+      "open_interest": 18464771.699999943,
+      "volume_24h": 334252688.37923837
     },
     "ME": {
-      "mark_price": 0.0408,
-      "oracle_price": 0.04201,
-      "funding": -0.0034962445,
-      "open_interest": 9941522.6,
-      "volume_24h": 1549748.8429519997
+      "mark_price": 0.04139,
+      "oracle_price": 0.0429,
+      "funding": -0.0040824386,
+      "open_interest": 9922443.4,
+      "volume_24h": 1590377.113897
     },
     "MOVE": {
-      "mark_price": 0.005563,
-      "oracle_price": 0.005752,
-      "funding": -0.0039774215,
-      "open_interest": 234577124.0,
-      "volume_24h": 3599822.704036
+      "mark_price": 0.00541,
+      "oracle_price": 0.005553,
+      "funding": -0.0034417737,
+      "open_interest": 220690652.0,
+      "volume_24h": 3692540.5770789995
     },
     "VIRTUAL": {
-      "mark_price": 0.36178,
-      "oracle_price": 0.3621,
+      "mark_price": 0.36572,
+      "oracle_price": 0.36607,
       "funding": 1.25e-05,
-      "open_interest": 8160174.8,
-      "volume_24h": 370131.3904499999
+      "open_interest": 8154292.8,
+      "volume_24h": 418767.126557
     },
     "PENGU": {
-      "mark_price": 0.004451,
-      "oracle_price": 0.004454,
+      "mark_price": 0.004438,
+      "oracle_price": 0.004441,
       "funding": 1.25e-05,
-      "open_interest": 531678502.0,
-      "volume_24h": 454206.0823409997
+      "open_interest": 542221544.0,
+      "volume_24h": 475791.8952679999
     },
     "USUAL": {
-      "mark_price": 0.0113,
-      "oracle_price": 0.01131,
+      "mark_price": 0.01125,
+      "oracle_price": 0.01126,
       "funding": 1.25e-05,
-      "open_interest": 38694613.6,
-      "volume_24h": 404868.6111330001
+      "open_interest": 38604024.60000001,
+      "volume_24h": 326605.8324750001
     },
     "FARTCOIN": {
-      "mark_price": 0.08212,
-      "oracle_price": 0.08209,
+      "mark_price": 0.08246,
+      "oracle_price": 0.08242,
       "funding": 1.25e-05,
-      "open_interest": 125443108.39999999,
-      "volume_24h": 2927244.161585999
+      "open_interest": 125911993.80000001,
+      "volume_24h": 2766881.962341
     },
     "AI16Z": {
       "mark_price": 0.06157,
@@ -1180,11 +1180,11 @@
       "volume_24h": 0.0
     },
     "AIXBT": {
-      "mark_price": 0.012534,
-      "oracle_price": 0.012555,
+      "mark_price": 0.01266,
+      "oracle_price": 0.01268,
       "funding": 1.25e-05,
-      "open_interest": 10307804.0,
-      "volume_24h": 144374.9232209999
+      "open_interest": 10194266.0,
+      "volume_24h": 141555.027389
     },
     "ZEREBRO": {
       "mark_price": 0.032083,
@@ -1194,60 +1194,60 @@
       "volume_24h": 0.0
     },
     "BIO": {
-      "mark_price": 0.015149,
-      "oracle_price": 0.015155,
+      "mark_price": 0.015216,
+      "oracle_price": 0.015215,
       "funding": 1.25e-05,
-      "open_interest": 35454620.0,
-      "volume_24h": 76877.190801
+      "open_interest": 35461556.0,
+      "volume_24h": 76634.072159
     },
     "GRIFFAIN": {
-      "mark_price": 0.01,
-      "oracle_price": 0.009976,
+      "mark_price": 0.010014,
+      "oracle_price": 0.009996,
       "funding": 1.25e-05,
-      "open_interest": 88411624.0,
-      "volume_24h": 65584.002224
+      "open_interest": 88263288.0,
+      "volume_24h": 65976.719577
     },
     "SPX": {
-      "mark_price": 0.2766,
-      "oracle_price": 0.2769,
+      "mark_price": 0.27631,
+      "oracle_price": 0.2766,
       "funding": 1.25e-05,
-      "open_interest": 7951877.599999999,
-      "volume_24h": 301072.0362639998
+      "open_interest": 7942123.3999999985,
+      "volume_24h": 295832.7382379998
     },
     "S": {
-      "mark_price": 0.02876,
-      "oracle_price": 0.02881,
-      "funding": -5.11162e-05,
-      "open_interest": 15036508.0,
-      "volume_24h": 236604.1407660001
+      "mark_price": 0.028605,
+      "oracle_price": 0.028655,
+      "funding": -4.83641e-05,
+      "open_interest": 14946724.0,
+      "volume_24h": 227664.501539
     },
     "MORPHO": {
-      "mark_price": 1.62896,
-      "oracle_price": 1.63015,
+      "mark_price": 1.6177,
+      "oracle_price": 1.619,
       "funding": 1.25e-05,
-      "open_interest": 1901121.8000000003,
-      "volume_24h": 316636.6372800001
+      "open_interest": 1902155.8000000003,
+      "volume_24h": 288369.0379100001
     },
     "TRUMP": {
-      "mark_price": 0.87232,
-      "oracle_price": 0.87345,
-      "funding": -1.59507e-05,
-      "open_interest": 10142944.200000003,
-      "volume_24h": 8468592.054846996
+      "mark_price": 0.88014,
+      "oracle_price": 0.88095,
+      "funding": -3.9378e-06,
+      "open_interest": 10183805.200000003,
+      "volume_24h": 8047633.891669001
     },
     "MELANIA": {
-      "mark_price": 0.04721,
-      "oracle_price": 0.0473,
-      "funding": -5.93335e-05,
-      "open_interest": 26311102.2,
-      "volume_24h": 255129.22396
+      "mark_price": 0.04728,
+      "oracle_price": 0.04738,
+      "funding": -0.0001127392,
+      "open_interest": 26340021.2,
+      "volume_24h": 258394.646689
     },
     "ANIME": {
-      "mark_price": 0.002312,
-      "oracle_price": 0.002321,
-      "funding": -0.0001627651,
-      "open_interest": 108879002.0,
-      "volume_24h": 170592.1420559999
+      "mark_price": 0.002293,
+      "oracle_price": 0.002301,
+      "funding": -0.0001035568,
+      "open_interest": 107317432.0,
+      "volume_24h": 172791.746665
     },
     "VINE": {
       "mark_price": 0.007518,
@@ -1257,11 +1257,11 @@
       "volume_24h": 0.0
     },
     "VVV": {
-      "mark_price": 26.7905,
-      "oracle_price": 26.788,
+      "mark_price": 27.232,
+      "oracle_price": 27.228,
       "funding": 1.25e-05,
-      "open_interest": 2548602.9600000004,
-      "volume_24h": 81614684.55248997
+      "open_interest": 2542881.840000002,
+      "volume_24h": 77262292.34613006
     },
     "JELLY": {
       "mark_price": 0.037555,
@@ -1271,11 +1271,11 @@
       "volume_24h": 0.0
     },
     "BERA": {
-      "mark_price": 0.08173,
-      "oracle_price": 0.0819,
-      "funding": -0.0001069651,
-      "open_interest": 15317759.600000001,
-      "volume_24h": 283985.6637279999
+      "mark_price": 0.08181,
+      "oracle_price": 0.08195,
+      "funding": -7.3604e-05,
+      "open_interest": 15287384.6,
+      "volume_24h": 224541.5519110001
     },
     "TST": {
       "mark_price": 0.017491,
@@ -1285,11 +1285,11 @@
       "volume_24h": 0.0
     },
     "LAYER": {
-      "mark_price": 0.046572,
-      "oracle_price": 0.046825,
-      "funding": -0.0003835125,
-      "open_interest": 5669312.0,
-      "volume_24h": 281509.100454
+      "mark_price": 0.046665,
+      "oracle_price": 0.046895,
+      "funding": -0.0003343097,
+      "open_interest": 5643808.0,
+      "volume_24h": 268270.9386610001
     },
     "IP": {
       "mark_price": 0.31703,
@@ -1306,25 +1306,25 @@
       "volume_24h": 0.0
     },
     "KAITO": {
-      "mark_price": 0.15685,
-      "oracle_price": 0.157052,
-      "funding": 1.21946e-05,
-      "open_interest": 2917998.0,
-      "volume_24h": 191589.1961399999
+      "mark_price": 0.15699,
+      "oracle_price": 0.1571,
+      "funding": -7.3018e-06,
+      "open_interest": 3044366.0,
+      "volume_24h": 208640.7456999999
     },
     "NIL": {
-      "mark_price": 0.04375,
-      "oracle_price": 0.04383,
+      "mark_price": 0.044119,
+      "oracle_price": 0.044125,
       "funding": 1.25e-05,
-      "open_interest": 18305916.0,
-      "volume_24h": 155095.409379
+      "open_interest": 18293380.0,
+      "volume_24h": 149793.3565189999
     },
     "PAXG": {
-      "mark_price": 3561.494,
-      "oracle_price": 3563.352,
-      "funding": 7.2021e-06,
-      "open_interest": 4994.852,
-      "volume_24h": 2181954.7342999983
+      "mark_price": 3560.2,
+      "oracle_price": 3561.5,
+      "funding": 1.25e-05,
+      "open_interest": 4994.744,
+      "volume_24h": 2028573.8037999999
     },
     "PROMPT": {
       "mark_price": 0.03661,
@@ -1334,39 +1334,39 @@
       "volume_24h": 0.0
     },
     "BABY": {
-      "mark_price": 0.00935,
-      "oracle_price": 0.009385,
-      "funding": -0.0002001547,
-      "open_interest": 72455834.0,
-      "volume_24h": 844150.8375410001
+      "mark_price": 0.009191,
+      "oracle_price": 0.00922,
+      "funding": -0.0001863237,
+      "open_interest": 72336636.0,
+      "volume_24h": 800869.1010720001
     },
     "WCT": {
-      "mark_price": 0.028178,
-      "oracle_price": 0.0282,
+      "mark_price": 0.028301,
+      "oracle_price": 0.028355,
       "funding": 1.25e-05,
-      "open_interest": 5747644.0,
-      "volume_24h": 40914.079897
+      "open_interest": 5755150.0,
+      "volume_24h": 42239.433893
     },
     "HYPER": {
-      "mark_price": 0.038917,
-      "oracle_price": 0.038972,
+      "mark_price": 0.038956,
+      "oracle_price": 0.039005,
       "funding": 1.25e-05,
-      "open_interest": 2311042.0,
-      "volume_24h": 77615.502229
+      "open_interest": 2316868.0,
+      "volume_24h": 77049.591341
     },
     "ZORA": {
-      "mark_price": 0.004351,
-      "oracle_price": 0.004361,
+      "mark_price": 0.004364,
+      "oracle_price": 0.004373,
       "funding": 1.25e-05,
-      "open_interest": 95220280.0,
-      "volume_24h": 70641.895108
+      "open_interest": 94999832.0,
+      "volume_24h": 70268.024707
     },
     "INIT": {
-      "mark_price": 0.13243,
-      "oracle_price": 0.133074,
-      "funding": -0.0001209662,
-      "open_interest": 10286064.0,
-      "volume_24h": 5401192.495586999
+      "mark_price": 0.13681,
+      "oracle_price": 0.13732,
+      "funding": -0.0005444275,
+      "open_interest": 10559882.0,
+      "volume_24h": 5560053.313152999
     },
     "DOOD": {
       "mark_price": 0.001412,
@@ -1383,46 +1383,46 @@
       "volume_24h": 0.0
     },
     "NXPC": {
-      "mark_price": 0.13298,
-      "oracle_price": 0.133151,
+      "mark_price": 0.133648,
+      "oracle_price": 0.1338,
       "funding": 1.25e-05,
-      "open_interest": 1059936.0,
-      "volume_24h": 61920.0638
+      "open_interest": 1058824.0,
+      "volume_24h": 62362.19852
     },
     "SOPH": {
-      "mark_price": 0.000883,
-      "oracle_price": 0.000875,
+      "mark_price": 0.000934,
+      "oracle_price": 0.000926,
       "funding": 1.25e-05,
-      "open_interest": 528355662.0,
-      "volume_24h": 6042.402595
+      "open_interest": 528327484.0,
+      "volume_24h": 6205.36886
     },
     "RESOLV": {
-      "mark_price": 0.013871,
-      "oracle_price": 0.01386,
+      "mark_price": 0.013906,
+      "oracle_price": 0.01389,
       "funding": 1.25e-05,
-      "open_interest": 119005692.0,
-      "volume_24h": 85809.394653
+      "open_interest": 119024276.0,
+      "volume_24h": 83677.344047
     },
     "SYRUP": {
-      "mark_price": 0.07049,
-      "oracle_price": 0.0706,
+      "mark_price": 0.070977,
+      "oracle_price": 0.07105,
       "funding": 1.25e-05,
-      "open_interest": 28654078.0,
-      "volume_24h": 554571.9596709998
+      "open_interest": 28675328.0,
+      "volume_24h": 513836.9771119999
     },
     "PUMP": {
-      "mark_price": 0.00258,
-      "oracle_price": 0.002581,
+      "mark_price": 0.002591,
+      "oracle_price": 0.002592,
       "funding": 1.25e-05,
-      "open_interest": 15654701674.0,
-      "volume_24h": 25226542.82427198
+      "open_interest": 15731550074.0,
+      "volume_24h": 23789373.64420199
     },
     "PROVE": {
-      "mark_price": 0.13585,
-      "oracle_price": 0.13607,
+      "mark_price": 0.13629,
+      "oracle_price": 0.136524,
       "funding": 1.25e-05,
-      "open_interest": 748136.0,
-      "volume_24h": 42034.84409
+      "open_interest": 748366.0,
+      "volume_24h": 44012.06283
     },
     "YZY": {
       "mark_price": 0.31107,
@@ -1432,228 +1432,228 @@
       "volume_24h": 0.0
     },
     "XPL": {
-      "mark_price": 0.048154,
-      "oracle_price": 0.04814,
+      "mark_price": 0.048231,
+      "oracle_price": 0.04822,
       "funding": 1.25e-05,
-      "open_interest": 526448186.0,
-      "volume_24h": 3171143.7502279994
+      "open_interest": 527415374.0,
+      "volume_24h": 2637994.7401159992
     },
     "WLFI": {
-      "mark_price": 0.042416,
-      "oracle_price": 0.04247,
-      "funding": -1.10778e-05,
-      "open_interest": 260546620.0,
-      "volume_24h": 711489.528639
+      "mark_price": 0.04229,
+      "oracle_price": 0.04233,
+      "funding": -3.4393e-05,
+      "open_interest": 262364654.0,
+      "volume_24h": 694725.5648619999
     },
     "LINEA": {
-      "mark_price": 0.001656,
-      "oracle_price": 0.00166,
-      "funding": -6.9692e-05,
-      "open_interest": 474937932.0,
-      "volume_24h": 85026.908306
+      "mark_price": 0.001674,
+      "oracle_price": 0.001679,
+      "funding": -3.69832e-05,
+      "open_interest": 473098224.0,
+      "volume_24h": 90322.562506
     },
     "SKY": {
-      "mark_price": 0.04573,
-      "oracle_price": 0.045815,
-      "funding": 2.124e-07,
-      "open_interest": 66918852.0,
-      "volume_24h": 2533123.5831809994
+      "mark_price": 0.045381,
+      "oracle_price": 0.04547,
+      "funding": 8.7884e-06,
+      "open_interest": 66399168.0,
+      "volume_24h": 2528601.354479
     },
     "ASTER": {
-      "mark_price": 0.49848,
-      "oracle_price": 0.4989,
-      "funding": 1.9068e-06,
-      "open_interest": 22847454.0,
-      "volume_24h": 757547.7238500002
+      "mark_price": 0.50296,
+      "oracle_price": 0.5034,
+      "funding": 2.2886e-06,
+      "open_interest": 22845834.0,
+      "volume_24h": 736447.3299100001
     },
     "AVNT": {
-      "mark_price": 0.059959,
-      "oracle_price": 0.060085,
-      "funding": -5.06492e-05,
-      "open_interest": 6994312.0,
-      "volume_24h": 204826.797263
+      "mark_price": 0.060249,
+      "oracle_price": 0.060365,
+      "funding": -2.03685e-05,
+      "open_interest": 6999558.0,
+      "volume_24h": 188068.9776619999
     },
     "STBL": {
-      "mark_price": 0.020385,
-      "oracle_price": 0.02035,
-      "funding": 1.25e-05,
-      "open_interest": 77917116.0,
-      "volume_24h": 1855820.2107330002
+      "mark_price": 0.020653,
+      "oracle_price": 0.020599,
+      "funding": 4.58866e-05,
+      "open_interest": 77966320.0,
+      "volume_24h": 1850329.1513880002
     },
     "0G": {
-      "mark_price": 0.1018,
-      "oracle_price": 0.1019,
+      "mark_price": 0.10095,
+      "oracle_price": 0.101,
       "funding": 1.25e-05,
-      "open_interest": 6105980.0,
-      "volume_24h": 239347.3612550001
+      "open_interest": 6105158.0,
+      "volume_24h": 233107.4028210001
     },
     "HEMI": {
-      "mark_price": 0.003263,
-      "oracle_price": 0.003265,
+      "mark_price": 0.003285,
+      "oracle_price": 0.003285,
       "funding": 1.25e-05,
-      "open_interest": 140008504.0,
-      "volume_24h": 71495.794089
+      "open_interest": 140105776.0,
+      "volume_24h": 71169.992702
     },
     "APEX": {
-      "mark_price": 0.1276,
-      "oracle_price": 0.1276,
+      "mark_price": 0.12887,
+      "oracle_price": 0.12905,
       "funding": 1.25e-05,
-      "open_interest": 2428632.0,
-      "volume_24h": 33392.5035
+      "open_interest": 2426550.0,
+      "volume_24h": 33065.19433
     },
     "2Z": {
-      "mark_price": 0.017321,
-      "oracle_price": 0.01736,
-      "funding": -0.0001316548,
-      "open_interest": 30281612.0,
-      "volume_24h": 1157483.230992
+      "mark_price": 0.017686,
+      "oracle_price": 0.017723,
+      "funding": -8.06421e-05,
+      "open_interest": 29707002.0,
+      "volume_24h": 1161689.0873619996
     },
     "ZEC": {
-      "mark_price": 705.41,
-      "oracle_price": 705.111,
+      "mark_price": 716.3,
+      "oracle_price": 716.01,
       "funding": 1.25e-05,
-      "open_interest": 406570.4999999993,
-      "volume_24h": 325404323.4771987
+      "open_interest": 409218.9799999997,
+      "volume_24h": 314201272.89610124
     },
     "MON": {
-      "mark_price": 0.010499,
-      "oracle_price": 0.0105,
+      "mark_price": 0.010426,
+      "oracle_price": 0.01042,
       "funding": 1.25e-05,
-      "open_interest": 2438047292.0,
-      "volume_24h": 5802312.512938003
+      "open_interest": 2439269684.0,
+      "volume_24h": 4513381.830751001
     },
     "MET": {
-      "mark_price": 0.20853,
-      "oracle_price": 0.2089,
-      "funding": -7.01288e-05,
-      "open_interest": 15209184.0,
-      "volume_24h": 221721.14306
+      "mark_price": 0.20886,
+      "oracle_price": 0.20925,
+      "funding": -6.39363e-05,
+      "open_interest": 15210782.0,
+      "volume_24h": 174228.30912
     },
     "MEGA": {
-      "mark_price": 0.041541,
-      "oracle_price": 0.041535,
+      "mark_price": 0.041389,
+      "oracle_price": 0.041351,
       "funding": 1.25e-05,
-      "open_interest": 148325598.0,
-      "volume_24h": 319448.310071
+      "open_interest": 148315906.0,
+      "volume_24h": 294470.5518079998
     },
     "CC": {
-      "mark_price": 0.076154,
-      "oracle_price": 0.076283,
-      "funding": -0.0002058208,
-      "open_interest": 49791356.0,
-      "volume_24h": 889851.7727220001
+      "mark_price": 0.076443,
+      "oracle_price": 0.076576,
+      "funding": -0.0001172279,
+      "open_interest": 50469460.0,
+      "volume_24h": 917984.5981299999
     },
     "ICP": {
-      "mark_price": 1.9974,
-      "oracle_price": 1.9995,
-      "funding": 1.25e-05,
-      "open_interest": 981258.6000000001,
-      "volume_24h": 453979.2388399999
+      "mark_price": 2.0001,
+      "oracle_price": 2.002,
+      "funding": 3.0415e-06,
+      "open_interest": 983922.6,
+      "volume_24h": 421263.8749399998
     },
     "AERO": {
-      "mark_price": 0.39679,
-      "oracle_price": 0.396814,
+      "mark_price": 0.39923,
+      "oracle_price": 0.39925,
       "funding": 1.25e-05,
-      "open_interest": 21105570.0,
-      "volume_24h": 1081996.7702699997
+      "open_interest": 20954042.0,
+      "volume_24h": 981818.7369500003
     },
     "STABLE": {
-      "mark_price": 0.025053,
-      "oracle_price": 0.025013,
+      "mark_price": 0.025347,
+      "oracle_price": 0.025333,
       "funding": 1.25e-05,
-      "open_interest": 25454954.0,
-      "volume_24h": 96575.505268
+      "open_interest": 25451364.0,
+      "volume_24h": 94009.96106
     },
     "FOGO": {
-      "mark_price": 0.001537,
-      "oracle_price": 0.001539,
+      "mark_price": 0.001544,
+      "oracle_price": 0.001545,
       "funding": 1.25e-05,
-      "open_interest": 75583882.0,
-      "volume_24h": 104737.568557
+      "open_interest": 77425172.0,
+      "volume_24h": 106473.268181
     },
     "LIT": {
-      "mark_price": 2.4607,
-      "oracle_price": 2.4606,
+      "mark_price": 2.4766,
+      "oracle_price": 2.4759,
       "funding": 1.25e-05,
-      "open_interest": 29886072.0,
-      "volume_24h": 12943792.139099993
+      "open_interest": 29852036.0,
+      "volume_24h": 12343438.568199996
     },
     "XMR": {
-      "mark_price": 442.97,
-      "oracle_price": 442.278,
-      "funding": 0.000108158,
-      "open_interest": 166117.856,
-      "volume_24h": 103680370.89737007
+      "mark_price": 443.42,
+      "oracle_price": 442.59,
+      "funding": 7.40937e-05,
+      "open_interest": 170288.88,
+      "volume_24h": 114741054.5732099
     },
     "AXS": {
-      "mark_price": 0.6472,
-      "oracle_price": 0.64783,
+      "mark_price": 0.64909,
+      "oracle_price": 0.65,
       "funding": 1.25e-05,
-      "open_interest": 305353.8,
-      "volume_24h": 67021.300256
+      "open_interest": 310144.4,
+      "volume_24h": 69004.140387
     },
     "DASH": {
-      "mark_price": 35.7036,
-      "oracle_price": 35.735,
+      "mark_price": 36.045,
+      "oracle_price": 36.087,
       "funding": 1.25e-05,
-      "open_interest": 42425.98,
-      "volume_24h": 230255.3747099999
+      "open_interest": 42443.62,
+      "volume_24h": 172562.42456
     },
     "SKR": {
-      "mark_price": 0.009173,
-      "oracle_price": 0.009177,
+      "mark_price": 0.009254,
+      "oracle_price": 0.00925,
       "funding": 1.25e-05,
-      "open_interest": 20933692.0,
-      "volume_24h": 231559.055428
+      "open_interest": 20866956.0,
+      "volume_24h": 228178.626227
     },
     "AZTEC": {
-      "mark_price": 0.008587,
-      "oracle_price": 0.008583,
+      "mark_price": 0.008605,
+      "oracle_price": 0.008599,
       "funding": 1.25e-05,
-      "open_interest": 90290728.0,
-      "volume_24h": 50857.31447
+      "open_interest": 90641286.0,
+      "volume_24h": 49841.02699
     },
     "CHIP": {
-      "mark_price": 0.026738,
-      "oracle_price": 0.02676,
+      "mark_price": 0.026805,
+      "oracle_price": 0.026825,
       "funding": 1.25e-05,
-      "open_interest": 127677696.0,
-      "volume_24h": 1590537.5228420005
+      "open_interest": 127659172.0,
+      "volume_24h": 1572779.1441859999
     },
     "GRAM": {
-      "mark_price": 0.96021,
-      "oracle_price": 0.961725,
-      "funding": -0.0001211861,
-      "open_interest": 10098904.0,
-      "volume_24h": 2980237.8000500007
+      "mark_price": 0.96412,
+      "oracle_price": 0.96528,
+      "funding": -7.27321e-05,
+      "open_interest": 10122138.0,
+      "volume_24h": 2917734.2816599994
     },
     "CASHCAT": {
-      "mark_price": 0.042198,
-      "oracle_price": 0.04225,
+      "mark_price": 0.042004,
+      "oracle_price": 0.042015,
       "funding": 1.25e-05,
-      "open_interest": 149230976.0,
-      "volume_24h": 1425594.6335569995
+      "open_interest": 149328332.0,
+      "volume_24h": 1346260.7442430016
     },
     "PONS": {
-      "mark_price": 0.086566,
-      "oracle_price": 0.086606,
+      "mark_price": 0.088884,
+      "oracle_price": 0.088945,
       "funding": 1.25e-05,
-      "open_interest": 59772864.0,
-      "volume_24h": 2338456.1002479987
+      "open_interest": 59580120.0,
+      "volume_24h": 2251296.0929809995
     },
     "USELESS": {
-      "mark_price": 0.073305,
-      "oracle_price": 0.07333,
+      "mark_price": 0.073525,
+      "oracle_price": 0.073519,
       "funding": 1.25e-05,
-      "open_interest": 45060800.0,
-      "volume_24h": 849654.7958100003
+      "open_interest": 45046870.0,
+      "volume_24h": 782924.4771220001
     },
     "XTEN": {
-      "mark_price": 0.14879,
-      "oracle_price": 0.15718,
-      "funding": 9.1933e-06,
-      "open_interest": 11030904.0,
-      "volume_24h": 858790.96825
+      "mark_price": 0.14632,
+      "oracle_price": 0.15602,
+      "funding": 1.25e-05,
+      "open_interest": 11028220.0,
+      "volume_24h": 1013567.4586600006
     }
   },
   "liquidation_zones": [],
