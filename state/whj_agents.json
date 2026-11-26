@@ -8,6 +8,7 @@
           "AAVE/USD",
           "ADA/USD",
           "AERO/USD",
+          "AKE/USD",
           "ALGO/USD",
           "ARB/USD",
           "ATOM/USD",
@@ -21,7 +22,6 @@
           "DRV/USD",
           "ENA/USD",
           "ETH/USD",
-          "FIDD/USD",
           "HBAR/USD",
           "HONEY/USD",
           "HYPE/USD",
@@ -75,6 +75,7 @@
           "AAVE/USD",
           "ADA/USD",
           "AERO/USD",
+          "AKE/USD",
           "ALGO/USD",
           "ARB/USD",
           "ATOM/USD",
@@ -88,7 +89,6 @@
           "DRV/USD",
           "ENA/USD",
           "ETH/USD",
-          "FIDD/USD",
           "HBAR/USD",
           "HONEY/USD",
           "HYPE/USD",
@@ -141,6 +141,7 @@
           "AAVE/USD",
           "ADA/USD",
           "AERO/USD",
+          "AKE/USD",
           "ALGO/USD",
           "ARB/USD",
           "ATOM/USD",
@@ -154,7 +155,6 @@
           "DRV/USD",
           "ENA/USD",
           "ETH/USD",
-          "FIDD/USD",
           "HBAR/USD",
           "HONEY/USD",
           "HYPE/USD",
@@ -253,22 +253,22 @@
       "detail": "Equity is read from the single shared paper wallet when available.",
       "metrics": {
         "closed_trades": 171,
-        "equity_usd": 98.8576,
+        "equity_usd": 99.1308,
         "initial_equity_usd": 100.0,
-        "pnl_usd": -1.1424,
-        "return_pct": -1.1424,
+        "pnl_usd": -0.8692,
+        "return_pct": -0.8692,
         "shared_wallet": true
       },
       "name": "EQUITY",
       "status": "TRACKING"
     }
   ],
-  "generated_at_utc": "2026-11-25T23:18:10.547229+00:00",
+  "generated_at_utc": "2026-11-26T00:13:26.554277+00:00",
   "live_trading_enabled": false,
   "mode": "PAPER_ONLY",
   "portfolio_status": "PAPER_RUNNING",
   "schema_version": 2,
-  "source_updated_at": "2026-11-25T23:18:10.208367+00:00",
+  "source_updated_at": "2026-11-26T00:13:25.992729+00:00",
   "summary": {
     "agent_count": 6,
     "markets": [
@@ -277,6 +277,7 @@
       "AAVE/USD",
       "ADA/USD",
       "AERO/USD",
+      "AKE/USD",
       "ALGO/USD",
       "ARB/USD",
       "ATOM/USD",
@@ -290,7 +291,6 @@
       "DRV/USD",
       "ENA/USD",
       "ETH/USD",
-      "FIDD/USD",
       "HBAR/USD",
       "HONEY/USD",
       "HYPE/USD",
@@ -374,6 +374,17 @@
         "watch_only": true
       },
       "AERO/USD": {
+        "approved_by_consensus": false,
+        "decision": "HOLD",
+        "execution_mode": "PAPER_ONLY",
+        "live_orders_enabled": false,
+        "reason_codes": [
+          "WATCH_ONLY_NO_CLOSED_CANDLE_SIGNAL"
+        ],
+        "strategy_signal": "HOLD",
+        "watch_only": true
+      },
+      "AKE/USD": {
         "approved_by_consensus": false,
         "decision": "HOLD",
         "execution_mode": "PAPER_ONLY",
@@ -538,17 +549,6 @@
         "watch_only": true
       },
       "ETH/USD": {
-        "approved_by_consensus": false,
-        "decision": "HOLD",
-        "execution_mode": "PAPER_ONLY",
-        "live_orders_enabled": false,
-        "reason_codes": [
-          "WATCH_ONLY_NO_CLOSED_CANDLE_SIGNAL"
-        ],
-        "strategy_signal": "HOLD",
-        "watch_only": true
-      },
-      "FIDD/USD": {
         "approved_by_consensus": false,
         "decision": "HOLD",
         "execution_mode": "PAPER_ONLY",
