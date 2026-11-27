@@ -22,10 +22,10 @@
           "DRV/USD",
           "ENA/USD",
           "ETH/USD",
-          "EVAA/USD",
           "FET/USD",
           "FIDD/USD",
           "FLR/USD",
+          "GRASS/USD",
           "HBAR/USD",
           "HONEY/USD",
           "HYPE/USD",
@@ -36,6 +36,7 @@
           "LIGHTER/USD",
           "LINK/USD",
           "LTC/USD",
+          "MON/USD",
           "NEAR/USD",
           "NIGHT/USD",
           "ONDO/USD",
@@ -52,16 +53,13 @@
           "SOL/USD",
           "SUI/USD",
           "TAO/USD",
-          "TEL/USD",
           "TRX/USD",
           "UNI/USD",
           "USELESS/USD",
           "VVV/USD",
           "W/USD",
           "WLD/USD",
-          "XAGUSD",
           "XAUT/USDT",
-          "XAUUSD",
           "XCN/USD",
           "XDG/USD",
           "XLM/USD",
@@ -91,10 +89,10 @@
           "DRV/USD",
           "ENA/USD",
           "ETH/USD",
-          "EVAA/USD",
           "FET/USD",
           "FIDD/USD",
           "FLR/USD",
+          "GRASS/USD",
           "HBAR/USD",
           "HONEY/USD",
           "HYPE/USD",
@@ -105,6 +103,7 @@
           "LIGHTER/USD",
           "LINK/USD",
           "LTC/USD",
+          "MON/USD",
           "NEAR/USD",
           "NIGHT/USD",
           "ONDO/USD",
@@ -121,14 +120,12 @@
           "SOL/USD",
           "SUI/USD",
           "TAO/USD",
-          "TEL/USD",
           "TRX/USD",
           "UNI/USD",
           "USELESS/USD",
           "VVV/USD",
           "W/USD",
           "WLD/USD",
-          "XAGUSD",
           "XAUT/USDT",
           "XCN/USD",
           "XDG/USD",
@@ -159,10 +156,10 @@
           "DRV/USD",
           "ENA/USD",
           "ETH/USD",
-          "EVAA/USD",
           "FET/USD",
           "FIDD/USD",
           "FLR/USD",
+          "GRASS/USD",
           "HBAR/USD",
           "HONEY/USD",
           "HYPE/USD",
@@ -173,6 +170,7 @@
           "LIGHTER/USD",
           "LINK/USD",
           "LTC/USD",
+          "MON/USD",
           "NEAR/USD",
           "NIGHT/USD",
           "ONDO/USD",
@@ -189,14 +187,12 @@
           "SOL/USD",
           "SUI/USD",
           "TAO/USD",
-          "TEL/USD",
           "TRX/USD",
           "UNI/USD",
           "USELESS/USD",
           "VVV/USD",
           "W/USD",
           "WLD/USD",
-          "XAGUSD",
           "XAUT/USDT",
           "XCN/USD",
           "XDG/USD",
@@ -259,22 +255,22 @@
       "detail": "Equity is read from the single shared paper wallet when available.",
       "metrics": {
         "closed_trades": 205,
-        "equity_usd": 99.4988,
+        "equity_usd": 99.7845,
         "initial_equity_usd": 100.0,
-        "pnl_usd": -0.5012,
-        "return_pct": -0.5012,
+        "pnl_usd": -0.2155,
+        "return_pct": -0.2155,
         "shared_wallet": true
       },
       "name": "EQUITY",
       "status": "TRACKING"
     }
   ],
-  "generated_at_utc": "2026-11-27T08:20:46.615776+00:00",
+  "generated_at_utc": "2026-11-27T09:39:18.682486+00:00",
   "live_trading_enabled": false,
   "mode": "PAPER_ONLY",
   "portfolio_status": "PAPER_RUNNING",
   "schema_version": 2,
-  "source_updated_at": "2026-11-27T08:20:46.291209+00:00",
+  "source_updated_at": "2026-11-27T09:39:18.268828+00:00",
   "summary": {
     "agent_count": 6,
     "markets": [
@@ -297,10 +293,10 @@
       "DRV/USD",
       "ENA/USD",
       "ETH/USD",
-      "EVAA/USD",
       "FET/USD",
       "FIDD/USD",
       "FLR/USD",
+      "GRASS/USD",
       "HBAR/USD",
       "HONEY/USD",
       "HYPE/USD",
@@ -311,6 +307,7 @@
       "LIGHTER/USD",
       "LINK/USD",
       "LTC/USD",
+      "MON/USD",
       "NEAR/USD",
       "NIGHT/USD",
       "ONDO/USD",
@@ -327,14 +324,12 @@
       "SOL/USD",
       "SUI/USD",
       "TAO/USD",
-      "TEL/USD",
       "TRX/USD",
       "UNI/USD",
       "USELESS/USD",
       "VVV/USD",
       "W/USD",
       "WLD/USD",
-      "XAGUSD",
       "XAUT/USDT",
       "XCN/USD",
       "XDG/USD",
@@ -567,17 +562,6 @@
         "strategy_signal": "HOLD",
         "watch_only": true
       },
-      "EVAA/USD": {
-        "approved_by_consensus": false,
-        "decision": "HOLD",
-        "execution_mode": "PAPER_ONLY",
-        "live_orders_enabled": false,
-        "reason_codes": [
-          "WATCH_ONLY_NO_CLOSED_CANDLE_SIGNAL"
-        ],
-        "strategy_signal": "HOLD",
-        "watch_only": true
-      },
       "FET/USD": {
         "approved_by_consensus": false,
         "decision": "HOLD",
@@ -601,6 +585,17 @@
         "watch_only": true
       },
       "FLR/USD": {
+        "approved_by_consensus": false,
+        "decision": "HOLD",
+        "execution_mode": "PAPER_ONLY",
+        "live_orders_enabled": false,
+        "reason_codes": [
+          "WATCH_ONLY_NO_CLOSED_CANDLE_SIGNAL"
+        ],
+        "strategy_signal": "HOLD",
+        "watch_only": true
+      },
+      "GRASS/USD": {
         "approved_by_consensus": false,
         "decision": "HOLD",
         "execution_mode": "PAPER_ONLY",
@@ -711,6 +706,17 @@
         "watch_only": true
       },
       "LTC/USD": {
+        "approved_by_consensus": false,
+        "decision": "HOLD",
+        "execution_mode": "PAPER_ONLY",
+        "live_orders_enabled": false,
+        "reason_codes": [
+          "WATCH_ONLY_NO_CLOSED_CANDLE_SIGNAL"
+        ],
+        "strategy_signal": "HOLD",
+        "watch_only": true
+      },
+      "MON/USD": {
         "approved_by_consensus": false,
         "decision": "HOLD",
         "execution_mode": "PAPER_ONLY",
@@ -897,17 +903,6 @@
         "strategy_signal": "HOLD",
         "watch_only": true
       },
-      "TEL/USD": {
-        "approved_by_consensus": false,
-        "decision": "HOLD",
-        "execution_mode": "PAPER_ONLY",
-        "live_orders_enabled": false,
-        "reason_codes": [
-          "WATCH_ONLY_NO_CLOSED_CANDLE_SIGNAL"
-        ],
-        "strategy_signal": "HOLD",
-        "watch_only": true
-      },
       "TRX/USD": {
         "approved_by_consensus": false,
         "decision": "HOLD",
@@ -964,17 +959,6 @@
         "watch_only": true
       },
       "WLD/USD": {
-        "approved_by_consensus": false,
-        "decision": "HOLD",
-        "execution_mode": "PAPER_ONLY",
-        "live_orders_enabled": false,
-        "reason_codes": [
-          "WATCH_ONLY_NO_CLOSED_CANDLE_SIGNAL"
-        ],
-        "strategy_signal": "HOLD",
-        "watch_only": true
-      },
-      "XAGUSD": {
         "approved_by_consensus": false,
         "decision": "HOLD",
         "execution_mode": "PAPER_ONLY",
