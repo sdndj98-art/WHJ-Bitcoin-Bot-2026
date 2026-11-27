@@ -8,11 +8,10 @@
           "AAVE/USD",
           "ADA/USD",
           "AKE/USD",
-          "AKT/USD",
           "ALGO/USD",
           "APT/USD",
           "ARB/USD",
-          "ASTER/USD",
+          "ATOM/USD",
           "AVAX/USD",
           "BCH/USD",
           "BLESS/USD",
@@ -33,6 +32,7 @@
           "ICP/USD",
           "INJ/USD",
           "JUP/USD",
+          "KAS/USD",
           "LIGHTER/USD",
           "LINK/USD",
           "LTC/USD",
@@ -60,13 +60,12 @@
           "W/USD",
           "WLD/USD",
           "XAGUSD",
-          "XAUT/USD",
+          "XAUT/USDT",
           "XAUUSD",
           "XCN/USD",
           "XDG/USD",
           "XLM/USD",
           "XMR/USD",
-          "XMR/USDT",
           "XPL/USD",
           "XRP/USD",
           "ZEC/USD",
@@ -78,11 +77,10 @@
           "AAVE/USD",
           "ADA/USD",
           "AKE/USD",
-          "AKT/USD",
           "ALGO/USD",
           "APT/USD",
           "ARB/USD",
-          "ASTER/USD",
+          "ATOM/USD",
           "AVAX/USD",
           "BCH/USD",
           "BLESS/USD",
@@ -103,6 +101,7 @@
           "ICP/USD",
           "INJ/USD",
           "JUP/USD",
+          "KAS/USD",
           "LIGHTER/USD",
           "LINK/USD",
           "LTC/USD",
@@ -130,12 +129,11 @@
           "W/USD",
           "WLD/USD",
           "XAGUSD",
-          "XAUT/USD",
+          "XAUT/USDT",
           "XCN/USD",
           "XDG/USD",
           "XLM/USD",
           "XMR/USD",
-          "XMR/USDT",
           "XPL/USD",
           "XRP/USD",
           "ZEC/USD",
@@ -147,11 +145,10 @@
           "AAVE/USD",
           "ADA/USD",
           "AKE/USD",
-          "AKT/USD",
           "ALGO/USD",
           "APT/USD",
           "ARB/USD",
-          "ASTER/USD",
+          "ATOM/USD",
           "AVAX/USD",
           "BCH/USD",
           "BLESS/USD",
@@ -172,6 +169,7 @@
           "ICP/USD",
           "INJ/USD",
           "JUP/USD",
+          "KAS/USD",
           "LIGHTER/USD",
           "LINK/USD",
           "LTC/USD",
@@ -199,12 +197,11 @@
           "W/USD",
           "WLD/USD",
           "XAGUSD",
-          "XAUT/USD",
+          "XAUT/USDT",
           "XCN/USD",
           "XDG/USD",
           "XLM/USD",
           "XMR/USD",
-          "XMR/USDT",
           "XPL/USD",
           "XRP/USD",
           "ZEC/USD",
@@ -261,23 +258,23 @@
     {
       "detail": "Equity is read from the single shared paper wallet when available.",
       "metrics": {
-        "closed_trades": 203,
-        "equity_usd": 99.4838,
+        "closed_trades": 205,
+        "equity_usd": 99.4988,
         "initial_equity_usd": 100.0,
-        "pnl_usd": -0.5162,
-        "return_pct": -0.5162,
+        "pnl_usd": -0.5012,
+        "return_pct": -0.5012,
         "shared_wallet": true
       },
       "name": "EQUITY",
       "status": "TRACKING"
     }
   ],
-  "generated_at_utc": "2026-11-27T06:56:28.597157+00:00",
+  "generated_at_utc": "2026-11-27T08:20:46.615776+00:00",
   "live_trading_enabled": false,
   "mode": "PAPER_ONLY",
   "portfolio_status": "PAPER_RUNNING",
   "schema_version": 2,
-  "source_updated_at": "2026-11-27T06:56:28.235574+00:00",
+  "source_updated_at": "2026-11-27T08:20:46.291209+00:00",
   "summary": {
     "agent_count": 6,
     "markets": [
@@ -286,11 +283,10 @@
       "AAVE/USD",
       "ADA/USD",
       "AKE/USD",
-      "AKT/USD",
       "ALGO/USD",
       "APT/USD",
       "ARB/USD",
-      "ASTER/USD",
+      "ATOM/USD",
       "AVAX/USD",
       "BCH/USD",
       "BLESS/USD",
@@ -311,6 +307,7 @@
       "ICP/USD",
       "INJ/USD",
       "JUP/USD",
+      "KAS/USD",
       "LIGHTER/USD",
       "LINK/USD",
       "LTC/USD",
@@ -338,12 +335,11 @@
       "W/USD",
       "WLD/USD",
       "XAGUSD",
-      "XAUT/USD",
+      "XAUT/USDT",
       "XCN/USD",
       "XDG/USD",
       "XLM/USD",
       "XMR/USD",
-      "XMR/USDT",
       "XPL/USD",
       "XRP/USD",
       "ZEC/USD",
@@ -396,17 +392,6 @@
         "strategy_signal": "HOLD",
         "watch_only": true
       },
-      "AKT/USD": {
-        "approved_by_consensus": false,
-        "decision": "HOLD",
-        "execution_mode": "PAPER_ONLY",
-        "live_orders_enabled": false,
-        "reason_codes": [
-          "WATCH_ONLY_NO_CLOSED_CANDLE_SIGNAL"
-        ],
-        "strategy_signal": "HOLD",
-        "watch_only": true
-      },
       "ALGO/USD": {
         "approved_by_consensus": false,
         "decision": "HOLD",
@@ -440,7 +425,7 @@
         "strategy_signal": "HOLD",
         "watch_only": true
       },
-      "ASTER/USD": {
+      "ATOM/USD": {
         "approved_by_consensus": false,
         "decision": "HOLD",
         "execution_mode": "PAPER_ONLY",
@@ -682,6 +667,17 @@
         "watch_only": true
       },
       "JUP/USD": {
+        "approved_by_consensus": false,
+        "decision": "HOLD",
+        "execution_mode": "PAPER_ONLY",
+        "live_orders_enabled": false,
+        "reason_codes": [
+          "WATCH_ONLY_NO_CLOSED_CANDLE_SIGNAL"
+        ],
+        "strategy_signal": "HOLD",
+        "watch_only": true
+      },
+      "KAS/USD": {
         "approved_by_consensus": false,
         "decision": "HOLD",
         "execution_mode": "PAPER_ONLY",
@@ -989,7 +985,7 @@
         "strategy_signal": "HOLD",
         "watch_only": true
       },
-      "XAUT/USD": {
+      "XAUT/USDT": {
         "approved_by_consensus": false,
         "decision": "HOLD",
         "execution_mode": "PAPER_ONLY",
@@ -1046,17 +1042,6 @@
         "watch_only": true
       },
       "XMR/USD": {
-        "approved_by_consensus": false,
-        "decision": "HOLD",
-        "execution_mode": "PAPER_ONLY",
-        "live_orders_enabled": false,
-        "reason_codes": [
-          "WATCH_ONLY_NO_CLOSED_CANDLE_SIGNAL"
-        ],
-        "strategy_signal": "HOLD",
-        "watch_only": true
-      },
-      "XMR/USDT": {
         "approved_by_consensus": false,
         "decision": "HOLD",
         "execution_mode": "PAPER_ONLY",
