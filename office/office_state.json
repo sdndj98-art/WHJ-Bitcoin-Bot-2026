@@ -1,28 +1,7 @@
 {
-  "cycle": 63,
-  "last_role_index": 6,
+  "cycle": 64,
+  "last_role_index": 0,
   "history": [
-    {
-      "cycle": 14,
-      "timestamp_utc": "2026-11-23T01:40:33+00:00",
-      "current_owner": "Release QA",
-      "current_task": "summarize blockers and hand off to Coordinator",
-      "handoff_to": "Coordinator",
-      "handoff_task": "select/sequence next backlog item",
-      "paper_engine_bridge": {
-        "status": "CONNECTED",
-        "generated_at_utc": "2026-11-23T01:18:14+00:00",
-        "paper_status": "PAPER_RUNNING",
-        "agent_count": 6,
-        "markets_scanned": 64,
-        "open_positions": 17,
-        "closed_trades": 34,
-        "equity_usd": 100.9261,
-        "live_trading_enabled": false,
-        "orders_submitted": false
-      },
-      "reminder": "Cycle 14: Release QA must hand off to Coordinator before the next scheduled cycle."
-    },
     {
       "cycle": 15,
       "timestamp_utc": "2026-11-23T03:18:09+00:00",
@@ -1051,29 +1030,50 @@
         "orders_submitted": false
       },
       "reminder": "Cycle 63: Release QA must hand off to Coordinator before the next scheduled cycle."
+    },
+    {
+      "cycle": 64,
+      "timestamp_utc": "2026-11-27T05:29:23+00:00",
+      "current_owner": "Coordinator",
+      "current_task": "select/sequence next backlog item",
+      "handoff_to": "Market-data QA",
+      "handoff_task": "check source freshness and candle integrity",
+      "paper_engine_bridge": {
+        "status": "CONNECTED",
+        "generated_at_utc": "2026-11-27T04:55:22+00:00",
+        "paper_status": "PAPER_RUNNING",
+        "agent_count": 6,
+        "markets_scanned": 67,
+        "open_positions": 17,
+        "closed_trades": 201,
+        "equity_usd": 99.2532,
+        "live_trading_enabled": false,
+        "orders_submitted": false
+      },
+      "reminder": "Cycle 64: Coordinator must hand off to Market-data QA before the next scheduled cycle."
     }
   ],
-  "updated_at_utc": "2026-11-27T03:21:34+00:00",
+  "updated_at_utc": "2026-11-27T05:29:23+00:00",
   "current_handoff": {
-    "cycle": 63,
-    "timestamp_utc": "2026-11-27T03:21:34+00:00",
-    "current_owner": "Release QA",
-    "current_task": "summarize blockers and hand off to Coordinator",
-    "handoff_to": "Coordinator",
-    "handoff_task": "select/sequence next backlog item",
+    "cycle": 64,
+    "timestamp_utc": "2026-11-27T05:29:23+00:00",
+    "current_owner": "Coordinator",
+    "current_task": "select/sequence next backlog item",
+    "handoff_to": "Market-data QA",
+    "handoff_task": "check source freshness and candle integrity",
     "paper_engine_bridge": {
       "status": "CONNECTED",
-      "generated_at_utc": "2026-11-27T02:46:28+00:00",
+      "generated_at_utc": "2026-11-27T04:55:22+00:00",
       "paper_status": "PAPER_RUNNING",
       "agent_count": 6,
       "markets_scanned": 67,
       "open_positions": 17,
-      "closed_trades": 200,
-      "equity_usd": 98.6022,
+      "closed_trades": 201,
+      "equity_usd": 99.2532,
       "live_trading_enabled": false,
       "orders_submitted": false
     },
-    "reminder": "Cycle 63: Release QA must hand off to Coordinator before the next scheduled cycle."
+    "reminder": "Cycle 64: Coordinator must hand off to Market-data QA before the next scheduled cycle."
   },
   "mode": "coordination_only_paper_trading",
   "live_orders_enabled": false
