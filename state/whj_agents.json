@@ -32,11 +32,9 @@
           "ICP/USD",
           "INJ/USD",
           "JUP/USD",
-          "KAS/USD",
           "LIGHTER/USD",
           "LINK/USD",
           "LTC/USD",
-          "MON/USD",
           "NEAR/USD",
           "NIGHT/USD",
           "ONDO/USD",
@@ -60,6 +58,7 @@
           "W/USD",
           "WLD/USD",
           "XAGUSD",
+          "XAUT/USDT",
           "XAUUSD",
           "XCN/USD",
           "XDG/USD",
@@ -100,11 +99,9 @@
           "ICP/USD",
           "INJ/USD",
           "JUP/USD",
-          "KAS/USD",
           "LIGHTER/USD",
           "LINK/USD",
           "LTC/USD",
-          "MON/USD",
           "NEAR/USD",
           "NIGHT/USD",
           "ONDO/USD",
@@ -128,6 +125,7 @@
           "W/USD",
           "WLD/USD",
           "XAGUSD",
+          "XAUT/USDT",
           "XCN/USD",
           "XDG/USD",
           "XLM/USD",
@@ -167,11 +165,9 @@
           "ICP/USD",
           "INJ/USD",
           "JUP/USD",
-          "KAS/USD",
           "LIGHTER/USD",
           "LINK/USD",
           "LTC/USD",
-          "MON/USD",
           "NEAR/USD",
           "NIGHT/USD",
           "ONDO/USD",
@@ -195,6 +191,7 @@
           "W/USD",
           "WLD/USD",
           "XAGUSD",
+          "XAUT/USDT",
           "XCN/USD",
           "XDG/USD",
           "XLM/USD",
@@ -256,22 +253,22 @@
       "detail": "Equity is read from the single shared paper wallet when available.",
       "metrics": {
         "closed_trades": 205,
-        "equity_usd": 99.8149,
+        "equity_usd": 99.8165,
         "initial_equity_usd": 100.0,
-        "pnl_usd": -0.1851,
-        "return_pct": -0.1851,
+        "pnl_usd": -0.1835,
+        "return_pct": -0.1835,
         "shared_wallet": true
       },
       "name": "EQUITY",
       "status": "TRACKING"
     }
   ],
-  "generated_at_utc": "2026-11-27T10:36:14.445064+00:00",
+  "generated_at_utc": "2026-11-27T11:31:50.112372+00:00",
   "live_trading_enabled": false,
   "mode": "PAPER_ONLY",
   "portfolio_status": "PAPER_RUNNING",
   "schema_version": 2,
-  "source_updated_at": "2026-11-27T10:36:14.133539+00:00",
+  "source_updated_at": "2026-11-27T11:31:49.657909+00:00",
   "summary": {
     "agent_count": 6,
     "markets": [
@@ -304,11 +301,9 @@
       "ICP/USD",
       "INJ/USD",
       "JUP/USD",
-      "KAS/USD",
       "LIGHTER/USD",
       "LINK/USD",
       "LTC/USD",
-      "MON/USD",
       "NEAR/USD",
       "NIGHT/USD",
       "ONDO/USD",
@@ -332,6 +327,7 @@
       "W/USD",
       "WLD/USD",
       "XAGUSD",
+      "XAUT/USDT",
       "XCN/USD",
       "XDG/USD",
       "XLM/USD",
@@ -673,17 +669,6 @@
         "strategy_signal": "HOLD",
         "watch_only": true
       },
-      "KAS/USD": {
-        "approved_by_consensus": false,
-        "decision": "HOLD",
-        "execution_mode": "PAPER_ONLY",
-        "live_orders_enabled": false,
-        "reason_codes": [
-          "WATCH_ONLY_NO_CLOSED_CANDLE_SIGNAL"
-        ],
-        "strategy_signal": "HOLD",
-        "watch_only": true
-      },
       "LIGHTER/USD": {
         "approved_by_consensus": false,
         "decision": "HOLD",
@@ -707,17 +692,6 @@
         "watch_only": true
       },
       "LTC/USD": {
-        "approved_by_consensus": false,
-        "decision": "HOLD",
-        "execution_mode": "PAPER_ONLY",
-        "live_orders_enabled": false,
-        "reason_codes": [
-          "WATCH_ONLY_NO_CLOSED_CANDLE_SIGNAL"
-        ],
-        "strategy_signal": "HOLD",
-        "watch_only": true
-      },
-      "MON/USD": {
         "approved_by_consensus": false,
         "decision": "HOLD",
         "execution_mode": "PAPER_ONLY",
@@ -971,6 +945,17 @@
         "watch_only": true
       },
       "XAGUSD": {
+        "approved_by_consensus": false,
+        "decision": "HOLD",
+        "execution_mode": "PAPER_ONLY",
+        "live_orders_enabled": false,
+        "reason_codes": [
+          "WATCH_ONLY_NO_CLOSED_CANDLE_SIGNAL"
+        ],
+        "strategy_signal": "HOLD",
+        "watch_only": true
+      },
+      "XAUT/USDT": {
         "approved_by_consensus": false,
         "decision": "HOLD",
         "execution_mode": "PAPER_ONLY",
