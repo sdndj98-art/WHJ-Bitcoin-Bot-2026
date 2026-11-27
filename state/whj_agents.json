@@ -40,10 +40,10 @@
           "PEARL/USD",
           "PEPE/USD",
           "PIEVERSE/USD",
+          "POL/USD",
           "PORTAL/USD",
           "PUMP/USD",
           "QNT/USD",
-          "RENDER/USD",
           "RLUSD/USDT",
           "SEI/USD",
           "SKY/USD",
@@ -107,10 +107,10 @@
           "PEARL/USD",
           "PEPE/USD",
           "PIEVERSE/USD",
+          "POL/USD",
           "PORTAL/USD",
           "PUMP/USD",
           "QNT/USD",
-          "RENDER/USD",
           "RLUSD/USDT",
           "SEI/USD",
           "SKY/USD",
@@ -173,10 +173,10 @@
           "PEARL/USD",
           "PEPE/USD",
           "PIEVERSE/USD",
+          "POL/USD",
           "PORTAL/USD",
           "PUMP/USD",
           "QNT/USD",
-          "RENDER/USD",
           "RLUSD/USDT",
           "SEI/USD",
           "SKY/USD",
@@ -253,22 +253,22 @@
       "detail": "Equity is read from the single shared paper wallet when available.",
       "metrics": {
         "closed_trades": 223,
-        "equity_usd": 97.955,
+        "equity_usd": 98.0312,
         "initial_equity_usd": 100.0,
-        "pnl_usd": -2.045,
-        "return_pct": -2.045,
+        "pnl_usd": -1.9688,
+        "return_pct": -1.9688,
         "shared_wallet": true
       },
       "name": "EQUITY",
       "status": "TRACKING"
     }
   ],
-  "generated_at_utc": "2026-11-27T21:34:59.616813+00:00",
+  "generated_at_utc": "2026-11-27T22:36:12.711031+00:00",
   "live_trading_enabled": false,
   "mode": "PAPER_ONLY",
   "portfolio_status": "PAPER_RUNNING",
   "schema_version": 2,
-  "source_updated_at": "2026-11-27T21:34:59.202082+00:00",
+  "source_updated_at": "2026-11-27T22:36:12.303190+00:00",
   "summary": {
     "agent_count": 6,
     "markets": [
@@ -309,10 +309,10 @@
       "PEARL/USD",
       "PEPE/USD",
       "PIEVERSE/USD",
+      "POL/USD",
       "PORTAL/USD",
       "PUMP/USD",
       "QNT/USD",
-      "RENDER/USD",
       "RLUSD/USDT",
       "SEI/USD",
       "SKY/USD",
@@ -757,6 +757,17 @@
         "strategy_signal": "HOLD",
         "watch_only": true
       },
+      "POL/USD": {
+        "approved_by_consensus": false,
+        "decision": "HOLD",
+        "execution_mode": "PAPER_ONLY",
+        "live_orders_enabled": false,
+        "reason_codes": [
+          "WATCH_ONLY_NO_CLOSED_CANDLE_SIGNAL"
+        ],
+        "strategy_signal": "HOLD",
+        "watch_only": true
+      },
       "PORTAL/USD": {
         "approved_by_consensus": false,
         "decision": "HOLD",
@@ -780,17 +791,6 @@
         "watch_only": true
       },
       "QNT/USD": {
-        "approved_by_consensus": false,
-        "decision": "HOLD",
-        "execution_mode": "PAPER_ONLY",
-        "live_orders_enabled": false,
-        "reason_codes": [
-          "WATCH_ONLY_NO_CLOSED_CANDLE_SIGNAL"
-        ],
-        "strategy_signal": "HOLD",
-        "watch_only": true
-      },
-      "RENDER/USD": {
         "approved_by_consensus": false,
         "decision": "HOLD",
         "execution_mode": "PAPER_ONLY",
