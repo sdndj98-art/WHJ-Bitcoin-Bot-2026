@@ -24,10 +24,8 @@
           "FET/USD",
           "FIDD/USD",
           "FLR/USD",
-          "GRASS/USD",
           "HBAR/USD",
           "HYPE/USD",
-          "ICNT/USD",
           "ICP/USD",
           "INJ/USD",
           "JUP/USD",
@@ -45,6 +43,7 @@
           "PUMP/USD",
           "QNT/USD",
           "RENDER/USD",
+          "RLUSD/USDT",
           "SEI/USD",
           "SKY/USD",
           "SOFID/USDT",
@@ -92,10 +91,8 @@
           "FET/USD",
           "FIDD/USD",
           "FLR/USD",
-          "GRASS/USD",
           "HBAR/USD",
           "HYPE/USD",
-          "ICNT/USD",
           "ICP/USD",
           "INJ/USD",
           "JUP/USD",
@@ -113,6 +110,7 @@
           "PUMP/USD",
           "QNT/USD",
           "RENDER/USD",
+          "RLUSD/USDT",
           "SEI/USD",
           "SKY/USD",
           "SOFID/USDT",
@@ -159,10 +157,8 @@
           "FET/USD",
           "FIDD/USD",
           "FLR/USD",
-          "GRASS/USD",
           "HBAR/USD",
           "HYPE/USD",
-          "ICNT/USD",
           "ICP/USD",
           "INJ/USD",
           "JUP/USD",
@@ -180,6 +176,7 @@
           "PUMP/USD",
           "QNT/USD",
           "RENDER/USD",
+          "RLUSD/USDT",
           "SEI/USD",
           "SKY/USD",
           "SOFID/USDT",
@@ -255,23 +252,23 @@
     {
       "detail": "Equity is read from the single shared paper wallet when available.",
       "metrics": {
-        "closed_trades": 205,
-        "equity_usd": 99.4709,
+        "closed_trades": 206,
+        "equity_usd": 97.6197,
         "initial_equity_usd": 100.0,
-        "pnl_usd": -0.5291,
-        "return_pct": -0.5291,
+        "pnl_usd": -2.3803,
+        "return_pct": -2.3803,
         "shared_wallet": true
       },
       "name": "EQUITY",
       "status": "TRACKING"
     }
   ],
-  "generated_at_utc": "2026-11-27T14:45:42.067181+00:00",
+  "generated_at_utc": "2026-11-27T15:42:25.713723+00:00",
   "live_trading_enabled": false,
   "mode": "PAPER_ONLY",
   "portfolio_status": "PAPER_RUNNING",
   "schema_version": 2,
-  "source_updated_at": "2026-11-27T14:45:41.437089+00:00",
+  "source_updated_at": "2026-11-27T15:42:25.214358+00:00",
   "summary": {
     "agent_count": 6,
     "markets": [
@@ -296,10 +293,8 @@
       "FET/USD",
       "FIDD/USD",
       "FLR/USD",
-      "GRASS/USD",
       "HBAR/USD",
       "HYPE/USD",
-      "ICNT/USD",
       "ICP/USD",
       "INJ/USD",
       "JUP/USD",
@@ -317,6 +312,7 @@
       "PUMP/USD",
       "QNT/USD",
       "RENDER/USD",
+      "RLUSD/USDT",
       "SEI/USD",
       "SKY/USD",
       "SOFID/USDT",
@@ -585,17 +581,6 @@
         "strategy_signal": "HOLD",
         "watch_only": true
       },
-      "GRASS/USD": {
-        "approved_by_consensus": false,
-        "decision": "HOLD",
-        "execution_mode": "PAPER_ONLY",
-        "live_orders_enabled": false,
-        "reason_codes": [
-          "WATCH_ONLY_NO_CLOSED_CANDLE_SIGNAL"
-        ],
-        "strategy_signal": "HOLD",
-        "watch_only": true
-      },
       "HBAR/USD": {
         "approved_by_consensus": false,
         "decision": "HOLD",
@@ -608,17 +593,6 @@
         "watch_only": true
       },
       "HYPE/USD": {
-        "approved_by_consensus": false,
-        "decision": "HOLD",
-        "execution_mode": "PAPER_ONLY",
-        "live_orders_enabled": false,
-        "reason_codes": [
-          "WATCH_ONLY_NO_CLOSED_CANDLE_SIGNAL"
-        ],
-        "strategy_signal": "HOLD",
-        "watch_only": true
-      },
-      "ICNT/USD": {
         "approved_by_consensus": false,
         "decision": "HOLD",
         "execution_mode": "PAPER_ONLY",
@@ -806,6 +780,17 @@
         "watch_only": true
       },
       "RENDER/USD": {
+        "approved_by_consensus": false,
+        "decision": "HOLD",
+        "execution_mode": "PAPER_ONLY",
+        "live_orders_enabled": false,
+        "reason_codes": [
+          "WATCH_ONLY_NO_CLOSED_CANDLE_SIGNAL"
+        ],
+        "strategy_signal": "HOLD",
+        "watch_only": true
+      },
+      "RLUSD/USDT": {
         "approved_by_consensus": false,
         "decision": "HOLD",
         "execution_mode": "PAPER_ONLY",
