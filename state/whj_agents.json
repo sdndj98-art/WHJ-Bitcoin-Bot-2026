@@ -8,7 +8,6 @@
           "AAVE/USD",
           "ADA/USD",
           "AKE/USD",
-          "AKT/USD",
           "ALGO/USD",
           "APT/USD",
           "ARB/USD",
@@ -27,8 +26,8 @@
           "FLR/USD",
           "GRASS/USD",
           "HBAR/USD",
-          "HONEY/USD",
           "HYPE/USD",
+          "ICNT/USD",
           "ICP/USD",
           "INJ/USD",
           "JUP/USD",
@@ -52,6 +51,7 @@
           "SOL/USD",
           "SUI/USD",
           "TAO/USD",
+          "TEL/USD",
           "TRX/USD",
           "UNI/USD",
           "USELESS/USD",
@@ -59,6 +59,7 @@
           "W/USD",
           "WLD/USD",
           "XAGUSD",
+          "XAUT/USD",
           "XAUUSD",
           "XCN/USD",
           "XDG/USD",
@@ -75,7 +76,6 @@
           "AAVE/USD",
           "ADA/USD",
           "AKE/USD",
-          "AKT/USD",
           "ALGO/USD",
           "APT/USD",
           "ARB/USD",
@@ -94,8 +94,8 @@
           "FLR/USD",
           "GRASS/USD",
           "HBAR/USD",
-          "HONEY/USD",
           "HYPE/USD",
+          "ICNT/USD",
           "ICP/USD",
           "INJ/USD",
           "JUP/USD",
@@ -119,6 +119,7 @@
           "SOL/USD",
           "SUI/USD",
           "TAO/USD",
+          "TEL/USD",
           "TRX/USD",
           "UNI/USD",
           "USELESS/USD",
@@ -126,6 +127,7 @@
           "W/USD",
           "WLD/USD",
           "XAGUSD",
+          "XAUT/USD",
           "XCN/USD",
           "XDG/USD",
           "XLM/USD",
@@ -141,7 +143,6 @@
           "AAVE/USD",
           "ADA/USD",
           "AKE/USD",
-          "AKT/USD",
           "ALGO/USD",
           "APT/USD",
           "ARB/USD",
@@ -160,8 +161,8 @@
           "FLR/USD",
           "GRASS/USD",
           "HBAR/USD",
-          "HONEY/USD",
           "HYPE/USD",
+          "ICNT/USD",
           "ICP/USD",
           "INJ/USD",
           "JUP/USD",
@@ -185,6 +186,7 @@
           "SOL/USD",
           "SUI/USD",
           "TAO/USD",
+          "TEL/USD",
           "TRX/USD",
           "UNI/USD",
           "USELESS/USD",
@@ -192,6 +194,7 @@
           "W/USD",
           "WLD/USD",
           "XAGUSD",
+          "XAUT/USD",
           "XCN/USD",
           "XDG/USD",
           "XLM/USD",
@@ -253,22 +256,22 @@
       "detail": "Equity is read from the single shared paper wallet when available.",
       "metrics": {
         "closed_trades": 205,
-        "equity_usd": 99.6354,
+        "equity_usd": 99.4709,
         "initial_equity_usd": 100.0,
-        "pnl_usd": -0.3646,
-        "return_pct": -0.3646,
+        "pnl_usd": -0.5291,
+        "return_pct": -0.5291,
         "shared_wallet": true
       },
       "name": "EQUITY",
       "status": "TRACKING"
     }
   ],
-  "generated_at_utc": "2026-11-27T13:58:16.771509+00:00",
+  "generated_at_utc": "2026-11-27T14:45:42.067181+00:00",
   "live_trading_enabled": false,
   "mode": "PAPER_ONLY",
   "portfolio_status": "PAPER_RUNNING",
   "schema_version": 2,
-  "source_updated_at": "2026-11-27T13:58:16.355386+00:00",
+  "source_updated_at": "2026-11-27T14:45:41.437089+00:00",
   "summary": {
     "agent_count": 6,
     "markets": [
@@ -277,7 +280,6 @@
       "AAVE/USD",
       "ADA/USD",
       "AKE/USD",
-      "AKT/USD",
       "ALGO/USD",
       "APT/USD",
       "ARB/USD",
@@ -296,8 +298,8 @@
       "FLR/USD",
       "GRASS/USD",
       "HBAR/USD",
-      "HONEY/USD",
       "HYPE/USD",
+      "ICNT/USD",
       "ICP/USD",
       "INJ/USD",
       "JUP/USD",
@@ -321,6 +323,7 @@
       "SOL/USD",
       "SUI/USD",
       "TAO/USD",
+      "TEL/USD",
       "TRX/USD",
       "UNI/USD",
       "USELESS/USD",
@@ -328,6 +331,7 @@
       "W/USD",
       "WLD/USD",
       "XAGUSD",
+      "XAUT/USD",
       "XCN/USD",
       "XDG/USD",
       "XLM/USD",
@@ -374,17 +378,6 @@
         "watch_only": true
       },
       "AKE/USD": {
-        "approved_by_consensus": false,
-        "decision": "HOLD",
-        "execution_mode": "PAPER_ONLY",
-        "live_orders_enabled": false,
-        "reason_codes": [
-          "WATCH_ONLY_NO_CLOSED_CANDLE_SIGNAL"
-        ],
-        "strategy_signal": "HOLD",
-        "watch_only": true
-      },
-      "AKT/USD": {
         "approved_by_consensus": false,
         "decision": "HOLD",
         "execution_mode": "PAPER_ONLY",
@@ -614,7 +607,7 @@
         "strategy_signal": "HOLD",
         "watch_only": true
       },
-      "HONEY/USD": {
+      "HYPE/USD": {
         "approved_by_consensus": false,
         "decision": "HOLD",
         "execution_mode": "PAPER_ONLY",
@@ -625,7 +618,7 @@
         "strategy_signal": "HOLD",
         "watch_only": true
       },
-      "HYPE/USD": {
+      "ICNT/USD": {
         "approved_by_consensus": false,
         "decision": "HOLD",
         "execution_mode": "PAPER_ONLY",
@@ -889,6 +882,17 @@
         "strategy_signal": "HOLD",
         "watch_only": true
       },
+      "TEL/USD": {
+        "approved_by_consensus": false,
+        "decision": "HOLD",
+        "execution_mode": "PAPER_ONLY",
+        "live_orders_enabled": false,
+        "reason_codes": [
+          "WATCH_ONLY_NO_CLOSED_CANDLE_SIGNAL"
+        ],
+        "strategy_signal": "HOLD",
+        "watch_only": true
+      },
       "TRX/USD": {
         "approved_by_consensus": false,
         "decision": "HOLD",
@@ -956,6 +960,17 @@
         "watch_only": true
       },
       "XAGUSD": {
+        "approved_by_consensus": false,
+        "decision": "HOLD",
+        "execution_mode": "PAPER_ONLY",
+        "live_orders_enabled": false,
+        "reason_codes": [
+          "WATCH_ONLY_NO_CLOSED_CANDLE_SIGNAL"
+        ],
+        "strategy_signal": "HOLD",
+        "watch_only": true
+      },
+      "XAUT/USD": {
         "approved_by_consensus": false,
         "decision": "HOLD",
         "execution_mode": "PAPER_ONLY",
