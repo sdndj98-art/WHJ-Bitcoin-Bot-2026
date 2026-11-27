@@ -21,6 +21,7 @@
           "CC/USD",
           "CRV/USD",
           "DASH/USD",
+          "DOT/USD",
           "DRV/USD",
           "ENA/USD",
           "ETH/USD",
@@ -35,7 +36,6 @@
           "LIGHTER/USD",
           "LINK/USD",
           "LTC/USD",
-          "MON/USD",
           "NEAR/USD",
           "NIGHT/USD",
           "PAXG/USD",
@@ -91,6 +91,7 @@
           "CC/USD",
           "CRV/USD",
           "DASH/USD",
+          "DOT/USD",
           "DRV/USD",
           "ENA/USD",
           "ETH/USD",
@@ -105,7 +106,6 @@
           "LIGHTER/USD",
           "LINK/USD",
           "LTC/USD",
-          "MON/USD",
           "NEAR/USD",
           "NIGHT/USD",
           "PAXG/USD",
@@ -160,6 +160,7 @@
           "CC/USD",
           "CRV/USD",
           "DASH/USD",
+          "DOT/USD",
           "DRV/USD",
           "ENA/USD",
           "ETH/USD",
@@ -174,7 +175,6 @@
           "LIGHTER/USD",
           "LINK/USD",
           "LTC/USD",
-          "MON/USD",
           "NEAR/USD",
           "NIGHT/USD",
           "PAXG/USD",
@@ -261,23 +261,23 @@
     {
       "detail": "Equity is read from the single shared paper wallet when available.",
       "metrics": {
-        "closed_trades": 196,
-        "equity_usd": 98.5536,
+        "closed_trades": 199,
+        "equity_usd": 98.6798,
         "initial_equity_usd": 100.0,
-        "pnl_usd": -1.4464,
-        "return_pct": -1.4464,
+        "pnl_usd": -1.3202,
+        "return_pct": -1.3202,
         "shared_wallet": true
       },
       "name": "EQUITY",
       "status": "TRACKING"
     }
   ],
-  "generated_at_utc": "2026-11-27T00:20:36.761827+00:00",
+  "generated_at_utc": "2026-11-27T01:51:01.954606+00:00",
   "live_trading_enabled": false,
   "mode": "PAPER_ONLY",
   "portfolio_status": "PAPER_RUNNING",
   "schema_version": 2,
-  "source_updated_at": "2026-11-27T00:20:36.407054+00:00",
+  "source_updated_at": "2026-11-27T01:51:01.433234+00:00",
   "summary": {
     "agent_count": 6,
     "markets": [
@@ -299,6 +299,7 @@
       "CC/USD",
       "CRV/USD",
       "DASH/USD",
+      "DOT/USD",
       "DRV/USD",
       "ENA/USD",
       "ETH/USD",
@@ -313,7 +314,6 @@
       "LIGHTER/USD",
       "LINK/USD",
       "LTC/USD",
-      "MON/USD",
       "NEAR/USD",
       "NIGHT/USD",
       "PAXG/USD",
@@ -560,6 +560,17 @@
         "strategy_signal": "HOLD",
         "watch_only": true
       },
+      "DOT/USD": {
+        "approved_by_consensus": false,
+        "decision": "HOLD",
+        "execution_mode": "PAPER_ONLY",
+        "live_orders_enabled": false,
+        "reason_codes": [
+          "WATCH_ONLY_NO_CLOSED_CANDLE_SIGNAL"
+        ],
+        "strategy_signal": "HOLD",
+        "watch_only": true
+      },
       "DRV/USD": {
         "approved_by_consensus": false,
         "decision": "HOLD",
@@ -704,17 +715,6 @@
         "watch_only": true
       },
       "LTC/USD": {
-        "approved_by_consensus": false,
-        "decision": "HOLD",
-        "execution_mode": "PAPER_ONLY",
-        "live_orders_enabled": false,
-        "reason_codes": [
-          "WATCH_ONLY_NO_CLOSED_CANDLE_SIGNAL"
-        ],
-        "strategy_signal": "HOLD",
-        "watch_only": true
-      },
-      "MON/USD": {
         "approved_by_consensus": false,
         "decision": "HOLD",
         "execution_mode": "PAPER_ONLY",
