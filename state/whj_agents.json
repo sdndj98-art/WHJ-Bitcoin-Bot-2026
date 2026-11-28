@@ -45,7 +45,6 @@
           "QNT/USD",
           "RENDER/USD",
           "RLUSD/USDT",
-          "SEI/USD",
           "SKY/USD",
           "SOFID/USDT",
           "SOL/USD",
@@ -60,9 +59,10 @@
           "XAGUSD",
           "XAUT/USD",
           "XAUUSD",
+          "XCN/USD",
           "XDG/USD",
           "XLM/USD",
-          "XMR/USDT",
+          "XMR/USD",
           "XPL/USD",
           "XRP/USD",
           "ZEC/USD",
@@ -111,7 +111,6 @@
           "QNT/USD",
           "RENDER/USD",
           "RLUSD/USDT",
-          "SEI/USD",
           "SKY/USD",
           "SOFID/USDT",
           "SOL/USD",
@@ -125,9 +124,10 @@
           "WLD/USD",
           "XAGUSD",
           "XAUT/USD",
+          "XCN/USD",
           "XDG/USD",
           "XLM/USD",
-          "XMR/USDT",
+          "XMR/USD",
           "XPL/USD",
           "XRP/USD",
           "ZEC/USD",
@@ -176,7 +176,6 @@
           "QNT/USD",
           "RENDER/USD",
           "RLUSD/USDT",
-          "SEI/USD",
           "SKY/USD",
           "SOFID/USDT",
           "SOL/USD",
@@ -190,9 +189,10 @@
           "WLD/USD",
           "XAGUSD",
           "XAUT/USD",
+          "XCN/USD",
           "XDG/USD",
           "XLM/USD",
-          "XMR/USDT",
+          "XMR/USD",
           "XPL/USD",
           "XRP/USD",
           "ZEC/USD",
@@ -250,22 +250,22 @@
       "detail": "Equity is read from the single shared paper wallet when available.",
       "metrics": {
         "closed_trades": 223,
-        "equity_usd": 98.0304,
+        "equity_usd": 98.2561,
         "initial_equity_usd": 100.0,
-        "pnl_usd": -1.9696,
-        "return_pct": -1.9696,
+        "pnl_usd": -1.7439,
+        "return_pct": -1.7439,
         "shared_wallet": true
       },
       "name": "EQUITY",
       "status": "TRACKING"
     }
   ],
-  "generated_at_utc": "2026-11-28T01:51:00.306020+00:00",
+  "generated_at_utc": "2026-11-28T02:42:37.543213+00:00",
   "live_trading_enabled": false,
   "mode": "PAPER_ONLY",
   "portfolio_status": "PAPER_RUNNING",
   "schema_version": 2,
-  "source_updated_at": "2026-11-28T01:50:59.815609+00:00",
+  "source_updated_at": "2026-11-28T02:42:37.036235+00:00",
   "summary": {
     "agent_count": 6,
     "markets": [
@@ -311,7 +311,6 @@
       "QNT/USD",
       "RENDER/USD",
       "RLUSD/USDT",
-      "SEI/USD",
       "SKY/USD",
       "SOFID/USDT",
       "SOL/USD",
@@ -325,9 +324,10 @@
       "WLD/USD",
       "XAGUSD",
       "XAUT/USD",
+      "XCN/USD",
       "XDG/USD",
       "XLM/USD",
-      "XMR/USDT",
+      "XMR/USD",
       "XPL/USD",
       "XRP/USD",
       "ZEC/USD",
@@ -808,17 +808,6 @@
         "strategy_signal": "HOLD",
         "watch_only": true
       },
-      "SEI/USD": {
-        "approved_by_consensus": false,
-        "decision": "HOLD",
-        "execution_mode": "PAPER_ONLY",
-        "live_orders_enabled": false,
-        "reason_codes": [
-          "WATCH_ONLY_NO_CLOSED_CANDLE_SIGNAL"
-        ],
-        "strategy_signal": "HOLD",
-        "watch_only": true
-      },
       "SKY/USD": {
         "approved_by_consensus": false,
         "decision": "HOLD",
@@ -974,6 +963,17 @@
         ],
         "strategy_signal": "HOLD"
       },
+      "XCN/USD": {
+        "approved_by_consensus": false,
+        "decision": "HOLD",
+        "execution_mode": "PAPER_ONLY",
+        "live_orders_enabled": false,
+        "reason_codes": [
+          "WATCH_ONLY_NO_CLOSED_CANDLE_SIGNAL"
+        ],
+        "strategy_signal": "HOLD",
+        "watch_only": true
+      },
       "XDG/USD": {
         "approved_by_consensus": false,
         "decision": "HOLD",
@@ -996,7 +996,7 @@
         "strategy_signal": "HOLD",
         "watch_only": true
       },
-      "XMR/USDT": {
+      "XMR/USD": {
         "approved_by_consensus": false,
         "decision": "HOLD",
         "execution_mode": "PAPER_ONLY",
