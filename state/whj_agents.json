@@ -62,7 +62,7 @@
           "XAUUSD",
           "XDG/USD",
           "XLM/USD",
-          "XMR/USD",
+          "XMR/USDT",
           "XPL/USD",
           "XRP/USD",
           "ZEC/USD",
@@ -127,7 +127,7 @@
           "XAUT/USD",
           "XDG/USD",
           "XLM/USD",
-          "XMR/USD",
+          "XMR/USDT",
           "XPL/USD",
           "XRP/USD",
           "ZEC/USD",
@@ -192,7 +192,7 @@
           "XAUT/USD",
           "XDG/USD",
           "XLM/USD",
-          "XMR/USD",
+          "XMR/USDT",
           "XPL/USD",
           "XRP/USD",
           "ZEC/USD",
@@ -250,22 +250,22 @@
       "detail": "Equity is read from the single shared paper wallet when available.",
       "metrics": {
         "closed_trades": 223,
-        "equity_usd": 98.1438,
+        "equity_usd": 98.0304,
         "initial_equity_usd": 100.0,
-        "pnl_usd": -1.8562,
-        "return_pct": -1.8562,
+        "pnl_usd": -1.9696,
+        "return_pct": -1.9696,
         "shared_wallet": true
       },
       "name": "EQUITY",
       "status": "TRACKING"
     }
   ],
-  "generated_at_utc": "2026-11-28T00:30:36.462698+00:00",
+  "generated_at_utc": "2026-11-28T01:51:00.306020+00:00",
   "live_trading_enabled": false,
   "mode": "PAPER_ONLY",
   "portfolio_status": "PAPER_RUNNING",
   "schema_version": 2,
-  "source_updated_at": "2026-11-28T00:30:35.891686+00:00",
+  "source_updated_at": "2026-11-28T01:50:59.815609+00:00",
   "summary": {
     "agent_count": 6,
     "markets": [
@@ -327,7 +327,7 @@
       "XAUT/USD",
       "XDG/USD",
       "XLM/USD",
-      "XMR/USD",
+      "XMR/USDT",
       "XPL/USD",
       "XRP/USD",
       "ZEC/USD",
@@ -996,7 +996,7 @@
         "strategy_signal": "HOLD",
         "watch_only": true
       },
-      "XMR/USD": {
+      "XMR/USDT": {
         "approved_by_consensus": false,
         "decision": "HOLD",
         "execution_mode": "PAPER_ONLY",
