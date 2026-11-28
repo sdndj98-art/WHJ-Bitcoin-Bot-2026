@@ -42,6 +42,7 @@
           "ONDO/USD",
           "PAXG/USD",
           "PEARL/USD",
+          "PENGU/USD",
           "PEPE/USD",
           "PIEVERSE/USD",
           "PORTAL/USD",
@@ -59,7 +60,6 @@
           "UNI/USD",
           "VVV/USD",
           "W/USD",
-          "WLD/USD",
           "WLFI/USD",
           "XAGUSD",
           "XAUUSD",
@@ -112,6 +112,7 @@
           "ONDO/USD",
           "PAXG/USD",
           "PEARL/USD",
+          "PENGU/USD",
           "PEPE/USD",
           "PIEVERSE/USD",
           "PORTAL/USD",
@@ -129,7 +130,6 @@
           "UNI/USD",
           "VVV/USD",
           "W/USD",
-          "WLD/USD",
           "WLFI/USD",
           "XAGUSD",
           "XCN/USD",
@@ -181,6 +181,7 @@
           "ONDO/USD",
           "PAXG/USD",
           "PEARL/USD",
+          "PENGU/USD",
           "PEPE/USD",
           "PIEVERSE/USD",
           "PORTAL/USD",
@@ -198,7 +199,6 @@
           "UNI/USD",
           "VVV/USD",
           "W/USD",
-          "WLD/USD",
           "WLFI/USD",
           "XAGUSD",
           "XCN/USD",
@@ -261,23 +261,23 @@
     {
       "detail": "Equity is read from the single shared paper wallet when available.",
       "metrics": {
-        "closed_trades": 245,
-        "equity_usd": 97.0827,
+        "closed_trades": 247,
+        "equity_usd": 97.2263,
         "initial_equity_usd": 100.0,
-        "pnl_usd": -2.9173,
-        "return_pct": -2.9173,
+        "pnl_usd": -2.7737,
+        "return_pct": -2.7737,
         "shared_wallet": true
       },
       "name": "EQUITY",
       "status": "TRACKING"
     }
   ],
-  "generated_at_utc": "2026-11-28T14:57:29.584753+00:00",
+  "generated_at_utc": "2026-11-28T15:36:46.768663+00:00",
   "live_trading_enabled": false,
   "mode": "PAPER_ONLY",
   "portfolio_status": "PAPER_RUNNING",
   "schema_version": 2,
-  "source_updated_at": "2026-11-28T14:57:29.221075+00:00",
+  "source_updated_at": "2026-11-28T15:36:46.387089+00:00",
   "summary": {
     "agent_count": 6,
     "markets": [
@@ -320,6 +320,7 @@
       "ONDO/USD",
       "PAXG/USD",
       "PEARL/USD",
+      "PENGU/USD",
       "PEPE/USD",
       "PIEVERSE/USD",
       "PORTAL/USD",
@@ -337,7 +338,6 @@
       "UNI/USD",
       "VVV/USD",
       "W/USD",
-      "WLD/USD",
       "WLFI/USD",
       "XAGUSD",
       "XCN/USD",
@@ -791,6 +791,17 @@
         "strategy_signal": "HOLD",
         "watch_only": true
       },
+      "PENGU/USD": {
+        "approved_by_consensus": false,
+        "decision": "HOLD",
+        "execution_mode": "PAPER_ONLY",
+        "live_orders_enabled": false,
+        "reason_codes": [
+          "WATCH_ONLY_NO_CLOSED_CANDLE_SIGNAL"
+        ],
+        "strategy_signal": "HOLD",
+        "watch_only": true
+      },
       "PEPE/USD": {
         "approved_by_consensus": false,
         "decision": "HOLD",
@@ -968,17 +979,6 @@
         "watch_only": true
       },
       "W/USD": {
-        "approved_by_consensus": false,
-        "decision": "HOLD",
-        "execution_mode": "PAPER_ONLY",
-        "live_orders_enabled": false,
-        "reason_codes": [
-          "WATCH_ONLY_NO_CLOSED_CANDLE_SIGNAL"
-        ],
-        "strategy_signal": "HOLD",
-        "watch_only": true
-      },
-      "WLD/USD": {
         "approved_by_consensus": false,
         "decision": "HOLD",
         "execution_mode": "PAPER_ONLY",
