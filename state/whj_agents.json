@@ -28,6 +28,7 @@
           "FIL/USD",
           "HBAR/USD",
           "HYPE/USD",
+          "ICNT/USD",
           "ICP/USD",
           "INJ/USD",
           "JUP/USD",
@@ -40,7 +41,6 @@
           "ONDO/USD",
           "PAXG/USD",
           "PEARL/USD",
-          "PENGU/USD",
           "PEPE/USD",
           "PIEVERSE/USD",
           "PORTAL/USD",
@@ -98,6 +98,7 @@
           "FIL/USD",
           "HBAR/USD",
           "HYPE/USD",
+          "ICNT/USD",
           "ICP/USD",
           "INJ/USD",
           "JUP/USD",
@@ -110,7 +111,6 @@
           "ONDO/USD",
           "PAXG/USD",
           "PEARL/USD",
-          "PENGU/USD",
           "PEPE/USD",
           "PIEVERSE/USD",
           "PORTAL/USD",
@@ -167,6 +167,7 @@
           "FIL/USD",
           "HBAR/USD",
           "HYPE/USD",
+          "ICNT/USD",
           "ICP/USD",
           "INJ/USD",
           "JUP/USD",
@@ -179,7 +180,6 @@
           "ONDO/USD",
           "PAXG/USD",
           "PEARL/USD",
-          "PENGU/USD",
           "PEPE/USD",
           "PIEVERSE/USD",
           "PORTAL/USD",
@@ -262,22 +262,22 @@
       "detail": "Equity is read from the single shared paper wallet when available.",
       "metrics": {
         "closed_trades": 247,
-        "equity_usd": 97.1241,
+        "equity_usd": 97.0333,
         "initial_equity_usd": 100.0,
-        "pnl_usd": -2.8759,
-        "return_pct": -2.8759,
+        "pnl_usd": -2.9667,
+        "return_pct": -2.9667,
         "shared_wallet": true
       },
       "name": "EQUITY",
       "status": "TRACKING"
     }
   ],
-  "generated_at_utc": "2026-11-28T16:28:56.869261+00:00",
+  "generated_at_utc": "2026-11-28T17:17:01.092313+00:00",
   "live_trading_enabled": false,
   "mode": "PAPER_ONLY",
   "portfolio_status": "PAPER_RUNNING",
   "schema_version": 2,
-  "source_updated_at": "2026-11-28T16:28:56.441350+00:00",
+  "source_updated_at": "2026-11-28T17:17:00.657028+00:00",
   "summary": {
     "agent_count": 6,
     "markets": [
@@ -306,6 +306,7 @@
       "FIL/USD",
       "HBAR/USD",
       "HYPE/USD",
+      "ICNT/USD",
       "ICP/USD",
       "INJ/USD",
       "JUP/USD",
@@ -318,7 +319,6 @@
       "ONDO/USD",
       "PAXG/USD",
       "PEARL/USD",
-      "PENGU/USD",
       "PEPE/USD",
       "PIEVERSE/USD",
       "PORTAL/USD",
@@ -637,6 +637,17 @@
         "strategy_signal": "HOLD",
         "watch_only": true
       },
+      "ICNT/USD": {
+        "approved_by_consensus": false,
+        "decision": "HOLD",
+        "execution_mode": "PAPER_ONLY",
+        "live_orders_enabled": false,
+        "reason_codes": [
+          "WATCH_ONLY_NO_CLOSED_CANDLE_SIGNAL"
+        ],
+        "strategy_signal": "HOLD",
+        "watch_only": true
+      },
       "ICP/USD": {
         "approved_by_consensus": false,
         "decision": "HOLD",
@@ -759,17 +770,6 @@
         "watch_only": true
       },
       "PEARL/USD": {
-        "approved_by_consensus": false,
-        "decision": "HOLD",
-        "execution_mode": "PAPER_ONLY",
-        "live_orders_enabled": false,
-        "reason_codes": [
-          "WATCH_ONLY_NO_CLOSED_CANDLE_SIGNAL"
-        ],
-        "strategy_signal": "HOLD",
-        "watch_only": true
-      },
-      "PENGU/USD": {
         "approved_by_consensus": false,
         "decision": "HOLD",
         "execution_mode": "PAPER_ONLY",
