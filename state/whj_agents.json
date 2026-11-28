@@ -10,9 +10,9 @@
           "AKE/USD",
           "ALGO/USD",
           "ARB/USD",
-          "ATOM/USD",
           "AVAX/USD",
           "BCH/USD",
+          "BFI/USD",
           "BLESS/USD",
           "BNB/USD",
           "CC/USD",
@@ -40,6 +40,7 @@
           "PEARL/USD",
           "PEPE/USD",
           "PIEVERSE/USD",
+          "POL/USD",
           "PORTAL/USD",
           "PUMP/USD",
           "QNT/USD",
@@ -79,9 +80,9 @@
           "AKE/USD",
           "ALGO/USD",
           "ARB/USD",
-          "ATOM/USD",
           "AVAX/USD",
           "BCH/USD",
+          "BFI/USD",
           "BLESS/USD",
           "BNB/USD",
           "CC/USD",
@@ -109,6 +110,7 @@
           "PEARL/USD",
           "PEPE/USD",
           "PIEVERSE/USD",
+          "POL/USD",
           "PORTAL/USD",
           "PUMP/USD",
           "QNT/USD",
@@ -147,9 +149,9 @@
           "AKE/USD",
           "ALGO/USD",
           "ARB/USD",
-          "ATOM/USD",
           "AVAX/USD",
           "BCH/USD",
+          "BFI/USD",
           "BLESS/USD",
           "BNB/USD",
           "CC/USD",
@@ -177,6 +179,7 @@
           "PEARL/USD",
           "PEPE/USD",
           "PIEVERSE/USD",
+          "POL/USD",
           "PORTAL/USD",
           "PUMP/USD",
           "QNT/USD",
@@ -258,23 +261,23 @@
     {
       "detail": "Equity is read from the single shared paper wallet when available.",
       "metrics": {
-        "closed_trades": 238,
-        "equity_usd": 97.7411,
+        "closed_trades": 239,
+        "equity_usd": 97.5512,
         "initial_equity_usd": 100.0,
-        "pnl_usd": -2.2589,
-        "return_pct": -2.2589,
+        "pnl_usd": -2.4488,
+        "return_pct": -2.4488,
         "shared_wallet": true
       },
       "name": "EQUITY",
       "status": "TRACKING"
     }
   ],
-  "generated_at_utc": "2026-11-28T08:41:03.902374+00:00",
+  "generated_at_utc": "2026-11-28T09:31:53.106586+00:00",
   "live_trading_enabled": false,
   "mode": "PAPER_ONLY",
   "portfolio_status": "PAPER_RUNNING",
   "schema_version": 2,
-  "source_updated_at": "2026-11-28T08:41:03.462140+00:00",
+  "source_updated_at": "2026-11-28T09:31:52.516481+00:00",
   "summary": {
     "agent_count": 6,
     "markets": [
@@ -285,9 +288,9 @@
       "AKE/USD",
       "ALGO/USD",
       "ARB/USD",
-      "ATOM/USD",
       "AVAX/USD",
       "BCH/USD",
+      "BFI/USD",
       "BLESS/USD",
       "BNB/USD",
       "CC/USD",
@@ -315,6 +318,7 @@
       "PEARL/USD",
       "PEPE/USD",
       "PIEVERSE/USD",
+      "POL/USD",
       "PORTAL/USD",
       "PUMP/USD",
       "QNT/USD",
@@ -414,17 +418,6 @@
         "strategy_signal": "HOLD",
         "watch_only": true
       },
-      "ATOM/USD": {
-        "approved_by_consensus": false,
-        "decision": "HOLD",
-        "execution_mode": "PAPER_ONLY",
-        "live_orders_enabled": false,
-        "reason_codes": [
-          "WATCH_ONLY_NO_CLOSED_CANDLE_SIGNAL"
-        ],
-        "strategy_signal": "HOLD",
-        "watch_only": true
-      },
       "AVAX/USD": {
         "approved_by_consensus": false,
         "decision": "HOLD",
@@ -437,6 +430,17 @@
         "watch_only": true
       },
       "BCH/USD": {
+        "approved_by_consensus": false,
+        "decision": "HOLD",
+        "execution_mode": "PAPER_ONLY",
+        "live_orders_enabled": false,
+        "reason_codes": [
+          "WATCH_ONLY_NO_CLOSED_CANDLE_SIGNAL"
+        ],
+        "strategy_signal": "HOLD",
+        "watch_only": true
+      },
+      "BFI/USD": {
         "approved_by_consensus": false,
         "decision": "HOLD",
         "execution_mode": "PAPER_ONLY",
@@ -755,6 +759,17 @@
         "watch_only": true
       },
       "PIEVERSE/USD": {
+        "approved_by_consensus": false,
+        "decision": "HOLD",
+        "execution_mode": "PAPER_ONLY",
+        "live_orders_enabled": false,
+        "reason_codes": [
+          "WATCH_ONLY_NO_CLOSED_CANDLE_SIGNAL"
+        ],
+        "strategy_signal": "HOLD",
+        "watch_only": true
+      },
+      "POL/USD": {
         "approved_by_consensus": false,
         "decision": "HOLD",
         "execution_mode": "PAPER_ONLY",
