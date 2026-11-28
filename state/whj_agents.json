@@ -30,6 +30,7 @@
           "ICP/USD",
           "INJ/USD",
           "JUP/USD",
+          "KAS/USD",
           "LIGHTER/USD",
           "LINK/USD",
           "LTC/USD",
@@ -45,6 +46,7 @@
           "QNT/USD",
           "RENDER/USD",
           "RLUSD/USD",
+          "SHIB/USD",
           "SKY/USD",
           "SOFID/USDT",
           "SOL/USD",
@@ -54,8 +56,6 @@
           "TRUMP/USD",
           "TRX/USD",
           "UNI/USD",
-          "USELESS/USD",
-          "VIRTUAL/USD",
           "VVV/USD",
           "W/USD",
           "WLD/USD",
@@ -100,6 +100,7 @@
           "ICP/USD",
           "INJ/USD",
           "JUP/USD",
+          "KAS/USD",
           "LIGHTER/USD",
           "LINK/USD",
           "LTC/USD",
@@ -115,6 +116,7 @@
           "QNT/USD",
           "RENDER/USD",
           "RLUSD/USD",
+          "SHIB/USD",
           "SKY/USD",
           "SOFID/USDT",
           "SOL/USD",
@@ -124,8 +126,6 @@
           "TRUMP/USD",
           "TRX/USD",
           "UNI/USD",
-          "USELESS/USD",
-          "VIRTUAL/USD",
           "VVV/USD",
           "W/USD",
           "WLD/USD",
@@ -169,6 +169,7 @@
           "ICP/USD",
           "INJ/USD",
           "JUP/USD",
+          "KAS/USD",
           "LIGHTER/USD",
           "LINK/USD",
           "LTC/USD",
@@ -184,6 +185,7 @@
           "QNT/USD",
           "RENDER/USD",
           "RLUSD/USD",
+          "SHIB/USD",
           "SKY/USD",
           "SOFID/USDT",
           "SOL/USD",
@@ -193,8 +195,6 @@
           "TRUMP/USD",
           "TRX/USD",
           "UNI/USD",
-          "USELESS/USD",
-          "VIRTUAL/USD",
           "VVV/USD",
           "W/USD",
           "WLD/USD",
@@ -261,23 +261,23 @@
     {
       "detail": "Equity is read from the single shared paper wallet when available.",
       "metrics": {
-        "closed_trades": 241,
-        "equity_usd": 97.457,
+        "closed_trades": 242,
+        "equity_usd": 97.3204,
         "initial_equity_usd": 100.0,
-        "pnl_usd": -2.543,
-        "return_pct": -2.543,
+        "pnl_usd": -2.6796,
+        "return_pct": -2.6796,
         "shared_wallet": true
       },
       "name": "EQUITY",
       "status": "TRACKING"
     }
   ],
-  "generated_at_utc": "2026-11-28T10:32:50.585032+00:00",
+  "generated_at_utc": "2026-11-28T11:29:27.494196+00:00",
   "live_trading_enabled": false,
   "mode": "PAPER_ONLY",
   "portfolio_status": "PAPER_RUNNING",
   "schema_version": 2,
-  "source_updated_at": "2026-11-28T10:32:50.198357+00:00",
+  "source_updated_at": "2026-11-28T11:29:26.980839+00:00",
   "summary": {
     "agent_count": 6,
     "markets": [
@@ -308,6 +308,7 @@
       "ICP/USD",
       "INJ/USD",
       "JUP/USD",
+      "KAS/USD",
       "LIGHTER/USD",
       "LINK/USD",
       "LTC/USD",
@@ -323,6 +324,7 @@
       "QNT/USD",
       "RENDER/USD",
       "RLUSD/USD",
+      "SHIB/USD",
       "SKY/USD",
       "SOFID/USDT",
       "SOL/USD",
@@ -332,8 +334,6 @@
       "TRUMP/USD",
       "TRX/USD",
       "UNI/USD",
-      "USELESS/USD",
-      "VIRTUAL/USD",
       "VVV/USD",
       "W/USD",
       "WLD/USD",
@@ -659,6 +659,17 @@
         "strategy_signal": "HOLD",
         "watch_only": true
       },
+      "KAS/USD": {
+        "approved_by_consensus": false,
+        "decision": "HOLD",
+        "execution_mode": "PAPER_ONLY",
+        "live_orders_enabled": false,
+        "reason_codes": [
+          "WATCH_ONLY_NO_CLOSED_CANDLE_SIGNAL"
+        ],
+        "strategy_signal": "HOLD",
+        "watch_only": true
+      },
       "LIGHTER/USD": {
         "approved_by_consensus": false,
         "decision": "HOLD",
@@ -824,6 +835,17 @@
         "strategy_signal": "HOLD",
         "watch_only": true
       },
+      "SHIB/USD": {
+        "approved_by_consensus": false,
+        "decision": "HOLD",
+        "execution_mode": "PAPER_ONLY",
+        "live_orders_enabled": false,
+        "reason_codes": [
+          "WATCH_ONLY_NO_CLOSED_CANDLE_SIGNAL"
+        ],
+        "strategy_signal": "HOLD",
+        "watch_only": true
+      },
       "SKY/USD": {
         "approved_by_consensus": false,
         "decision": "HOLD",
@@ -913,28 +935,6 @@
         "watch_only": true
       },
       "UNI/USD": {
-        "approved_by_consensus": false,
-        "decision": "HOLD",
-        "execution_mode": "PAPER_ONLY",
-        "live_orders_enabled": false,
-        "reason_codes": [
-          "WATCH_ONLY_NO_CLOSED_CANDLE_SIGNAL"
-        ],
-        "strategy_signal": "HOLD",
-        "watch_only": true
-      },
-      "USELESS/USD": {
-        "approved_by_consensus": false,
-        "decision": "HOLD",
-        "execution_mode": "PAPER_ONLY",
-        "live_orders_enabled": false,
-        "reason_codes": [
-          "WATCH_ONLY_NO_CLOSED_CANDLE_SIGNAL"
-        ],
-        "strategy_signal": "HOLD",
-        "watch_only": true
-      },
-      "VIRTUAL/USD": {
         "approved_by_consensus": false,
         "decision": "HOLD",
         "execution_mode": "PAPER_ONLY",
