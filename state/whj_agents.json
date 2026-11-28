@@ -60,7 +60,6 @@
           "XAGUSD",
           "XAUT/USD",
           "XAUUSD",
-          "XCN/USD",
           "XDG/USD",
           "XLM/USD",
           "XMR/USD",
@@ -126,7 +125,6 @@
           "WLD/USD",
           "XAGUSD",
           "XAUT/USD",
-          "XCN/USD",
           "XDG/USD",
           "XLM/USD",
           "XMR/USD",
@@ -192,7 +190,6 @@
           "WLD/USD",
           "XAGUSD",
           "XAUT/USD",
-          "XCN/USD",
           "XDG/USD",
           "XLM/USD",
           "XMR/USD",
@@ -253,22 +250,22 @@
       "detail": "Equity is read from the single shared paper wallet when available.",
       "metrics": {
         "closed_trades": 223,
-        "equity_usd": 97.9142,
+        "equity_usd": 98.1438,
         "initial_equity_usd": 100.0,
-        "pnl_usd": -2.0858,
-        "return_pct": -2.0858,
+        "pnl_usd": -1.8562,
+        "return_pct": -1.8562,
         "shared_wallet": true
       },
       "name": "EQUITY",
       "status": "TRACKING"
     }
   ],
-  "generated_at_utc": "2026-11-27T23:31:28.221910+00:00",
+  "generated_at_utc": "2026-11-28T00:30:36.462698+00:00",
   "live_trading_enabled": false,
   "mode": "PAPER_ONLY",
   "portfolio_status": "PAPER_RUNNING",
   "schema_version": 2,
-  "source_updated_at": "2026-11-27T23:31:27.799388+00:00",
+  "source_updated_at": "2026-11-28T00:30:35.891686+00:00",
   "summary": {
     "agent_count": 6,
     "markets": [
@@ -328,7 +325,6 @@
       "WLD/USD",
       "XAGUSD",
       "XAUT/USD",
-      "XCN/USD",
       "XDG/USD",
       "XLM/USD",
       "XMR/USD",
@@ -977,17 +973,6 @@
           "POSITION_SIZE_INVALID"
         ],
         "strategy_signal": "HOLD"
-      },
-      "XCN/USD": {
-        "approved_by_consensus": false,
-        "decision": "HOLD",
-        "execution_mode": "PAPER_ONLY",
-        "live_orders_enabled": false,
-        "reason_codes": [
-          "WATCH_ONLY_NO_CLOSED_CANDLE_SIGNAL"
-        ],
-        "strategy_signal": "HOLD",
-        "watch_only": true
       },
       "XDG/USD": {
         "approved_by_consensus": false,
