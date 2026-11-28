@@ -25,11 +25,9 @@
           "ETH/USD",
           "EVAA/USD",
           "FET/USD",
-          "FIDD/USD",
           "FIL/USD",
           "HBAR/USD",
           "HYPE/USD",
-          "ICNT/USD",
           "ICP/USD",
           "INJ/USD",
           "JUP/USD",
@@ -49,6 +47,7 @@
           "PUMP/USD",
           "QNT/USD",
           "RENDER/USD",
+          "SEI/USD",
           "SHIB/USD",
           "SKY/USD",
           "SOFID/USDT",
@@ -60,6 +59,7 @@
           "UNI/USD",
           "VVV/USD",
           "W/USD",
+          "WLD/USD",
           "WLFI/USD",
           "XAGUSD",
           "XAUUSD",
@@ -95,11 +95,9 @@
           "ETH/USD",
           "EVAA/USD",
           "FET/USD",
-          "FIDD/USD",
           "FIL/USD",
           "HBAR/USD",
           "HYPE/USD",
-          "ICNT/USD",
           "ICP/USD",
           "INJ/USD",
           "JUP/USD",
@@ -119,6 +117,7 @@
           "PUMP/USD",
           "QNT/USD",
           "RENDER/USD",
+          "SEI/USD",
           "SHIB/USD",
           "SKY/USD",
           "SOFID/USDT",
@@ -130,6 +129,7 @@
           "UNI/USD",
           "VVV/USD",
           "W/USD",
+          "WLD/USD",
           "WLFI/USD",
           "XAGUSD",
           "XCN/USD",
@@ -164,11 +164,9 @@
           "ETH/USD",
           "EVAA/USD",
           "FET/USD",
-          "FIDD/USD",
           "FIL/USD",
           "HBAR/USD",
           "HYPE/USD",
-          "ICNT/USD",
           "ICP/USD",
           "INJ/USD",
           "JUP/USD",
@@ -188,6 +186,7 @@
           "PUMP/USD",
           "QNT/USD",
           "RENDER/USD",
+          "SEI/USD",
           "SHIB/USD",
           "SKY/USD",
           "SOFID/USDT",
@@ -199,6 +198,7 @@
           "UNI/USD",
           "VVV/USD",
           "W/USD",
+          "WLD/USD",
           "WLFI/USD",
           "XAGUSD",
           "XCN/USD",
@@ -262,22 +262,22 @@
       "detail": "Equity is read from the single shared paper wallet when available.",
       "metrics": {
         "closed_trades": 247,
-        "equity_usd": 97.2263,
+        "equity_usd": 97.1241,
         "initial_equity_usd": 100.0,
-        "pnl_usd": -2.7737,
-        "return_pct": -2.7737,
+        "pnl_usd": -2.8759,
+        "return_pct": -2.8759,
         "shared_wallet": true
       },
       "name": "EQUITY",
       "status": "TRACKING"
     }
   ],
-  "generated_at_utc": "2026-11-28T15:36:46.768663+00:00",
+  "generated_at_utc": "2026-11-28T16:28:56.869261+00:00",
   "live_trading_enabled": false,
   "mode": "PAPER_ONLY",
   "portfolio_status": "PAPER_RUNNING",
   "schema_version": 2,
-  "source_updated_at": "2026-11-28T15:36:46.387089+00:00",
+  "source_updated_at": "2026-11-28T16:28:56.441350+00:00",
   "summary": {
     "agent_count": 6,
     "markets": [
@@ -303,11 +303,9 @@
       "ETH/USD",
       "EVAA/USD",
       "FET/USD",
-      "FIDD/USD",
       "FIL/USD",
       "HBAR/USD",
       "HYPE/USD",
-      "ICNT/USD",
       "ICP/USD",
       "INJ/USD",
       "JUP/USD",
@@ -327,6 +325,7 @@
       "PUMP/USD",
       "QNT/USD",
       "RENDER/USD",
+      "SEI/USD",
       "SHIB/USD",
       "SKY/USD",
       "SOFID/USDT",
@@ -338,6 +337,7 @@
       "UNI/USD",
       "VVV/USD",
       "W/USD",
+      "WLD/USD",
       "WLFI/USD",
       "XAGUSD",
       "XCN/USD",
@@ -604,17 +604,6 @@
         "strategy_signal": "HOLD",
         "watch_only": true
       },
-      "FIDD/USD": {
-        "approved_by_consensus": false,
-        "decision": "HOLD",
-        "execution_mode": "PAPER_ONLY",
-        "live_orders_enabled": false,
-        "reason_codes": [
-          "WATCH_ONLY_NO_CLOSED_CANDLE_SIGNAL"
-        ],
-        "strategy_signal": "HOLD",
-        "watch_only": true
-      },
       "FIL/USD": {
         "approved_by_consensus": false,
         "decision": "HOLD",
@@ -638,17 +627,6 @@
         "watch_only": true
       },
       "HYPE/USD": {
-        "approved_by_consensus": false,
-        "decision": "HOLD",
-        "execution_mode": "PAPER_ONLY",
-        "live_orders_enabled": false,
-        "reason_codes": [
-          "WATCH_ONLY_NO_CLOSED_CANDLE_SIGNAL"
-        ],
-        "strategy_signal": "HOLD",
-        "watch_only": true
-      },
-      "ICNT/USD": {
         "approved_by_consensus": false,
         "decision": "HOLD",
         "execution_mode": "PAPER_ONLY",
@@ -868,6 +846,17 @@
         "strategy_signal": "HOLD",
         "watch_only": true
       },
+      "SEI/USD": {
+        "approved_by_consensus": false,
+        "decision": "HOLD",
+        "execution_mode": "PAPER_ONLY",
+        "live_orders_enabled": false,
+        "reason_codes": [
+          "WATCH_ONLY_NO_CLOSED_CANDLE_SIGNAL"
+        ],
+        "strategy_signal": "HOLD",
+        "watch_only": true
+      },
       "SHIB/USD": {
         "approved_by_consensus": false,
         "decision": "HOLD",
@@ -979,6 +968,17 @@
         "watch_only": true
       },
       "W/USD": {
+        "approved_by_consensus": false,
+        "decision": "HOLD",
+        "execution_mode": "PAPER_ONLY",
+        "live_orders_enabled": false,
+        "reason_codes": [
+          "WATCH_ONLY_NO_CLOSED_CANDLE_SIGNAL"
+        ],
+        "strategy_signal": "HOLD",
+        "watch_only": true
+      },
+      "WLD/USD": {
         "approved_by_consensus": false,
         "decision": "HOLD",
         "execution_mode": "PAPER_ONLY",
