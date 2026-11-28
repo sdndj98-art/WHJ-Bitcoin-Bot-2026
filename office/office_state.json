@@ -1,28 +1,7 @@
 {
-  "cycle": 74,
-  "last_role_index": 3,
+  "cycle": 75,
+  "last_role_index": 4,
   "history": [
-    {
-      "cycle": 25,
-      "timestamp_utc": "2026-11-23T23:14:38+00:00",
-      "current_owner": "Paper-engine QA",
-      "current_task": "verify simulated entry/exit and ledger consistency",
-      "handoff_to": "Dashboard QA",
-      "handoff_task": "verify report/dashboard fields and refresh",
-      "paper_engine_bridge": {
-        "status": "CONNECTED",
-        "generated_at_utc": "2026-11-23T22:33:12+00:00",
-        "paper_status": "PAPER_RUNNING",
-        "agent_count": 6,
-        "markets_scanned": 64,
-        "open_positions": 16,
-        "closed_trades": 72,
-        "equity_usd": 100.7465,
-        "live_trading_enabled": false,
-        "orders_submitted": false
-      },
-      "reminder": "Cycle 25: Paper-engine QA must hand off to Dashboard QA before the next scheduled cycle."
-    },
     {
       "cycle": 26,
       "timestamp_utc": "2026-11-24T01:39:04+00:00",
@@ -1051,29 +1030,50 @@
         "orders_submitted": false
       },
       "reminder": "Cycle 74: Paper-engine QA must hand off to Dashboard QA before the next scheduled cycle."
+    },
+    {
+      "cycle": 75,
+      "timestamp_utc": "2026-11-28T03:14:14+00:00",
+      "current_owner": "Dashboard QA",
+      "current_task": "verify report/dashboard fields and refresh",
+      "handoff_to": "Risk QA",
+      "handoff_task": "verify drawdown, stale-data and duplicate-entry guards",
+      "paper_engine_bridge": {
+        "status": "CONNECTED",
+        "generated_at_utc": "2026-11-28T02:42:37+00:00",
+        "paper_status": "PAPER_RUNNING",
+        "agent_count": 6,
+        "markets_scanned": 63,
+        "open_positions": 17,
+        "closed_trades": 223,
+        "equity_usd": 98.2561,
+        "live_trading_enabled": false,
+        "orders_submitted": false
+      },
+      "reminder": "Cycle 75: Dashboard QA must hand off to Risk QA before the next scheduled cycle."
     }
   ],
-  "updated_at_utc": "2026-11-28T01:41:28+00:00",
+  "updated_at_utc": "2026-11-28T03:14:14+00:00",
   "current_handoff": {
-    "cycle": 74,
-    "timestamp_utc": "2026-11-28T01:41:28+00:00",
-    "current_owner": "Paper-engine QA",
-    "current_task": "verify simulated entry/exit and ledger consistency",
-    "handoff_to": "Dashboard QA",
-    "handoff_task": "verify report/dashboard fields and refresh",
+    "cycle": 75,
+    "timestamp_utc": "2026-11-28T03:14:14+00:00",
+    "current_owner": "Dashboard QA",
+    "current_task": "verify report/dashboard fields and refresh",
+    "handoff_to": "Risk QA",
+    "handoff_task": "verify drawdown, stale-data and duplicate-entry guards",
     "paper_engine_bridge": {
       "status": "CONNECTED",
-      "generated_at_utc": "2026-11-28T00:30:36+00:00",
+      "generated_at_utc": "2026-11-28T02:42:37+00:00",
       "paper_status": "PAPER_RUNNING",
       "agent_count": 6,
       "markets_scanned": 63,
       "open_positions": 17,
       "closed_trades": 223,
-      "equity_usd": 98.1438,
+      "equity_usd": 98.2561,
       "live_trading_enabled": false,
       "orders_submitted": false
     },
-    "reminder": "Cycle 74: Paper-engine QA must hand off to Dashboard QA before the next scheduled cycle."
+    "reminder": "Cycle 75: Dashboard QA must hand off to Risk QA before the next scheduled cycle."
   },
   "mode": "coordination_only_paper_trading",
   "live_orders_enabled": false
