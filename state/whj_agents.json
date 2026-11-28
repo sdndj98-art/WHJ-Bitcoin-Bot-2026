@@ -29,6 +29,7 @@
           "FIL/USD",
           "HBAR/USD",
           "HYPE/USD",
+          "ICNT/USD",
           "ICP/USD",
           "INJ/USD",
           "JUP/USD",
@@ -47,7 +48,7 @@
           "PUMP/USD",
           "QNT/USD",
           "RENDER/USD",
-          "RLUSD/USD",
+          "SHIB/USD",
           "SKY/USD",
           "SOFID/USDT",
           "SOL/USD",
@@ -61,7 +62,6 @@
           "WLD/USD",
           "WLFI/USD",
           "XAGUSD",
-          "XAUT/USD",
           "XAUUSD",
           "XCN/USD",
           "XDG/USD",
@@ -99,6 +99,7 @@
           "FIL/USD",
           "HBAR/USD",
           "HYPE/USD",
+          "ICNT/USD",
           "ICP/USD",
           "INJ/USD",
           "JUP/USD",
@@ -117,7 +118,7 @@
           "PUMP/USD",
           "QNT/USD",
           "RENDER/USD",
-          "RLUSD/USD",
+          "SHIB/USD",
           "SKY/USD",
           "SOFID/USDT",
           "SOL/USD",
@@ -131,7 +132,6 @@
           "WLD/USD",
           "WLFI/USD",
           "XAGUSD",
-          "XAUT/USD",
           "XCN/USD",
           "XDG/USD",
           "XLM/USD",
@@ -168,6 +168,7 @@
           "FIL/USD",
           "HBAR/USD",
           "HYPE/USD",
+          "ICNT/USD",
           "ICP/USD",
           "INJ/USD",
           "JUP/USD",
@@ -186,7 +187,7 @@
           "PUMP/USD",
           "QNT/USD",
           "RENDER/USD",
-          "RLUSD/USD",
+          "SHIB/USD",
           "SKY/USD",
           "SOFID/USDT",
           "SOL/USD",
@@ -200,7 +201,6 @@
           "WLD/USD",
           "WLFI/USD",
           "XAGUSD",
-          "XAUT/USD",
           "XCN/USD",
           "XDG/USD",
           "XLM/USD",
@@ -272,12 +272,12 @@
       "status": "TRACKING"
     }
   ],
-  "generated_at_utc": "2026-11-28T14:12:32.190527+00:00",
+  "generated_at_utc": "2026-11-28T14:57:29.584753+00:00",
   "live_trading_enabled": false,
   "mode": "PAPER_ONLY",
   "portfolio_status": "PAPER_RUNNING",
   "schema_version": 2,
-  "source_updated_at": "2026-11-28T14:12:31.662153+00:00",
+  "source_updated_at": "2026-11-28T14:57:29.221075+00:00",
   "summary": {
     "agent_count": 6,
     "markets": [
@@ -307,6 +307,7 @@
       "FIL/USD",
       "HBAR/USD",
       "HYPE/USD",
+      "ICNT/USD",
       "ICP/USD",
       "INJ/USD",
       "JUP/USD",
@@ -325,7 +326,7 @@
       "PUMP/USD",
       "QNT/USD",
       "RENDER/USD",
-      "RLUSD/USD",
+      "SHIB/USD",
       "SKY/USD",
       "SOFID/USDT",
       "SOL/USD",
@@ -339,7 +340,6 @@
       "WLD/USD",
       "WLFI/USD",
       "XAGUSD",
-      "XAUT/USD",
       "XCN/USD",
       "XDG/USD",
       "XLM/USD",
@@ -648,6 +648,17 @@
         "strategy_signal": "HOLD",
         "watch_only": true
       },
+      "ICNT/USD": {
+        "approved_by_consensus": false,
+        "decision": "HOLD",
+        "execution_mode": "PAPER_ONLY",
+        "live_orders_enabled": false,
+        "reason_codes": [
+          "WATCH_ONLY_NO_CLOSED_CANDLE_SIGNAL"
+        ],
+        "strategy_signal": "HOLD",
+        "watch_only": true
+      },
       "ICP/USD": {
         "approved_by_consensus": false,
         "decision": "HOLD",
@@ -846,7 +857,7 @@
         "strategy_signal": "HOLD",
         "watch_only": true
       },
-      "RLUSD/USD": {
+      "SHIB/USD": {
         "approved_by_consensus": false,
         "decision": "HOLD",
         "execution_mode": "PAPER_ONLY",
@@ -990,17 +1001,6 @@
         "watch_only": true
       },
       "XAGUSD": {
-        "approved_by_consensus": false,
-        "decision": "HOLD",
-        "execution_mode": "PAPER_ONLY",
-        "live_orders_enabled": false,
-        "reason_codes": [
-          "WATCH_ONLY_NO_CLOSED_CANDLE_SIGNAL"
-        ],
-        "strategy_signal": "HOLD",
-        "watch_only": true
-      },
-      "XAUT/USD": {
         "approved_by_consensus": false,
         "decision": "HOLD",
         "execution_mode": "PAPER_ONLY",
