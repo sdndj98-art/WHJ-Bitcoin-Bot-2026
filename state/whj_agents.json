@@ -23,7 +23,6 @@
           "ETH/USD",
           "FET/USD",
           "FIDD/USD",
-          "FLR/USD",
           "HBAR/USD",
           "HYPE/USD",
           "ICNT/USD",
@@ -51,6 +50,7 @@
           "SOL/USD",
           "SUI/USD",
           "TAO/USD",
+          "TON/USD",
           "TRX/USD",
           "UNI/USD",
           "USELESS/USD",
@@ -90,7 +90,6 @@
           "ETH/USD",
           "FET/USD",
           "FIDD/USD",
-          "FLR/USD",
           "HBAR/USD",
           "HYPE/USD",
           "ICNT/USD",
@@ -118,6 +117,7 @@
           "SOL/USD",
           "SUI/USD",
           "TAO/USD",
+          "TON/USD",
           "TRX/USD",
           "UNI/USD",
           "USELESS/USD",
@@ -156,7 +156,6 @@
           "ETH/USD",
           "FET/USD",
           "FIDD/USD",
-          "FLR/USD",
           "HBAR/USD",
           "HYPE/USD",
           "ICNT/USD",
@@ -184,6 +183,7 @@
           "SOL/USD",
           "SUI/USD",
           "TAO/USD",
+          "TON/USD",
           "TRX/USD",
           "UNI/USD",
           "USELESS/USD",
@@ -252,23 +252,23 @@
     {
       "detail": "Equity is read from the single shared paper wallet when available.",
       "metrics": {
-        "closed_trades": 226,
-        "equity_usd": 97.8738,
+        "closed_trades": 229,
+        "equity_usd": 97.8381,
         "initial_equity_usd": 100.0,
-        "pnl_usd": -2.1262,
-        "return_pct": -2.1262,
+        "pnl_usd": -2.1619,
+        "return_pct": -2.1619,
         "shared_wallet": true
       },
       "name": "EQUITY",
       "status": "TRACKING"
     }
   ],
-  "generated_at_utc": "2026-11-28T03:36:19.472868+00:00",
+  "generated_at_utc": "2026-11-28T04:40:46.852772+00:00",
   "live_trading_enabled": false,
   "mode": "PAPER_ONLY",
   "portfolio_status": "PAPER_RUNNING",
   "schema_version": 2,
-  "source_updated_at": "2026-11-28T03:36:19.035269+00:00",
+  "source_updated_at": "2026-11-28T04:40:46.439715+00:00",
   "summary": {
     "agent_count": 6,
     "markets": [
@@ -292,7 +292,6 @@
       "ETH/USD",
       "FET/USD",
       "FIDD/USD",
-      "FLR/USD",
       "HBAR/USD",
       "HYPE/USD",
       "ICNT/USD",
@@ -320,6 +319,7 @@
       "SOL/USD",
       "SUI/USD",
       "TAO/USD",
+      "TON/USD",
       "TRX/USD",
       "UNI/USD",
       "USELESS/USD",
@@ -560,17 +560,6 @@
         "watch_only": true
       },
       "FIDD/USD": {
-        "approved_by_consensus": false,
-        "decision": "HOLD",
-        "execution_mode": "PAPER_ONLY",
-        "live_orders_enabled": false,
-        "reason_codes": [
-          "WATCH_ONLY_NO_CLOSED_CANDLE_SIGNAL"
-        ],
-        "strategy_signal": "HOLD",
-        "watch_only": true
-      },
-      "FLR/USD": {
         "approved_by_consensus": false,
         "decision": "HOLD",
         "execution_mode": "PAPER_ONLY",
@@ -868,6 +857,17 @@
         "watch_only": true
       },
       "TAO/USD": {
+        "approved_by_consensus": false,
+        "decision": "HOLD",
+        "execution_mode": "PAPER_ONLY",
+        "live_orders_enabled": false,
+        "reason_codes": [
+          "WATCH_ONLY_NO_CLOSED_CANDLE_SIGNAL"
+        ],
+        "strategy_signal": "HOLD",
+        "watch_only": true
+      },
+      "TON/USD": {
         "approved_by_consensus": false,
         "decision": "HOLD",
         "execution_mode": "PAPER_ONLY",
