@@ -26,6 +26,7 @@
           "EVAA/USD",
           "FET/USD",
           "FIDD/USD",
+          "FIL/USD",
           "HBAR/USD",
           "HYPE/USD",
           "ICP/USD",
@@ -47,7 +48,6 @@
           "QNT/USD",
           "RENDER/USD",
           "RLUSD/USD",
-          "SHIB/USD",
           "SKY/USD",
           "SOFID/USDT",
           "SOL/USD",
@@ -96,6 +96,7 @@
           "EVAA/USD",
           "FET/USD",
           "FIDD/USD",
+          "FIL/USD",
           "HBAR/USD",
           "HYPE/USD",
           "ICP/USD",
@@ -117,7 +118,6 @@
           "QNT/USD",
           "RENDER/USD",
           "RLUSD/USD",
-          "SHIB/USD",
           "SKY/USD",
           "SOFID/USDT",
           "SOL/USD",
@@ -165,6 +165,7 @@
           "EVAA/USD",
           "FET/USD",
           "FIDD/USD",
+          "FIL/USD",
           "HBAR/USD",
           "HYPE/USD",
           "ICP/USD",
@@ -186,7 +187,6 @@
           "QNT/USD",
           "RENDER/USD",
           "RLUSD/USD",
-          "SHIB/USD",
           "SKY/USD",
           "SOFID/USDT",
           "SOL/USD",
@@ -261,23 +261,23 @@
     {
       "detail": "Equity is read from the single shared paper wallet when available.",
       "metrics": {
-        "closed_trades": 244,
-        "equity_usd": 97.3055,
+        "closed_trades": 245,
+        "equity_usd": 97.0827,
         "initial_equity_usd": 100.0,
-        "pnl_usd": -2.6945,
-        "return_pct": -2.6945,
+        "pnl_usd": -2.9173,
+        "return_pct": -2.9173,
         "shared_wallet": true
       },
       "name": "EQUITY",
       "status": "TRACKING"
     }
   ],
-  "generated_at_utc": "2026-11-28T13:12:57.963429+00:00",
+  "generated_at_utc": "2026-11-28T14:12:32.190527+00:00",
   "live_trading_enabled": false,
   "mode": "PAPER_ONLY",
   "portfolio_status": "PAPER_RUNNING",
   "schema_version": 2,
-  "source_updated_at": "2026-11-28T13:12:57.469749+00:00",
+  "source_updated_at": "2026-11-28T14:12:31.662153+00:00",
   "summary": {
     "agent_count": 6,
     "markets": [
@@ -304,6 +304,7 @@
       "EVAA/USD",
       "FET/USD",
       "FIDD/USD",
+      "FIL/USD",
       "HBAR/USD",
       "HYPE/USD",
       "ICP/USD",
@@ -325,7 +326,6 @@
       "QNT/USD",
       "RENDER/USD",
       "RLUSD/USD",
-      "SHIB/USD",
       "SKY/USD",
       "SOFID/USDT",
       "SOL/USD",
@@ -615,6 +615,17 @@
         "strategy_signal": "HOLD",
         "watch_only": true
       },
+      "FIL/USD": {
+        "approved_by_consensus": false,
+        "decision": "HOLD",
+        "execution_mode": "PAPER_ONLY",
+        "live_orders_enabled": false,
+        "reason_codes": [
+          "WATCH_ONLY_NO_CLOSED_CANDLE_SIGNAL"
+        ],
+        "strategy_signal": "HOLD",
+        "watch_only": true
+      },
       "HBAR/USD": {
         "approved_by_consensus": false,
         "decision": "HOLD",
@@ -836,17 +847,6 @@
         "watch_only": true
       },
       "RLUSD/USD": {
-        "approved_by_consensus": false,
-        "decision": "HOLD",
-        "execution_mode": "PAPER_ONLY",
-        "live_orders_enabled": false,
-        "reason_codes": [
-          "WATCH_ONLY_NO_CLOSED_CANDLE_SIGNAL"
-        ],
-        "strategy_signal": "HOLD",
-        "watch_only": true
-      },
-      "SHIB/USD": {
         "approved_by_consensus": false,
         "decision": "HOLD",
         "execution_mode": "PAPER_ONLY",
