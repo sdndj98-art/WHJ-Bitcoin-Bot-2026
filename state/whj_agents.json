@@ -15,6 +15,7 @@
           "BLESS/USD",
           "BNB/USD",
           "CC/USD",
+          "CFG/USD",
           "CRV/USD",
           "DOT/USD",
           "DRV/USD",
@@ -81,6 +82,7 @@
           "BLESS/USD",
           "BNB/USD",
           "CC/USD",
+          "CFG/USD",
           "CRV/USD",
           "DOT/USD",
           "DRV/USD",
@@ -146,6 +148,7 @@
           "BLESS/USD",
           "BNB/USD",
           "CC/USD",
+          "CFG/USD",
           "CRV/USD",
           "DOT/USD",
           "DRV/USD",
@@ -249,23 +252,23 @@
     {
       "detail": "Equity is read from the single shared paper wallet when available.",
       "metrics": {
-        "closed_trades": 223,
-        "equity_usd": 98.2561,
+        "closed_trades": 226,
+        "equity_usd": 97.8738,
         "initial_equity_usd": 100.0,
-        "pnl_usd": -1.7439,
-        "return_pct": -1.7439,
+        "pnl_usd": -2.1262,
+        "return_pct": -2.1262,
         "shared_wallet": true
       },
       "name": "EQUITY",
       "status": "TRACKING"
     }
   ],
-  "generated_at_utc": "2026-11-28T02:42:37.543213+00:00",
+  "generated_at_utc": "2026-11-28T03:36:19.472868+00:00",
   "live_trading_enabled": false,
   "mode": "PAPER_ONLY",
   "portfolio_status": "PAPER_RUNNING",
   "schema_version": 2,
-  "source_updated_at": "2026-11-28T02:42:37.036235+00:00",
+  "source_updated_at": "2026-11-28T03:36:19.035269+00:00",
   "summary": {
     "agent_count": 6,
     "markets": [
@@ -281,6 +284,7 @@
       "BLESS/USD",
       "BNB/USD",
       "CC/USD",
+      "CFG/USD",
       "CRV/USD",
       "DOT/USD",
       "DRV/USD",
@@ -468,6 +472,17 @@
         "watch_only": true
       },
       "CC/USD": {
+        "approved_by_consensus": false,
+        "decision": "HOLD",
+        "execution_mode": "PAPER_ONLY",
+        "live_orders_enabled": false,
+        "reason_codes": [
+          "WATCH_ONLY_NO_CLOSED_CANDLE_SIGNAL"
+        ],
+        "strategy_signal": "HOLD",
+        "watch_only": true
+      },
+      "CFG/USD": {
         "approved_by_consensus": false,
         "decision": "HOLD",
         "execution_mode": "PAPER_ONLY",
