@@ -10,6 +10,7 @@
           "AKE/USD",
           "ALGO/USD",
           "ARB/USD",
+          "ATOM/USD",
           "AVAX/USD",
           "BCH/USD",
           "BLESS/USD",
@@ -49,11 +50,11 @@
           "SOL/USD",
           "SUI/USD",
           "TAO/USD",
-          "TON/USD",
           "TRUMP/USD",
           "TRX/USD",
           "UNI/USD",
           "USELESS/USD",
+          "VIRTUAL/USD",
           "VVV/USD",
           "W/USD",
           "WLD/USD",
@@ -78,6 +79,7 @@
           "AKE/USD",
           "ALGO/USD",
           "ARB/USD",
+          "ATOM/USD",
           "AVAX/USD",
           "BCH/USD",
           "BLESS/USD",
@@ -117,11 +119,11 @@
           "SOL/USD",
           "SUI/USD",
           "TAO/USD",
-          "TON/USD",
           "TRUMP/USD",
           "TRX/USD",
           "UNI/USD",
           "USELESS/USD",
+          "VIRTUAL/USD",
           "VVV/USD",
           "W/USD",
           "WLD/USD",
@@ -145,6 +147,7 @@
           "AKE/USD",
           "ALGO/USD",
           "ARB/USD",
+          "ATOM/USD",
           "AVAX/USD",
           "BCH/USD",
           "BLESS/USD",
@@ -184,11 +187,11 @@
           "SOL/USD",
           "SUI/USD",
           "TAO/USD",
-          "TON/USD",
           "TRUMP/USD",
           "TRX/USD",
           "UNI/USD",
           "USELESS/USD",
+          "VIRTUAL/USD",
           "VVV/USD",
           "W/USD",
           "WLD/USD",
@@ -255,23 +258,23 @@
     {
       "detail": "Equity is read from the single shared paper wallet when available.",
       "metrics": {
-        "closed_trades": 236,
-        "equity_usd": 97.6566,
+        "closed_trades": 238,
+        "equity_usd": 97.7411,
         "initial_equity_usd": 100.0,
-        "pnl_usd": -2.3434,
-        "return_pct": -2.3434,
+        "pnl_usd": -2.2589,
+        "return_pct": -2.2589,
         "shared_wallet": true
       },
       "name": "EQUITY",
       "status": "TRACKING"
     }
   ],
-  "generated_at_utc": "2026-11-28T07:54:45.326535+00:00",
+  "generated_at_utc": "2026-11-28T08:41:03.902374+00:00",
   "live_trading_enabled": false,
   "mode": "PAPER_ONLY",
   "portfolio_status": "PAPER_RUNNING",
   "schema_version": 2,
-  "source_updated_at": "2026-11-28T07:54:44.859610+00:00",
+  "source_updated_at": "2026-11-28T08:41:03.462140+00:00",
   "summary": {
     "agent_count": 6,
     "markets": [
@@ -282,6 +285,7 @@
       "AKE/USD",
       "ALGO/USD",
       "ARB/USD",
+      "ATOM/USD",
       "AVAX/USD",
       "BCH/USD",
       "BLESS/USD",
@@ -321,11 +325,11 @@
       "SOL/USD",
       "SUI/USD",
       "TAO/USD",
-      "TON/USD",
       "TRUMP/USD",
       "TRX/USD",
       "UNI/USD",
       "USELESS/USD",
+      "VIRTUAL/USD",
       "VVV/USD",
       "W/USD",
       "WLD/USD",
@@ -400,6 +404,17 @@
         "watch_only": true
       },
       "ARB/USD": {
+        "approved_by_consensus": false,
+        "decision": "HOLD",
+        "execution_mode": "PAPER_ONLY",
+        "live_orders_enabled": false,
+        "reason_codes": [
+          "WATCH_ONLY_NO_CLOSED_CANDLE_SIGNAL"
+        ],
+        "strategy_signal": "HOLD",
+        "watch_only": true
+      },
+      "ATOM/USD": {
         "approved_by_consensus": false,
         "decision": "HOLD",
         "execution_mode": "PAPER_ONLY",
@@ -860,17 +875,6 @@
         "strategy_signal": "HOLD",
         "watch_only": true
       },
-      "TON/USD": {
-        "approved_by_consensus": false,
-        "decision": "HOLD",
-        "execution_mode": "PAPER_ONLY",
-        "live_orders_enabled": false,
-        "reason_codes": [
-          "WATCH_ONLY_NO_CLOSED_CANDLE_SIGNAL"
-        ],
-        "strategy_signal": "HOLD",
-        "watch_only": true
-      },
       "TRUMP/USD": {
         "approved_by_consensus": false,
         "decision": "HOLD",
@@ -905,6 +909,17 @@
         "watch_only": true
       },
       "USELESS/USD": {
+        "approved_by_consensus": false,
+        "decision": "HOLD",
+        "execution_mode": "PAPER_ONLY",
+        "live_orders_enabled": false,
+        "reason_codes": [
+          "WATCH_ONLY_NO_CLOSED_CANDLE_SIGNAL"
+        ],
+        "strategy_signal": "HOLD",
+        "watch_only": true
+      },
+      "VIRTUAL/USD": {
         "approved_by_consensus": false,
         "decision": "HOLD",
         "execution_mode": "PAPER_ONLY",
