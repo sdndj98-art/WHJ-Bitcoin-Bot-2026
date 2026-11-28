@@ -1,28 +1,7 @@
 {
-  "cycle": 75,
-  "last_role_index": 4,
+  "cycle": 76,
+  "last_role_index": 5,
   "history": [
-    {
-      "cycle": 26,
-      "timestamp_utc": "2026-11-24T01:39:04+00:00",
-      "current_owner": "Dashboard QA",
-      "current_task": "verify report/dashboard fields and refresh",
-      "handoff_to": "Risk QA",
-      "handoff_task": "verify drawdown, stale-data and duplicate-entry guards",
-      "paper_engine_bridge": {
-        "status": "CONNECTED",
-        "generated_at_utc": "2026-11-24T00:19:04+00:00",
-        "paper_status": "PAPER_RUNNING",
-        "agent_count": 6,
-        "markets_scanned": 64,
-        "open_positions": 17,
-        "closed_trades": 85,
-        "equity_usd": 100.5202,
-        "live_trading_enabled": false,
-        "orders_submitted": false
-      },
-      "reminder": "Cycle 26: Dashboard QA must hand off to Risk QA before the next scheduled cycle."
-    },
     {
       "cycle": 27,
       "timestamp_utc": "2026-11-24T03:12:59+00:00",
@@ -1051,29 +1030,50 @@
         "orders_submitted": false
       },
       "reminder": "Cycle 75: Dashboard QA must hand off to Risk QA before the next scheduled cycle."
+    },
+    {
+      "cycle": 76,
+      "timestamp_utc": "2026-11-28T05:21:17+00:00",
+      "current_owner": "Risk QA",
+      "current_task": "verify drawdown, stale-data and duplicate-entry guards",
+      "handoff_to": "Release QA",
+      "handoff_task": "summarize blockers and hand off to Coordinator",
+      "paper_engine_bridge": {
+        "status": "CONNECTED",
+        "generated_at_utc": "2026-11-28T04:40:47+00:00",
+        "paper_status": "PAPER_RUNNING",
+        "agent_count": 6,
+        "markets_scanned": 64,
+        "open_positions": 17,
+        "closed_trades": 229,
+        "equity_usd": 97.8381,
+        "live_trading_enabled": false,
+        "orders_submitted": false
+      },
+      "reminder": "Cycle 76: Risk QA must hand off to Release QA before the next scheduled cycle."
     }
   ],
-  "updated_at_utc": "2026-11-28T03:14:14+00:00",
+  "updated_at_utc": "2026-11-28T05:21:17+00:00",
   "current_handoff": {
-    "cycle": 75,
-    "timestamp_utc": "2026-11-28T03:14:14+00:00",
-    "current_owner": "Dashboard QA",
-    "current_task": "verify report/dashboard fields and refresh",
-    "handoff_to": "Risk QA",
-    "handoff_task": "verify drawdown, stale-data and duplicate-entry guards",
+    "cycle": 76,
+    "timestamp_utc": "2026-11-28T05:21:17+00:00",
+    "current_owner": "Risk QA",
+    "current_task": "verify drawdown, stale-data and duplicate-entry guards",
+    "handoff_to": "Release QA",
+    "handoff_task": "summarize blockers and hand off to Coordinator",
     "paper_engine_bridge": {
       "status": "CONNECTED",
-      "generated_at_utc": "2026-11-28T02:42:37+00:00",
+      "generated_at_utc": "2026-11-28T04:40:47+00:00",
       "paper_status": "PAPER_RUNNING",
       "agent_count": 6,
-      "markets_scanned": 63,
+      "markets_scanned": 64,
       "open_positions": 17,
-      "closed_trades": 223,
-      "equity_usd": 98.2561,
+      "closed_trades": 229,
+      "equity_usd": 97.8381,
       "live_trading_enabled": false,
       "orders_submitted": false
     },
-    "reminder": "Cycle 75: Dashboard QA must hand off to Risk QA before the next scheduled cycle."
+    "reminder": "Cycle 76: Risk QA must hand off to Release QA before the next scheduled cycle."
   },
   "mode": "coordination_only_paper_trading",
   "live_orders_enabled": false
